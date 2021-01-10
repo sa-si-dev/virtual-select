@@ -14,9 +14,9 @@ You can download the required CSS and JS files from the `dist` directory in the 
 
 OR from below direct links
 
-**CSS file link** - [virtual-select.min.css](https://raw.githubusercontent.com/{{repo}}/main/dist/virtual-select.min.css)
+**CSS file link** - [virtual-select.min.css](https://raw.githubusercontent.com/{{repo}}/master/dist/virtual-select.min.css)
 
-**JS file link** - [virtual-select.min.js](https://raw.githubusercontent.com/{{repo}}/main/dist/virtual-select.min.js)
+**JS file link** - [virtual-select.min.js](https://raw.githubusercontent.com/{{repo}}/master/dist/virtual-select.min.js)
 
 ## Import files
 
