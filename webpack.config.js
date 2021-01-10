@@ -5,7 +5,7 @@ const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 
 const banner = `Virtual Select 1.0
 https://sa-si-dev.github.io/virtual-select
-Licensed under MIT (https://github.com/sa-si-dev/virtual-select/blob/main/LICENSE)`;
+Licensed under MIT (https://github.com/sa-si-dev/virtual-select/blob/master/LICENSE)`;
 
 module.exports = (env, options) => {
   return {
