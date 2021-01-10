@@ -1,0 +1,8 @@
+@mixin checkbox-checked {
+  width: 50%;
+  border-color: $primaryColor;
+  border-left-color: transparent;
+  border-top-color: transparent;
+  -webkit-transform: rotate(45deg) translate(1px, -4px);
+  transform: rotate(45deg) translate(1px, -4px);
+}

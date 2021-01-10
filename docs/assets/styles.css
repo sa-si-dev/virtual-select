@@ -1,0 +1,58 @@
+*:focus {
+  outline: none;
+}
+
+body {
+  font-family: 'Roboto';
+  font-size: 16px;
+}
+
+/* theme customization - start */
+.sidebar {
+  width: 200px;
+}
+
+.content {
+  left: 200px;
+}
+
+section.cover .cover-main>p:last-child a:last-child:hover {
+  color: #fff;
+}
+
+.sidebar > h1 {
+  font-weight: bold;
+  color: #512DA8; /* primary color */
+}
+
+.sidebar ul li a {
+  font-size: 16px;
+  padding: 5px 0;
+}
+
+.sidebar ul li a:hover {
+  text-decoration: none;
+  color: #512DA8; /* primary color */
+}
+
+.select-ele {
+  width: 100%;
+  max-width: 250px;
+}
+
+section.cover {
+  background: linear-gradient(to left bottom, hsl(71, 100%, 85%) 0%,hsl(252, 100%, 85%) 100%) !important;
+}
+
+.markdown-section td, .markdown-section th {
+  padding: 10px 15px;
+  line-height: 30px;
+}
+/* theme customization - end */
+
+.get-started-select {
+  display: flex;
+  justify-content: space-between;
+  max-width: 600px;
+  margin: 30px auto 0;
+}

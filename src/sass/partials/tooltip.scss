@@ -1,0 +1,12 @@
+.tooltip-box {
+  position: absolute;
+  top: 0;
+  left: 0;
+  max-width: 300px;
+  padding: 5px 10px;
+  font-size: 14px;
+  color: #fff;
+  background: #212121;
+  opacity: 0;
+  pointer-events: none;
+}

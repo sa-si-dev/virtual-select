@@ -1,0 +1,280 @@
+.vscomp-wrapper {
+  display: inline-flex;
+  position: relative;
+  width: 100%;
+  font-size: $fontSize;
+  color: $fontColor;
+  text-align: left;
+
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+
+  &:focus {
+    outline: none;
+  }
+}
+
+.vscomp-toggle-button {
+  display: flex;
+  position: relative;
+  align-items: center;
+  width: 100%;
+  padding: 7px $arrowWidth 7px 10px;
+  border: 1px solid $borderColor;
+  background-color: $primaryBg;
+  cursor: pointer;
+}
+
+.vscomp-value {
+  width: 100%;
+  height: 20px;
+  line-height: 20px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.vscomp-value-tag {
+  white-space: nowrap;
+}
+
+.vscomp-arrow {
+  position: absolute;
+  display: flex;
+  top: 0;
+  right: 0;
+  width: $arrowWidth;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+
+  &::after {
+    content: '';
+    border: $arrowSize solid transparent;
+    border-top-color: $arrowColor;
+    margin-bottom: -$arrowSize;
+  }
+}
+
+.vscomp-clear-button {
+  position: absolute;
+  display: none;
+  top: 50%;
+  right: $arrowWidth;
+  width: $clearButtonWidth;
+  height: $clearButtonWidth;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  margin-top: -#{$clearButtonWidth / 2};
+  font-size: 20px;
+  color: #999;
+
+  &:hover {
+    background: $focusColor;
+    color: #333;
+  }
+}
+
+.vscomp-dropbox {
+  position: absolute;
+  top: calc(100% + #{$dropboxMargin});
+  left: 0;
+  width: 100%;
+  opacity: 0;
+  box-shadow: 0 4px 5px 0 rgba(0, 0, 0, 0.14), 0 1px 10px 0 rgba(0, 0, 0, 0.12), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+  background-color: $primaryBg;
+  z-index: 1;
+  -webkit-transition-duration: $transitionDuration;
+  transition-duration: $transitionDuration;
+  -webkit-transform: translate3d(0, -$transitionDistance, 0);
+  transform: translate3d(0, -$transitionDistance, 0);
+}
+
+.vscomp-options-container {
+  position: relative;
+  max-height: #{$dropboxHeight - $searchHeight};
+  overflow: auto;
+}
+
+.vscomp-option {
+  display: flex;
+  align-items: center;
+  padding: 10px 15px;
+  height: $optionHeight;
+  align-items: center;
+  cursor: pointer;
+
+  &.selected {
+    background-color: $selectedColor;
+  }
+
+  &.focused {
+    background-color: $focusColor;
+  }
+
+  &.disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+}
+
+.vscomp-option-text {
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.vscomp-search-container {
+  display: flex;
+  align-items: center;
+  position: relative;
+  height: $searchHeight;
+  padding: 0 5px 0 15px;
+  border-bottom: 1px solid $borderColor;
+}
+
+.vscomp-search-input {
+  border: none;
+  width: calc(100% - #{$searchClearWidth});
+  height: #{$searchHeight - 2px};
+  padding: 10px 0;
+  font-size: 15px;
+
+  &:focus {
+    outline: none;
+  }
+}
+
+.vscomp-search-clear {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: $searchClearWidth;
+  height: $searchClearWidth;
+  font-size: 25px;
+  color: #999;
+  cursor: pointer;
+  user-select: none;
+  visibility: hidden;
+
+  &:hover {
+    color: #333;
+  }
+}
+
+.vscomp-no-options {
+  display: none;
+  text-align: center;
+  padding: 20px 10px;
+}
+
+.vscomp-wrapper {
+  .checkbox-icon {
+    display: inline-flex;
+    position: relative;
+    width: 15px;
+    height: 15px;
+    margin-right: 10px;
+
+    &::after {
+      content: '';
+      width: 100%;
+      height: 100%;
+      border: 2px solid $checkboxColor;
+      -webkit-transition-duration: 0.2s;
+      transition-duration: 0.2s;
+    }
+
+    &.checked::after {
+      @include checkbox-checked;
+    }
+  }
+
+  &.position-top {
+    .vscomp-dropbox {
+      top: auto;
+      bottom: calc(100% + #{$dropboxMargin});
+      -webkit-transform: translate3d(0, $transitionDistance, 0);
+      transform: translate3d(0, $transitionDistance, 0);
+    }
+  }
+
+  &.selected .checkbox-icon::after {
+    width: 50%;
+    border-color: $primaryColor;
+    border-left-color: transparent;
+    border-top-color: transparent;
+    -webkit-transform: rotate(45deg) translate(1px, -4px);
+    transform: rotate(45deg) translate(1px, -4px);
+  }
+
+  &.multiple {
+    .toggle-all-options {
+      cursor: pointer;
+    }
+
+    .vscomp-search-input {
+      width: calc(100% - #{$searchClearWidth + $checkboxFullWidth});
+    }
+    
+    .vscomp-option {
+      &.selected .checkbox-icon::after {
+        @include checkbox-checked;
+      }
+    }
+  }
+
+  &.focused, &:focus {
+    .vscomp-toggle-button {
+      box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 3px 1px -2px rgba(0, 0, 0, 0.12), 0 1px 5px 0 rgba(0, 0, 0, 0.20);
+    }
+  }
+
+  &.opened {
+    .vscomp-dropbox {
+      opacity: 1;
+      -webkit-transform: translate3d(0, 0, 0);
+      transform: translate3d(0, 0, 0);
+    }
+  }
+
+  &.closed {
+    .vscomp-dropbox {
+      display: none;
+    }
+  }
+
+  &:not(.has-value) {
+    .vscomp-value {
+      opacity: 0.5;
+    }
+  }
+
+  &.has-clear-button {
+    &.has-value .vscomp-clear-button {
+      display: flex;
+    }
+  
+    .vscomp-toggle-button {
+      padding-right: #{$arrowWidth + $clearButtonWidth};
+    }
+  }
+
+  &.has-no-options {
+    .vscomp-options-container {
+      display: none;
+    }
+    
+    .vscomp-no-options {
+      display: block;
+    }
+  }
+
+  &.has-search-value {
+    .vscomp-search-clear {
+      visibility: visible;
+    }
+  }
+}
