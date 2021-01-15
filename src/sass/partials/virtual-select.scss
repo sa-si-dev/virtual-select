@@ -1,3 +1,10 @@
+.vscomp-ele {
+  font-family: sans-serif;
+  display: inline-block;
+  width: 100%;
+  max-width: 250px;
+}
+
 .vscomp-wrapper {
   display: inline-flex;
   position: relative;
@@ -64,16 +71,36 @@
   right: $arrowWidth;
   width: $clearButtonWidth;
   height: $clearButtonWidth;
-  align-items: center;
   justify-content: center;
   border-radius: 50%;
   margin-top: -#{$clearButtonWidth / 2};
-  font-size: 20px;
-  color: #999;
+
+  &::before, &::after {
+    content: '';
+    position: absolute;
+    width: 2px;
+    height: 12px;
+    top: 50%;
+    margin-top: -6px;
+    background: #999;
+  }
+
+  &::before {
+    -webkit-transform: rotate(45deg);
+    transform: rotate(45deg);
+  }
+
+  &::after {
+    -webkit-transform: rotate(-45deg);
+    transform: rotate(-45deg);
+  }
 
   &:hover {
     background: $focusColor;
-    color: #333;
+    
+    &::before, &::after {
+      background: #333;
+    }
   }
 }
 

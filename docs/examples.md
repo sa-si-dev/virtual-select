@@ -2,7 +2,7 @@
 
 ## Default dropdown
 
-<div id="single-select" class="select-ele"></div>
+<div id="single-select"></div>
 
 ```html
 <div id="sample-select"></div>
@@ -21,7 +21,7 @@ VirtualSelect.init({
 
 ## With search box
 
-<div id="single-search-select" class="select-ele"></div>
+<div id="single-search-select"></div>
 
 ```js
 VirtualSelect.init({
@@ -32,7 +32,7 @@ VirtualSelect.init({
 
 ## Multiple select
 
-<div id="sample-multi-select" class="select-ele"></div>
+<div id="sample-multi-select"></div>
 
 ```js
 VirtualSelect.init({
@@ -43,7 +43,7 @@ VirtualSelect.init({
 
 ## Disabled options
 
-<div id="single-disabled-select" class="select-ele"></div>
+<div id="single-disabled-select"></div>
 
 ```js
 VirtualSelect.init({
@@ -54,7 +54,7 @@ VirtualSelect.init({
 
 ## Hide clear button
 
-<div id="hide-clear-select" class="select-ele"></div>
+<div id="hide-clear-select"></div>
 
 ```js
 VirtualSelect.init({

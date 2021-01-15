@@ -22,7 +22,7 @@ section.cover .cover-main>p:last-child a:last-child:hover {
 
 .sidebar > h1 {
   font-weight: bold;
-  color: #512DA8; /* primary color */
+  color: var(--theme-color, #42b983);
 }
 
 .sidebar ul li a {
@@ -32,12 +32,7 @@ section.cover .cover-main>p:last-child a:last-child:hover {
 
 .sidebar ul li a:hover {
   text-decoration: none;
-  color: #512DA8; /* primary color */
-}
-
-.select-ele {
-  width: 100%;
-  max-width: 250px;
+  color: var(--theme-color, #42b983);
 }
 
 section.cover {
@@ -48,11 +43,55 @@ section.cover {
   padding: 10px 15px;
   line-height: 30px;
 }
+
+@media screen and (max-width: 768px) {
+  .sidebar-toggle {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 56px;
+    height: 56px;
+    left: 20px;
+    bottom: 20px;
+    padding: 0;
+    background-color: var(--theme-color, #42b983);
+    border-radius: 50%;
+  }
+
+  .sidebar-toggle span {
+    background-color: #fff;
+  }
+
+  .sidebar-toggle span:last-child {
+    margin-bottom: 0;
+  }
+
+  body.close .sidebar-toggle {
+    display: none;
+  }
+
+  .markdown-section {
+    padding-bottom: 100px;
+  }
+}
+
+@media only screen and (max-width: 576px) {
+  .markdown-section {
+    max-width: 100%;
+    padding-left: 30px;
+    padding-right: 30px;
+  }
+}
 /* theme customization - end */
 
-.get-started-select {
+.get-started-example {
   display: flex;
   justify-content: space-between;
   max-width: 600px;
   margin: 30px auto 0;
+  flex-wrap: wrap;
+}
+
+.get-started-example .vscomp-ele {
+  margin-bottom: 20px;
 }

@@ -1,5 +1,3 @@
-import * as tooltip from './tooltip';
-
 const keyDownMethodMapping = {
   13: 'onEnterPress',
   27: 'onEscPress',
@@ -29,25 +27,38 @@ export class VirtualSelect {
    */
   constructor(options) {
     try {
-      this.valueKey = options.valueKey || 'value';
-      this.labelKey = options.labelKey || 'label';
-      this.optionsCount = options.optionsCount || 5;
+      let defaultOptions = {
+        valueKey: 'value',
+        labelKey: 'label',
+        optionsCount: 5,
+        optionHeight: '40px',
+        multiple: false,
+        hideClearButton: false,
+        noOptionsText: 'No results found',
+        placeholder: 'Select',
+        position: 'auto',
+      };
+
+      options = Object.assign(defaultOptions, options);
+      this.valueKey = options.valueKey;
+      this.labelKey = options.labelKey;
+      this.optionsCount = options.optionsCount;
       this.halfOptionsCount = Math.ceil(this.optionsCount / 2);
-      this.optionHeightText = options.optionHeight || '40px';
+      this.optionHeightText = options.optionHeight;
       this.optionHeight = parseFloat(this.optionHeightText);
       this.multiple = options.multiple ? true : false;
       this.hasSearch = options.search ? true : false;
       this.hideClearButton = options.hideClearButton ? true : false;
-      this.noOptionsText = options.noOptionsText || 'No results found';
-      this.placeholder = options.placeholder || 'Select';
-      this.position = options.position || 'auto';
+      this.noOptionsText = options.noOptionsText;
+      this.placeholder = options.placeholder;
+      this.position = options.position;
       this.selectedValues = [];
       this.events = {};
       this.tooltipEnterDelay = 500;
       this.maximumValuesToShow = 50;
       this.transitionDuration = 250;
       this.searchValue = '';
-      this.optionsHeight = (this.optionsCount * this.optionHeight) + 'px';
+      this.optionsHeight = this.optionsCount * this.optionHeight + 'px';
       this.$ele = options.ele;
 
       if (options.search === undefined && this.multiple) {
@@ -59,13 +70,13 @@ export class VirtualSelect {
       this.render();
       this.addEvents();
       this.setMethods();
-    } catch(e) {
+    } catch (e) {
       console.warn(`Couldn't initiate Virtual Select`);
       console.error(e);
     }
   }
 
-  /* render - start */
+  /** render methods - start */
   render() {
     if (!this.$ele) {
       return;
@@ -75,10 +86,6 @@ export class VirtualSelect {
     let optionsStyleText = this.getStyleText({
       'max-height': this.optionsHeight,
     });
-
-    if (optionsStyleText) {
-      optionsStyleText = `style="${optionsStyleText}"`;
-    }
 
     if (this.multiple) {
       wrapperClasses += ' multiple';
@@ -96,7 +103,7 @@ export class VirtualSelect {
         <div class="vscomp-toggle-button">
           <div class="vscomp-value" data-tooltip-enter-delay="${this.tooltipEnterDelay}">${this.placeholder}</div>
           <div class="vscomp-arrow"></div>
-          <div class="vscomp-clear-button toggle-button-child" data-tooltip-enter-delay="${this.tooltipEnterDelay}" data-tooltip="Clear">&times;</div>
+          <div class="vscomp-clear-button toggle-button-child" data-tooltip-enter-delay="${this.tooltipEnterDelay}" data-tooltip="Clear"></div>
         </div>
         <div class="vscomp-dropbox">
           <div class="vscomp-search-wrapper"></div>
@@ -120,6 +127,7 @@ export class VirtualSelect {
     this.$options = this.$ele.querySelector('.vscomp-options');
     this.$valueText = this.$ele.querySelector('.vscomp-value');
 
+    this.addClass(this.$ele, 'vscomp-ele');
     this.renderSearch();
     this.setOptionsHeight();
     this.setVisibleOptions();
@@ -134,15 +142,11 @@ export class VirtualSelect {
       height: this.optionHeight + 'px',
     });
 
-    if (styleText) {
-      styleText = `style="${styleText}"`;
-    }
-
     if (this.multiple) {
       checkboxHtml = '<span class="checkbox-icon"></span>';
     }
 
-    visibleOptions.forEach(d => {
+    visibleOptions.forEach((d) => {
       let optionLabel = d[labelKey];
       let optionClasses = 'vscomp-option';
 
@@ -198,9 +202,9 @@ export class VirtualSelect {
     this.addEvent(this.$searchClear, 'click', 'onSearchClear');
     this.addEvent(this.$toggleAllOptions, 'click', 'onToggleAllOptions');
   }
-  /* render - end */
+  /** render methods - end */
 
-  /* events - start */
+  /** event methods - start */
   addEvents() {
     this.addEvent(document, 'click', 'onDocumentClick');
     this.addEvent(this.$wrapper, 'keydown', 'onKeyDown');
@@ -209,6 +213,7 @@ export class VirtualSelect {
     this.addEvent(this.$optionsContainer, 'scroll', 'onOptionsScroll');
     this.addEvent(this.$options, 'click', 'onOptionsClick');
     this.addEvent(this.$options, 'mouseover', 'onOptionsMouseOver');
+    this.addEvent(this.$options, 'touchmove', 'onOptionsTouchMove');
   }
 
   addEvent($ele, events, method) {
@@ -218,18 +223,18 @@ export class VirtualSelect {
 
     events = this.removeArrayEmpty(events.split(' '));
 
-    events.forEach(event => {
+    events.forEach((event) => {
       let eventsKey = `${method}-${event}`;
       let callback = this.events[eventsKey];
-  
+
       if (!callback) {
         callback = this[method].bind(this);
         this.events[eventsKey] = callback;
       }
-  
+
       $ele = this.getElements($ele);
-  
-      $ele.forEach(_this => {
+
+      $ele.forEach((_this) => {
         _this.addEventListener(event, callback);
       });
     });
@@ -242,7 +247,7 @@ export class VirtualSelect {
 
     $ele = this.getElements($ele);
 
-    $ele.forEach(_this => {
+    $ele.forEach((_this) => {
       _this.dispatchEvent(new Event(eventName));
     });
   }
@@ -254,7 +259,7 @@ export class VirtualSelect {
   onKeyDown(e) {
     let key = e.which || e.keyCode;
     let method = keyDownMethodMapping[key];
-    
+
     if (method) {
       this[method](e);
     }
@@ -324,6 +329,10 @@ export class VirtualSelect {
     }
   }
 
+  onOptionsTouchMove() {
+    this.removeOptionFocus();
+  }
+
   onSearch(e) {
     e.stopPropagation();
     this.setSearchValue(e.target.value, true);
@@ -337,259 +346,9 @@ export class VirtualSelect {
   onToggleAllOptions() {
     this.toggleAllOptions();
   }
-  /* events - end */
+  /** event methods - end */
 
-  openDropbox(isSilent) {
-    this.setDropboxPosition();
-    this.removeClass(this.$wrapper, 'closed');
-
-    setTimeout(() => {
-      this.addClass(this.$wrapper, 'opened');
-
-      if (!isSilent) {
-        this.addClass(this.$wrapper, 'focused');
-      }
-
-      this.focusSearchInput();
-    }, 0);
-  }
-
-  closeDropbox(isSilent) {
-    let transitionDuration = isSilent ? 0 : this.transitionDuration;
-
-    setTimeout(() => {
-      this.removeClass(this.$wrapper, 'opened focused');
-      this.removeOptionFocus();
-    }, 0);
-
-    setTimeout(() => {
-      this.addClass(this.$wrapper, 'closed');
-    }, transitionDuration);
-  }
-
-  toggleDropbox() {
-    if (this.isOpened()) {
-      this.closeDropbox();
-    } else {
-      this.openDropbox();
-    }
-  }
-
-  isOpened() {
-    return this.hasClass(this.$wrapper, 'opened');
-  }
-
-  focusSearchInput() {
-    let $ele = this.$searchInput;
-
-    if ($ele) {
-      $ele.focus();
-    }
-  }
-
-  focusOption(direction, ele) {
-    let $focusedEle = this.$dropbox.querySelector('.vscomp-option.focused');
-    let $newFocusedEle;
-
-    if (ele) {
-      $newFocusedEle = ele;
-    } else if (!$focusedEle) {
-      /* if no element on focus choose first visible one */
-      let firstVisibleOptionIndex = this.getFirstVisibleOptionIndex();
-      $newFocusedEle = this.$dropbox.querySelector(`.vscomp-option[data-index="${firstVisibleOptionIndex}"]`);
-
-      if (this.hasClass($newFocusedEle, 'disabled')) {
-        $newFocusedEle = this.getSibling($newFocusedEle, 'next');
-      }
-    } else {
-      $newFocusedEle = this.getSibling($focusedEle, direction);
-    }
-
-    if ($newFocusedEle && $newFocusedEle !== $focusedEle) {
-      if ($focusedEle) {
-        this.removeClass($focusedEle, 'focused');
-      }
-
-      this.addClass($newFocusedEle, 'focused');
-      this.toggleFocusedProp(this.getData($newFocusedEle, 'index'), true);
-      this.moveFocusedOptionToView($newFocusedEle);
-    }
-  }
-
-  getSibling($ele, direction) {
-    let propName = direction === 'next' ? 'nextElementSibling' : 'previousElementSibling';
-
-    do {
-      if ($ele) {
-        $ele = $ele[propName];
-      }
-    } while(this.hasClass($ele, 'disabled'));
-
-    return $ele;
-  }
-
-  moveFocusedOptionToView($focusedEle) {
-    if (!$focusedEle) {
-      $focusedEle = this.$dropbox.querySelector('.vscomp-option.focused');
-    }
-
-    if (!$focusedEle) {
-      return;
-    }
-
-    let newScrollTop;
-    let containerRect = this.$optionsContainer.getBoundingClientRect();
-    let optionRect = $focusedEle.getBoundingClientRect();
-    let containerTop = containerRect.top;
-    let containerBottom = containerRect.bottom;
-    let containerHeight = containerRect.height;
-    let optionTop = optionRect.top;
-    let optionBottom = optionRect.bottom;
-    let optionHeight = optionRect.height;
-    let optionOffsetTop = $focusedEle.offsetTop;
-    let optionsTop = this.getData(this.$options, 'top', 'number');
-
-    /* if option hidden on top */
-    if (containerTop > optionTop) {
-      newScrollTop = optionOffsetTop + optionsTop;
-    } else if (containerBottom < optionBottom) {
-      /* if option hidden on bottom */
-      newScrollTop = optionOffsetTop - containerHeight + optionHeight + optionsTop;
-    }
-
-    if (newScrollTop !== undefined) {
-      this.$optionsContainer.scrollTop = newScrollTop;
-    }
-  }
-
-  removeOptionFocus() {
-    let $focusedEle = this.$dropbox.querySelector('.vscomp-option.focused');
-
-    if (!$focusedEle) {
-      return;
-    }
-
-    this.removeClass($focusedEle, 'focused');
-    this.toggleFocusedProp(null);
-  }
-
-  selectOption($ele) {
-    if (!$ele) {
-      return;
-    }
-
-    let isAdding = !this.hasClass($ele, 'selected');
-
-    if (!isAdding && !this.multiple) {
-      return;
-    }
-
-    let selectedValues = this.selectedValues;
-    let selectedValue = this.getData($ele, 'value');
-    let selectedIndex = this.getData($ele, 'index');
-
-    this.toggleSelectedProp(selectedIndex, isAdding);
-
-    if (isAdding) {
-      if (this.multiple) {
-        selectedValues.push(selectedValue);
-        this.toggleAllOptionsClass();
-      } else {
-        let $prevSelectedOption = this.$ele.querySelector('.vscomp-option.selected');
-        selectedValues = [selectedValue];
-        this.closeDropbox();
-        
-        if ($prevSelectedOption) {
-          this.toggleClass($prevSelectedOption, 'selected', false);
-          this.toggleSelectedProp(this.getData($prevSelectedOption, 'index'), false);
-        }
-      }
-
-      this.toggleClass($ele, 'selected');
-    } else {
-      if (this.multiple) {
-        this.toggleClass($ele, 'selected');
-        this.removeItemFromArray(selectedValues, selectedValue);
-        this.toggleAllOptionsClass(false);
-      }
-    }
-
-    this.setValue(selectedValues, true);
-  }
-
-  selectFocusedOption() {
-    this.selectOption(this.$dropbox.querySelector('.vscomp-option.focused'));
-  }
-
-  toggleAllOptions(isSelected) {
-    if (typeof isSelected !== 'boolean') {
-      isSelected = !this.hasClass(this.$toggleAllOptions, 'checked');
-    }
-
-    let selectedValues = [];
-
-    this.options.forEach(d => {
-      if (d.isDisabled) {
-        return;
-      }
-
-      d.isSelected = isSelected;
-
-      if (isSelected) {
-        selectedValues.push(d.value);
-      }
-    });
-
-    this.setValue(selectedValues, true);
-    this.toggleAllOptionsClass(isSelected);
-    this.renderOptions();
-  }
-
-  toggleAllOptionsClass(isAllSelected) {
-    if (typeof isAllSelected !== 'boolean') {
-      isAllSelected = false;
-
-      if (this.options.length) {
-        isAllSelected = !this.options.some(d => {
-          return !d.isSelected && !d.isDisabled;
-        });
-      }
-    }
-
-    this.toggleClass(this.$toggleAllOptions, 'checked', isAllSelected);
-  }
-
-  toggleFocusedProp(index, isFocused = false) {
-    if (this.focusedOptionIndex) {
-      this.setOptionProp(this.focusedOptionIndex, 'isFocused', false);
-    }
-
-    this.setOptionProp(index, 'isFocused', isFocused);
-    this.focusedOptionIndex = index;
-  }
-
-  toggleSelectedProp(index, isSelected = false) {
-    this.setOptionProp(index, 'isSelected', isSelected);
-  }
-
-  scrollToTop() {
-    let isClosed = !this.isOpened();
-    
-    if (isClosed) {
-      this.openDropbox(true);
-    }
-
-    let scrollTop = this.$optionsContainer.scrollTop;
-
-    if (scrollTop > 0) {
-      this.$optionsContainer.scrollTop = 0;
-    }
-
-    if (isClosed) {
-      this.closeDropbox(true);
-    }
-  }
-
+  /** set methods - start */
   setMethods() {
     let $ele = this.$ele;
     $ele.virtualSelect = this;
@@ -605,13 +364,13 @@ export class VirtualSelect {
       value = [value];
     }
 
-    value = value.map(v => {
-      return (v || v == 0) ? v.toString() : '';
+    value = value.map((v) => {
+      return v || v == 0 ? v.toString() : '';
     });
 
     let validValues = [];
 
-    this.options.forEach(d => {
+    this.options.forEach((d) => {
       let isSelected = value.indexOf(d.value) !== -1;
 
       if (isSelected && !d.isDisabled) {
@@ -643,24 +402,8 @@ export class VirtualSelect {
     this.setVisibleOptions();
   }
 
-  reset() {
-    this.options.forEach(d => {
-      d.isSelected = false;
-    });
-
-    this.setValue(null, true);
-    this.afterValueSet(true);
-  }
-
-  afterValueSet(isReset) {
-    this.scrollToTop();
-    this.toggleAllOptionsClass(isReset ? false : undefined);
-    this.setSearchValue('');
-    this.renderOptions();
-  }
-
   setDisabledOptions(disabledOptions = [], setOptionsProp = false) {
-    disabledOptions = disabledOptions.map(d => d.toString());
+    disabledOptions = disabledOptions.map((d) => d.toString());
     this.disabledOptions = disabledOptions;
 
     if (setOptionsProp && disabledOptions.length) {
@@ -739,7 +482,7 @@ export class VirtualSelect {
       this.selectedValues = [value];
     }
 
-    this.$ele.value = this.multiple ? this.selectedValues : (this.selectedValues[0] || '');
+    this.$ele.value = this.multiple ? this.selectedValues : this.selectedValues[0] || '';
     this.setValueText();
     this.toggleClass(this.$wrapper, 'has-value', this.isNotEmpty(this.selectedValues));
 
@@ -753,7 +496,7 @@ export class VirtualSelect {
     let valueTooltip = [];
     let selectedValue = this.selectedValues;
     let maximumValuesToShow = this.maximumValuesToShow;
-    
+
     let selectedValuesCount = 0;
 
     for (let d of this.options) {
@@ -771,12 +514,12 @@ export class VirtualSelect {
       }
     }
 
-    let moreSelectedOptions =  selectedValue.length - maximumValuesToShow;
+    let moreSelectedOptions = selectedValue.length - maximumValuesToShow;
 
     if (moreSelectedOptions > 0) {
       valueTooltip.push(`<span class="vscomp-value-tag">+ ${moreSelectedOptions} more...</span>`);
     }
-    
+
     this.$valueText.innerHTML = valueText.join(', ') || this.placeholder;
     this.setData(this.$valueText, 'tooltip', valueTooltip.join(', '));
   }
@@ -820,14 +563,8 @@ export class VirtualSelect {
     this.options[index][key] = value;
   }
 
-  setData($ele, name, value) {
-    if ($ele) {
-      $ele.dataset[name] = value;
-    }
-  }
-
   setOptionsHeight() {
-    this.$optionsList.style.height = (this.optionHeight * this.visibleOptionsCount) + 'px';
+    this.$optionsList.style.height = this.optionHeight * this.visibleOptionsCount + 'px';
   }
 
   setDropboxPosition() {
@@ -838,51 +575,15 @@ export class VirtualSelect {
     let moreVisibleSides = this.getMoreVisibleSides(this.$wrapper);
     this.toggleClass(this.$wrapper, 'position-top', moreVisibleSides.vertical === 'top');
   }
+  /** set methods - end */
 
+  /** get methods - start */
   getVisibleOptions() {
     return this.visibleOptions || [];
   }
 
   getValue() {
     return this.multiple ? this.selectedValues : this.selectedValues[0];
-  }
-
-  getStyleText(props) {
-    let result = '';
-
-    for (let k in props) {
-      result += `${k}: ${props[k]};`;
-    }
-
-    return result;
-  }
-
-  getElements($ele) {
-    if (!$ele) {
-      return;
-    }
-
-    if ($ele.length === undefined) {
-      $ele = [$ele];
-    }
-
-    return $ele;
-  }
-
-  getData($ele, name, type) {
-    let value = $ele ? $ele.dataset[name] : '';
-
-    if (type === 'number') {
-      value = parseFloat(value) || 0;
-    } else {
-      if (value === 'true') {
-        value = true;
-      } else if (value === 'false') {
-        value = false;
-      }
-    }
-
-    return value;
   }
 
   getFirstVisibleOptionIndex() {
@@ -899,8 +600,264 @@ export class VirtualSelect {
 
     return startIndex;
   }
-  /* helpers - start */
+  /** get methods - end */
 
+  openDropbox(isSilent) {
+    this.setDropboxPosition();
+    this.removeClass(this.$wrapper, 'closed');
+
+    setTimeout(() => {
+      this.addClass(this.$wrapper, 'opened');
+
+      if (!isSilent) {
+        this.addClass(this.$wrapper, 'focused');
+      }
+
+      this.focusSearchInput();
+    }, 0);
+  }
+
+  closeDropbox(isSilent) {
+    let transitionDuration = isSilent ? 0 : this.transitionDuration;
+
+    setTimeout(() => {
+      this.removeClass(this.$wrapper, 'opened focused');
+      this.removeOptionFocus();
+    }, 0);
+
+    setTimeout(() => {
+      this.addClass(this.$wrapper, 'closed');
+    }, transitionDuration);
+  }
+
+  toggleDropbox() {
+    if (this.isOpened()) {
+      this.closeDropbox();
+    } else {
+      this.openDropbox();
+    }
+  }
+
+  isOpened() {
+    return this.hasClass(this.$wrapper, 'opened');
+  }
+
+  focusSearchInput() {
+    let $ele = this.$searchInput;
+
+    if ($ele) {
+      $ele.focus();
+    }
+  }
+
+  focusOption(direction, ele) {
+    let $focusedEle = this.$dropbox.querySelector('.vscomp-option.focused');
+    let $newFocusedEle;
+
+    if (ele) {
+      $newFocusedEle = ele;
+    } else if (!$focusedEle) {
+      /* if no element on focus choose first visible one */
+      let firstVisibleOptionIndex = this.getFirstVisibleOptionIndex();
+      $newFocusedEle = this.$dropbox.querySelector(`.vscomp-option[data-index="${firstVisibleOptionIndex}"]`);
+
+      if (this.hasClass($newFocusedEle, 'disabled')) {
+        $newFocusedEle = this.getSibling($newFocusedEle, 'next');
+      }
+    } else {
+      $newFocusedEle = this.getSibling($focusedEle, direction);
+    }
+
+    if ($newFocusedEle && $newFocusedEle !== $focusedEle) {
+      if ($focusedEle) {
+        this.removeClass($focusedEle, 'focused');
+      }
+
+      this.addClass($newFocusedEle, 'focused');
+      this.toggleFocusedProp(this.getData($newFocusedEle, 'index'), true);
+      this.moveFocusedOptionToView($newFocusedEle);
+    }
+  }
+
+  moveFocusedOptionToView($focusedEle) {
+    if (!$focusedEle) {
+      $focusedEle = this.$dropbox.querySelector('.vscomp-option.focused');
+    }
+
+    if (!$focusedEle) {
+      return;
+    }
+
+    let newScrollTop;
+    let containerRect = this.$optionsContainer.getBoundingClientRect();
+    let optionRect = $focusedEle.getBoundingClientRect();
+    let containerTop = containerRect.top;
+    let containerBottom = containerRect.bottom;
+    let containerHeight = containerRect.height;
+    let optionTop = optionRect.top;
+    let optionBottom = optionRect.bottom;
+    let optionHeight = optionRect.height;
+    let optionOffsetTop = $focusedEle.offsetTop;
+    let optionsTop = this.getData(this.$options, 'top', 'number');
+
+    /* if option hidden on top */
+    if (containerTop > optionTop) {
+      newScrollTop = optionOffsetTop + optionsTop;
+    } else if (containerBottom < optionBottom) {
+      /* if option hidden on bottom */
+      newScrollTop = optionOffsetTop - containerHeight + optionHeight + optionsTop;
+    }
+
+    if (newScrollTop !== undefined) {
+      this.$optionsContainer.scrollTop = newScrollTop;
+    }
+  }
+
+  removeOptionFocus() {
+    let $focusedEle = this.$dropbox.querySelector('.vscomp-option.focused');
+
+    if (!$focusedEle) {
+      return;
+    }
+
+    this.removeClass($focusedEle, 'focused');
+    this.toggleFocusedProp(null);
+  }
+
+  selectOption($ele) {
+    if (!$ele) {
+      return;
+    }
+
+    let isAdding = !this.hasClass($ele, 'selected');
+
+    if (!isAdding && !this.multiple) {
+      return;
+    }
+
+    let selectedValues = this.selectedValues;
+    let selectedValue = this.getData($ele, 'value');
+    let selectedIndex = this.getData($ele, 'index');
+
+    this.toggleSelectedProp(selectedIndex, isAdding);
+
+    if (isAdding) {
+      if (this.multiple) {
+        selectedValues.push(selectedValue);
+        this.toggleAllOptionsClass();
+      } else {
+        let $prevSelectedOption = this.$ele.querySelector('.vscomp-option.selected');
+        selectedValues = [selectedValue];
+        this.closeDropbox();
+
+        if ($prevSelectedOption) {
+          this.toggleClass($prevSelectedOption, 'selected', false);
+          this.toggleSelectedProp(this.getData($prevSelectedOption, 'index'), false);
+        }
+      }
+
+      this.toggleClass($ele, 'selected');
+    } else {
+      if (this.multiple) {
+        this.toggleClass($ele, 'selected');
+        this.removeItemFromArray(selectedValues, selectedValue);
+        this.toggleAllOptionsClass(false);
+      }
+    }
+
+    this.setValue(selectedValues, true);
+  }
+
+  selectFocusedOption() {
+    this.selectOption(this.$dropbox.querySelector('.vscomp-option.focused'));
+  }
+
+  toggleAllOptions(isSelected) {
+    if (typeof isSelected !== 'boolean') {
+      isSelected = !this.hasClass(this.$toggleAllOptions, 'checked');
+    }
+
+    let selectedValues = [];
+
+    this.options.forEach((d) => {
+      if (d.isDisabled) {
+        return;
+      }
+
+      d.isSelected = isSelected;
+
+      if (isSelected) {
+        selectedValues.push(d.value);
+      }
+    });
+
+    this.setValue(selectedValues, true);
+    this.toggleAllOptionsClass(isSelected);
+    this.renderOptions();
+  }
+
+  toggleAllOptionsClass(isAllSelected) {
+    if (typeof isAllSelected !== 'boolean') {
+      isAllSelected = false;
+
+      if (this.options.length) {
+        isAllSelected = !this.options.some((d) => {
+          return !d.isSelected && !d.isDisabled;
+        });
+      }
+    }
+
+    this.toggleClass(this.$toggleAllOptions, 'checked', isAllSelected);
+  }
+
+  toggleFocusedProp(index, isFocused = false) {
+    if (this.focusedOptionIndex) {
+      this.setOptionProp(this.focusedOptionIndex, 'isFocused', false);
+    }
+
+    this.setOptionProp(index, 'isFocused', isFocused);
+    this.focusedOptionIndex = index;
+  }
+
+  toggleSelectedProp(index, isSelected = false) {
+    this.setOptionProp(index, 'isSelected', isSelected);
+  }
+
+  scrollToTop() {
+    let isClosed = !this.isOpened();
+
+    if (isClosed) {
+      this.openDropbox(true);
+    }
+
+    let scrollTop = this.$optionsContainer.scrollTop;
+
+    if (scrollTop > 0) {
+      this.$optionsContainer.scrollTop = 0;
+    }
+
+    if (isClosed) {
+      this.closeDropbox(true);
+    }
+  }
+
+  reset() {
+    this.options.forEach((d) => {
+      d.isSelected = false;
+    });
+
+    this.setValue(null, true);
+    this.afterValueSet(true);
+  }
+
+  afterValueSet(isReset) {
+    this.scrollToTop();
+    this.toggleAllOptionsClass(isReset ? false : undefined);
+    this.setSearchValue('');
+    this.renderOptions();
+  }
+
+  /** helper methods - start */
   addClass($ele, className) {
     if (!$ele) {
       return;
@@ -908,7 +865,7 @@ export class VirtualSelect {
 
     className = className.split(' ');
 
-    this.getElements($ele).forEach(_this => {
+    this.getElements($ele).forEach((_this) => {
       _this.classList.add(...className);
     });
   }
@@ -920,7 +877,7 @@ export class VirtualSelect {
 
     className = className.split(' ');
 
-    this.getElements($ele).forEach(_this => {
+    this.getElements($ele).forEach((_this) => {
       _this.classList.remove(...className);
     });
   }
@@ -936,10 +893,10 @@ export class VirtualSelect {
 
     let isAdded;
 
-    this.getElements($ele).forEach(_this => {
+    this.getElements($ele).forEach((_this) => {
       isAdded = _this.classList.toggle(className, isAdd);
     });
-    
+
     return isAdded;
   }
 
@@ -960,7 +917,7 @@ export class VirtualSelect {
       if (value.length === 0) {
         result = true;
       }
-    } else if (typeof(value) === 'object') {
+    } else if (typeof value === 'object') {
       if (Object.keys(value).length === 0) {
         result = true;
       }
@@ -971,6 +928,60 @@ export class VirtualSelect {
 
   isNotEmpty(value) {
     return !this.isEmpty(value);
+  }
+
+  setData($ele, name, value) {
+    if (!$ele) {
+      return;
+    }
+
+    $ele.dataset[name] = value;
+  }
+
+  getStyleText(props, skipAttrName) {
+    let result = '';
+
+    for (let k in props) {
+      result += `${k}: ${props[k]};`;
+    }
+
+    if (result && !skipAttrName) {
+      result = `style="${result}"`;
+    }
+
+    return result;
+  }
+
+  getElements($ele) {
+    if (!$ele) {
+      return;
+    }
+
+    if ($ele.length === undefined) {
+      $ele = [$ele];
+    }
+
+    return $ele;
+  }
+
+  getData($ele, name, type) {
+    if (!$ele) {
+      return;
+    }
+
+    let value = $ele ? $ele.dataset[name] : '';
+
+    if (type === 'number') {
+      value = parseFloat(value) || 0;
+    } else {
+      if (value === 'true') {
+        value = true;
+      } else if (value === 'false') {
+        value = false;
+      }
+    }
+
+    return value;
   }
 
   removeItemFromArray(array, value, cloneArray) {
@@ -996,7 +1007,7 @@ export class VirtualSelect {
       return [];
     }
 
-    return array.filter(d => !!d);
+    return array.filter((d) => !!d);
   }
 
   getMoreVisibleSides($ele) {
@@ -1019,9 +1030,21 @@ export class VirtualSelect {
       vertical,
     };
   }
-  /* helpers - end */
 
-  /* static methods - start */
+  getSibling($ele, direction) {
+    let propName = direction === 'next' ? 'nextElementSibling' : 'previousElementSibling';
+
+    do {
+      if ($ele) {
+        $ele = $ele[propName];
+      }
+    } while (this.hasClass($ele, 'disabled'));
+
+    return $ele;
+  }
+  /** helper methods - end */
+
+  /** static methods - start */
   static init(options) {
     let $eleArray = options.ele;
 
@@ -1031,7 +1054,7 @@ export class VirtualSelect {
 
     let singleEle = false;
 
-    if (typeof($eleArray) === 'string') {
+    if (typeof $eleArray === 'string') {
       $eleArray = document.querySelector($eleArray);
 
       if (!$eleArray) {
@@ -1054,7 +1077,7 @@ export class VirtualSelect {
   }
 
   static closeAllDropbox($eleToKeepOpen) {
-    document.querySelectorAll('.vscomp-wrapper').forEach($ele => {
+    document.querySelectorAll('.vscomp-wrapper').forEach(($ele) => {
       if ($eleToKeepOpen && $eleToKeepOpen === $ele) {
         return;
       }
@@ -1070,7 +1093,7 @@ export class VirtualSelect {
       return;
     }
 
-    $form.querySelectorAll('.vscomp-wrapper').forEach($ele => {
+    $form.querySelectorAll('.vscomp-wrapper').forEach(($ele) => {
       $ele.parentElement.virtualSelect.reset();
     });
   }
@@ -1090,7 +1113,7 @@ export class VirtualSelect {
   static setDisabledOptionsMethod(options) {
     this.virtualSelect.setDisabledOptionsMethod(options);
   }
-  /* static methods - start */
+  /** static methods - start */
 }
 
 document.addEventListener('reset', VirtualSelect.resetForm);
