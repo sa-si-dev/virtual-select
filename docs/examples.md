@@ -52,6 +52,29 @@ VirtualSelect.init({
 });
 ```
 
+## Preselect value
+
+<div id="preselect-single-select"></div>
+
+```js
+VirtualSelect.init({
+  ...
+  selectedValue: 3,
+});
+```
+
+## Preselect multiple values
+
+<div id="preselect-multiple-select"></div>
+
+```js
+VirtualSelect.init({
+  ...
+  multiple: true,
+  selectedValue: [3, 4],
+});
+```
+
 ## Hide clear button
 
 <div id="hide-clear-select"></div>
@@ -60,6 +83,17 @@ VirtualSelect.init({
 VirtualSelect.init({
   ...
   hideClearButton: true,
+});
+```
+
+## Custom width for dropbox
+
+<div id="custom-width-select"></div>
+
+```js
+VirtualSelect.init({
+  ...
+  dropboxWidth: '130px',
 });
 ```
 

@@ -151,6 +151,7 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   overflow: hidden;
+  width: calc(100% - #{$checkboxFullWidth});
 }
 
 .vscomp-search-container {
@@ -191,7 +192,7 @@
   }
 }
 
-.vscomp-no-options {
+.vscomp-no-options, .vscomp-no-search-results {
   display: none;
   text-align: center;
   padding: 20px 10px;
@@ -207,6 +208,7 @@
 
     &::after {
       content: '';
+      display: inline-block;
       width: 100%;
       height: 100%;
       border: 2px solid $checkboxColor;
@@ -225,6 +227,13 @@
       bottom: calc(100% + #{$dropboxMargin});
       -webkit-transform: translate3d(0, $transitionDistance, 0);
       transform: translate3d(0, $transitionDistance, 0);
+    }
+  }
+
+  &.position-left {
+    .vscomp-dropbox {
+      right: 0;
+      left: auto;
     }
   }
 
@@ -289,12 +298,20 @@
     }
   }
 
-  &.has-no-options {
+  &.has-no-options, &.has-no-search-results {
     .vscomp-options-container {
       display: none;
     }
-    
+  }
+
+  &.has-no-options {
     .vscomp-no-options {
+      display: block;
+    }
+  }
+
+  &.has-no-search-results {
+    .vscomp-no-search-results {
       display: block;
     }
   }

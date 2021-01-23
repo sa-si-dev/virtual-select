@@ -109,8 +109,27 @@ function initPageExamples() {
   });
 
   VirtualSelect.init({
+    ele: '#preselect-single-select',
+    options: getOptions(),
+    selectedValue: 3,
+  });
+
+  VirtualSelect.init({
+    ele: '#preselect-multiple-select',
+    options: getOptions(),
+    multiple: true,
+    selectedValue: [3, 4],
+  });
+
+  VirtualSelect.init({
     ele: '#hide-clear-select',
     options: getOptions(),
     hideClearButton: true,
+  });
+
+  VirtualSelect.init({
+    ele: '#custom-width-select',
+    options: getOptions(),
+    dropboxWidth: '130px',
   });
 }

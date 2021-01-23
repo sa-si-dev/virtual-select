@@ -22,8 +22,13 @@ export class VirtualSelect {
    * @property {string} [optionHeight=40px] - Height of each dropdown options
    * @property {string} [position=auto] - Position of dropbox (top, bottom, auto)
    * @property {string} [placeholder=Select] - Text to show when no options selected
-   * @property {string} [noOptionsText=No results found] - Text to show when no options to show
+   * @property {string} [noOptionsText=No options found] - Text to show when no options to show
+   * @property {string} [noSearchResultsText=No results found] - Text to show when no results on search
    * @property {array} [disabledOptions] - Options to disable (array of values)
+   * @property {(string|array)} [selectedValue] - Single value or array of values to select on init
+   * @property {boolean} [silentInitialValueSet=false] - To avoid "change event" trigger on setting initial value
+   * @property {string} [dropboxWidth] - Custom width for dropbox
+   * @property {number} [zIndex=1] - CSS z-index value for dropbox
    */
   constructor(options) {
     try {
@@ -34,9 +39,11 @@ export class VirtualSelect {
         optionHeight: '40px',
         multiple: false,
         hideClearButton: false,
-        noOptionsText: 'No results found',
+        noOptionsText: 'No options found',
+        noSearchResultsText: 'No results found',
         placeholder: 'Select',
         position: 'auto',
+        zIndex: 1,
       };
 
       options = Object.assign(defaultOptions, options);
@@ -50,14 +57,18 @@ export class VirtualSelect {
       this.hasSearch = options.search ? true : false;
       this.hideClearButton = options.hideClearButton ? true : false;
       this.noOptionsText = options.noOptionsText;
+      this.noSearchResultsText = options.noSearchResultsText;
       this.placeholder = options.placeholder;
       this.position = options.position;
+      this.dropboxWidth = options.dropboxWidth;
+      this.zIndex = options.zIndex;
       this.selectedValues = [];
       this.events = {};
-      this.tooltipEnterDelay = 500;
+      this.tooltipEnterDelay = 200;
       this.maximumValuesToShow = 50;
       this.transitionDuration = 250;
       this.searchValue = '';
+      this.isAllSelected = false;
       this.optionsHeight = this.optionsCount * this.optionHeight + 'px';
       this.$ele = options.ele;
 
@@ -70,6 +81,10 @@ export class VirtualSelect {
       this.render();
       this.addEvents();
       this.setMethods();
+
+      if (options.selectedValue) {
+        this.setValueMethod(options.selectedValue, options.silentInitialValueSet);
+      }
     } catch (e) {
       console.warn(`Couldn't initiate Virtual Select`);
       console.error(e);
@@ -83,9 +98,19 @@ export class VirtualSelect {
     }
 
     let wrapperClasses = 'vscomp-wrapper closed';
+    let valueTooltip = this.getTooltipAttrText('', true);
+    let clearButtonTooltip = this.getTooltipAttrText('Clear');
     let optionsStyleText = this.getStyleText({
       'max-height': this.optionsHeight,
     });
+
+    let dropboxStyle = {
+      'z-index': this.zIndex,
+    };
+
+    if (this.dropboxWidth) {
+      dropboxStyle.width = this.dropboxWidth;
+    }
 
     if (this.multiple) {
       wrapperClasses += ' multiple';
@@ -101,11 +126,14 @@ export class VirtualSelect {
 
     let html = `<div class="${wrapperClasses}" tabindex="0">
         <div class="vscomp-toggle-button">
-          <div class="vscomp-value" data-tooltip-enter-delay="${this.tooltipEnterDelay}">${this.placeholder}</div>
+          <div class="vscomp-value" ${valueTooltip}>
+            ${this.placeholder}
+          </div>
           <div class="vscomp-arrow"></div>
-          <div class="vscomp-clear-button toggle-button-child" data-tooltip-enter-delay="${this.tooltipEnterDelay}" data-tooltip="Clear"></div>
+          <div class="vscomp-clear-button toggle-button-child" ${clearButtonTooltip}>
+          </div>
         </div>
-        <div class="vscomp-dropbox">
+        <div class="vscomp-dropbox" ${this.getStyleText(dropboxStyle)}>
           <div class="vscomp-search-wrapper"></div>
           <div class="vscomp-options-container" ${optionsStyleText}>
             <div class="vscomp-options-list">
@@ -113,6 +141,7 @@ export class VirtualSelect {
             </div>
           </div>
           <div class="vscomp-no-options">${this.noOptionsText}</div>
+          <div class="vscomp-no-search-results">${this.noSearchResultsText}</div>
         </div>
       </div>`;
 
@@ -136,6 +165,8 @@ export class VirtualSelect {
   renderOptions() {
     let html = '';
     let labelKey = this.labelKey;
+    let zIndex = this.zIndex;
+    let tooltipEnterDelay = this.tooltipEnterDelay;
     let visibleOptions = this.getVisibleOptions();
     let checkboxHtml = '';
     let styleText = this.getStyleText({
@@ -149,6 +180,7 @@ export class VirtualSelect {
     visibleOptions.forEach((d) => {
       let optionLabel = d[labelKey];
       let optionClasses = 'vscomp-option';
+      let optionTooltip = this.getTooltipAttrText(optionLabel, true);
 
       if (d.isSelected) {
         optionClasses += ' selected';
@@ -162,16 +194,20 @@ export class VirtualSelect {
         optionClasses += ' disabled';
       }
 
-      html += `<div class="${optionClasses}" data-value="${d.value}" data-index="${d.index}" ${styleText}>
+      html += `<div class="${optionClasses}" data-value="${d.value}" data-index="${d.index}" data-visible-index="${d.visibleIndex}" ${styleText}>
           ${checkboxHtml}
-          <span class="vscomp-option-text" data-tooltip="${optionLabel}" data-tooltip-enter-delay="${this.tooltipEnterDelay}">
+          <span class="vscomp-option-text" ${optionTooltip}>
             ${optionLabel}
           </span>
         </div>`;
     });
 
     this.$options.innerHTML = html;
-    this.toggleClass(this.$wrapper, 'has-no-options', !visibleOptions.length);
+    let hasNoOptions = !this.options.length;
+    let hasNoSearchResults = !hasNoOptions && !visibleOptions.length;
+
+    this.toggleClass(this.$wrapper, 'has-no-options', hasNoOptions);
+    this.toggleClass(this.$wrapper, 'has-no-search-results', hasNoSearchResults);
     this.setOptionsPosition();
     this.moveFocusedOptionToView();
   }
@@ -248,7 +284,7 @@ export class VirtualSelect {
     $ele = this.getElements($ele);
 
     $ele.forEach((_this) => {
-      _this.dispatchEvent(new Event(eventName));
+      _this.dispatchEvent(new Event(eventName, { bubbles: true }));
     });
   }
 
@@ -357,6 +393,8 @@ export class VirtualSelect {
     $ele.setValue = VirtualSelect.setValueMethod;
     $ele.setOptions = VirtualSelect.setOptionsMethod;
     $ele.setDisabledOptions = VirtualSelect.setDisabledOptionsMethod;
+    $ele.toggleSelectAll = VirtualSelect.toggleSelectAll;
+    $ele.isAllSelected = VirtualSelect.isAllSelected;
   }
 
   setValueMethod(value, silentChange) {
@@ -428,16 +466,18 @@ export class VirtualSelect {
 
     this.options = options.map((d, i) => {
       let value = d[valueKey].toString();
-      d.index = i;
-      d.value = value;
-      d.label = d[labelKey];
-      d.isVisible = true;
-
+      let option = {
+        index: i,
+        value,
+        label: d[labelKey],
+        isVisible: true,
+      };
+      
       if (hasDisabledOptions) {
-        d.isDisabled = disabledOptions.indexOf(value) !== -1;
+        option.isDisabled = disabledOptions.indexOf(value) !== -1;
       }
 
-      return d;
+      return option;
     });
   }
 
@@ -453,6 +493,7 @@ export class VirtualSelect {
 
       if (d.isVisible) {
         inView = i >= startIndex && i <= endIndex;
+        d.visibleIndex = i;
         i++;
       }
 
@@ -573,7 +614,23 @@ export class VirtualSelect {
     }
 
     let moreVisibleSides = this.getMoreVisibleSides(this.$wrapper);
+    let showOnLeft = false;
+
+    /** check that is dropbox hidden on right edge - only if custom width given */
+    if (this.dropboxWidth) {
+      let buttonCoords = this.$toggleButton.getBoundingClientRect();
+      let viewportWidth = window.innerWidth;
+      let dropboxWidth = parseFloat(this.dropboxWidth);
+      let hiddenOnRight = buttonCoords.left + dropboxWidth > viewportWidth;
+      let hiddenOnLeft = dropboxWidth > buttonCoords.right;
+      
+      if (hiddenOnRight && !hiddenOnLeft) {
+        showOnLeft = true;
+      }
+    }
+
     this.toggleClass(this.$wrapper, 'position-top', moreVisibleSides.vertical === 'top');
+    this.toggleClass(this.$wrapper, 'position-left', showOnLeft);
   }
   /** set methods - end */
 
@@ -600,6 +657,17 @@ export class VirtualSelect {
 
     return startIndex;
   }
+
+  getTooltipAttrText(text, ellipsisOnly) {
+    let data = {
+      'data-tooltip': text || '',
+      'data-tooltip-enter-delay': this.tooltipEnterDelay,
+      'data-tooltip-z-index': this.zIndex,
+      'data-tooltip-ellipsis-only': ellipsisOnly || false,
+    };
+
+    return this.getAttributesText(data);
+  }
   /** get methods - end */
 
   openDropbox(isSilent) {
@@ -611,9 +679,8 @@ export class VirtualSelect {
 
       if (!isSilent) {
         this.addClass(this.$wrapper, 'focused');
+        this.focusSearchInput();
       }
-
-      this.focusSearchInput();
     }, 0);
   }
 
@@ -659,7 +726,7 @@ export class VirtualSelect {
     } else if (!$focusedEle) {
       /* if no element on focus choose first visible one */
       let firstVisibleOptionIndex = this.getFirstVisibleOptionIndex();
-      $newFocusedEle = this.$dropbox.querySelector(`.vscomp-option[data-index="${firstVisibleOptionIndex}"]`);
+      $newFocusedEle = this.$dropbox.querySelector(`.vscomp-option[data-visible-index="${firstVisibleOptionIndex}"]`);
 
       if (this.hasClass($newFocusedEle, 'disabled')) {
         $newFocusedEle = this.getSibling($newFocusedEle, 'next');
@@ -731,7 +798,9 @@ export class VirtualSelect {
 
     let isAdding = !this.hasClass($ele, 'selected');
 
+    /** on selecting same value in single select */
     if (!isAdding && !this.multiple) {
+      this.closeDropbox();
       return;
     }
 
@@ -773,6 +842,10 @@ export class VirtualSelect {
   }
 
   toggleAllOptions(isSelected) {
+    if (!this.multiple) {
+      return;
+    }
+
     if (typeof isSelected !== 'boolean') {
       isSelected = !this.hasClass(this.$toggleAllOptions, 'checked');
     }
@@ -808,6 +881,7 @@ export class VirtualSelect {
     }
 
     this.toggleClass(this.$toggleAllOptions, 'checked', isAllSelected);
+    this.isAllSelected = isAllSelected;
   }
 
   toggleFocusedProp(index, isFocused = false) {
@@ -1042,6 +1116,20 @@ export class VirtualSelect {
 
     return $ele;
   }
+
+  getAttributesText(data) {
+    let html = '';
+  
+    if (!data) {
+      return html;
+    }
+  
+    for (let k in data) {
+      html +=  ` ${k}="${data[k]}" `;
+    }
+  
+    return html;
+  }
   /** helper methods - end */
 
   /** static methods - start */
@@ -1112,6 +1200,14 @@ export class VirtualSelect {
 
   static setDisabledOptionsMethod(options) {
     this.virtualSelect.setDisabledOptionsMethod(options);
+  }
+
+  static toggleSelectAll(isSelected) {
+    this.virtualSelect.toggleAllOptions(isSelected);
+  }
+
+  static isAllSelected() {
+    return this.virtualSelect.isAllSelected;
   }
   /** static methods - start */
 }

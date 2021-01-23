@@ -11,8 +11,8 @@ $('#sample-select').val();
 ### setValue()
 
 ```js
-var value = 3; /* for single select */
-var value = [2, 3]; /* for multi-select */
+var value = 3; /** for single select */
+var value = [2, 3]; /** for multi-select */
 
 document.querySelector('#sample-select').setValue(value);
 ```
@@ -41,4 +41,24 @@ document.querySelector('#sample-select').setOptions(options);
 var disabledOptions = [2, 6, 9];
 
 document.querySelector('#sample-select').setDisabledOptions(disabledOptions);
+```
+
+### toggleSelectAll()
+
+Select / Deselect all options
+
+```js
+/** select all options */
+document.querySelector('#sample-select').toggleSelectAll(true);
+
+/** deselect all options */
+document.querySelector('#sample-select').toggleSelectAll(false);
+```
+
+### isAllSelected()
+
+To check that if all options selected or not
+
+```js
+document.querySelector('#sample-select').isAllSelected();
 ```
