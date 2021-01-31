@@ -42,10 +42,6 @@
   text-overflow: ellipsis;
 }
 
-.vscomp-value-tag {
-  white-space: nowrap;
-}
-
 .vscomp-arrow {
   position: absolute;
   display: flex;
@@ -127,6 +123,7 @@
 
 .vscomp-option {
   display: flex;
+  position: relative;
   align-items: center;
   padding: 10px 15px;
   height: $optionHeight;
@@ -147,11 +144,43 @@
   }
 }
 
+.vscomp-new-option-icon {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: $newOptionIconWidth;
+  height: $newOptionIconWidth;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    border: #{$newOptionIconWidth / 2} solid $primaryColor;
+    border-left-color: transparent;
+    border-bottom-color: transparent;
+  }
+
+  &::after {
+    content: '+';
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    top: 0;
+    right: 1px;
+    font-size: 18px;
+    color: #fff;
+    width: #{$newOptionIconWidth / 2};
+    height: #{$newOptionIconWidth / 2};
+  }
+}
+
 .vscomp-option-text {
   text-overflow: ellipsis;
   white-space: nowrap;
   overflow: hidden;
-  width: calc(100% - #{$checkboxFullWidth});
+  width: 100%;
 }
 
 .vscomp-search-container {
@@ -256,6 +285,10 @@
     }
     
     .vscomp-option {
+      .vscomp-option-text {
+        width: calc(100% - #{$checkboxFullWidth});
+      }
+      
       &.selected .checkbox-icon::after {
         @include checkbox-checked;
       }
