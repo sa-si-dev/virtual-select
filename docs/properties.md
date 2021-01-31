@@ -20,3 +20,44 @@
 | silentInitialValueSet | Boolean | false | To avoid "change event" trigger on setting initial value |
 | dropboxWidth | String | | Custom width for dropbox |
 | zIndex | Number | 1 | CSS z-index value for dropbox |
+| noOfDisplayValues | Number | 50 | Maximum no.of values to show in the tooltip for multi-select |
+| allowNewOption | Boolean | false | Allow to add new option by searching |
+
+## Using properties on initialization
+
+```js
+VirtualSelect.init({
+  ...
+  valueKey: 'id',
+  search: true,
+  ...
+});
+```
+
+
+## Using properties as DOM attributes
+
+To use an property as an attribute, property name should be `hyphenated` and prefixed with `data-*` (e.g. `noOptionsText` => `data-no-options-text`)
+
+```html
+<div id="sample-select"
+  multiple
+  placeholder="Select country"
+  data-value-key="id"
+  data-search="true"
+></div>
+```
+
+<br>
+
+**Following properties are not allowed to use as attribute**
+- ele
+- options
+- disabledOptions
+- selectedValue
+
+<br>
+
+**Following properties should be used without `data-*` as prefix**
+- multiple
+- placeholder

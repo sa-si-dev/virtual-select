@@ -132,4 +132,10 @@ function initPageExamples() {
     options: getOptions(),
     dropboxWidth: '130px',
   });
+
+  VirtualSelect.init({
+    ele: '#new-option-select',
+    options: getOptions(3),
+    allowNewOption: true,
+  });
 }

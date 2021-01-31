@@ -97,6 +97,19 @@ VirtualSelect.init({
 });
 ```
 
+## Allow to add new option
+
+To add new option, enter new value in the search box.
+
+<div id="new-option-select"></div>
+
+```js
+VirtualSelect.init({
+  ...
+  allowNewOption: true,
+});
+```
+
 <script>
   initPageExamples();
 </script>
