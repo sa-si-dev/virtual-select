@@ -110,6 +110,17 @@ VirtualSelect.init({
 });
 ```
 
+## Mark matched term in label
+
+<div id="mark-results-select"></div>
+
+```js
+VirtualSelect.init({
+  ...
+  markSearchResults: true,
+});
+```
+
 <script>
   initPageExamples();
 </script>
