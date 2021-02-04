@@ -141,7 +141,7 @@ function initPageExamples() {
 
   VirtualSelect.init({
     ele: '#mark-results-select',
-    options: getOptions(0),
+    options: getOptions(),
     markSearchResults: true,
   });
 }
