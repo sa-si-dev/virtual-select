@@ -674,6 +674,7 @@ export class VirtualSelect {
       this.$searchInput.value = value;
     }
 
+    const markSearchResults = this.markSearchResults;
     let searchValue = value.toLowerCase().trim();
     let visibleOptionsCount = 0;
     let hasExactOption = false;
@@ -685,7 +686,7 @@ export class VirtualSelect {
         return;
       }
 
-      if (this.markSearchResults) {
+      if (markSearchResults) {
         /** remove previous modifications to the label */
         d.label = d.label.replace(/<\/*mark>/g, '');
       }
@@ -696,7 +697,7 @@ export class VirtualSelect {
 
       if (isVisible) {
         visibleOptionsCount++;
-        if (this.markSearchResults) {
+        if (markSearchResults) {
           const index = value.indexOf(searchValue);
           d.label = d.label.substr(0, index) + '<mark>' + d.label.substr(index, searchValue.length) + '</mark>' + d.label.substr(index + searchValue.length);
         }
