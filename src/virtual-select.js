@@ -694,7 +694,7 @@ export class VirtualSelect {
 
       if (markSearchResults) {
         /** remove previous modifications to the label */
-        d.label = d.label.replace(/<\/*mark>/g, '');
+        d.label = d.label.replace(/<\/?mark.*?>/g, '');
       }
 
       const value = d.label.toString().toLowerCase();
@@ -710,7 +710,7 @@ export class VirtualSelect {
             d.label = d.label.replace(new RegExp(`(${searchValue})`, 'gi'), `<mark>$1</mark>`);
           } else if (matchedTerms) {
             /** if we didn't match the label but matched any of the terms mark the entire label */
-            d.label = `<mark>${d.label}</mark>`;
+            d.label = `<mark class="vscomp-termsmatch">${d.label}</mark>`;
           }
         }
       }
