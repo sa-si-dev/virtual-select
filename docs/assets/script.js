@@ -138,4 +138,10 @@ function initPageExamples() {
     options: getOptions(3),
     allowNewOption: true,
   });
+
+  VirtualSelect.init({
+    ele: '#mark-results-select',
+    options: getOptions(),
+    markSearchResults: true,
+  });
 }

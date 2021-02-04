@@ -31,6 +31,7 @@ export class VirtualSelect {
    * @property {number} [zIndex=1] - CSS z-index value for dropbox
    * @property {number} [noOfDisplayValues=50] - Maximum no.of values to show in the tooltip for multi-select
    * @property {boolean} [allowNewOption=false] - Allow to add new option by searching
+   * @property {boolean} [markSearchResults=false] - Mark matched term in label
    */
   constructor(options) {
     try {
@@ -376,6 +377,7 @@ export class VirtualSelect {
     this.hideClearButton = this.convertToBoolean(options.hideClearButton);
     this.silentInitialValueSet = this.convertToBoolean(options.silentInitialValueSet);
     this.allowNewOption = this.convertToBoolean(options.allowNewOption);
+    this.markSearchResults = this.convertToBoolean(options.markSearchResults);
     this.noOptionsText = options.noOptionsText;
     this.noSearchResultsText = options.noSearchResultsText;
     this.placeholder = options.placeholder;
@@ -413,6 +415,7 @@ export class VirtualSelect {
       position: 'auto',
       zIndex: 1,
       allowNewOption: false,
+      markSearchResults: false,
     };
 
     return Object.assign(defaultOptions, options);
@@ -437,6 +440,7 @@ export class VirtualSelect {
       'data-z-index': 'zIndex',
       'data-no-of-display-values': 'noOfDisplayValues',
       'data-allow-new-option': 'allowNewOption',
+      'data-mark-search-results': 'markSearchResults',
     };
 
     for (let k in mapping) {
@@ -670,6 +674,7 @@ export class VirtualSelect {
       this.$searchInput.value = value;
     }
 
+    const markSearchResults = this.markSearchResults;
     let searchValue = value.toLowerCase().trim();
     let visibleOptionsCount = 0;
     let hasExactOption = false;
@@ -681,12 +686,20 @@ export class VirtualSelect {
         return;
       }
 
+      if (markSearchResults) {
+        /** remove previous modifications to the label */
+        d.label = d.label.replace(/<\/*mark>/g, '');
+      }
+
       let value = d.label.toString().toLowerCase();
       let isVisible = value.indexOf(searchValue) !== -1;
       d.isVisible = isVisible;
 
       if (isVisible) {
         visibleOptionsCount++;
+        if (markSearchResults) {
+          d.label = d.label.replace(new RegExp(`(${searchValue})`, 'gi'), `<mark>$1</mark>`);
+        }
       }
 
       if (!hasExactOption) {
