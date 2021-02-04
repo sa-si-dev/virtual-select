@@ -698,8 +698,7 @@ export class VirtualSelect {
       if (isVisible) {
         visibleOptionsCount++;
         if (markSearchResults) {
-          const index = value.indexOf(searchValue);
-          d.label = d.label.substr(0, index) + '<mark>' + d.label.substr(index, searchValue.length) + '</mark>' + d.label.substr(index + searchValue.length);
+          d.label = d.label.replace(new RegExp(`(${searchValue})`, 'gi'), `<mark>$1</mark>`);
         }
       }
 
