@@ -23,6 +23,9 @@
 | zIndex | Number | 1 | CSS z-index value for dropbox |
 | noOfDisplayValues | Number | 50 | Maximum no.of values to show in the tooltip for multi-select |
 | allowNewOption | Boolean | false | Allow to add new option by searching |
+| tooltipFontSize | String | 14px | Font size for tooltip |
+| tooltipAlignment | String | center | CSS Text alignment for tooltip |
+| showSelectedOptionsFirst | Boolean | false | Show selected options at the top of the dropbox |
 | markSearchResults | Boolean | false | Mark matched term in label |
 
 ## Using properties on initialization
