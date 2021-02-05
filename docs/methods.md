@@ -62,3 +62,22 @@ To check that if all options selected or not
 ```js
 document.querySelector('#sample-select').isAllSelected();
 ```
+
+### addOption()
+
+To add a new option with existing options
+
+```js
+document.querySelector('#sample-select').addOption({
+  value: '101',
+  label: 'Option 101',
+});
+```
+
+### getNewValue()
+
+Get selected value which is added as [new option](https://sa-si-dev.github.io/virtual-select/#/examples?id=allow-to-add-new-option)
+
+```js
+document.querySelector('#sample-select').getNewValue();
+```

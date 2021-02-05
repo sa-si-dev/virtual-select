@@ -117,8 +117,20 @@ VirtualSelect.init({
 ```js
 VirtualSelect.init({
   ...
-  search: true,
   markSearchResults: true,
+});
+```
+
+## Showing selected options first
+
+Show selected options at the top of the dropbox on reopen
+
+<div id="selected-first-select"></div>
+
+```js
+VirtualSelect.init({
+  ...
+  showSelectedOptionsFirst: true,
 });
 ```
 
