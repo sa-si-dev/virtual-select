@@ -661,7 +661,17 @@ export class VirtualSelect {
       valueTooltip.push(`<span class="vscomp-value-tag">+ ${moreSelectedOptions} more...</span>`);
     }
 
-    this.$valueText.innerHTML = valueText.join(', ') || this.placeholder;
+    const aggregateValueText = valueText.join(', ');
+    if (aggregateValueText === '') {
+      this.$valueText.innerHTML = this.placeholder;
+    } else {
+      this.$valueText.innerHTML = aggregateValueText;
+      if (this.isEllipsisActive(this.$valueText)) {
+        /** replace comma delimitted list of selections with shorter text indicating selection count */
+        this.$valueText.innerHTML = `${valueText.length} option${valueText.length === 1 ? '' : 's'} oelected`
+      }
+    }
+
     this.setData(this.$valueText, 'tooltip', valueTooltip.join(', '));
   }
 
@@ -1377,6 +1387,10 @@ export class VirtualSelect {
 
   convertToBoolean(value) {
     return (value === true || value === 'true') ? true : false;
+  }
+  
+  isEllipsisActive(element) {
+    return element.offsetWidth < element.scrollWidth;
   }
   /** helper methods - end */
 
