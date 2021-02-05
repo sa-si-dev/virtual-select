@@ -2,6 +2,11 @@
   font-family: sans-serif;
   display: inline-block;
   width: 100%;
+  max-width: 250px;	
+}	
+
+.vscomp-wrapper {	
+  display: inline-flex;
   position: relative;
   width: 100%;
   font-size: $fontSize;
@@ -354,6 +359,7 @@
     .vscomp-search-clear {
       visibility: visible;
     }
+    
     .toggle-all-options {
       opacity: 0.5;
       pointer-events: none;
