@@ -278,13 +278,6 @@
   &.multiple {
     .toggle-all-options {
       cursor: pointer;
-      &.disabled {
-        cursor: default;
-      }
-     
-      &.disabled::after {
-        opacity: 0.5;
-      }
     }
 
     .vscomp-search-input {
@@ -359,6 +352,10 @@
   &.has-search-value {
     .vscomp-search-clear {
       visibility: visible;
+    }
+    .toggle-all-options {
+      opacity: 0.5;
+      pointer-events: none;
     }
   }
 }
