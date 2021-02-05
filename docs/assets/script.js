@@ -152,4 +152,15 @@ function initPageExamples() {
     multiple: true,
     showSelectedOptionsFirst: true,
   });
+
+  VirtualSelect.init({
+    ele: '#alias-select',
+    options: [
+      { label: 'Colors', value: 'colors', alias: 'Orange, Red' },
+      { label: 'Fruits', value: 'fruits', alias: ['Orange', 'Apple'] },
+      { label: 'Months', value: 'months', alias: 'January' },
+      { label: 'Others', value: 'others' }
+    ],
+    search: true,
+  });
 }
