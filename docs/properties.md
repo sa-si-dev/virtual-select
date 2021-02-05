@@ -6,6 +6,7 @@
 | options | Array | [] | List of options <br/>[<br/>  { label: 'Option 1', value: '1' }, <br/>  { label: 'Option 2', value: '2' }<br/>  ...<br/>] |
 | labelKey | String | label | Object key to use to get label from options array |
 | valueKey | String | value | Object key to use to get value from options array |
+| termsKey | String | label | Object key to use to get array of string terms from options array |
 | disabledOptions | Array | [] | List of values to disable options <br/>e.g - [2, 3, 9] |
 | multiple | Boolean | false | Enable multi-select |
 | search | Boolean | false - for single select <br/>true - for multi-select | Enable search feature |
