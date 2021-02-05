@@ -117,6 +117,7 @@ VirtualSelect.init({
 ```js
 VirtualSelect.init({
   ...
+  search: true,
   markSearchResults: true,
 });
 ```

@@ -141,7 +141,7 @@ export class VirtualSelect {
     }
 
     visibleOptions.forEach((d) => {
-      let optionLabel = d.label;
+      let optionLabel = d.dropboxLabel;
       let optionClasses = 'vscomp-option';
       let optionTooltip = this.getTooltipAttrText('', true);
       let rightSection = '';
@@ -537,10 +537,12 @@ export class VirtualSelect {
 
     this.options = options.map((d, i) => {
       let value = (d[valueKey] || '').toString();
+      let label = d[labelKey] || '';
       let option = {
         index: i,
         value,
-        label: d[labelKey] || '',
+        label: label,
+        dropboxLabel: label,
         isVisible: true,
       };
       
@@ -688,7 +690,7 @@ export class VirtualSelect {
 
       if (markSearchResults) {
         /** remove previous modifications to the label */
-        d.label = d.label.replace(/<\/*mark>/g, '');
+        d.dropboxLabel = d.label;
       }
 
       let value = d.label.toString().toLowerCase();
@@ -698,7 +700,7 @@ export class VirtualSelect {
       if (isVisible) {
         visibleOptionsCount++;
         if (markSearchResults) {
-          d.label = d.label.replace(new RegExp(`(${searchValue})`, 'gi'), `<mark>$1</mark>`);
+          d.dropboxLabel = d.dropboxLabel.replace(new RegExp(`(${searchValue})`, 'gi'), `<mark>$1</mark>`);
         }
       }
 
