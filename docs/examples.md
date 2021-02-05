@@ -121,6 +121,37 @@ VirtualSelect.init({
 });
 ```
 
+## Showing selected options first
+
+Show selected options at the top of the dropbox on reopen
+
+<div id="selected-first-select"></div>
+
+```js
+VirtualSelect.init({
+  ...
+  showSelectedOptionsFirst: true,
+});
+```
+
+## Using alias for searching
+
+Alias value could be an array or comma separated string. Try alias in searching.
+
+<div id="alias-select"></div>
+
+```js
+VirtualSelect.init({
+  ...
+  options: [
+    { label: 'Colors', value: 'colors', alias: 'Orange, Red' },
+    { label: 'Fruits', value: 'fruits', alias: ['Orange', 'Apple'] },
+    { label: 'Months', value: 'months', alias: 'January' },
+    { label: 'Others', value: 'others' }
+  ]
+});
+```
+
 <script>
   initPageExamples();
 </script>

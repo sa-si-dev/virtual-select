@@ -13,6 +13,6 @@
 
 | Command | Description |
 |---------|-------------|
-| npm run docs | Starts a local documentation server |
 | npm run start | Builds dist versions of the plugin on file change |
 | npm run build | Builds dist versions of the plugin |
+| npm run docs | Starts a local documentation server |

@@ -4,8 +4,10 @@
 | --- | --- | --- | ---- |
 | ele | String \| Element | | DOM element to initialize plugin<br/>String - #sample-select <br/>Element - document.querySelector('#sample-select') |
 | options | Array | [] | List of options <br/>[<br/>  { label: 'Option 1', value: '1' }, <br/>  { label: 'Option 2', value: '2' }<br/>  ...<br/>] |
+| options[].alias | String \| Array | | Alternative labels to use on search.<br/>Array of string or comma separated string. |
 | labelKey | String | label | Object key to use to get label from options array |
 | valueKey | String | value | Object key to use to get value from options array |
+| aliasKey | String | alias | Object key to use to get alias from options array |
 | disabledOptions | Array | [] | List of values to disable options <br/>e.g - [2, 3, 9] |
 | multiple | Boolean | false | Enable multi-select |
 | search | Boolean | false - for single select <br/>true - for multi-select | Enable search feature |
@@ -22,6 +24,9 @@
 | zIndex | Number | 1 | CSS z-index value for dropbox |
 | noOfDisplayValues | Number | 50 | Maximum no.of values to show in the tooltip for multi-select |
 | allowNewOption | Boolean | false | Allow to add new option by searching |
+| tooltipFontSize | String | 14px | Font size for tooltip |
+| tooltipAlignment | String | center | CSS Text alignment for tooltip |
+| showSelectedOptionsFirst | Boolean | false | Show selected options at the top of the dropbox |
 | markSearchResults | Boolean | false | Mark matched term in label |
 
 ## Using properties on initialization

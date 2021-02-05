@@ -1,7 +1,7 @@
 /*!
- * Tooltip 1.0
+ * Tooltip v1.0.3
  * https://sa-si-dev.github.io/tooltip
  * Licensed under MIT (https://github.com/sa-si-dev/tooltip/blob/master/LICENSE)
  */
-.tooltip-box{font-family:sans-serif;font-size:14px;color:#fff;background:#212121;position:absolute;top:0;left:0;max-width:300px;padding:5px 10px;opacity:0;pointer-events:none;word-wrap:break-word}
+.tooltip-box{font-family:sans-serif;font-size:14px;line-height:20px;color:#fff;background:#212121;position:absolute;top:0;left:0;max-width:300px;padding:5px 10px;opacity:0;pointer-events:none;word-wrap:break-word;text-align:left}
 

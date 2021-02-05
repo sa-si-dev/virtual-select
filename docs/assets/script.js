@@ -142,6 +142,25 @@ function initPageExamples() {
   VirtualSelect.init({
     ele: '#mark-results-select',
     options: getOptions(),
+    search: true,
     markSearchResults: true,
+  });
+
+  VirtualSelect.init({
+    ele: '#selected-first-select',
+    options: getOptions(30),
+    multiple: true,
+    showSelectedOptionsFirst: true,
+  });
+
+  VirtualSelect.init({
+    ele: '#alias-select',
+    options: [
+      { label: 'Colors', value: 'colors', alias: 'Orange, Red' },
+      { label: 'Fruits', value: 'fruits', alias: ['Orange', 'Apple'] },
+      { label: 'Months', value: 'months', alias: 'January' },
+      { label: 'Others', value: 'others' }
+    ],
+    search: true,
   });
 }
