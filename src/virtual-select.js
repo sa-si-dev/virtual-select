@@ -356,6 +356,10 @@ export class VirtualSelect {
   }
 
   onToggleAllOptions() {
+    if (!this.isToggleAllOptionsEnabled()) {
+      return;
+    }
+    
     this.toggleAllOptions();
   }
   /** event methods - end */
@@ -669,6 +673,8 @@ export class VirtualSelect {
     if (value === this.searchValueOriginal) {
       return;
     }
+    
+    this.setToggleAllOptionsEnabled(value === '');
 
     if (!skipInputSet) {
       this.$searchInput.value = value;
@@ -784,6 +790,10 @@ export class VirtualSelect {
   
       this.addOption(this.getOptionObj(data));
     }
+  }
+
+  setToggleAllOptionsEnabled(enabled = true) {
+    this.toggleClass(this.$toggleAllOptions, 'disabled', !enabled);
   }
   /** set methods - end */
 
@@ -901,6 +911,10 @@ export class VirtualSelect {
 
   isOpened() {
     return this.hasClass(this.$wrapper, 'opened');
+  }
+
+  isToggleAllOptionsEnabled() {
+    return !this.hasClass(this.$toggleAllOptions, 'disabled');
   }
 
   focusSearchInput() {
