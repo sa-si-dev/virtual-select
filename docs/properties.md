@@ -28,6 +28,7 @@
 | tooltipAlignment | String | center | CSS Text alignment for tooltip |
 | showSelectedOptionsFirst | Boolean | false | Show selected options at the top of the dropbox |
 | markSearchResults | Boolean | false | Mark matched term in label |
+| showCountAtEllipses | Boolean | false | Show count of selected options when aggregate selected options text is wider than its container |
 
 ## Using properties on initialization
 

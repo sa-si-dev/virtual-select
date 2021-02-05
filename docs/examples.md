@@ -134,6 +134,19 @@ VirtualSelect.init({
 });
 ```
 
+## Show count of selected options on wide aggregate options text
+
+Show count of selected options when aggregate selected options text is wider than its container
+
+<div id="count-at-ellipses-select"></div>
+
+```js
+VirtualSelect.init({
+  ...
+  showCountAtEllipses: true,
+});
+```
+
 ## Using alias for searching
 
 Alias value could be an array or comma separated string. Try alias in searching.

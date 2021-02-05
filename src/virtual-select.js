@@ -39,6 +39,7 @@ export class VirtualSelect {
    * @property {string} [tooltipFontSize=14px] - Font size for tooltip
    * @property {string} [tooltipAlignment=center] - CSS Text alignment for tooltip
    * @property {boolean} [showSelectedOptionsFirst=false] - Show selected options at the top of the dropbox
+   * @property {boolean} [showCountAtEllipses=false] - Show count of selected options when aggregate selected options text is wider than its container
    */
   constructor(options) {
     try {
@@ -398,6 +399,7 @@ export class VirtualSelect {
     this.allowNewOption = this.convertToBoolean(options.allowNewOption);
     this.markSearchResults = this.convertToBoolean(options.markSearchResults);
     this.showSelectedOptionsFirst = this.convertToBoolean(options.showSelectedOptionsFirst);
+    this.showCountAtEllipses = this.convertToBoolean(options.showCountAtEllipses);
     this.noOptionsText = options.noOptionsText;
     this.noSearchResultsText = options.noSearchResultsText;
     this.placeholder = options.placeholder;
@@ -443,6 +445,7 @@ export class VirtualSelect {
       tooltipFontSize: '14px',
       tooltipAlignment: 'center',
       showSelectedOptionsFirst: false,
+      showCountAtEllipses: false,
     };
 
     return Object.assign(defaultOptions, options);
@@ -472,6 +475,7 @@ export class VirtualSelect {
       'data-tooltip-font-size': 'tooltipFontSize',
       'data-tooltip-alignment': 'tooltipAlignment',
       'data-show-selected-options-first': 'showSelectedOptionsFirst',
+      'data-show-count-at-ellipses': 'showCountAtEllipses',
     };
 
     for (let k in mapping) {
@@ -729,7 +733,7 @@ export class VirtualSelect {
         this.$valueText.innerHTML = aggregatedValueText;
 
         if (this.multiple) {
-          if (this.hasEllipsis(this.$valueText)) {
+          if (this.showCountAtEllipses && this.hasEllipsis(this.$valueText)) {
             /** replace comma delimitted list of selections with shorter text indicating selection count */
             this.$valueText.innerHTML = `${selectedLength} option${selectedLength === 1 ? '' : 's'} selected`;
           } else {

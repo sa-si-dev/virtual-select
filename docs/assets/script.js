@@ -154,6 +154,13 @@ function initPageExamples() {
   });
 
   VirtualSelect.init({
+    ele: '#count-at-ellipses-select',
+    options: getOptions(30),
+    multiple: true,
+    showCountAtEllipses: true,
+  });
+
+  VirtualSelect.init({
     ele: '#alias-select',
     options: [
       { label: 'Colors', value: 'colors', alias: 'Orange, Red' },
