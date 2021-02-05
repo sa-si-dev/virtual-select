@@ -15,9 +15,10 @@ export class VirtualSelect {
    * @property {object[]} options - Array of object to show as options
    * @property {(string|number)} options[].value - Value of the option
    * @property {(string|number)} options[].label - Display text of the option
-   * @property {string} [labelKey=label] - Key name to get display text from options object
+   * @property {(string|array)} options[].alias - Alternative labels to use on search. Array of string or comma separated string.
    * @property {string} [valueKey=value] - Key name to get value from options object
-   * @property {string} [termsKey=terms] - Key name to get array of string terms from options object
+   * @property {string} [labelKey=label] - Key name to get display text from options object
+   * @property {string} [aliasKey=alias] - Key name to get alias from options object
    * @property {boolean} [multiple=false] - Enable multiselect
    * @property {boolean} [search=false] - Enable search
    * @property {boolean} [hideClearButton=false] - Hide clear button
@@ -383,9 +384,9 @@ export class VirtualSelect {
     this.setPropsFromElementAttr(options);
 
     this.$ele = options.ele;
-    this.labelKey = options.labelKey;
     this.valueKey = options.valueKey;
-    this.termsKey = options.termsKey;
+    this.labelKey = options.labelKey;
+    this.aliasKey = options.aliasKey;
     this.optionsCount = parseInt(options.optionsCount);
     this.halfOptionsCount = Math.ceil(this.optionsCount / 2);
     this.optionHeightText = options.optionHeight;
@@ -423,9 +424,9 @@ export class VirtualSelect {
 
   setDefaultProps(options) {
     let defaultOptions = {
-      labelKey: 'label',
       valueKey: 'value',
-      termsKey: 'terms',
+      labelKey: 'label',
+      aliasKey: 'alias',
       optionsCount: 5,
       noOfDisplayValues: 50,
       optionHeight: '40px',
@@ -454,7 +455,7 @@ export class VirtualSelect {
       placeholder: 'placeholder',
       'data-label-key': 'labelKey',
       'data-value-key': 'valueKey',
-      'data-terms-key': 'termsKey',
+      'data-alias-key': 'aliasKey',
       'data-search': 'search',
       'data-hide-clear-button': 'hideClearButton',
       'data-options-count': 'optionsCount',
@@ -562,19 +563,27 @@ export class VirtualSelect {
 
     let disabledOptions = this.disabledOptions;
     let hasDisabledOptions = disabledOptions.length;
-    let labelKey = this.labelKey;
     let valueKey = this.valueKey;
-    let termsKey = this.termsKey;
+    let labelKey = this.labelKey;
+    let aliasKey = this.aliasKey;
     this.visibleOptionsCount = options.length;
 
     this.options = options.map((d, i) => {
       let value = (d[valueKey] || '').toString();
+      let alias = d[aliasKey] || '';
+
+      if (Array.isArray(alias)) {
+        alias = alias.join(',');
+      } else if (alias) {
+        alias = alias.toString().trim();
+      }
+
       let option = {
         index: i,
         value,
         label: d[labelKey] || '',
+        alias: alias.toLowerCase(),
         isVisible: true,
-        terms: Array.isArray(d[termsKey]) ? d[termsKey] : [],
       };
       
       if (hasDisabledOptions) {
@@ -754,28 +763,18 @@ export class VirtualSelect {
         return;
       }
 
-      if (markSearchResults) {
-        /** remove previous modifications to the label */
-        d.label = d.label.replace(/<\/?mark.*?>/g, '');
+      let value = d.label.toString().toLowerCase();
+      let alias = d.alias;
+      let isVisible = value.indexOf(searchValue) !== -1;
+
+      if (alias && !isVisible) {
+        isVisible = alias.indexOf(searchValue) !== -1;
       }
 
-      const value = d.label.toString().toLowerCase();
-      const matchedLabel = value.indexOf(searchValue) !== -1;
-      const matchedTerms = matchedLabel ? false : d.terms.some(x => x.indexOf(searchValue) !== -1);
-      let isVisible = matchedLabel || matchedTerms;
       d.isVisible = isVisible;
 
       if (isVisible) {
         visibleOptionsCount++;
-        
-        if (markSearchResults) {
-          if (matchedLabel) {
-            d.label = d.label.replace(new RegExp(`(${searchValue})`, 'gi'), `<mark>$1</mark>`);
-          } else if (matchedTerms) {
-            /** if we didn't match the label but matched any of the terms mark the entire label */
-            d.label = `<mark class="vscomp-termsmatch">${d.label}</mark>`;
-          }
-        }
       }
 
       if (!hasExactOption) {
@@ -784,7 +783,7 @@ export class VirtualSelect {
     });
 
     if (this.allowNewOption) {
-      if (value && !hasExactOption) {
+      if (searchValue && !hasExactOption) {
         this.setNewOption();
         visibleOptionsCount++;
       } else {
