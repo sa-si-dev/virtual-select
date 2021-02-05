@@ -668,7 +668,7 @@ export class VirtualSelect {
       this.$valueText.innerHTML = aggregateValueText;
       if (this.isEllipsisActive(this.$valueText)) {
         /** replace comma delimitted list of selections with shorter text indicating selection count */
-        this.$valueText.innerHTML = `${valueText.length} option${valueText.length === 1 ? '' : 's'} oelected`
+        this.$valueText.innerHTML = `${valueText.length} option${valueText.length === 1 ? '' : 's'} selected`
       }
     }
 
