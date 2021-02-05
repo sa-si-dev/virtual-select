@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "description": "A javascript plugin for dropdown with virtual scroll",
   "scripts": {
-    "docs": "docsify serve docs",
     "start": "webpack --mode development --watch",
-    "build": "webpack --mode production"
+    "build": "webpack --mode production",
+    "docs": "docsify serve docs"
   },
   "author": "",
   "license": "ISC",

@@ -2,11 +2,6 @@
   font-family: sans-serif;
   display: inline-block;
   width: 100%;
-  max-width: 250px;
-}
-
-.vscomp-wrapper {
-  display: inline-flex;
   position: relative;
   width: 100%;
   font-size: $fontSize;
@@ -97,6 +92,12 @@
     &::before, &::after {
       background: #333;
     }
+  }
+}
+
+.vscomp-value-tag {
+  &.more-value-count {
+    white-space: nowrap;
   }
 }
 
