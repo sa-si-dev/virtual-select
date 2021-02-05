@@ -1,5 +1,18 @@
 # Examples
 
+- [Default dropdown](#default-dropdown)
+- [With search box](#with-search-box)
+- [Multiple select](#multiple-select)
+- [Disabled options](#disabled-options)
+- [Preselect value](#preselect-value)
+- [Preselect multiple values](#preselect-multiple-values)
+- [Hide clear button](#hide-clear-button)
+- [Custom width for dropbox](#custom-width-for-dropbox)
+- [Allow to add new option](#allow-to-add-new-option)
+- [Mark matched term in label](#mark-matched-term-in-label)
+- [Showing selected options first](#showing-selected-options-first)
+- [Using alias for searching](#using-alias-for-searching)
+
 ## Default dropdown
 
 <div id="single-select"></div>
