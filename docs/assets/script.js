@@ -66,6 +66,26 @@ function getOptions(count) {
   return optionsData;
 }
 
+function getGroupOptions() {
+  let optGroupData = [];
+
+  for (let i = 1; i <= 3; i++) {
+    let label = `Option group ${i}`;
+    let options = [];
+  
+    for (let j = 1; j <= 3; j++) {
+      let value = `${i}-${j}`;
+      let label = `Option ${value}`;
+  
+      options.push({ value: value, label: label });
+    }
+  
+    optGroupData.push({ label: label, options: options });
+  }
+
+  return optGroupData;
+}
+
 function initPageGetStarted() {
   replacePlaceholdersForElement('.cover-main');
 
@@ -106,6 +126,12 @@ function initPageExamples() {
     ele: '#single-disabled-select',
     options: getOptions(),
     disabledOptions: [2, 6, 9],
+  });
+
+  VirtualSelect.init({
+    ele: '#option-group-select',
+    options: getGroupOptions(),
+    search: true,
   });
 
   VirtualSelect.init({

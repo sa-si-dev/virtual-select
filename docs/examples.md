@@ -4,6 +4,7 @@
 - [With search box](#with-search-box)
 - [Multiple select](#multiple-select)
 - [Disabled options](#disabled-options)
+- [Option group](#option-group)
 - [Preselect value](#preselect-value)
 - [Preselect multiple values](#preselect-multiple-values)
 - [Hide clear button](#hide-clear-button)
@@ -62,6 +63,28 @@ VirtualSelect.init({
 VirtualSelect.init({
   ...
   disabledOptions: [2, 6, 9],
+});
+```
+
+## Option group
+
+Option group could be added by adding nested options
+
+<div id="option-group-select"></div>
+
+```js
+VirtualSelect.init({
+  ...
+  options: [
+    { 
+      label: 'Option Group 1',
+      options: [
+        { label: 'Option 1-1', value: '1' },
+        ...
+      ]
+    },
+    ...
+  ]
 });
 ```
 
@@ -124,6 +147,8 @@ VirtualSelect.init({
 ```
 
 ## Mark matched term in label
+
+Try searching in below dropdown. Matched letters would be highlighted.
 
 <div id="mark-results-select"></div>
 

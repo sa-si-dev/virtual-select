@@ -5,6 +5,7 @@
 | ele | String \| Element | | DOM element to initialize plugin<br/>String - #sample-select <br/>Element - document.querySelector('#sample-select') |
 | options | Array | [] | List of options <br/>[<br/>  { label: 'Option 1', value: '1' }, <br/>  { label: 'Option 2', value: '2' }<br/>  ...<br/>] |
 | options[].alias | String \| Array | | Alternative labels to use on search.<br/>Array of string or comma separated string. |
+| options[].options | Array | | List of options for option group |
 | labelKey | String | label | Object key to use to get label from options array |
 | valueKey | String | value | Object key to use to get value from options array |
 | aliasKey | String | alias | Object key to use to get alias from options array |
