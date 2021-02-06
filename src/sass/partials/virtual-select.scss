@@ -148,6 +148,15 @@
     opacity: 0.5;
     cursor: default;
   }
+
+  &.group-title {
+    opacity: 0.6;
+    cursor: default;
+  }
+
+  &.group-option {
+    padding-left: 30px;
+  }
 }
 
 .vscomp-new-option-icon {

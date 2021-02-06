@@ -16,6 +16,7 @@ export class VirtualSelect {
    * @property {(string|number)} options[].value - Value of the option
    * @property {(string|number)} options[].label - Display text of the option
    * @property {(string|array)} options[].alias - Alternative labels to use on search. Array of string or comma separated string.
+   * @property {array} options[].options - List of options for option group
    * @property {string} [valueKey=value] - Key name to get value from options object
    * @property {string} [labelKey=label] - Key name to get display text from options object
    * @property {string} [aliasKey=alias] - Key name to get alias from options object
@@ -158,6 +159,7 @@ export class VirtualSelect {
       let optionLabel = d.label;
       let optionClasses = 'vscomp-option';
       let optionTooltip = this.getTooltipAttrText('', true);
+      let leftSection = checkboxHtml;
       let rightSection = '';
 
       if (d.isSelected) {
@@ -172,17 +174,26 @@ export class VirtualSelect {
         optionClasses += ' disabled';
       }
 
+      if (d.isGroupTitle) {
+        optionClasses += ' group-title';
+        leftSection = '';
+      }
+
+      if (d.isGroupOption) {
+        optionClasses += ' group-option';
+      }
+
       if (d.isCurrentNew) {
         optionClasses += ' current-new';
         rightSection += newOptionIconHtml;
       } else {
-        if (markSearchResults) {
+        if (markSearchResults && !d.isGroupTitle) {
           optionLabel = optionLabel.replace(searchRegex, '<mark>$1</mark>');
         }
       }
 
       html += `<div class="${optionClasses}" data-value="${d.value}" data-index="${d.index}" data-visible-index="${d.visibleIndex}" ${styleText}>
-          ${checkboxHtml}
+          ${leftSection}
           <span class="vscomp-option-text" ${optionTooltip}>
             ${optionLabel}
           </span>
@@ -348,11 +359,11 @@ export class VirtualSelect {
   }
 
   onOptionsClick(e) {
-    this.selectOption(e.target.closest('.vscomp-option:not(.disabled)'));
+    this.selectOption(e.target.closest('.vscomp-option:not(.disabled):not(.group-title)'));
   }
 
   onOptionsMouseOver(e) {
-    let $ele = e.target.closest('.vscomp-option:not(.disabled)');
+    let $ele = e.target.closest('.vscomp-option:not(.disabled):not(.group-title)');
 
     if ($ele) {
       this.focusOption(null, $ele);
@@ -515,7 +526,7 @@ export class VirtualSelect {
     this.options.forEach((d) => {
       let isSelected = value.indexOf(d.value) !== -1;
 
-      if (isSelected && !d.isDisabled) {
+      if (isSelected && !d.isDisabled && !d.isGroupTitle) {
         d.isSelected = true;
         validValues.push(d.value);
       } else {
@@ -561,40 +572,61 @@ export class VirtualSelect {
       options = [];
     }
 
+    let preparedOptions = [];
     let disabledOptions = this.disabledOptions;
     let hasDisabledOptions = disabledOptions.length;
     let valueKey = this.valueKey;
     let labelKey = this.labelKey;
     let aliasKey = this.aliasKey;
-    this.visibleOptionsCount = options.length;
+    let index = 0;
+    let hasOptionGroup = false;
 
-    this.options = options.map((d, i) => {
+    let prepareOption = (d) => {
       let value = (d[valueKey] || '').toString();
-      let alias = d[aliasKey] || '';
-
-      if (Array.isArray(alias)) {
-        alias = alias.join(',');
-      } else if (alias) {
-        alias = alias.toString().trim();
-      }
-
+      let childOptions = d.options;
+      let isGroupTitle = childOptions ? true : false;
       let option = {
-        index: i,
+        index,
         value,
         label: d[labelKey] || '',
-        alias: alias.toLowerCase(),
+        alias: this.getAlias(d[aliasKey]),
         isVisible: true,
+        isGroupTitle,
       };
       
       if (hasDisabledOptions) {
         option.isDisabled = disabledOptions.indexOf(value) !== -1;
       }
 
-      return option;
-    });
+      if (d.isGroupOption) {
+        option.isGroupOption = true;
+      }
 
+      preparedOptions.push(option);
+      index++;
+
+      if (isGroupTitle) {
+        hasOptionGroup = true;
+
+        childOptions.forEach((d) => {
+          d.isGroupOption = true;
+
+          prepareOption(d);
+        });
+      }
+    };
+
+    options.forEach(prepareOption);
+
+    if (hasOptionGroup) {
+      this.showSelectedOptionsFirst = false;
+    }
+
+    this.options = preparedOptions;
+    this.visibleOptionsCount = preparedOptions.length;
     this.lastOptionIndex = this.options.length - 1;
     this.newValues = [];
+    this.hasOptionGroup = hasOptionGroup;
     this.setSortedOptions();
   }
 
@@ -767,6 +799,10 @@ export class VirtualSelect {
       let alias = d.alias;
       let isVisible = value.indexOf(searchValue) !== -1;
 
+      if (d.isGroupTitle) {
+        isVisible = true;
+      }
+      
       if (alias && !isVisible) {
         isVisible = alias.indexOf(searchValue) !== -1;
       }
@@ -909,6 +945,7 @@ export class VirtualSelect {
       index: data.index,
       value: data.value ? data.value.toString() : '',
       label: data.label || '',
+      alias: this.getAlias(data.alias),
       isCurrentNew: data.isCurrentNew || false,
       isVisible: true,
     };
@@ -947,6 +984,22 @@ export class VirtualSelect {
     let result = this.selectedValues.filter((d) => newValues.indexOf(d) !== -1);
 
     return this.multiple ? result : result[0];
+  }
+
+  getAlias(alias) {
+    if (alias) {
+      if (Array.isArray(alias)) {
+        alias = alias.join(',');
+      } else {
+        alias = alias.toString().trim();
+      }
+  
+      alias = alias.toLowerCase();
+    } else {
+      alias = '';
+    }
+
+    return alias;
   }
   /** get methods - end */
 
@@ -1023,7 +1076,7 @@ export class VirtualSelect {
       let firstVisibleOptionIndex = this.getFirstVisibleOptionIndex();
       $newFocusedEle = this.$dropbox.querySelector(`.vscomp-option[data-visible-index="${firstVisibleOptionIndex}"]`);
 
-      if (this.hasClass($newFocusedEle, 'disabled')) {
+      if (this.hasClass($newFocusedEle, 'disabled') || this.hasClass($newFocusedEle, 'group-title')) {
         $newFocusedEle = this.getSibling($newFocusedEle, 'next');
       }
     } else {
@@ -1156,7 +1209,7 @@ export class VirtualSelect {
     let selectedValues = [];
 
     this.options.forEach((d) => {
-      if (d.isDisabled || d.isCurrentNew) {
+      if (d.isDisabled || d.isCurrentNew || d.isGroupTitle) {
         return;
       }
 
@@ -1178,7 +1231,7 @@ export class VirtualSelect {
 
       if (this.options.length) {
         isAllSelected = !this.options.some((d) => {
-          return !d.isSelected && !d.isDisabled;
+          return !d.isSelected && !d.isDisabled && !d.isGroupTitle;
         });
       }
     }
@@ -1251,8 +1304,10 @@ export class VirtualSelect {
 
     this.lastOptionIndex++;
     data.index = this.lastOptionIndex;
+    let newOption = this.getOptionObj(data);
 
-    this.options.push(this.getOptionObj(data));
+    this.options.push(newOption);
+    this.sortedOptions.push(newOption);
 
     if (rerender) {
       this.visibleOptionsCount++;
@@ -1473,7 +1528,7 @@ export class VirtualSelect {
       if ($ele) {
         $ele = $ele[propName];
       }
-    } while (this.hasClass($ele, 'disabled'));
+    } while (this.hasClass($ele, 'disabled') || this.hasClass($ele, 'group-title'));
 
     return $ele;
   }
