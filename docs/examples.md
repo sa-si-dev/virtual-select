@@ -13,6 +13,8 @@
 - [Mark matched term in label](#mark-matched-term-in-label)
 - [Showing selected options first](#showing-selected-options-first)
 - [Using alias for searching](#using-alias-for-searching)
+- [Keep dropbox always open](#keep-dropbox-always-open)
+- [Maximum values](#maximum-values)
 
 ## Default dropdown
 
@@ -187,6 +189,32 @@ VirtualSelect.init({
     { label: 'Months', value: 'months', alias: 'January' },
     { label: 'Others', value: 'others' }
   ]
+});
+```
+
+## Keep dropbox always open
+
+Keep dropbox always open with fixed height
+
+<div id="keep-open-select"></div>
+
+```js
+VirtualSelect.init({
+  ...
+  keepAlwaysOpen: true,
+});
+```
+
+## Maximum values
+
+Maximum no.of options allowed to choose in multiple select
+
+<div id="max-values-select"></div>
+
+```js
+VirtualSelect.init({
+  ...
+  maxValues: 4,
 });
 ```
 

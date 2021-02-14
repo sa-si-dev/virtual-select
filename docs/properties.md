@@ -13,6 +13,7 @@
 | multiple | Boolean | false | Enable multi-select |
 | search | Boolean | false - for single select <br/>true - for multi-select | Enable search feature |
 | hideClearButton | Boolean | false | Hide clear value button |
+| disableSelectAll | Boolean | false | Disable select all feature of multiple select |
 | optionsCount | Number | 5 | No.of options to show on viewport |
 | optionHeight | String | 40px | Height of each dropdown options |
 | position | String | auto | Position of dropbox (top, bottom, auto) |
@@ -27,8 +28,12 @@
 | allowNewOption | Boolean | false | Allow to add new option by searching |
 | tooltipFontSize | String | 14px | Font size for tooltip |
 | tooltipAlignment | String | center | CSS Text alignment for tooltip |
+| tooltipMaxWidth | String | 300px | CSS max width for tooltip |
 | showSelectedOptionsFirst | Boolean | false | Show selected options at the top of the dropbox |
 | markSearchResults | Boolean | false | Mark matched term in label |
+| hiddenInputName | String | | Name attribute for hidden input<br>It would be useful for form submit to server |
+| keepAlwaysOpen | Boolean | false | Keep dropbox always open with fixed height |
+| maxValues | Number | 0 | Maximum no.of options allowed to choose in multiple select<br>0 - for no limit |
 
 ## Using properties on initialization
 

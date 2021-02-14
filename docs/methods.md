@@ -1,5 +1,16 @@
 # Methods
 
+- [Get selected value](#get-selected-value)
+- [reset()](#reset)
+- [setValue()](#setoptions)
+- [setOptions()](#setvalue)
+- [setDisabledOptions()](#setdisabledoptions)
+- [toggleSelectAll()](#toggleselectall)
+- [isAllSelected()](#isallselected)
+- [addOption()](#addoption)
+- [getNewValue()](#getnewvalue)
+- [getDisplayValue()](#getdisplayvalue)
+
 ### Get selected value
 
 ```js
@@ -80,4 +91,12 @@ Get selected value which is added as [new option](https://sa-si-dev.github.io/vi
 
 ```js
 document.querySelector('#sample-select').getNewValue();
+```
+
+### getDisplayValue()
+
+Get selected option's display value (i.e label)
+
+```js
+document.querySelector('#sample-select').getDisplayValue();
 ```

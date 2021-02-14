@@ -189,4 +189,18 @@ function initPageExamples() {
     ],
     search: true,
   });
+
+  VirtualSelect.init({
+    ele: '#keep-open-select',
+    options: getOptions(),
+    search: true,
+    keepAlwaysOpen: true,
+  });
+
+  VirtualSelect.init({
+    ele: '#max-values-select',
+    options: getOptions(),
+    multiple: true,
+    maxValues: 4,
+  });
 }
