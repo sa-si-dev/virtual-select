@@ -12,6 +12,7 @@
   font-size: $fontSize;
   color: $fontColor;
   text-align: left;
+  flex-wrap: wrap;
 
   *, *::before, *::after {
     box-sizing: border-box;
@@ -112,7 +113,7 @@
   left: 0;
   width: 100%;
   opacity: 0;
-  box-shadow: 0 4px 5px 0 rgba(0, 0, 0, 0.14), 0 1px 10px 0 rgba(0, 0, 0, 0.12), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+  box-shadow: $boxShadow1;
   background-color: $primaryBg;
   z-index: 1;
   -webkit-transition-duration: $transitionDuration;
@@ -238,7 +239,8 @@
 
 .vscomp-no-options, .vscomp-no-search-results {
   display: none;
-  text-align: center;
+  justify-content: center;
+  align-items: center;
   padding: 20px 10px;
 }
 
@@ -290,7 +292,7 @@
     transform: rotate(45deg) translate(1px, -4px);
   }
 
-  &.multiple {
+  &.has-select-all {
     .toggle-all-options {
       cursor: pointer;
     }
@@ -298,7 +300,9 @@
     .vscomp-search-input {
       width: calc(100% - #{$searchClearWidth + $checkboxFullWidth});
     }
-    
+  }
+
+  &.multiple {
     .vscomp-option {
       .vscomp-option-text {
         width: calc(100% - #{$checkboxFullWidth});
@@ -312,7 +316,7 @@
 
   &.focused, &:focus {
     .vscomp-toggle-button {
-      box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 3px 1px -2px rgba(0, 0, 0, 0.12), 0 1px 5px 0 rgba(0, 0, 0, 0.20);
+      box-shadow: $boxShadow2;
     }
   }
 
@@ -354,13 +358,13 @@
 
   &.has-no-options {
     .vscomp-no-options {
-      display: block;
+      display: flex;
     }
   }
 
   &.has-no-search-results {
     .vscomp-no-search-results {
-      display: block;
+      display: flex;
     }
   }
 
@@ -372,6 +376,32 @@
     .toggle-all-options {
       opacity: 0.5;
       pointer-events: none;
+    }
+  }
+
+  &.keep-always-open {
+    .vscomp-toggle-button {
+      padding-right: $clearButtonWidth;
+    }
+
+    .vscomp-clear-button {
+      right: 5px;
+    }
+
+    .vscomp-arrow {
+      display: none;
+    }
+
+    .vscomp-dropbox {
+      position: relative;
+      -webkit-transition-duration: 0s;
+      transition-duration: 0s;
+      box-shadow: none;
+      border: 1px solid $borderColor;
+    }
+
+    &.focused, &:focus, &:hover {
+      box-shadow: $boxShadow2;
     }
   }
 }
