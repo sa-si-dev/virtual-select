@@ -52,7 +52,7 @@ function replacePlaceholders(content) {
   return content;
 }
 
-function getOptions(count) {
+function getOptions(count, includeDesc) {
   if (!count) {
     count = 100000;
   }
@@ -60,7 +60,13 @@ function getOptions(count) {
   var optionsData = [];
 
   for (var i = 1; i <= count; i++) {
-    optionsData.push({ value: i, label: 'Option ' + i});
+    let optionData = { value: i, label: 'Option ' + i };
+
+    if (includeDesc) {
+      optionData.description = 'Description ' + i;
+    }
+  
+    optionsData.push(optionData);
   }
 
   return optionsData;
@@ -202,5 +208,11 @@ function initPageExamples() {
     options: getOptions(),
     multiple: true,
     maxValues: 4,
+  });
+
+  VirtualSelect.init({
+    ele: '#with-description-select',
+    options: getOptions(null, true),
+    hasOptionDescription: true,
   });
 }

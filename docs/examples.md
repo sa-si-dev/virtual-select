@@ -15,6 +15,7 @@
 - [Using alias for searching](#using-alias-for-searching)
 - [Keep dropbox always open](#keep-dropbox-always-open)
 - [Maximum values](#maximum-values)
+- [Label with description](#label-with-description)
 
 ## Default dropdown
 
@@ -215,6 +216,23 @@ Maximum no.of options allowed to choose in multiple select
 VirtualSelect.init({
   ...
   maxValues: 4,
+});
+```
+
+
+## Label with description
+
+<div id="with-description-select"></div>
+
+```js
+VirtualSelect.init({
+  ...
+  options: [
+    { label: 'Options 1', value: '1', description: 'Description 1' },
+    { label: 'Options 2', value: '2', description: 'Description 2' },
+    { label: 'Options 3', value: '3', description: 'Description 3' },
+  ],
+  hasOptionDescription: true
 });
 ```
 

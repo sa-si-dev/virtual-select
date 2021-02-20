@@ -6,16 +6,19 @@
 | options | Array | [] | List of options <br/>[<br/>  { label: 'Option 1', value: '1' }, <br/>  { label: 'Option 2', value: '2' }<br/>  ...<br/>] |
 | options[].alias | String \| Array | | Alternative labels to use on search.<br/>Array of string or comma separated string. |
 | options[].options | Array | | List of options for option group |
-| labelKey | String | label | Object key to use to get label from options array |
+| options[].description | String | | Text to show along with label |
 | valueKey | String | value | Object key to use to get value from options array |
+| labelKey | String | label | Object key to use to get label from options array |
+| descriptionKey | String | description | Object key to use to get description from options array |
 | aliasKey | String | alias | Object key to use to get alias from options array |
 | disabledOptions | Array | [] | List of values to disable options <br/>e.g - [2, 3, 9] |
 | multiple | Boolean | false | Enable multi-select |
 | search | Boolean | false - for single select <br/>true - for multi-select | Enable search feature |
 | hideClearButton | Boolean | false | Hide clear value button |
+| hasOptionDescription | Boolean | false | Has description to show along with label |
 | disableSelectAll | Boolean | false | Disable select all feature of multiple select |
-| optionsCount | Number | 5 | No.of options to show on viewport |
-| optionHeight | String | 40px | Height of each dropdown options |
+| optionsCount | Number | 5 \| 4 | No.of options to show on viewport <br/>4 - When hasOptionDescription is true |
+| optionHeight | String | 40px \| 60px | Height of each dropdown options <br/>60px - When hasOptionDescription is true |
 | position | String | auto | Position of dropbox (top, bottom, auto) |
 | placeholder | String | Select | Text to show when no options selected |
 | noOptionsText | String | No options found | Text to show when no options to show |
@@ -31,7 +34,7 @@
 | tooltipMaxWidth | String | 300px | CSS max width for tooltip |
 | showSelectedOptionsFirst | Boolean | false | Show selected options at the top of the dropbox |
 | markSearchResults | Boolean | false | Mark matched term in label |
-| hiddenInputName | String | | Name attribute for hidden input<br>It would be useful for form submit to server |
+| name | String | | Name attribute for hidden input<br>It would be useful for form submit to server |
 | keepAlwaysOpen | Boolean | false | Keep dropbox always open with fixed height |
 | maxValues | Number | 0 | Maximum no.of options allowed to choose in multiple select<br>0 - for no limit |
 
@@ -73,3 +76,4 @@ To use an property as an attribute, property name should be `hyphenated` and pre
 **Following properties should be used without `data-*` as prefix**
 - multiple
 - placeholder
+- name

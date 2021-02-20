@@ -10,6 +10,8 @@
 - [addOption()](#addoption)
 - [getNewValue()](#getnewvalue)
 - [getDisplayValue()](#getdisplayvalue)
+- [open()](#open)
+- [close()](#close)
 
 ### Get selected value
 
@@ -99,4 +101,20 @@ Get selected option's display value (i.e label)
 
 ```js
 document.querySelector('#sample-select').getDisplayValue();
+```
+
+### open()
+
+To open dropbox programmatically
+
+```js
+document.querySelector('#sample-select').open();
+```
+
+### close()
+
+To close dropbox programmatically
+
+```js
+document.querySelector('#sample-select').close();
 ```
