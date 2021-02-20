@@ -5,7 +5,7 @@ const keyDownMethodMapping = {
   40: 'onDownArrowPress',
 };
 
-const virtualSelectVersion = 'v1.0.4';
+const virtualSelectVersion = 'v1.0.5';
 
 /** Class representing VirtualSelect */
 export class VirtualSelect {
@@ -15,17 +15,20 @@ export class VirtualSelect {
    * @property {object[]} options - Array of object to show as options
    * @property {(string|number)} options[].value - Value of the option
    * @property {(string|number)} options[].label - Display text of the option
+   * @property {(string|number)} options[].description - Text to show along with label
    * @property {(string|array)} options[].alias - Alternative labels to use on search. Array of string or comma separated string.
    * @property {array} options[].options - List of options for option group
-   * @property {string} [valueKey=value] - Key name to get value from options object
-   * @property {string} [labelKey=label] - Key name to get display text from options object
+   * @property {string} [valueKey=value] - Object key to use to get value from options array
+   * @property {string} [labelKey=label] - Object key to use to get label from options array
+   * @property {string} [descriptionKey=description] - Object key to use to get description from options array
    * @property {string} [aliasKey=alias] - Key name to get alias from options object
    * @property {boolean} [multiple=false] - Enable multiselect
    * @property {boolean} [search=false] - Enable search
    * @property {boolean} [hideClearButton=false] - Hide clear button
+   * @property {boolean} [hasOptionDescription=false] - Has description to show along with label
    * @property {boolean} [disableSelectAll=false] - Disable select all feature of multiple select
-   * @property {string} [optionsCount=5] - No.of options to show on viewport
-   * @property {string} [optionHeight=40px] - Height of each dropdown options
+   * @property {string} [optionsCount=5|4] - No.of options to show on viewport
+   * @property {string} [optionHeight=40px|60px] - Height of each dropdown options
    * @property {string} [position=auto] - Position of dropbox (top, bottom, auto)
    * @property {string} [placeholder=Select] - Text to show when no options selected
    * @property {string} [noOptionsText=No options found] - Text to show when no options to show
@@ -42,7 +45,7 @@ export class VirtualSelect {
    * @property {string} [tooltipAlignment=center] - CSS Text alignment for tooltip
    * @property {string} [tooltipMaxWidth=300px] - CSS max width for tooltip
    * @property {boolean} [showSelectedOptionsFirst=false] - Show selected options at the top of the dropbox
-   * @property {string} [hiddenInputName] - Name attribute for hidden input
+   * @property {string} [name] - Name attribute for hidden input
    * @property {boolean} [keepAlwaysOpen] - Keep dropbox always open with fixed height
    * @property {number} [maxValues=0] - Maximum no.of options allowed to choose in multiple select
    */
@@ -112,7 +115,7 @@ export class VirtualSelect {
     }
 
     let html = `<div class="${wrapperClasses}" tabindex="0">
-        <input type="hidden" name="${this.hiddenInputName}" class="vscomp-hidden-input">
+        <input type="hidden" name="${this.name}" class="vscomp-hidden-input">
         <div class="vscomp-toggle-button">
           <div class="vscomp-value" ${valueTooltip}>
             ${this.placeholder}
@@ -144,6 +147,8 @@ export class VirtualSelect {
     this.$options = this.$ele.querySelector('.vscomp-options');
     this.$valueText = this.$ele.querySelector('.vscomp-value');
     this.$hiddenInput = this.$ele.querySelector('.vscomp-hidden-input');
+
+    this.$ele.setAttribute('name', this.name);
 
     this.addClass(this.$ele, 'vscomp-ele');
     this.renderSearch();
@@ -182,10 +187,7 @@ export class VirtualSelect {
       let optionTooltip = this.getTooltipAttrText('', true);
       let leftSection = checkboxHtml;
       let rightSection = '';
-
-      if (d.isSelected) {
-        optionClasses += ' selected';
-      }
+      let description = '';
 
       if (d.isFocused) {
         optionClasses += ' focused';
@@ -198,10 +200,18 @@ export class VirtualSelect {
       if (d.isGroupTitle) {
         optionClasses += ' group-title';
         leftSection = '';
+      } else {
+        if (d.isSelected) {
+          optionClasses += ' selected';
+        }
       }
 
       if (d.isGroupOption) {
         optionClasses += ' group-option';
+      }
+
+      if (d.description) {
+        description = `<div class="vscomp-option-description" ${optionTooltip}>${d.description}</div>`;
       }
 
       if (d.isCurrentNew) {
@@ -218,6 +228,7 @@ export class VirtualSelect {
           <span class="vscomp-option-text" ${optionTooltip}>
             ${optionLabel}
           </span>
+          ${description}
           ${rightSection}
         </div>`;
     });
@@ -418,6 +429,7 @@ export class VirtualSelect {
     this.$ele = options.ele;
     this.valueKey = options.valueKey;
     this.labelKey = options.labelKey;
+    this.descriptionKey = options.descriptionKey;
     this.aliasKey = options.aliasKey;
     this.optionsCount = parseInt(options.optionsCount);
     this.halfOptionsCount = Math.ceil(this.optionsCount / 2);
@@ -426,6 +438,7 @@ export class VirtualSelect {
     this.multiple = this.convertToBoolean(options.multiple);
     this.hasSearch = this.convertToBoolean(options.search);
     this.hideClearButton = this.convertToBoolean(options.hideClearButton);
+    this.hasOptionDescription = this.convertToBoolean(options.hasOptionDescription);
     this.silentInitialValueSet = this.convertToBoolean(options.silentInitialValueSet);
     this.allowNewOption = this.convertToBoolean(options.allowNewOption);
     this.markSearchResults = this.convertToBoolean(options.markSearchResults);
@@ -443,7 +456,7 @@ export class VirtualSelect {
     this.noOfDisplayValues = parseInt(options.noOfDisplayValues);
     this.zIndex = parseInt(options.zIndex);
     this.maxValues = parseInt(options.maxValues);
-    this.hiddenInputName = options.hiddenInputName;
+    this.name = options.name;
     this.selectedValues = [];
     this.newValues = [];
     this.events = {};
@@ -467,12 +480,14 @@ export class VirtualSelect {
     let defaultOptions = {
       valueKey: 'value',
       labelKey: 'label',
+      descriptionKey: 'description',
       aliasKey: 'alias',
       optionsCount: 5,
       noOfDisplayValues: 50,
       optionHeight: '40px',
       multiple: false,
       hideClearButton: false,
+      hasOptionDescription: false,
       silentInitialValueSet: false,
       disableSelectAll: false,
       noOptionsText: 'No options found',
@@ -486,10 +501,15 @@ export class VirtualSelect {
       tooltipAlignment: 'center',
       tooltipMaxWidth: '300px',
       showSelectedOptionsFirst: false,
-      hiddenInputName: '',
+      name: '',
       keepAlwaysOpen: false,
       maxValues: 0,
     };
+
+    if (options.hasOptionDescription) {
+      defaultOptions.optionsCount = 4;
+      defaultOptions.optionHeight = '60px';
+    }
 
     return Object.assign(defaultOptions, options);
   }
@@ -499,11 +519,14 @@ export class VirtualSelect {
     let mapping = {
       multiple: 'multiple',
       placeholder: 'placeholder',
-      'data-label-key': 'labelKey',
+      name: 'name',
       'data-value-key': 'valueKey',
+      'data-label-key': 'labelKey',
+      'data-description-key': 'descriptionKey',
       'data-alias-key': 'aliasKey',
       'data-search': 'search',
       'data-hide-clear-button': 'hideClearButton',
+      'data-has-option-description': 'hasOptionDescription',
       'data-options-count': 'optionsCount',
       'data-option-height': 'optionHeight',
       'data-position': 'position',
@@ -519,7 +542,6 @@ export class VirtualSelect {
       'data-tooltip-alignment': 'tooltipAlignment',
       'data-tooltip-max-width': 'tooltipMaxWidth',
       'data-show-selected-options-first': 'showSelectedOptionsFirst',
-      'data-hidden-input-name': 'hiddenInputName',
       'data-disable-select-all': 'disableSelectAll',
       'data-keep-always-open': 'keepAlwaysOpen',
       'data-max-values': 'maxValues',
@@ -551,6 +573,8 @@ export class VirtualSelect {
     $ele.addOption = VirtualSelect.addOptionMethod;
     $ele.getNewValue = VirtualSelect.getNewValueMethod;
     $ele.getDisplayValue = VirtualSelect.getDisplayValueMethod;
+    $ele.open = VirtualSelect.openMethod;
+    $ele.close = VirtualSelect.closeMethod;
   }
 
   setValueMethod(value, silentChange) {
@@ -618,39 +642,50 @@ export class VirtualSelect {
     let hasDisabledOptions = disabledOptions.length;
     let valueKey = this.valueKey;
     let labelKey = this.labelKey;
+    let descriptionKey = this.descriptionKey;
     let aliasKey = this.aliasKey;
+    let hasOptionDescription = this.hasOptionDescription;
+    let getString = this.getString;
+    let getAlias = this.getAlias;
     let index = 0;
     let hasOptionGroup = false;
 
     let prepareOption = (d) => {
-      let value = (d[valueKey] || '').toString();
+      let value = getString(d[valueKey]);
       let childOptions = d.options;
       let isGroupTitle = childOptions ? true : false;
       let option = {
         index,
         value,
-        label: d[labelKey] || '',
-        alias: this.getAlias(d[aliasKey]),
+        label: getString(d[labelKey]),
+        alias: getAlias(d[aliasKey]),
         isVisible: true,
         isGroupTitle,
       };
-      
+
       if (hasDisabledOptions) {
         option.isDisabled = disabledOptions.indexOf(value) !== -1;
       }
 
       if (d.isGroupOption) {
         option.isGroupOption = true;
+        option.groupIndex = d.groupIndex;
+      }
+
+      if (hasOptionDescription) {
+        option.description = getString(d[descriptionKey]);
       }
 
       preparedOptions.push(option);
       index++;
 
       if (isGroupTitle) {
+        let groupIndex = option.index;
         hasOptionGroup = true;
 
         childOptions.forEach((d) => {
           d.isGroupOption = true;
+          d.groupIndex = groupIndex;
 
           prepareOption(d);
         });
@@ -658,10 +693,6 @@ export class VirtualSelect {
     };
 
     options.forEach(prepareOption);
-
-    if (hasOptionGroup) {
-      this.showSelectedOptionsFirst = false;
-    }
 
     this.options = preparedOptions;
     this.visibleOptionsCount = preparedOptions.length;
@@ -675,15 +706,11 @@ export class VirtualSelect {
     let sortedOptions = [...this.options];
 
     if (this.showSelectedOptionsFirst && this.selectedValues.length) {
-      sortedOptions = sortedOptions.sort((a, b) => {
-        if (!a.isSelected && !b.isSelected) {
-          return 0;
-        } else if (a.isSelected && (!b.isSelected || a.index < b.index)) {
-          return -1;
-        } else {
-          return 1;
-        }
-      });
+      if (this.hasOptionGroup) {
+        sortedOptions = this.sortOptionsGroup(sortedOptions);
+      } else {
+        sortedOptions = this.sortOptions(sortedOptions);
+      }
     }
 
     this.sortedOptions = sortedOptions;
@@ -734,11 +761,16 @@ export class VirtualSelect {
 
   setOptionsTooltip() {
     let visibleOptions = this.getVisibleOptions();
+    let hasOptionDescription = this.hasOptionDescription;
 
     visibleOptions.forEach((d) => {
-      let $optionEle = this.$dropbox.querySelector(`.vscomp-option[data-index="${d.index}"] .vscomp-option-text`);
+      let $optionEle = this.$dropbox.querySelector(`.vscomp-option[data-index="${d.index}"]`);
 
-      this.setData($optionEle, 'tooltip', d.label);
+      this.setData($optionEle.querySelector('.vscomp-option-text'), 'tooltip', d.label);
+      
+      if (hasOptionDescription) {
+        this.setData($optionEle.querySelector('.vscomp-option-description'), 'tooltip', d.description);
+      }
     });
   }
 
@@ -846,34 +878,28 @@ export class VirtualSelect {
     let searchValue = value.toLowerCase().trim();
     let visibleOptionsCount = 0;
     let hasExactOption = false;
+    let visibleOptionGroupsMapping;
+    let isOptionVisible = this.isOptionVisible;
     this.searchValue = searchValue;
     this.searchValueOriginal = value;
+
+    if (this.hasOptionGroup) {
+      visibleOptionGroupsMapping = this.getVisibleOptionGroupsMapping(searchValue);
+    }
 
     this.options.forEach((d) => {
       if (d.isCurrentNew) {
         return;
       }
 
-      let value = d.label.toString().toLowerCase();
-      let alias = d.alias;
-      let isVisible = value.indexOf(searchValue) !== -1;
+      let result = isOptionVisible(d, searchValue, hasExactOption, visibleOptionGroupsMapping);
 
-      if (d.isGroupTitle) {
-        isVisible = true;
-      }
-      
-      if (alias && !isVisible) {
-        isVisible = alias.indexOf(searchValue) !== -1;
-      }
-
-      d.isVisible = isVisible;
-
-      if (isVisible) {
+      if (result.isVisible) {
         visibleOptionsCount++;
       }
 
       if (!hasExactOption) {
-        hasExactOption = value === searchValue;
+        hasExactOption = result.hasExactOption;
       }
     });
 
@@ -1001,10 +1027,12 @@ export class VirtualSelect {
       return;
     }
 
+    let getString = this.getString;
     let newOption = {
       index: data.index,
-      value: data.value ? data.value.toString() : '',
-      label: data.label || '',
+      value: getString(data.value),
+      label: getString(data.label),
+      description: getString(data.description),
       alias: this.getAlias(data.alias),
       isCurrentNew: data.isCurrentNew || false,
       isVisible: true,
@@ -1073,6 +1101,19 @@ export class VirtualSelect {
     }
 
     return this.multiple ? displayValues : (displayValues[0] || '');
+  }
+
+  getVisibleOptionGroupsMapping(searchValue) {
+    let options = this.options;
+    let result = {};
+    let isOptionVisible = this.isOptionVisible;
+    options = this.structureOptionGroup(options);
+
+    options.forEach((d) => {
+      result[d.index] = d.options.some(e => isOptionVisible(e, searchValue).isVisible);
+    });
+
+    return result;
   }
   /** get methods - end */
 
@@ -1431,6 +1472,102 @@ export class VirtualSelect {
     }, 0);
   }
 
+  sortOptions(options) {
+    return options.sort((a, b) => {
+      if (!a.isSelected && !b.isSelected) {
+        return 0;
+      } else if (a.isSelected && (!b.isSelected || a.index < b.index)) {
+        return -1;
+      } else {
+        return 1;
+      }
+    });
+  }
+
+  sortOptionsGroup(options) {
+    let sortOptions = this.sortOptions;
+    options = this.structureOptionGroup(options);
+
+    options.forEach((d) => {
+      let childOptions = d.options;
+      d.isSelected = childOptions.some(e => e.isSelected);
+
+      if (d.isSelected) {
+        sortOptions(childOptions);
+      }
+    });
+
+    sortOptions(options);
+
+    return this.destructureOptionGroup(options);
+  }
+
+  isOptionVisible(d, searchValue, hasExactOption, visibleOptionGroupsMapping) {
+    let value = d.label.toLowerCase();
+    let description = d.description;
+    let alias = d.alias;
+    let isVisible = value.indexOf(searchValue) !== -1;
+
+    if (d.isGroupTitle) {
+      isVisible = visibleOptionGroupsMapping[d.index];
+    }
+    
+    if (alias && !isVisible) {
+      isVisible = alias.indexOf(searchValue) !== -1;
+    }
+
+    if (description && !isVisible) {
+      isVisible = description.toLowerCase().indexOf(searchValue) !== -1;
+    }
+
+    d.isVisible = isVisible;
+
+    if (!hasExactOption) {
+      hasExactOption = value === searchValue;
+    }
+
+    return {
+      isVisible,
+      hasExactOption,
+    };
+  }
+
+  structureOptionGroup(options) {
+    let result = [];
+    let childOptions = {};
+
+    /** getting all group title */
+    options.forEach((d) => {
+      if (d.isGroupTitle) {
+        let childArray = [];
+        d.options = childArray;
+        childOptions[d.index] = childArray;
+
+        result.push(d);
+      }
+    });
+
+    /** getting all group options */
+    options.forEach((d) => {
+      if (d.isGroupOption) {
+        childOptions[d.groupIndex].push(d);
+      }
+    });
+
+    return result;
+  }
+
+  destructureOptionGroup(options) {
+    let result = [];
+
+    options.forEach((d) => {
+      result.push(d);
+      result = result.concat(d.options);
+    });
+
+    return result;
+  }
+
   /** helper methods - start */
   addClass($ele, className) {
     if (!$ele) {
@@ -1635,8 +1772,16 @@ export class VirtualSelect {
     return html;
   }
 
-  convertToBoolean(value) {
-    return (value === true || value === 'true') ? true : false;
+  convertToBoolean(value, defaultValue = false) {
+    if (value === true || value === 'true') {
+      value = true;
+    } else if (value === false || value === 'false') {
+      value = false;
+    } else {
+      value = defaultValue;
+    }
+
+    return value;
   }
 
   hasEllipsis($ele) {
@@ -1645,6 +1790,10 @@ export class VirtualSelect {
     }
 
     return $ele.scrollWidth > $ele.offsetWidth;
+  }
+
+  getString(text) {
+    return (text || text === 0) ? text.toString() : '';
   }
   /** helper methods - end */
 
@@ -1740,6 +1889,14 @@ export class VirtualSelect {
 
   static getDisplayValueMethod() {
     return this.virtualSelect.getDisplayValue();
+  }
+
+  static openMethod() {
+    return this.virtualSelect.openDropbox();
+  }
+
+  static closeMethod() {
+    return this.virtualSelect.closeDropbox();
   }
   /** static methods - start */
 }

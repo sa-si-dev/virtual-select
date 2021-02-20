@@ -130,6 +130,7 @@
 
 .vscomp-option {
   display: flex;
+  flex-wrap: wrap;
   position: relative;
   align-items: center;
   padding: 10px 15px;
@@ -193,10 +194,17 @@
 }
 
 .vscomp-option-text {
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  overflow: hidden;
+  @include ellipse;
   width: 100%;
+}
+
+.vscomp-option-description {
+  @include ellipse;
+  width: 100%;
+  line-height: 15px;
+  margin-top: 5px;
+  color: $fontColorLight;
+  font-size: $fontSizeSmall;
 }
 
 .vscomp-search-container {
@@ -306,6 +314,10 @@
     .vscomp-option {
       .vscomp-option-text {
         width: calc(100% - #{$checkboxFullWidth});
+      }
+
+      .vscomp-option-description {
+        padding-left: $checkboxFullWidth;
       }
       
       &.selected .checkbox-icon::after {

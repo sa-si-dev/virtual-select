@@ -6,3 +6,9 @@
   -webkit-transform: rotate(45deg) translate(1px, -4px);
   transform: rotate(45deg) translate(1px, -4px);
 }
+
+@mixin ellipse {
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
