@@ -9,6 +9,8 @@
 
 [Documentation](https://sa-si-dev.github.io/virtual-select)
 
+[Changelog](https://github.com/sa-si-dev/virtual-select/releases)
+
 ## Commands
 
 | Command | Description |
