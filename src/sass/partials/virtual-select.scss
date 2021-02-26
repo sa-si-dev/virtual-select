@@ -1,5 +1,8 @@
+body.vscomp-popup-active {
+  overflow: hidden;
+}
+
 .vscomp-ele {
-  font-family: sans-serif;
   display: inline-block;
   width: 100%;
   max-width: 250px;
@@ -9,6 +12,7 @@
   display: inline-flex;
   position: relative;
   width: 100%;
+  font-family: $fontFamily;
   font-size: $fontSize;
   color: $fontColor;
   text-align: left;
@@ -55,9 +59,43 @@
 
   &::after {
     content: '';
-    border: $arrowSize solid transparent;
-    border-top-color: $arrowColor;
-    margin-bottom: -$arrowSize;
+    @include prefix(transform, rotate(45deg));
+    border: 1px solid transparent;
+    border-right-color: $arrowColor;
+    border-bottom-color: $arrowColor;
+    width: $arrowSize;
+    height: $arrowSize;
+    margin-top: -6px;
+  }
+}
+
+.vscomp-clear-icon {
+  position: relative;
+  width: $clearIconSize;
+  height: $clearIconSize;
+
+  &::before, &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 5px;
+    width: 2px;
+    height: $clearIconSize;
+    background: #999;
+  }
+
+  &::before {
+    @include prefix(transform, rotate(45deg));
+  }
+
+  &::after {
+    @include prefix(transform, rotate(-45deg));
+  }
+
+  &:hover {
+    &::before, &::after {
+      background: $iconHoverColor;
+    }
   }
 }
 
@@ -69,36 +107,34 @@
   width: $clearButtonWidth;
   height: $clearButtonWidth;
   justify-content: center;
+  align-items: center;
   border-radius: 50%;
   margin-top: -#{$clearButtonWidth / 2};
 
-  &::before, &::after {
-    content: '';
-    position: absolute;
-    width: 2px;
-    height: 12px;
-    top: 50%;
-    margin-top: -6px;
-    background: #999;
-  }
-
-  &::before {
-    -webkit-transform: rotate(45deg);
-    transform: rotate(45deg);
-  }
-
-  &::after {
-    -webkit-transform: rotate(-45deg);
-    transform: rotate(-45deg);
-  }
-
   &:hover {
     background: $focusColor;
-    
-    &::before, &::after {
-      background: #333;
+
+    .vscomp-clear-icon {
+      &::before, &::after {
+        background: $iconHoverColor;
+      }
     }
   }
+}
+
+.vscomp-dropbox-close-button {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  left: 50%;
+  margin-left: -#{$dropboxCloseButtonWidth / 2};
+  bottom: -#{$dropboxCloseButtonWidth + $dropboxCloseButtonOffset};
+  width: $dropboxCloseButtonWidth;
+  height: $dropboxCloseButtonWidth;
+  background-color: $primaryBg;
+  border-radius: 50%;
+  cursor: pointer;
 }
 
 .vscomp-value-tag {
@@ -107,19 +143,20 @@
   }
 }
 
-.vscomp-dropbox {
+.vscomp-dropbox-container {
   position: absolute;
   top: calc(100% + #{$dropboxMargin});
   left: 0;
   width: 100%;
+  z-index: $zIndex;
+}
+
+.vscomp-dropbox {
   opacity: 0;
   box-shadow: $boxShadow1;
   background-color: $primaryBg;
-  z-index: 1;
-  -webkit-transition-duration: $transitionDuration;
-  transition-duration: $transitionDuration;
-  -webkit-transform: translate3d(0, -$transitionDistance, 0);
-  transform: translate3d(0, -$transitionDistance, 0);
+  @include prefix(transition-duration, $transitionDuration);
+  @include prefix(transform, translate3d(0, -$transitionDistance, 0));
 }
 
 .vscomp-options-container {
@@ -252,6 +289,24 @@
   padding: 20px 10px;
 }
 
+.vscomp-options-loader {
+  display: none;
+  text-align: center;
+  padding: 20px 0;
+
+  &::before {
+    content: '';
+    display: inline-block;
+    height: $optionsLoaderSize;
+    width: $optionsLoaderSize;
+    opacity: 0.7;
+    border-radius: 50%;
+    background-color: $primaryBg;
+    box-shadow: -4px -5px 3px -3px rgba(0, 0, 0, 0.3);
+    @include prefix(animation, vscomp-animation-spin .8s infinite linear);
+  }
+}
+
 .vscomp-wrapper {
   .checkbox-icon {
     display: inline-flex;
@@ -266,8 +321,7 @@
       width: 100%;
       height: 100%;
       border: 2px solid $checkboxColor;
-      -webkit-transition-duration: 0.2s;
-      transition-duration: 0.2s;
+      @include prefix(transition-duration, 0.2s);
     }
 
     &.checked::after {
@@ -276,18 +330,48 @@
   }
 
   &.position-top {
-    .vscomp-dropbox {
+    .vscomp-dropbox-container {
       top: auto;
       bottom: calc(100% + #{$dropboxMargin});
-      -webkit-transform: translate3d(0, $transitionDistance, 0);
-      transform: translate3d(0, $transitionDistance, 0);
+    }
+
+    .vscomp-dropbox {
+      @include prefix(transform, translate3d(0, $transitionDistance, 0));
     }
   }
 
   &.position-left {
-    .vscomp-dropbox {
+    .vscomp-dropbox-container {
       right: 0;
       left: auto;
+    }
+  }
+
+  &.show-as-popup {
+    .vscomp-dropbox-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      overflow: auto;
+      background-color: $overlayBg;
+      z-index: $zIndex;
+    }
+
+    .vscomp-dropbox {
+      position: relative;
+      width: 80%;
+      max-height: calc(80% - #{$dropboxCloseButtonWidth + $dropboxCloseButtonOffset});
+      max-width: 500px;
+      margin-top: -#{($dropboxCloseButtonWidth + $dropboxCloseButtonOffset) / 2};
+    }
+
+    .vscomp-dropbox-close-button {
+      display: flex;
     }
   }
 
@@ -296,17 +380,32 @@
     border-color: $primaryColor;
     border-left-color: transparent;
     border-top-color: transparent;
-    -webkit-transform: rotate(45deg) translate(1px, -4px);
-    transform: rotate(45deg) translate(1px, -4px);
+    @include prefix(transform, rotate(45deg) translate(1px, -4px));
   }
 
   &.has-select-all {
-    .toggle-all-options {
+    .vscomp-toggle-all-button {
+      display: flex;
+      align-items: center;
       cursor: pointer;
     }
 
-    .vscomp-search-input {
+    .vscomp-search-input, .vscomp-toggle-all-label {
       width: calc(100% - #{$searchClearWidth + $checkboxFullWidth});
+    }
+
+    .vscomp-toggle-all-label {
+      display: none;
+    }
+  }
+
+  &:not(.has-search-input) {
+    .vscomp-toggle-all-button {
+      width: 100%;
+    }
+
+    .vscomp-toggle-all-label {
+      display: inline-block;
     }
   }
 
@@ -335,13 +434,12 @@
   &.opened {
     .vscomp-dropbox {
       opacity: 1;
-      -webkit-transform: translate3d(0, 0, 0);
-      transform: translate3d(0, 0, 0);
+      @include prefix(transform, translate3d(0, 0, 0));
     }
   }
 
   &.closed {
-    .vscomp-dropbox {
+    .vscomp-dropbox-container {
       display: none;
     }
   }
@@ -385,7 +483,7 @@
       visibility: visible;
     }
 
-    .toggle-all-options {
+    .vscomp-toggle-all-button {
       opacity: 0.5;
       pointer-events: none;
     }
@@ -404,16 +502,28 @@
       display: none;
     }
 
-    .vscomp-dropbox {
+    .vscomp-dropbox-container {
       position: relative;
-      -webkit-transition-duration: 0s;
-      transition-duration: 0s;
+    }
+
+    .vscomp-dropbox {
+      @include prefix(transition-duration, 0s);
       box-shadow: none;
       border: 1px solid $borderColor;
     }
 
     &.focused, &:focus, &:hover {
       box-shadow: $boxShadow2;
+    }
+  }
+
+  &.server-searching {
+    .vscomp-options-list {
+      display: none;
+    }
+
+    .vscomp-options-loader {
+      display: block;
     }
   }
 }

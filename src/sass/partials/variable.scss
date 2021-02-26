@@ -7,10 +7,12 @@ $focusColor: #ccc;
 $selectedColor: #eee;
 $arrowColor: #111;
 $checkboxColor: #888;
+$iconHoverColor: #333;
+$overlayBg: rgba(0, 0, 0, 0.5);
 
+$fontFamily: sans-serif;
 $fontSize: 14px;
 $fontSizeSmall: 13px;
-$arrowSize: 6px;
 $dropboxHeight: 250px;
 $dropboxMargin: 4px;
 $searchHeight: 40px;
@@ -19,9 +21,16 @@ $newOptionIconWidth: 30px;
 $searchClearWidth: 30px;
 $optionHeight: 40px;
 $arrowWidth: 30px;
+$arrowSize: 8px;
 $clearButtonWidth: 24px;
+$clearIconSize: 12px;
+$dropboxCloseButtonWidth: 40px;
+$dropboxCloseButtonOffset: 8px;
 $transitionDuration: 250ms;
 $transitionDistance: 30px;
+$optionsLoaderSize: 40px;
+
+$zIndex: 1;
 
 $boxShadow1: 0 4px 5px 0 rgba(0, 0, 0, 0.14), 0 1px 10px 0 rgba(0, 0, 0, 0.12), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
 $boxShadow2: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 3px 1px -2px rgba(0, 0, 0, 0.12), 0 1px 5px 0 rgba(0, 0, 0, 0.20);

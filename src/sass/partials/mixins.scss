@@ -1,10 +1,14 @@
+@mixin prefix($property, $value) {
+  #{'-webkit-' + $property}: $value;
+  #{$property}: $value;
+}
+
 @mixin checkbox-checked {
   width: 50%;
   border-color: $primaryColor;
   border-left-color: transparent;
   border-top-color: transparent;
-  -webkit-transform: rotate(45deg) translate(1px, -4px);
-  transform: rotate(45deg) translate(1px, -4px);
+  @include prefix(transform, rotate(45deg) translate(1px, -4px));
 }
 
 @mixin ellipse {
