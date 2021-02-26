@@ -15,6 +15,7 @@
 | multiple | Boolean | false | Enable multi-select |
 | search | Boolean | false - for single select <br/>true - for multi-select | Enable search feature |
 | hideClearButton | Boolean | false | Hide clear value button |
+| autoSelectFirstOption | Boolean | false | Select first option by default on load |
 | hasOptionDescription | Boolean | false | Has description to show along with label |
 | disableSelectAll | Boolean | false | Disable select all feature of multiple select |
 | optionsCount | Number | 5 \| 4 | No.of options to show on viewport <br/>4 - When hasOptionDescription is true |
@@ -23,6 +24,7 @@
 | placeholder | String | Select | Text to show when no options selected |
 | noOptionsText | String | No options found | Text to show when no options to show |
 | noSearchResultsText | String | No results found | Text to show when no results on search |
+| selectAllText | String | Select all | Text to show near select all checkbox when search is disabled |
 | selectedValue | String \| Array | | Single value or array of values to select on init |
 | silentInitialValueSet | Boolean | false | To avoid "change event" trigger on setting initial value |
 | dropboxWidth | String | | Custom width for dropbox |
@@ -37,6 +39,9 @@
 | name | String | | Name attribute for hidden input<br>It would be useful for form submit to server |
 | keepAlwaysOpen | Boolean | false | Keep dropbox always open with fixed height |
 | maxValues | Number | 0 | Maximum no.of options allowed to choose in multiple select<br>0 - for no limit |
+| additionalClasses | String | | Additional classes for wrapper element |
+| showDropboxAsPopup | Boolean | true | Show dropbox as popup on small screen like mobile |
+| popupDropboxBreakpoint | String | 576px | Maximum screen width that allowed to show dropbox as popup |
 
 ## Using properties on initialization
 

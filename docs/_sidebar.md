@@ -3,3 +3,4 @@
 * [Methods](methods.md)
 * [Events](events.md)
 * [Examples](examples.md)
+* [Changelog](https://github.com/sa-si-dev/virtual-select/releases)

@@ -129,6 +129,13 @@ function initPageExamples() {
   });
 
   VirtualSelect.init({
+    ele: '#multi-select-without-search',
+    options: getOptions(),
+    multiple: true,
+    search: false,
+  });
+
+  VirtualSelect.init({
     ele: '#single-disabled-select',
     options: getOptions(),
     disabledOptions: [2, 6, 9],
@@ -214,5 +221,22 @@ function initPageExamples() {
     ele: '#with-description-select',
     options: getOptions(null, true),
     hasOptionDescription: true,
+  });
+
+  VirtualSelect.init({
+    ele: '#single-show-as-popup-select',
+    options: getOptions(),
+    zIndex: 99,
+    popupDropboxBreakpoint: '3000px',
+    placeholder: 'Select a single value',
+  });
+
+  VirtualSelect.init({
+    ele: '#multiple-show-as-popup-select',
+    options: getOptions(),
+    zIndex: 99,
+    popupDropboxBreakpoint: '3000px',
+    placeholder: 'Select multiple values',
+    multiple: true,
   });
 }

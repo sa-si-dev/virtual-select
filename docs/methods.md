@@ -1,9 +1,9 @@
 # Methods
 
 - [Get selected value](#get-selected-value)
+- [setValue()](#setvalue)
 - [reset()](#reset)
-- [setValue()](#setoptions)
-- [setOptions()](#setvalue)
+- [setOptions()](#setoptions)
 - [setDisabledOptions()](#setdisabledoptions)
 - [toggleSelectAll()](#toggleselectall)
 - [isAllSelected()](#isallselected)

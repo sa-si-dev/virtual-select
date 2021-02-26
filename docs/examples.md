@@ -3,6 +3,7 @@
 - [Default dropdown](#default-dropdown)
 - [With search box](#with-search-box)
 - [Multiple select](#multiple-select)
+- [Multiple select without search](#multiple-select-without-search)
 - [Disabled options](#disabled-options)
 - [Option group](#option-group)
 - [Preselect value](#preselect-value)
@@ -16,6 +17,7 @@
 - [Keep dropbox always open](#keep-dropbox-always-open)
 - [Maximum values](#maximum-values)
 - [Label with description](#label-with-description)
+- [Show dropbox as popup](#show-dropbox-as-popup)
 
 ## Default dropdown
 
@@ -55,6 +57,18 @@ VirtualSelect.init({
 VirtualSelect.init({
   ...
   multiple: true,
+});
+```
+
+## Multiple select without search
+
+<div id="multi-select-without-search"></div>
+
+```js
+VirtualSelect.init({
+  ...
+  multiple: true,
+  search: false,
 });
 ```
 
@@ -235,6 +249,21 @@ VirtualSelect.init({
   hasOptionDescription: true
 });
 ```
+
+## Show dropbox as popup
+
+Show dropbox as popup on small screens like mobile.
+
+For demo purpose I have enabled popup for large screens by setting `popupDropboxBreakpoint: '3000px'`
+
+So that you can check below dropdown in large screens also.
+
+<div id="multiple-show-as-popup-select"></div>
+
+<br>
+<br>
+
+<div id="single-show-as-popup-select"></div>
 
 <script>
   initPageExamples();
