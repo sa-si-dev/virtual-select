@@ -16,7 +16,7 @@ body {
   left: 200px;
 }
 
-section.cover .cover-main>p:last-child a:last-child:hover {
+section.cover .cover-main > p:last-child a:last-child:hover {
   color: #fff;
 }
 
@@ -36,10 +36,11 @@ section.cover .cover-main>p:last-child a:last-child:hover {
 }
 
 section.cover {
-  background: linear-gradient(to left bottom, hsl(71, 100%, 85%) 0%,hsl(252, 100%, 85%) 100%) !important;
+  background: linear-gradient(to left bottom, hsl(71, 100%, 85%) 0%, hsl(252, 100%, 85%) 100%) !important;
 }
 
-.markdown-section td, .markdown-section th {
+.markdown-section td,
+.markdown-section th {
   padding: 10px 15px;
   line-height: 30px;
 }

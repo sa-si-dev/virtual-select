@@ -30,14 +30,10 @@ module.exports = (env, options) => {
       new FileManagerPlugin({
         events: {
           onStart: {
-            delete: [
-              'dist',
-            ]
+            delete: ['dist'],
           },
           onEnd: {
-            delete: [
-              'dist/styles.min.js',
-            ],
+            delete: ['dist/styles.min.js'],
             copy: [
               { source: 'static', destination: 'dist' },
               { source: 'static', destination: 'docs/assets' },

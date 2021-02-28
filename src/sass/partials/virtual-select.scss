@@ -18,7 +18,9 @@ body.vscomp-popup-active {
   text-align: left;
   flex-wrap: wrap;
 
-  *, *::before, *::after {
+  *,
+  *::before,
+  *::after {
     box-sizing: border-box;
   }
 
@@ -74,7 +76,8 @@ body.vscomp-popup-active {
   width: $clearIconSize;
   height: $clearIconSize;
 
-  &::before, &::after {
+  &::before,
+  &::after {
     content: '';
     position: absolute;
     top: 0;
@@ -93,7 +96,8 @@ body.vscomp-popup-active {
   }
 
   &:hover {
-    &::before, &::after {
+    &::before,
+    &::after {
       background: $iconHoverColor;
     }
   }
@@ -115,7 +119,8 @@ body.vscomp-popup-active {
     background: $focusColor;
 
     .vscomp-clear-icon {
-      &::before, &::after {
+      &::before,
+      &::after {
         background: $iconHoverColor;
       }
     }
@@ -282,7 +287,8 @@ body.vscomp-popup-active {
   }
 }
 
-.vscomp-no-options, .vscomp-no-search-results {
+.vscomp-no-options,
+.vscomp-no-search-results {
   display: none;
   justify-content: center;
   align-items: center;
@@ -303,7 +309,7 @@ body.vscomp-popup-active {
     border-radius: 50%;
     background-color: $primaryBg;
     box-shadow: -4px -5px 3px -3px rgba(0, 0, 0, 0.3);
-    @include prefix(animation, vscomp-animation-spin .8s infinite linear);
+    @include prefix(animation, vscomp-animation-spin 0.8s infinite linear);
   }
 }
 
@@ -390,7 +396,8 @@ body.vscomp-popup-active {
       cursor: pointer;
     }
 
-    .vscomp-search-input, .vscomp-toggle-all-label {
+    .vscomp-search-input,
+    .vscomp-toggle-all-label {
       width: calc(100% - #{$searchClearWidth + $checkboxFullWidth});
     }
 
@@ -418,14 +425,15 @@ body.vscomp-popup-active {
       .vscomp-option-description {
         padding-left: $checkboxFullWidth;
       }
-      
+
       &.selected .checkbox-icon::after {
         @include checkbox-checked;
       }
     }
   }
 
-  &.focused, &:focus {
+  &.focused,
+  &:focus {
     .vscomp-toggle-button {
       box-shadow: $boxShadow2;
     }
@@ -454,13 +462,14 @@ body.vscomp-popup-active {
     &.has-value .vscomp-clear-button {
       display: flex;
     }
-  
+
     .vscomp-toggle-button {
       padding-right: #{$arrowWidth + $clearButtonWidth};
     }
   }
 
-  &.has-no-options, &.has-no-search-results {
+  &.has-no-options,
+  &.has-no-search-results {
     .vscomp-options-container {
       display: none;
     }
@@ -512,7 +521,9 @@ body.vscomp-popup-active {
       border: 1px solid $borderColor;
     }
 
-    &.focused, &:focus, &:hover {
+    &.focused,
+    &:focus,
+    &:hover {
       box-shadow: $boxShadow2;
     }
   }
