@@ -225,7 +225,6 @@ function initPageExamples() {
     options: getOptions(),
     search: true,
     keepAlwaysOpen: true,
-    zIndex: config.zIndex,
   });
 
   VirtualSelect.init({
