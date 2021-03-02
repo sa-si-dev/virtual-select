@@ -654,8 +654,6 @@ export class VirtualSelect {
       defaultOptions.optionHeight = '60px';
     }
 
-    console.log(options);
-
     return Object.assign(defaultOptions, options);
   }
 
@@ -1227,10 +1225,6 @@ export class VirtualSelect {
   }
 
   getFirstVisibleOptionIndex() {
-    console.log('beuh');
-    console.log(this.overrideScrollPosition);
-    console.log(this.overrideScrollPosition());
-
     return Math.ceil(
       (this.overrideScrollPosition
         ? this.overrideScrollPosition()
@@ -1239,7 +1233,6 @@ export class VirtualSelect {
   }
 
   getVisibleStartIndex() {
-    console.log('coucou');
     let firstVisibleOptionIndex = this.getFirstVisibleOptionIndex();
     let startIndex = firstVisibleOptionIndex - this.halfOptionsCount;
 
