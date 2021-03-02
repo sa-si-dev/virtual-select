@@ -654,6 +654,8 @@ export class VirtualSelect {
       defaultOptions.optionHeight = '60px';
     }
 
+    console.log(options);
+
     return Object.assign(defaultOptions, options);
   }
 
