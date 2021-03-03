@@ -58,7 +58,6 @@ export class VirtualSelect {
    * @property {boolean} [showDropboxAsPopup=true] - Show dropbox as popup on small screen like mobile
    * @property {string} [popupDropboxBreakpoint=576px] - Maximum screen width that allowed to show dropbox as popup
    * @property {function} [onServerSearch] - Callback function to integrate server search
-   * @property {function} [overrideScrollPosition] - Function to override the scroll position (so you can use a custom scrollbar)
    */
   constructor(options) {
     try {
@@ -283,7 +282,7 @@ export class VirtualSelect {
     DomUtils.toggleClass(this.$wrapper, 'has-no-options', hasNoOptions);
     this.setOptionsPosition();
     this.setOptionsTooltip();
-    this.moveFocusedOptionToView();
+    //this.moveFocusedOptionToView();
   }
 
   renderSearch() {
@@ -339,7 +338,15 @@ export class VirtualSelect {
       'click',
       'onDropboxCloseButtonClick'
     );
-    this.addEvent(this.$optionsContainer, 'scroll', 'onOptionsScroll');
+    if (this.overrideScrollEventSelector) {
+      this.addEvent(
+        this.$ele.querySelector(this.overrideScrollEventSelector),
+        'scroll',
+        'onOptionsScroll'
+      );
+    } else {
+      this.addEvent(this.$optionsContainer, 'scroll', 'onOptionsScroll');
+    }
     this.addEvent(this.$options, 'click', 'onOptionsClick');
     this.addEvent(this.$options, 'mouseover', 'onOptionsMouseOver');
     this.addEvent(this.$options, 'touchmove', 'onOptionsTouchMove');
@@ -580,7 +587,6 @@ export class VirtualSelect {
     this.initialSelectedValue = options.selectedValue;
     this.popupDropboxBreakpoint = options.popupDropboxBreakpoint;
     this.onServerSearch = options.onServerSearch;
-    this.overrideScrollPosition = options.overrideScrollPosition;
 
     this.selectedValues = [];
     this.newValues = [];
@@ -1225,11 +1231,7 @@ export class VirtualSelect {
   }
 
   getFirstVisibleOptionIndex() {
-    return Math.ceil(
-      (this.overrideScrollPosition
-        ? this.overrideScrollPosition()
-        : this.$optionsContainer.scrollTop) / this.optionHeight
-    );
+    return Math.ceil(this.$optionsContainer.scrollTop / this.optionHeight);
   }
 
   getVisibleStartIndex() {
@@ -1539,6 +1541,9 @@ export class VirtualSelect {
       newScrollTop =
         optionOffsetTop - containerHeight + optionHeight + optionsTop;
     }
+
+    console.log('ouaiche');
+    console.log('st ' + newScrollTop);
 
     if (newScrollTop !== undefined) {
       this.$optionsContainer.scrollTop = newScrollTop;
