@@ -1542,9 +1542,6 @@ export class VirtualSelect {
         optionOffsetTop - containerHeight + optionHeight + optionsTop;
     }
 
-    console.log('ouaiche');
-    console.log('st ' + newScrollTop);
-
     if (newScrollTop !== undefined) {
       this.$optionsContainer.scrollTop = newScrollTop;
     }
