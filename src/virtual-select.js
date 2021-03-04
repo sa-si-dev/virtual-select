@@ -58,6 +58,7 @@ export class VirtualSelect {
    * @property {boolean} [showDropboxAsPopup=true] - Show dropbox as popup on small screen like mobile
    * @property {string} [popupDropboxBreakpoint=576px] - Maximum screen width that allowed to show dropbox as popup
    * @property {function} [onServerSearch] - Callback function to integrate server search
+   * @property {string} [searchPlaceHolder=Search...] - Text to show inside search input
    */
   constructor(options) {
     try {
@@ -301,7 +302,7 @@ export class VirtualSelect {
     }
 
     if (this.hasSearch) {
-      searchInput = `<input type="text" class="vscomp-search-input" placeholder="Search...">
+      searchInput = `<input type="text" class="vscomp-search-input" placeholder="${this.searchPlaceholder}">
       <span class="vscomp-search-clear">&times;</span>`;
     }
 
@@ -587,6 +588,7 @@ export class VirtualSelect {
     this.initialSelectedValue = options.selectedValue;
     this.popupDropboxBreakpoint = options.popupDropboxBreakpoint;
     this.onServerSearch = options.onServerSearch;
+    this.searchPlaceholder = options.searchPlaceholder;
 
     this.selectedValues = [];
     this.newValues = [];
@@ -653,6 +655,7 @@ export class VirtualSelect {
       maxValues: 0,
       showDropboxAsPopup: true,
       popupDropboxBreakpoint: '576px',
+      searchPlaceholder: 'Search...',
     };
 
     if (options.hasOptionDescription) {
