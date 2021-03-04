@@ -58,7 +58,7 @@ export class VirtualSelect {
    * @property {boolean} [showDropboxAsPopup=true] - Show dropbox as popup on small screen like mobile
    * @property {string} [popupDropboxBreakpoint=576px] - Maximum screen width that allowed to show dropbox as popup
    * @property {function} [onServerSearch] - Callback function to integrate server search
-   * @property {string} [searchPlaceHolder=Search...] - Text to show inside search input
+   * @property {string} [searchPlaceholder=Search...] - Text to show inside search input
    */
   constructor(options) {
     try {
