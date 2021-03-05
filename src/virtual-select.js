@@ -360,7 +360,11 @@ export class VirtualSelect {
   }
 
   onDocumentClick(e) {
-    VirtualSelect.closeAllDropbox(e.target.closest('.vscomp-wrapper'));
+    let $eleToKeepOpen = e.target.closest('.vscomp-wrapper');
+
+    if ($eleToKeepOpen !== this.$wrapper) {
+      this.closeDropbox();
+    }
   }
 
   onKeyDown(e) {
@@ -1861,16 +1865,6 @@ export class VirtualSelect {
     });
 
     return singleEle ? instances[0] : instances;
-  }
-
-  static closeAllDropbox($eleToKeepOpen) {
-    document.querySelectorAll('.vscomp-wrapper').forEach(($ele) => {
-      if ($eleToKeepOpen && $eleToKeepOpen === $ele) {
-        return;
-      }
-
-      $ele.parentElement.virtualSelect.closeDropbox();
-    });
   }
 
   static resetForm(e) {
