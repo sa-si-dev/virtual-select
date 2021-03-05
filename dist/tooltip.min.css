@@ -1,7 +1,7 @@
 /*!
- * Tooltip v1.0.6
+ * Tooltip v1.0.7
  * https://sa-si-dev.github.io/tooltip
  * Licensed under MIT (https://github.com/sa-si-dev/tooltip/blob/master/LICENSE)
  */
-.tooltip-box{font-family:sans-serif;font-size:14px;line-height:20px;color:#fff;background:#212121;position:absolute;top:0;left:0;max-width:300px;padding:5px 10px;opacity:0;pointer-events:none;word-wrap:break-word;text-align:left}
+.tooltip-comp{font-family:sans-serif;font-size:14px;line-height:20px;color:#fff;background:#212121;position:absolute;top:0;left:0;max-width:300px;padding:5px 10px;opacity:0;pointer-events:none;word-break:break-word;text-align:left;border-radius:2px}.tooltip-comp-arrow{position:absolute;border:6px solid transparent;z-index:1}.tooltip-comp-content{position:relative;z-index:2}.tooltip-comp.hide-arrow-icon .tooltip-comp-arrow{display:none}.tooltip-comp.position-bottom .tooltip-comp-arrow{margin-left:-6px;left:0;border-bottom-color:#212121;top:-12px}.tooltip-comp.position-top .tooltip-comp-arrow{margin-left:-6px;left:0;border-top-color:#212121;bottom:-12px}.tooltip-comp.position-right .tooltip-comp-arrow{margin-top:-6px;top:0;border-right-color:#212121;left:-12px}.tooltip-comp.position-left .tooltip-comp-arrow{margin-top:-6px;top:0;border-left-color:#212121;right:-12px}
 
