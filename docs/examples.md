@@ -18,6 +18,7 @@
 - [Maximum values](#maximum-values)
 - [Label with description](#label-with-description)
 - [Show dropbox as popup](#show-dropbox-as-popup)
+- [Server search](#server-search)
 
 ## Default dropdown
 
@@ -264,6 +265,26 @@ So that you can check below dropdown in large screens also.
 <br>
 
 <div id="single-show-as-popup-select"></div>
+
+## Server search
+
+Get options from server on search
+
+<div id="server-search-select"></div>
+
+```js
+VirtualSelect.init({
+  ...
+  onServerSearch: onSampleSelectServerSearch,
+});
+
+function onSampleSelectServerSearch(searchValue, virtualSelect) {
+  /** project developer has to define anyMehodToGetDataFromServer function to make API call */
+  anyMehodToGetDataFromServer(searchValue).then(function(newOptions) {
+    virtualSelect.setServerOptions(newOptions);
+  });
+}
+```
 
 <script>
   initPageExamples();

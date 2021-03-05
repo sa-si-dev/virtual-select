@@ -93,6 +93,14 @@ function getGroupOptions() {
   return optGroupData;
 }
 
+function onSampleServerSearch(searchValue, virtualSelect) {
+  let newOptions = searchValue ? getOptions().filter((d) => d.label.toLowerCase().indexOf(searchValue) !== -1) : [];
+
+  setTimeout(() => {
+    virtualSelect.setServerOptions(newOptions);
+  }, 300);
+}
+
 function initPageGetStarted() {
   replacePlaceholdersForElement('.cover-main');
 
@@ -257,5 +265,12 @@ function initPageExamples() {
     placeholder: 'Select multiple values',
     multiple: true,
     zIndex: config.zIndex,
+  });
+
+  VirtualSelect.init({
+    ele: '#server-search-select',
+    multiple: true,
+    searchPlaceholderText: 'Type here for options',
+    onServerSearch: onSampleServerSearch,
   });
 }

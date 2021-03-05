@@ -25,6 +25,7 @@
 | noOptionsText | String | No options found | Text to show when no options to show |
 | noSearchResultsText | String | No results found | Text to show when no results on search |
 | selectAllText | String | Select all | Text to show near select all checkbox when search is disabled |
+| searchPlaceholderText | String | Search... | Text to show as placeholder for search input |
 | selectedValue | String \| Array | | Single value or array of values to select on init |
 | silentInitialValueSet | Boolean | false | To avoid "change event" trigger on setting initial value |
 | dropboxWidth | String | | Custom width for dropbox |
@@ -42,6 +43,8 @@
 | additionalClasses | String | | Additional classes for wrapper element |
 | showDropboxAsPopup | Boolean | true | Show dropbox as popup on small screen like mobile |
 | popupDropboxBreakpoint | String | 576px | Maximum screen width that allowed to show dropbox as popup |
+| onServerSearch | Function | | Callback function to integrate server search |
+| hideValueTooltipOnSelectAll | Boolean | true | Hide value tooltip if all options selected |
 
 ## Using properties on initialization
 
@@ -75,6 +78,7 @@ To use an property as an attribute, property name should be `hyphenated` and pre
 - options
 - disabledOptions
 - selectedValue
+- onServerSearch
 
 <br>
 
