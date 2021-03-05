@@ -41,7 +41,7 @@ body.vscomp-popup-active {
 }
 
 .vscomp-value {
-  width: 100%;
+  max-width: 100%;
   height: 20px;
   line-height: 20px;
   overflow: hidden;
@@ -491,7 +491,9 @@ body.vscomp-popup-active {
     .vscomp-search-clear {
       visibility: visible;
     }
+  }
 
+  &.has-search-value, &.has-no-options {
     .vscomp-toggle-all-button {
       opacity: 0.5;
       pointer-events: none;
