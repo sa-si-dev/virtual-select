@@ -60,6 +60,7 @@ export class VirtualSelect {
    * @property {string} [popupDropboxBreakpoint=576px] - Maximum screen width that allowed to show dropbox as popup
    * @property {function} [onServerSearch] - Callback function to integrate server search
    * @property {boolean} [hideValueTooltipOnSelectAll=true] - Hide value tooltip if all options selected
+   * @property {boolean} [showOptionsOnlyOnSearch=false] - Show options to select only if search value is not empty
    */
   constructor(options) {
     try {
@@ -260,7 +261,7 @@ export class VirtualSelect {
     let hasNoOptions = !this.options.length && !this.hasServerSearch;
     let hasNoSearchResults = !hasNoOptions && !visibleOptions.length;
 
-    if (!this.allowNewOption) {
+    if (!this.allowNewOption || this.showOptionsOnlyOnSearch) {
       DomUtils.toggleClass(this.$wrapper, 'has-no-search-results', hasNoSearchResults);
     }
 
@@ -511,6 +512,10 @@ export class VirtualSelect {
     } else if (this.autoSelectFirstOption && this.visibleOptions.length) {
       this.setValueMethod(this.visibleOptions[0].value, this.silentInitialValueSet);
     }
+
+    if (this.showOptionsOnlyOnSearch) {
+      this.setSearchValue('', false, true);
+    }
   }
 
   afterSetOptionsContainerHeight(reset) {
@@ -549,6 +554,10 @@ export class VirtualSelect {
     this.setOptionsHeight();
     this.setVisibleOptions();
 
+    if (this.showOptionsOnlyOnSearch) {
+      this.setSearchValue('', false, true);
+    }
+
     if (!keepValue) {
       this.reset();
     }
@@ -582,6 +591,7 @@ export class VirtualSelect {
     this.keepAlwaysOpen = convertToBoolean(options.keepAlwaysOpen);
     this.showDropboxAsPopup = convertToBoolean(options.showDropboxAsPopup);
     this.hideValueTooltipOnSelectAll = convertToBoolean(options.hideValueTooltipOnSelectAll);
+    this.showOptionsOnlyOnSearch = convertToBoolean(options.showOptionsOnlyOnSearch);
     this.noOptionsText = options.noOptionsText;
     this.noSearchResultsText = options.noSearchResultsText;
     this.selectAllText = options.selectAllText;
@@ -611,13 +621,13 @@ export class VirtualSelect {
     this.searchValueOriginal = '';
     this.isAllSelected = false;
 
-    if ((options.search === undefined && this.multiple) || this.allowNewOption) {
+    if ((options.search === undefined && this.multiple) || this.allowNewOption || this.showOptionsOnlyOnSearch) {
       this.hasSearch = true;
     }
 
     this.hasServerSearch = typeof this.onServerSearch === 'function';
 
-    if (this.maxValues || this.hasServerSearch) {
+    if (this.maxValues || this.hasServerSearch || this.showOptionsOnlyOnSearch) {
       this.disableSelectAll = true;
     }
 
@@ -663,6 +673,7 @@ export class VirtualSelect {
       showDropboxAsPopup: true,
       popupDropboxBreakpoint: '576px',
       hideValueTooltipOnSelectAll: true,
+      showOptionsOnlyOnSearch: false,
     };
 
     if (options.hasOptionDescription) {
@@ -711,6 +722,7 @@ export class VirtualSelect {
       'data-show-dropbox-as-popup': 'showDropboxAsPopup',
       'data-popup-dropbox-breakpoint': 'popupDropboxBreakpoint',
       'data-hide-value-tooltip-on-select-all': 'hideValueTooltipOnSelectAll',
+      'data-show-options-only-on-search': 'showOptionsOnlyOnSearch',
     };
 
     for (let k in mapping) {
@@ -1073,8 +1085,8 @@ export class VirtualSelect {
     DomUtils.setData(this.$valueText, 'tooltip', valueTooltip.join(', '));
   }
 
-  setSearchValue(value, skipInputSet) {
-    if (value === this.searchValueOriginal) {
+  setSearchValue(value, skipInputSet = false, forceSet = false) {
+    if (value === this.searchValueOriginal && !forceSet) {
       return;
     }
 
@@ -1082,7 +1094,7 @@ export class VirtualSelect {
       this.$searchInput.value = value;
     }
 
-    let searchValue = value.toLowerCase().trim();
+    let searchValue = value.replace(/\\/g, '').toLowerCase().trim();
     this.searchValue = searchValue;
     this.searchValueOriginal = value;
 
@@ -1096,7 +1108,8 @@ export class VirtualSelect {
     let hasExactOption = false;
     let visibleOptionGroupsMapping;
     let searchValue = this.searchValue;
-    let isOptionVisible = this.isOptionVisible;
+    let showOptionsOnlyOnSearch = this.showOptionsOnlyOnSearch;
+    let isOptionVisible = this.isOptionVisible.bind(this);
 
     if (this.hasOptionGroup) {
       visibleOptionGroupsMapping = this.getVisibleOptionGroupsMapping(searchValue);
@@ -1107,7 +1120,17 @@ export class VirtualSelect {
         return;
       }
 
-      let result = isOptionVisible(d, searchValue, hasExactOption, visibleOptionGroupsMapping);
+      let result;
+
+      if (showOptionsOnlyOnSearch && !searchValue) {
+        d.isVisible = false;
+        result = {
+          isVisible: false,
+          hasExactOption: false,
+        };
+      } else {
+        result = isOptionVisible(d, searchValue, hasExactOption, visibleOptionGroupsMapping);
+      }
 
       if (result.isVisible) {
         visibleOptionsCount++;
