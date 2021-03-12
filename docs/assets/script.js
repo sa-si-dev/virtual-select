@@ -273,4 +273,11 @@ function initPageExamples() {
     searchPlaceholderText: 'Type here for options',
     onServerSearch: onSampleServerSearch,
   });
+
+  VirtualSelect.init({
+    ele: '#options-on-search-select',
+    options: getOptions(),
+    showOptionsOnlyOnSearch: true,
+    searchPlaceholderText: 'Type here for options',
+  });
 }

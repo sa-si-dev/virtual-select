@@ -19,6 +19,7 @@
 - [Label with description](#label-with-description)
 - [Show dropbox as popup](#show-dropbox-as-popup)
 - [Server search](#server-search)
+- [Show options only on search](#show-options-only-on-search)
 
 ## Default dropdown
 
@@ -284,6 +285,17 @@ function onSampleSelectServerSearch(searchValue, virtualSelect) {
     virtualSelect.setServerOptions(newOptions);
   });
 }
+```
+
+## Show options only on search
+
+<div id="options-on-search-select"></div>
+
+```js
+VirtualSelect.init({
+  ...
+  showOptionsOnlyOnSearch: true,
+});
 ```
 
 <script>

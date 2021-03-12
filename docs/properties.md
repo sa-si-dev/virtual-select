@@ -45,6 +45,7 @@
 | popupDropboxBreakpoint | String | 576px | Maximum screen width that allowed to show dropbox as popup |
 | onServerSearch | Function | | Callback function to integrate server search |
 | hideValueTooltipOnSelectAll | Boolean | true | Hide value tooltip if all options selected |
+| showOptionsOnlyOnSearch | Boolean | false | Show options to select only if search value is not empty |
 
 ## Using properties on initialization
 
