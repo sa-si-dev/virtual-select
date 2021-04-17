@@ -10,6 +10,7 @@
 - [addOption()](#addoption)
 - [getNewValue()](#getnewvalue)
 - [getDisplayValue()](#getdisplayvalue)
+- [getSelectedOptions()](#getselectedoptions)
 - [open()](#open)
 - [close()](#close)
 
@@ -101,6 +102,15 @@ Get selected option's display value (i.e label)
 
 ```js
 document.querySelector('#sample-select').getDisplayValue();
+```
+
+### getSelectedOptions()
+
+Get selected option's details.
+It would contains `isNew: true` property for options added newly by `allowNewOption`
+
+```js
+document.querySelector('#sample-select').getSelectedOptions();
 ```
 
 ### open()
