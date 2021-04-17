@@ -1,3 +1,5 @@
+import { Utils } from './index';
+
 export class DomUtils {
   static addClass($ele, className) {
     if (!$ele) {
@@ -6,8 +8,8 @@ export class DomUtils {
 
     className = className.split(' ');
 
-    this.getElements($ele).forEach((_this) => {
-      _this.classList.add(...className);
+    DomUtils.getElements($ele).forEach(($this) => {
+      $this.classList.add(...className);
     });
   }
 
@@ -18,8 +20,8 @@ export class DomUtils {
 
     className = className.split(' ');
 
-    this.getElements($ele).forEach((_this) => {
-      _this.classList.remove(...className);
+    DomUtils.getElements($ele).forEach(($this) => {
+      $this.classList.remove(...className);
     });
   }
 
@@ -34,8 +36,8 @@ export class DomUtils {
 
     let isAdded;
 
-    this.getElements($ele).forEach((_this) => {
-      isAdded = _this.classList.toggle(className, isAdd);
+    DomUtils.getElements($ele).forEach(($this) => {
+      isAdded = $this.classList.toggle(className, isAdd);
     });
 
     return isAdded;
@@ -119,11 +121,42 @@ export class DomUtils {
       return;
     }
 
-    if ($ele.length === undefined) {
+    if ($ele.forEach === undefined) {
       $ele = [$ele];
     }
 
     return $ele;
+  }
+
+  static addEvent($ele, events, callback) {
+    if (!$ele) {
+      return;
+    }
+
+    events = Utils.removeArrayEmpty(events.split(' '));
+
+    events.forEach((event) => {
+      $ele = DomUtils.getElements($ele);
+
+      $ele.forEach(($this) => {
+        $this.addEventListener(event, callback);
+      });
+    });
+  }
+
+  static dispatchEvent($ele, eventName) {
+    if (!$ele) {
+      return;
+    }
+
+    $ele = DomUtils.getElements($ele);
+
+    /** using setTimeout to trigger asynchronous event */
+    setTimeout(() => {
+      $ele.forEach(($this) => {
+        $this.dispatchEvent(new Event(eventName, { bubbles: true }));
+      });
+    }, 0);
   }
 
   /** convert object to style attribute */

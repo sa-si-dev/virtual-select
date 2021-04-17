@@ -175,7 +175,7 @@ body.vscomp-popup-active {
   flex-wrap: wrap;
   position: relative;
   align-items: center;
-  padding: 10px 15px;
+  padding: 0 15px;
   height: $optionHeight;
   align-items: center;
   cursor: pointer;
@@ -381,14 +381,6 @@ body.vscomp-popup-active {
     }
   }
 
-  &.selected .checkbox-icon::after {
-    width: 50%;
-    border-color: $primaryColor;
-    border-left-color: transparent;
-    border-top-color: transparent;
-    @include prefix(transform, rotate(45deg) translate(1px, -4px));
-  }
-
   &.has-select-all {
     .vscomp-toggle-all-button {
       display: flex;
@@ -493,7 +485,8 @@ body.vscomp-popup-active {
     }
   }
 
-  &.has-search-value, &.has-no-options {
+  &.has-search-value,
+  &.has-no-options {
     .vscomp-toggle-all-button {
       opacity: 0.5;
       pointer-events: none;

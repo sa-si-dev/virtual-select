@@ -4,12 +4,14 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
 const FileManagerPlugin = require('filemanager-webpack-plugin');
 
-const banner = `Virtual Select v1.0.8
+const banner = `Virtual Select v1.0.9
 https://sa-si-dev.github.io/virtual-select
 Licensed under MIT (https://github.com/sa-si-dev/virtual-select/blob/master/LICENSE)`;
 
 module.exports = (env, options) => {
   const config = {
+    target: 'es5',
+
     entry: {
       styles: './src/styles.js',
       'virtual-select': './src/virtual-select.js',

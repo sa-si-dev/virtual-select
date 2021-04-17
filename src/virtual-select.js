@@ -40,6 +40,7 @@ export class VirtualSelect {
    * @property {string} [noSearchResultsText=No results found] - Text to show when no results on search
    * @property {string} [selectAllText=Select all] - Text to show near select all checkbox when search is disabled
    * @property {string} [searchPlaceholderText=Search...] - Text to show as placeholder for search input
+   * @property {string} [clearButtonText=Clear] - Tooltip text for clear button
    * @property {array} [disabledOptions] - Options to disable (array of values)
    * @property {(string|array)} [selectedValue] - Single value or array of values to select on init
    * @property {boolean} [silentInitialValueSet=false] - To avoid "change event" trigger on setting initial value
@@ -82,7 +83,7 @@ export class VirtualSelect {
 
     let wrapperClasses = 'vscomp-wrapper';
     let valueTooltip = this.getTooltipAttrText('', !this.multiple, true);
-    let clearButtonTooltip = this.getTooltipAttrText('Clear');
+    let clearButtonTooltip = this.getTooltipAttrText(this.clearButtonText);
 
     let dropboxContainerStyle = {
       'z-index': this.zIndex,
@@ -261,7 +262,7 @@ export class VirtualSelect {
     let hasNoOptions = !this.options.length && !this.hasServerSearch;
     let hasNoSearchResults = !hasNoOptions && !visibleOptions.length;
 
-    if (!this.allowNewOption || this.showOptionsOnlyOnSearch) {
+    if (!this.allowNewOption || this.hasServerSearch || this.showOptionsOnlyOnSearch) {
       DomUtils.toggleClass(this.$wrapper, 'has-no-search-results', hasNoSearchResults);
     }
 
@@ -337,27 +338,8 @@ export class VirtualSelect {
         this.events[eventsKey] = callback;
       }
 
-      $ele = DomUtils.getElements($ele);
-
-      $ele.forEach((_this) => {
-        _this.addEventListener(event, callback);
-      });
+      DomUtils.addEvent($ele, event, callback);
     });
-  }
-
-  dispatchEvent($ele, eventName) {
-    if (!$ele) {
-      return;
-    }
-
-    $ele = DomUtils.getElements($ele);
-
-    /** using setTimeout to trigger asynchronous event */
-    setTimeout(() => {
-      $ele.forEach((_this) => {
-        _this.dispatchEvent(new Event(eventName, { bubbles: true }));
-      });
-    }, 0);
   }
 
   onDocumentClick(e) {
@@ -596,6 +578,7 @@ export class VirtualSelect {
     this.noSearchResultsText = options.noSearchResultsText;
     this.selectAllText = options.selectAllText;
     this.searchPlaceholderText = options.searchPlaceholderText;
+    this.clearButtonText = options.clearButtonText;
     this.placeholder = options.placeholder;
     this.position = options.position;
     this.dropboxWidth = options.dropboxWidth;
@@ -657,6 +640,7 @@ export class VirtualSelect {
       noSearchResultsText: 'No results found',
       selectAllText: 'Select All',
       searchPlaceholderText: 'Search...',
+      clearButtonText: 'Clear',
       placeholder: 'Select',
       position: 'auto',
       zIndex: 1,
@@ -705,6 +689,7 @@ export class VirtualSelect {
       'data-no-search-results-text': 'noSearchResultsText',
       'data-select-all-text': 'selectAllText',
       'data-search-placeholder-text': 'searchPlaceholderText',
+      'data-clear-button-text': 'clearButtonText',
       'data-silent-initial-value-set': 'silentInitialValueSet',
       'data-dropbox-width': 'dropboxWidth',
       'data-z-index': 'zIndex',
@@ -751,6 +736,7 @@ export class VirtualSelect {
     $ele.addOption = VirtualSelect.addOptionMethod;
     $ele.getNewValue = VirtualSelect.getNewValueMethod;
     $ele.getDisplayValue = VirtualSelect.getDisplayValueMethod;
+    $ele.getSelectedOptions = VirtualSelect.getSelectedOptionsMethod;
     $ele.open = VirtualSelect.openMethod;
     $ele.close = VirtualSelect.closeMethod;
   }
@@ -765,6 +751,10 @@ export class VirtualSelect {
     });
 
     let validValues = [];
+
+    if (this.allowNewOption && value) {
+      this.setNewOptionsFromValue(value);
+    }
 
     this.options.forEach((d) => {
       let isSelected = value.indexOf(d.value) !== -1;
@@ -839,6 +829,7 @@ export class VirtualSelect {
         label: getString(d[labelKey]),
         alias: getAlias(d[aliasKey]),
         isVisible: convertToBoolean(d.isVisible, true),
+        isNew: d.isNew || false,
         isGroupTitle,
       };
 
@@ -886,10 +877,12 @@ export class VirtualSelect {
 
     let selectedOptions = this.selectedOptions;
     let newOptions = this.options;
+    let optionsUpdated = false;
 
     /** merging already seleted options details with new options */
     if (selectedOptions.length) {
       let newOptionsValue = newOptions.map((d) => d.value);
+      optionsUpdated = true;
 
       selectedOptions.forEach((d) => {
         if (newOptionsValue.indexOf(d.value) === -1) {
@@ -899,6 +892,19 @@ export class VirtualSelect {
       });
 
       this.setOptionsMethod(newOptions, true);
+    }
+
+    /** merging new search option */
+    if (this.allowNewOption && this.searchValue) {
+      let hasExactOption = newOptions.some((d) => d.label.toLowerCase() === this.searchValue);
+
+      if (!hasExactOption) {
+        optionsUpdated = true;
+        this.setNewOption();
+      }
+    }
+
+    if (optionsUpdated) {
       this.setVisibleOptionsCount();
 
       if (this.multiple) {
@@ -1006,7 +1012,7 @@ export class VirtualSelect {
     DomUtils.toggleClass(this.$wrapper, 'max-value-selected', this.isMaxValuesSelected);
 
     if (triggerEvent) {
-      this.dispatchEvent(this.$ele, 'change');
+      DomUtils.dispatchEvent(this.$ele, 'change');
     }
   }
 
@@ -1215,8 +1221,8 @@ export class VirtualSelect {
     DomUtils.toggleClass(this.$wrapper, 'position-left', showOnLeft);
   }
 
-  setNewOption() {
-    let value = this.searchValueOriginal.trim();
+  setNewOption(newValue) {
+    let value = newValue || this.searchValueOriginal.trim();
 
     if (!value) {
       return;
@@ -1233,8 +1239,14 @@ export class VirtualSelect {
       let data = {
         value,
         label: value,
-        isCurrentNew: true,
       };
+
+      if (newValue) {
+        data.isNew = true;
+        this.newValues.push(value);
+      } else {
+        data.isCurrentNew = true;
+      }
 
       this.addOption(data);
     }
@@ -1246,6 +1258,21 @@ export class VirtualSelect {
     this.options.forEach((d) => {
       if (selectedValues.indexOf(d.value) !== -1) {
         d.isSelected = true;
+      }
+    });
+  }
+
+  setNewOptionsFromValue(values) {
+    if (!values) {
+      return;
+    }
+
+    let availableValues = this.options.map((d) => d.value);
+    let setNewOption = this.setNewOption.bind(this);
+
+    values.forEach((d) => {
+      if (d && availableValues.indexOf(d) === -1) {
+        setNewOption(d);
       }
     });
   }
@@ -1303,6 +1330,7 @@ export class VirtualSelect {
       description: getString(data.description),
       alias: this.getAlias(data.alias),
       isCurrentNew: data.isCurrentNew || false,
+      isNew: data.isNew || false,
       isVisible: true,
     };
 
@@ -1369,6 +1397,32 @@ export class VirtualSelect {
     }
 
     return this.multiple ? displayValues : displayValues[0] || '';
+  }
+
+  getSelectedOptions() {
+    let selectedValues = this.selectedValues;
+    let selectedOptions = [];
+    let valueKey = this.valueKey;
+    let labelKey = this.labelKey;
+
+    this.options.forEach((d) => {
+      let isSelected = selectedValues.indexOf(d.value) !== -1;
+
+      if (isSelected) {
+        let data = {
+          [valueKey]: d.value,
+          [labelKey]: d.label,
+        };
+
+        if (d.isNew) {
+          data.isNew = true;
+        }
+
+        selectedOptions.push(data);
+      }
+    });
+
+    return this.multiple ? selectedOptions : selectedOptions[0];
   }
 
   getVisibleOptionGroupsMapping(searchValue) {
@@ -1664,6 +1718,10 @@ export class VirtualSelect {
   }
 
   toggleAllOptionsClass(isAllSelected) {
+    if (!this.multiple) {
+      return;
+    }
+
     if (typeof isAllSelected !== 'boolean') {
       isAllSelected = false;
 
@@ -1940,6 +1998,10 @@ export class VirtualSelect {
 
   static getDisplayValueMethod() {
     return this.virtualSelect.getDisplayValue();
+  }
+
+  static getSelectedOptionsMethod() {
+    return this.virtualSelect.getSelectedOptions();
   }
 
   static openMethod() {
