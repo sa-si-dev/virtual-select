@@ -1,6 +1,6 @@
 import { Utils, DomUtils } from './utils';
 
-const virtualSelectVersion = 'v1.0.7';
+const virtualSelectVersion = 'v1.0.10';
 const dropboxCloseButtonFullHeight = 48;
 const searchHeight = 40;
 
@@ -1514,6 +1514,7 @@ export class VirtualSelect {
 
     setTimeout(() => {
       DomUtils.addClass(this.$wrapper, 'closed');
+      DomUtils.dispatchEvent(this.$ele, 'closed');
     }, transitionDuration);
   }
 
