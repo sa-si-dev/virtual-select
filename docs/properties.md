@@ -47,6 +47,7 @@
 | onServerSearch | Function | | Callback function to integrate server search |
 | hideValueTooltipOnSelectAll | Boolean | true | Hide value tooltip if all options selected |
 | showOptionsOnlyOnSearch | Boolean | false | Show options to select only if search value is not empty |
+| selectAllOnlyVisible | Boolean | false | Select only visible options on clicking select all checkbox when options filtered by search |
 
 ## Using properties on initialization
 

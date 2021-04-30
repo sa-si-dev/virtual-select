@@ -16,18 +16,14 @@ $('#sample-select').change(function() {
 });
 ```
 
-### On closed
-
-Change event would be trigged on choosing option
+### Open / Close
 
 ```js
 /** in vanilla javascript */
-document.querySelector('#sample-select').addEventListener('closed', function() {
-  console.log(this.value);
-});
+document.querySelector('#sample-select').addEventListener('beforeOpen', callbackFunction);
+document.querySelector('#sample-select').addEventListener('afterOpen', callbackFunction);
 
 /** in jquery */
-$('#sample-select').closed(function() {
-  console.log(this.value);
-});
+$('#sample-select').on('beforeClose', callbackFunction);
+$('#sample-select').on('afterClose', callbackFunction);
 ```
