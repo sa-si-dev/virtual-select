@@ -62,6 +62,7 @@ export class VirtualSelect {
    * @property {function} [onServerSearch] - Callback function to integrate server search
    * @property {boolean} [hideValueTooltipOnSelectAll=true] - Hide value tooltip if all options selected
    * @property {boolean} [showOptionsOnlyOnSearch=false] - Show options to select only if search value is not empty
+   * @property {boolean} [selectAllOnlyVisible=false] - Select only visible options on clicking select all checkbox when options filtered by search
    */
   constructor(options) {
     try {
@@ -345,7 +346,7 @@ export class VirtualSelect {
   onDocumentClick(e) {
     let $eleToKeepOpen = e.target.closest('.vscomp-wrapper');
 
-    if ($eleToKeepOpen !== this.$wrapper) {
+    if ($eleToKeepOpen !== this.$wrapper && this.isOpened()) {
       this.closeDropbox();
     }
   }
@@ -514,6 +515,10 @@ export class VirtualSelect {
     } else {
       this.setVisibleOptionsCount();
     }
+
+    if (this.selectAllOnlyVisible) {
+      this.toggleAllOptionsClass();
+    }
   }
 
   afterSetVisibleOptionsCount() {
@@ -574,6 +579,7 @@ export class VirtualSelect {
     this.showDropboxAsPopup = convertToBoolean(options.showDropboxAsPopup);
     this.hideValueTooltipOnSelectAll = convertToBoolean(options.hideValueTooltipOnSelectAll);
     this.showOptionsOnlyOnSearch = convertToBoolean(options.showOptionsOnlyOnSearch);
+    this.selectAllOnlyVisible = convertToBoolean(options.selectAllOnlyVisible);
     this.noOptionsText = options.noOptionsText;
     this.noSearchResultsText = options.noSearchResultsText;
     this.selectAllText = options.selectAllText;
@@ -658,6 +664,7 @@ export class VirtualSelect {
       popupDropboxBreakpoint: '576px',
       hideValueTooltipOnSelectAll: true,
       showOptionsOnlyOnSearch: false,
+      selectAllOnlyVisible: false,
     };
 
     if (options.hasOptionDescription) {
@@ -708,6 +715,7 @@ export class VirtualSelect {
       'data-popup-dropbox-breakpoint': 'popupDropboxBreakpoint',
       'data-hide-value-tooltip-on-select-all': 'hideValueTooltipOnSelectAll',
       'data-show-options-only-on-search': 'showOptionsOnlyOnSearch',
+      'data-select-all-only-visible': 'selectAllOnlyVisible',
     };
 
     for (let k in mapping) {
@@ -1472,6 +1480,10 @@ export class VirtualSelect {
   /** get methods - end */
 
   openDropbox(isSilent) {
+    if (!isSilent) {
+      DomUtils.dispatchEvent(this.$ele, 'beforeOpen');
+    }
+
     this.setDropboxPosition();
     DomUtils.removeClass(this.$wrapper, 'closed');
 
@@ -1488,6 +1500,8 @@ export class VirtualSelect {
         } else {
           this.focusSearchInput();
         }
+
+        DomUtils.dispatchEvent(this.$ele, 'afterOpen');
       }
     }, 0);
   }
@@ -1496,6 +1510,10 @@ export class VirtualSelect {
     if (this.keepAlwaysOpen) {
       this.removeOptionFocus();
       return;
+    }
+
+    if (!isSilent) {
+      DomUtils.dispatchEvent(this.$ele, 'beforeClose');
     }
 
     let transitionDuration = isSilent ? 0 : this.transitionDuration;
@@ -1514,7 +1532,10 @@ export class VirtualSelect {
 
     setTimeout(() => {
       DomUtils.addClass(this.$wrapper, 'closed');
-      DomUtils.dispatchEvent(this.$ele, 'closed');
+
+      if (!isSilent) {
+        DomUtils.dispatchEvent(this.$ele, 'afterClose');
+      }
     }, transitionDuration);
   }
 
@@ -1700,15 +1721,18 @@ export class VirtualSelect {
     }
 
     let selectedValues = [];
+    let selectAllOnlyVisible = this.selectAllOnlyVisible;
 
     this.options.forEach((d) => {
       if (d.isDisabled || d.isCurrentNew || d.isGroupTitle) {
         return;
       }
 
-      d.isSelected = isSelected;
+      if (!isSelected || (selectAllOnlyVisible && !d.isVisible)) {
+        d.isSelected = false;
+      } else {
+        d.isSelected = true;
 
-      if (isSelected) {
         selectedValues.push(d.value);
       }
     });
@@ -1723,18 +1747,31 @@ export class VirtualSelect {
       return;
     }
 
-    if (typeof isAllSelected !== 'boolean') {
-      isAllSelected = false;
+    var valuePassed = typeof isAllSelected === 'boolean';
 
-      if (this.options.length) {
-        isAllSelected = !this.options.some((d) => {
-          return !d.isSelected && !d.isDisabled && !d.isGroupTitle;
-        });
-      }
+    if (!valuePassed) {
+      isAllSelected = this.isAllOptionsSelected();
     }
 
     DomUtils.toggleClass(this.$toggleAllCheckbox, 'checked', isAllSelected);
-    this.isAllSelected = isAllSelected;
+
+    if (this.selectAllOnlyVisible && valuePassed) {
+      this.isAllSelected = this.isAllOptionsSelected();
+    } else {
+      this.isAllSelected = isAllSelected;
+    }
+  }
+
+  isAllOptionsSelected() {
+    let isAllSelected = false;
+
+    if (this.options.length) {
+      isAllSelected = !this.options.some((d) => {
+        return !d.isSelected && !d.isDisabled && !d.isGroupTitle;
+      });
+    }
+
+    return isAllSelected;
   }
 
   toggleFocusedProp(index, isFocused = false) {
