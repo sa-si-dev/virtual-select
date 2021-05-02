@@ -1,6 +1,6 @@
 import { Utils, DomUtils } from './utils';
 
-const virtualSelectVersion = 'v1.0.10';
+const virtualSelectVersion = 'v1.0.11';
 const dropboxCloseButtonFullHeight = 48;
 const searchHeight = 40;
 
@@ -1969,6 +1969,11 @@ export class VirtualSelect {
 
       if (!$eleArray) {
         return;
+      }
+
+      if ('DIV' !== $eleArray.tagName.toUpperCase()) {
+        throw `Please provide \"<div>\" to ${options.ele}`;
+        /** return; */
       }
     }
 
