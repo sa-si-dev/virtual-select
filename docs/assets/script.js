@@ -22,12 +22,18 @@ window.$docsify = {
 
 function docsifyPlugin(hook, vm) {
   hook.beforeEach(docsifyPluginBeforeEach);
+  hook.doneEach(docsifyPluginDoneEach);
 }
 
 function docsifyPluginBeforeEach(content) {
   content = replacePlaceholders(content);
 
   return content;
+}
+
+function docsifyPluginDoneEach() {
+  replacePlaceholdersForElement('.sidebar-nav');
+  replacePlaceholdersForElement('.docsify-pagination-container');
 }
 
 function replacePlaceholdersForElement(selector) {
