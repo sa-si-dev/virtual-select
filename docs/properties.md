@@ -19,7 +19,7 @@
 | hasOptionDescription | Boolean | false | Has description to show along with label |
 | disableSelectAll | Boolean | false | Disable select all feature of multiple select |
 | optionsCount | Number | 5 \| 4 | No.of options to show on viewport <br/>4 - When hasOptionDescription is true |
-| optionHeight | String | 40px \| 60px | Height of each dropdown options <br/>60px - When hasOptionDescription is true |
+| optionHeight | String | 40px \| 50px | Height of each dropdown options <br/>50px - When hasOptionDescription is true |
 | position | String | auto | Position of dropbox (top, bottom, auto) |
 | placeholder | String | Select | Text to show when no options selected |
 | noOptionsText | String | No options found | Text to show when no options to show |
@@ -45,6 +45,7 @@
 | showDropboxAsPopup | Boolean | true | Show dropbox as popup on small screen like mobile |
 | popupDropboxBreakpoint | String | 576px | Maximum screen width that allowed to show dropbox as popup |
 | onServerSearch | Function | | Callback function to integrate server search |
+| labelRenderer | Function | | Callback function to render label, which could be used to add image, icon, or custom content |
 | hideValueTooltipOnSelectAll | Boolean | true | Hide value tooltip if all options selected |
 | showOptionsOnlyOnSearch | Boolean | false | Show options to select only if search value is not empty |
 | selectAllOnlyVisible | Boolean | false | Select only visible options on clicking select all checkbox when options filtered by search |
@@ -82,6 +83,7 @@ To use an property as an attribute, property name should be `hyphenated` and pre
 - disabledOptions
 - selectedValue
 - onServerSearch
+- labelRenderer
 
 <br>
 

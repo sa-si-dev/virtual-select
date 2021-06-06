@@ -20,6 +20,7 @@
 - [Show dropbox as popup](#show-dropbox-as-popup)
 - [Server search](#server-search)
 - [Show options only on search](#show-options-only-on-search)
+- [Add image/icon](#add-imageicon)
 
 ## Default dropdown
 
@@ -296,6 +297,34 @@ VirtualSelect.init({
   ...
   showOptionsOnlyOnSearch: true,
 });
+```
+
+## Add image/icon
+
+Use `labelRenderer` callback function to add image, icon, or custom content
+
+<div id="with-image-select"></div>
+
+```js
+VirtualSelect.init({
+  ...
+  labelRenderer: sampleLabelRenderer,
+});
+
+function sampleLabelRenderer(data) {
+  let prefix = '';
+
+  /** skipping options those are added newly by allowNewOption feature */
+  if (!data.isCurrentNew && !data.isNew) {
+    /** project developer has to add their own logic to create image/icon tag */
+    let flagIndex = data.value % flagClasses.length;
+    prefix = `<i class="flag flag-${flagClasses[flagIndex]}"></i>`;
+  } else {
+    /** common image/icon could be added for new options */
+  }
+
+  return `${prefix}${data.label}`;
+}
 ```
 
 <script>

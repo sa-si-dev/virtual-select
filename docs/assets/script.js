@@ -1,8 +1,10 @@
-var config = {
+let config = {
   name: 'Virtual Select',
   repo: 'sa-si-dev/virtual-select',
   zIndex: 99,
 };
+
+let flagClasses = ['gu', 'mn', 'va', 'tibet', 'fo', 'th', 'tr', 'tl', 'kz', 'zm', 'uz', 'dk', 'scotland', 'gi', 'gy', 'bj', 'fr', 'mo', 'ir', 'io', 'tm', 'ch', 'mt', 'nl', 'gp', 'im', 'tv', 'mu', 'pe', 'vi', 'hn', 'ss', 'ae', 'td', 'pw', 'nu', 'bt', 'ms', 'cv', 'es', 'mh', 'la', 'vn', 'py', 'br', 'ye', 'ie', 'gh', 'cg', 'cu', 'hu', 'sg', 'at', 'lk', 'vu', 'bo', 'jo', 'er', 'za', 'rs', 'nr', 'ls', 'jm', 'tz', 'ki', 'sj', 'cz', 'pg', 'lv', 'do', 'lu', 'no', 'kw', 'mx', 'yt', 'ly', 'cy', 'ph', 'my', 'sm', 'et', 'ru', 'tj', 'ai', 'pl', 'kp', 'uy', 'gb', 'gs', 'kurdistan', 'rw', 'ec', 'mm', 'pa', 'wales', 'kg', 've', 'tk', 'ca', 'is', 'ke', 'ro', 'gq', 'pt', 'tf', 'ad', 'sk', 'pm', 'om', 'an', 'ws', 'sh', 'mp', 'gt', 'cf', 'zanzibar', 'mw', 'catalonia', 'ug', 'je', 'km', 'in', 'bf', 'mc', 'sy', 'sn', 'kr', 'eu', 'bn', 'st', 'england', 'lc', 'dm', 'be', 'ni', 'ua', 'mz', 'pf', 'tn', 'ee', 'xk', 'sx', 'sd', 'gd', 'ci', 'sz', 'cl', 'fi', 'ga', 'jp', 'de', 'np', 're', 'bg', 'sc', 'ng', 'qa', 'mk', 'aw', 'kn', 'al', 'bw', 'um', 'ky', 'tt', 'so', 'lt', 'by', 'bb', 'us', 'md', 'ag', 'hm', 'as', 'eg', 'sv', 'sl', 'fk', 'am', 'ck', 'tw', 'kh', 'to', 'se', 'cd', 'pn', 'gr', 'id', 'vc', 'somaliland', 'bi', 'pk', 'pr', 'bd', 'co', 'fm', 'bm', 'ar', 'bv', 'sb', 'mq', 'eh', 'bh', 'it', 'hr', 'sa', 'mv', 'mg', 'dz', 'gg', 'gm', 'af', 'li', 'sr', 'vg', 'cr', 'tc', 'ao', 'ma', 'mr', 'gn', 'ne', 'nf', 'wf', 'hk', 'gf', 'ps', 'ic', 'cw', 'ml', 'ax', 'gl', 'dj', 'cn', 'ht', 'lr', 'tg', 'ba', 'ge', 'bz', 'au', 'iq', 'cm', 'gw', 'az', 'na', 'fj', 'zw', 'bs', 'il', 'nz', 'me', 'si', 'nc', 'lb'];
 
 window.$docsify = {
   name: config.name,
@@ -105,6 +107,21 @@ function onSampleServerSearch(searchValue, virtualSelect) {
   setTimeout(() => {
     virtualSelect.setServerOptions(newOptions);
   }, 300);
+}
+
+function sampleLabelRenderer(data) {
+  let prefix = '';
+
+  /** skipping options those are added newly by allowNewOption feature */
+  if (!data.isCurrentNew && !data.isNew) {
+    /** project developer has to add their own logic to create image/icon tag */
+    let flagIndex = data.value % flagClasses.length;
+    prefix = `<i class="flag flag-${flagClasses[flagIndex]}"></i>`;
+  } else {
+    /** common image/icon could be added for new options */
+  }
+
+  return `${prefix}${data.label}`;
 }
 
 function initPageGetStarted() {
@@ -285,5 +302,11 @@ function initPageExamples() {
     options: getOptions(),
     showOptionsOnlyOnSearch: true,
     searchPlaceholderText: 'Type here for options',
+  });
+
+  VirtualSelect.init({
+    ele: '#with-image-select',
+    options: getOptions(),
+    labelRenderer: sampleLabelRenderer,
   });
 }
