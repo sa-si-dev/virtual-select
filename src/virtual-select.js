@@ -1,6 +1,6 @@
 import { Utils, DomUtils } from './utils';
 
-const virtualSelectVersion = 'v1.0.10';
+const virtualSelectVersion = 'v1.0.11';
 const dropboxCloseButtonFullHeight = 48;
 const searchHeight = 40;
 
@@ -33,7 +33,7 @@ export class VirtualSelect {
    * @property {boolean} [hasOptionDescription=false] - Has description to show along with label
    * @property {boolean} [disableSelectAll=false] - Disable select all feature of multiple select
    * @property {string} [optionsCount=5|4] - No.of options to show on viewport
-   * @property {string} [optionHeight=40px|60px] - Height of each dropdown options
+   * @property {string} [optionHeight=40px|50px] - Height of each dropdown options
    * @property {string} [position=auto] - Position of dropbox (top, bottom, auto)
    * @property {string} [placeholder=Select] - Text to show when no options selected
    * @property {string} [noOptionsText=No options found] - Text to show when no options to show
@@ -60,6 +60,7 @@ export class VirtualSelect {
    * @property {boolean} [showDropboxAsPopup=true] - Show dropbox as popup on small screen like mobile
    * @property {string} [popupDropboxBreakpoint=576px] - Maximum screen width that allowed to show dropbox as popup
    * @property {function} [onServerSearch] - Callback function to integrate server search
+   * @property {function} [labelRenderer] - Callback function to render label, which could be used to add image, icon, or custom content
    * @property {boolean} [hideValueTooltipOnSelectAll=true] - Hide value tooltip if all options selected
    * @property {boolean} [showOptionsOnlyOnSearch=false] - Show options to select only if search value is not empty
    * @property {boolean} [selectAllOnlyVisible=false] - Select only visible options on clicking select all checkbox when options filtered by search
@@ -189,6 +190,8 @@ export class VirtualSelect {
     let newOptionIconHtml = '';
     let markSearchResults = this.markSearchResults && this.searchValue ? true : false;
     let searchRegex;
+    let labelRenderer = this.labelRenderer;
+    let hasLabelRenderer = typeof labelRenderer === 'function';
 
     let styleText = DomUtils.getStyleText({
       height: this.optionHeight + 'px',
@@ -208,7 +211,7 @@ export class VirtualSelect {
     }
 
     visibleOptions.forEach((d) => {
-      let optionLabel = d.label;
+      let optionLabel;
       let optionClasses = 'vscomp-option';
       let optionTooltip = this.getTooltipAttrText('', true);
       let leftSection = checkboxHtml;
@@ -234,6 +237,12 @@ export class VirtualSelect {
 
       if (d.isGroupOption) {
         optionClasses += ' group-option';
+      }
+
+      if (hasLabelRenderer) {
+        optionLabel = labelRenderer(d);
+      } else {
+        optionLabel = d.label;
       }
 
       if (d.description) {
@@ -598,6 +607,7 @@ export class VirtualSelect {
     this.additionalClasses = options.additionalClasses;
     this.popupDropboxBreakpoint = options.popupDropboxBreakpoint;
     this.onServerSearch = options.onServerSearch;
+    this.labelRenderer = options.labelRenderer;
     this.initialSelectedValue = options.selectedValue === 0 ? '0' : options.selectedValue;
 
     this.selectedValues = [];
@@ -669,7 +679,7 @@ export class VirtualSelect {
 
     if (options.hasOptionDescription) {
       defaultOptions.optionsCount = 4;
-      defaultOptions.optionHeight = '60px';
+      defaultOptions.optionHeight = '50px';
     }
 
     return Object.assign(defaultOptions, options);
