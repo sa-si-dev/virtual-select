@@ -26,6 +26,7 @@
 | noSearchResultsText | String | No results found | Text to show when no results on search |
 | selectAllText | String | Select all | Text to show near select all checkbox when search is disabled |
 | searchPlaceholderText | String | Search... | Text to show as placeholder for search input |
+| optionsSelectedText | String | options selected | Text to use when displaying no.of values selected text (i.e. 3 options selected) |
 | clearButtonText | String | Clear | Tooltip text for clear button |
 | selectedValue | String \| Array | | Single value or array of values to select on init |
 | silentInitialValueSet | Boolean | false | To avoid "change event" trigger on setting initial value |

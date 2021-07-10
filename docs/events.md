@@ -27,3 +27,15 @@ document.querySelector('#sample-select').addEventListener('afterOpen', callbackF
 $('#sample-select').on('beforeClose', callbackFunction);
 $('#sample-select').on('afterClose', callbackFunction);
 ```
+
+### Reset
+
+This event would be triggered when clear button is clicked or form is reset.
+
+```js
+/** in vanilla javascript */
+document.querySelector('#sample-select').addEventListener('reset', callbackFunction);
+
+/** in jquery */
+$('#sample-select').on('reset', callbackFunction);
+```
