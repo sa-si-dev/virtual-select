@@ -1,6 +1,6 @@
 import { Utils, DomUtils } from './utils';
 
-const virtualSelectVersion = 'v1.0.11';
+const virtualSelectVersion = 'v1.0.12';
 const dropboxCloseButtonFullHeight = 48;
 const searchHeight = 40;
 
@@ -40,6 +40,7 @@ export class VirtualSelect {
    * @property {string} [noSearchResultsText=No results found] - Text to show when no results on search
    * @property {string} [selectAllText=Select all] - Text to show near select all checkbox when search is disabled
    * @property {string} [searchPlaceholderText=Search...] - Text to show as placeholder for search input
+   * @property {string} [optionsSelectedText=options selected] - Text to use when displaying no.of values selected text (i.e. 3 options selected)
    * @property {string} [clearButtonText=Clear] - Tooltip text for clear button
    * @property {array} [disabledOptions] - Options to disable (array of values)
    * @property {(string|array)} [selectedValue] - Single value or array of values to select on init
@@ -593,6 +594,7 @@ export class VirtualSelect {
     this.noSearchResultsText = options.noSearchResultsText;
     this.selectAllText = options.selectAllText;
     this.searchPlaceholderText = options.searchPlaceholderText;
+    this.optionsSelectedText = options.optionsSelectedText;
     this.clearButtonText = options.clearButtonText;
     this.placeholder = options.placeholder;
     this.position = options.position;
@@ -706,6 +708,7 @@ export class VirtualSelect {
       'data-no-search-results-text': 'noSearchResultsText',
       'data-select-all-text': 'selectAllText',
       'data-search-placeholder-text': 'searchPlaceholderText',
+      'data-options-selected-text': 'optionsSelectedText',
       'data-clear-button-text': 'clearButtonText',
       'data-silent-initial-value-set': 'silentInitialValueSet',
       'data-dropbox-width': 'dropboxWidth',
@@ -1095,8 +1098,9 @@ export class VirtualSelect {
             if (showAllText) {
               this.$valueText.innerHTML = `All (${selectedLength})`;
             } else {
+              let optionsSelectedText = this.optionsSelectedText || `option${selectedLength === 1 ? '' : 's'} selected`;
               /** replace comma delimitted list of selections with shorter text indicating selection count */
-              this.$valueText.innerHTML = `${countText} option${selectedLength === 1 ? '' : 's'} selected`;
+              this.$valueText.innerHTML = `${countText} ${optionsSelectedText}`;
             }
           } else {
             /** removing tooltip if full value text is visible */
@@ -1823,6 +1827,8 @@ export class VirtualSelect {
     this.beforeValueSet(true);
     this.setValue(null, true);
     this.afterValueSet();
+
+    DomUtils.dispatchEvent(this.$ele, 'reset');
   }
 
   addOption(data, rerender) {
