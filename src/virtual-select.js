@@ -1,6 +1,6 @@
 import { Utils, DomUtils } from './utils';
 
-const virtualSelectVersion = 'v1.0.12';
+const virtualSelectVersion = 'v1.0.13';
 const dropboxCloseButtonFullHeight = 48;
 const searchHeight = 40;
 

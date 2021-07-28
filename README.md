@@ -1,4 +1,4 @@
-# Virtual Select <small>1.0</small>
+# Virtual Select Plugin
 
 > A javascript plugin for dropdown with virtual scroll
 
@@ -11,10 +11,19 @@
 
 [Changelog](https://github.com/sa-si-dev/virtual-select/releases)
 
-## Commands
+## Install
 
-| Command | Description |
-|---------|-------------|
-| npm run start | Builds dist versions of the plugin on file change |
-| npm run build | Builds dist versions of the plugin |
-| npm run docs | Starts a local documentation server |
+```shell
+npm install --save virtual-select-plugin
+```
+
+## Import files
+
+```html
+<link rel="stylesheet" href="node_modules/virtual-select-plugin/dist/virtual-select.min.css">
+<script src="node_modules/virtual-select-plugin/dist/virtual-select.min.js"></script>
+
+<!-- optional -->
+<link rel="stylesheet" href="node_modules/tooltip-plugin/dist/tooltip.min.css">
+<script src="node_modules/tooltip-plugin/dist/tooltip.min.js"></script>
+```

@@ -20,9 +20,9 @@ OR from below direct links
 
 [virtual-select.min.js](https://raw.githubusercontent.com/{{repo}}/master/dist/virtual-select.min.js)
 
-[tooltip.min.css](https://raw.githubusercontent.com/{{repo}}/master/dist/tooltip.min.css)
+[tooltip.min.css](https://raw.githubusercontent.com/sa-si-dev/tooltip/master/dist/tooltip.min.css)
 
-[tooltip.min.js](https://raw.githubusercontent.com/{{repo}}/master/dist/tooltip.min.js)
+[tooltip.min.js](https://raw.githubusercontent.com/sa-si-dev/tooltip/master/dist/tooltip.min.js)
 
 
 ## Import files
@@ -44,6 +44,25 @@ Tooltip would be used to show selected values and options text, if text is long 
 ```
 
 If you want to use tooltip plug-in in your project, refer [Tooltip Documentation](https://sa-si-dev.github.io/tooltip)
+
+## Install from NPM
+
+We could install this plugin from NPM and use it
+
+```shell
+npm install --save virtual-select-plugin
+```
+
+## Import files from node_modules
+
+```html
+<link rel="stylesheet" href="node_modules/virtual-select-plugin/dist/virtual-select.min.css">
+<script src="node_modules/virtual-select-plugin/dist/virtual-select.min.js"></script>
+
+<!-- optional -->
+<link rel="stylesheet" href="node_modules/tooltip-plugin/dist/tooltip.min.css">
+<script src="node_modules/tooltip-plugin/dist/tooltip.min.js"></script>
+```
 
 ## Initiatize plugin
 
