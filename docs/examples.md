@@ -21,6 +21,7 @@
 - [Server search](#server-search)
 - [Show options only on search](#show-options-only-on-search)
 - [Add image/icon](#add-imageicon)
+- [Show values as tags](#show-values-as-tags)
 
 ## Default dropdown
 
@@ -325,6 +326,19 @@ function sampleLabelRenderer(data) {
 
   return `${prefix}${data.label}`;
 }
+```
+
+## Show values as tags
+
+Show each selected values as tags with remove icon
+
+<div id="show-value-as-tags-select"></div>
+
+```js
+VirtualSelect.init({
+  ...
+  showValueAsTags: true,
+});
 ```
 
 <script>

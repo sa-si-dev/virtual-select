@@ -309,4 +309,11 @@ function initPageExamples() {
     options: getOptions(),
     labelRenderer: sampleLabelRenderer,
   });
+
+  VirtualSelect.init({
+    ele: '#show-value-as-tags-select',
+    options: getOptions(),
+    multiple: true,
+    showValueAsTags: true,
+  });
 }

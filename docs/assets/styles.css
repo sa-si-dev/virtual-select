@@ -102,3 +102,7 @@ section.cover {
   -webkit-transform: scale(1.4);
   transform: scale(1.4);
 }
+
+#show-value-as-tags-select {
+  max-width: 400px;
+}

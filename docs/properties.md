@@ -21,13 +21,6 @@
 | optionsCount | Number | 5 \| 4 | No.of options to show on viewport <br/>4 - When hasOptionDescription is true |
 | optionHeight | String | 40px \| 50px | Height of each dropdown options <br/>50px - When hasOptionDescription is true |
 | position | String | auto | Position of dropbox (top, bottom, auto) |
-| placeholder | String | Select | Text to show when no options selected |
-| noOptionsText | String | No options found | Text to show when no options to show |
-| noSearchResultsText | String | No results found | Text to show when no results on search |
-| selectAllText | String | Select all | Text to show near select all checkbox when search is disabled |
-| searchPlaceholderText | String | Search... | Text to show as placeholder for search input |
-| optionsSelectedText | String | options selected | Text to use when displaying no.of values selected text (i.e. 3 options selected) |
-| clearButtonText | String | Clear | Tooltip text for clear button |
 | selectedValue | String \| Array | | Single value or array of values to select on init |
 | silentInitialValueSet | Boolean | false | To avoid "change event" trigger on setting initial value |
 | dropboxWidth | String | | Custom width for dropbox |
@@ -50,6 +43,25 @@
 | hideValueTooltipOnSelectAll | Boolean | true | Hide value tooltip if all options selected |
 | showOptionsOnlyOnSearch | Boolean | false | Show options to select only if search value is not empty |
 | selectAllOnlyVisible | Boolean | false | Select only visible options on clicking select all checkbox when options filtered by search |
+| alwaysShowSelectedOptionsCount | Boolean | false | By default, no.of options selected text would be shown when there is no enough space to show all selected values. Set true to override this. |
+| disableAllOptionsSelectedText | Boolean | false | By default, when all values selected "All (10)" value text would be shown. Set true to show value text as "10 options selected". |
+| showValueAsTags | Boolean | false | Show each selected values as tags with remove icon |
+
+# Text Properties
+
+Update below properties to change display texts.
+
+| Name | Type | Default value | Description |
+| --- | --- | --- | ---- |
+| placeholder | String | Select | Text to show when no options selected |
+| noOptionsText | String | No options found | Text to show when no options to show |
+| noSearchResultsText | String | No results found | Text to show when no results on search |
+| selectAllText | String | Select all | Text to show near select all checkbox when search is disabled |
+| searchPlaceholderText | String | Search... | Text to show as placeholder for search input |
+| optionsSelectedText | String | options selected | Text to use when displaying no.of values selected text (i.e. 3 options selected) |
+| optionSelectedText | String | option selected | Text to use when displaying no.of values selected text and only one value is selected (i.e. 1 option selected) |
+| allOptionsSelectedText | String | All | Text to use when displaying all values selected text (i.e. All (10)) |
+| clearButtonText | String | Clear | Tooltip text for clear button |
 
 ## Using properties on initialization
 
