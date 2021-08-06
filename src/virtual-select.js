@@ -1,6 +1,6 @@
 import { Utils, DomUtils } from './utils';
 
-const virtualSelectVersion = 'v1.0.13';
+const virtualSelectVersion = 'v1.0.14';
 const dropboxCloseButtonFullHeight = 48;
 const searchHeight = 40;
 
@@ -35,13 +35,6 @@ export class VirtualSelect {
    * @property {string} [optionsCount=5|4] - No.of options to show on viewport
    * @property {string} [optionHeight=40px|50px] - Height of each dropdown options
    * @property {string} [position=auto] - Position of dropbox (top, bottom, auto)
-   * @property {string} [placeholder=Select] - Text to show when no options selected
-   * @property {string} [noOptionsText=No options found] - Text to show when no options to show
-   * @property {string} [noSearchResultsText=No results found] - Text to show when no results on search
-   * @property {string} [selectAllText=Select all] - Text to show near select all checkbox when search is disabled
-   * @property {string} [searchPlaceholderText=Search...] - Text to show as placeholder for search input
-   * @property {string} [optionsSelectedText=options selected] - Text to use when displaying no.of values selected text (i.e. 3 options selected)
-   * @property {string} [clearButtonText=Clear] - Tooltip text for clear button
    * @property {array} [disabledOptions] - Options to disable (array of values)
    * @property {(string|array)} [selectedValue] - Single value or array of values to select on init
    * @property {boolean} [silentInitialValueSet=false] - To avoid "change event" trigger on setting initial value
@@ -65,6 +58,22 @@ export class VirtualSelect {
    * @property {boolean} [hideValueTooltipOnSelectAll=true] - Hide value tooltip if all options selected
    * @property {boolean} [showOptionsOnlyOnSearch=false] - Show options to select only if search value is not empty
    * @property {boolean} [selectAllOnlyVisible=false] - Select only visible options on clicking select all checkbox when options filtered by search
+   * @property {boolean} [alwaysShowSelectedOptionsCount=false] - By default, no.of options selected text would be shown
+   * when there is no enough space to show all selected values. Set true to override this.
+   * @property {boolean} [disableAllOptionsSelectedText=false] - By default, when all values selected "All (10)" value text would be shown.
+   * Set true to show value text as "10 options selected".
+   * @property {boolean} [showValueAsTags=false] - Show each selected values as tags with remove icon
+   *
+   * @property {string} [placeholder=Select] - Text to show when no options selected
+   * @property {string} [noOptionsText=No options found] - Text to show when no options to show
+   * @property {string} [noSearchResultsText=No results found] - Text to show when no results on search
+   * @property {string} [selectAllText=Select all] - Text to show near select all checkbox when search is disabled
+   * @property {string} [searchPlaceholderText=Search...] - Text to show as placeholder for search input
+   * @property {string} [optionsSelectedText=options selected] - Text to use when displaying no.of values selected text (i.e. 3 options selected)
+   * @property {string} [optionSelectedText=option selected] - Text to use when displaying no.of values selected text
+   * and only one value is selected (i.e. 1 option selected)
+   * @property {string} [allOptionsSelectedText=All] - Text to use when displaying all values selected text (i.e. All (10))
+   * @property {string} [clearButtonText=Clear] - Tooltip text for clear button
    */
   constructor(options) {
     try {
@@ -128,6 +137,10 @@ export class VirtualSelect {
 
     if (this.hasSearch) {
       wrapperClasses += ' has-search-input';
+    }
+
+    if (this.showValueAsTags) {
+      wrapperClasses += ' show-value-as-tags';
     }
 
     let html = `<div class="${wrapperClasses}" tabindex="0">
@@ -405,13 +418,13 @@ export class VirtualSelect {
   }
 
   onToggleButtonClick(e) {
-    let childEle = e.target.closest('.toggle-button-child');
+    let $target = e.target;
 
-    if (childEle) {
-      return;
+    if ($target.closest('.vscomp-value-tag-clear-button')) {
+      this.removeValue($target.closest('.vscomp-value-tag'));
+    } else if (!$target.closest('.toggle-button-child')) {
+      this.toggleDropbox();
     }
-
-    this.toggleDropbox();
   }
 
   onClearButtonClick() {
@@ -590,11 +603,16 @@ export class VirtualSelect {
     this.hideValueTooltipOnSelectAll = convertToBoolean(options.hideValueTooltipOnSelectAll);
     this.showOptionsOnlyOnSearch = convertToBoolean(options.showOptionsOnlyOnSearch);
     this.selectAllOnlyVisible = convertToBoolean(options.selectAllOnlyVisible);
+    this.alwaysShowSelectedOptionsCount = convertToBoolean(options.alwaysShowSelectedOptionsCount);
+    this.disableAllOptionsSelectedText = convertToBoolean(options.disableAllOptionsSelectedText);
+    this.showValueAsTags = convertToBoolean(options.showValueAsTags);
     this.noOptionsText = options.noOptionsText;
     this.noSearchResultsText = options.noSearchResultsText;
     this.selectAllText = options.selectAllText;
     this.searchPlaceholderText = options.searchPlaceholderText;
     this.optionsSelectedText = options.optionsSelectedText;
+    this.optionSelectedText = options.optionSelectedText;
+    this.allOptionsSelectedText = options.allOptionsSelectedText;
     this.clearButtonText = options.clearButtonText;
     this.placeholder = options.placeholder;
     this.position = options.position;
@@ -659,9 +677,12 @@ export class VirtualSelect {
       selectAllText: 'Select All',
       searchPlaceholderText: 'Search...',
       clearButtonText: 'Clear',
+      optionsSelectedText: 'options selected',
+      optionSelectedText: 'option selected',
+      allOptionsSelectedText: 'All',
       placeholder: 'Select',
       position: 'auto',
-      zIndex: 1,
+      zIndex: options.keepAlwaysOpen ? 1 : 2,
       allowNewOption: false,
       markSearchResults: false,
       tooltipFontSize: '14px',
@@ -677,6 +698,9 @@ export class VirtualSelect {
       hideValueTooltipOnSelectAll: true,
       showOptionsOnlyOnSearch: false,
       selectAllOnlyVisible: false,
+      alwaysShowSelectedOptionsCount: false,
+      disableAllOptionsSelectedText: false,
+      showValueAsTags: false,
     };
 
     if (options.hasOptionDescription) {
@@ -709,6 +733,8 @@ export class VirtualSelect {
       'data-select-all-text': 'selectAllText',
       'data-search-placeholder-text': 'searchPlaceholderText',
       'data-options-selected-text': 'optionsSelectedText',
+      'data-option-selected-text': 'optionSelectedText',
+      'data-all-options-selected-text': 'allOptionsSelectedText',
       'data-clear-button-text': 'clearButtonText',
       'data-silent-initial-value-set': 'silentInitialValueSet',
       'data-dropbox-width': 'dropboxWidth',
@@ -729,6 +755,9 @@ export class VirtualSelect {
       'data-hide-value-tooltip-on-select-all': 'hideValueTooltipOnSelectAll',
       'data-show-options-only-on-search': 'showOptionsOnlyOnSearch',
       'data-select-all-only-visible': 'selectAllOnlyVisible',
+      'data-always-show-selected-options-count': 'alwaysShowSelectedOptionsCount',
+      'data-disable-all-options-selected-text': 'disableAllOptionsSelectedText',
+      'data-show-value-as-tags': 'showValueAsTags',
     };
 
     for (let k in mapping) {
@@ -777,10 +806,14 @@ export class VirtualSelect {
       this.setNewOptionsFromValue(value);
     }
 
-    this.options.forEach((d) => {
-      let isSelected = value.indexOf(d.value) !== -1;
+    let valuesMapping = {};
 
-      if (isSelected && !d.isDisabled && !d.isGroupTitle) {
+    value.forEach((d) => {
+      valuesMapping[d] = true;
+    });
+
+    this.options.forEach((d) => {
+      if (valuesMapping[d.value] === true && !d.isDisabled && !d.isGroupTitle) {
         d.isSelected = true;
         validValues.push(d.value);
       } else {
@@ -812,9 +845,15 @@ export class VirtualSelect {
     disabledOptions = disabledOptions.map((d) => d.toString());
     this.disabledOptions = disabledOptions;
 
+    let disabledOptionsMapping = {};
+
+    disabledOptions.forEach((d) => {
+      disabledOptionsMapping[d] = true;
+    });
+
     if (setOptionsProp && disabledOptions.length) {
       this.options.forEach((d) => {
-        d.isDisabled = disabledOptions.indexOf(d.value) !== -1;
+        d.isDisabled = disabledOptionsMapping[d.value] === true;
 
         return d;
       });
@@ -827,8 +866,7 @@ export class VirtualSelect {
     }
 
     let preparedOptions = [];
-    let disabledOptions = this.disabledOptions;
-    let hasDisabledOptions = disabledOptions.length;
+    let hasDisabledOptions = this.disabledOptions.length;
     let valueKey = this.valueKey;
     let labelKey = this.labelKey;
     let descriptionKey = this.descriptionKey;
@@ -839,6 +877,11 @@ export class VirtualSelect {
     let getAlias = this.getAlias;
     let index = 0;
     let hasOptionGroup = false;
+    let disabledOptionsMapping = {};
+
+    this.disabledOptions.forEach((d) => {
+      disabledOptionsMapping[d] = true;
+    });
 
     let prepareOption = (d) => {
       let value = getString(d[valueKey]);
@@ -855,7 +898,7 @@ export class VirtualSelect {
       };
 
       if (hasDisabledOptions) {
-        option.isDisabled = disabledOptions.indexOf(value) !== -1;
+        option.isDisabled = disabledOptionsMapping[value] === true;
       }
 
       if (d.isGroupOption) {
@@ -902,11 +945,15 @@ export class VirtualSelect {
 
     /** merging already seleted options details with new options */
     if (selectedOptions.length) {
-      let newOptionsValue = newOptions.map((d) => d.value);
+      let newOptionsValueMapping = {};
       optionsUpdated = true;
 
+      newOptions.forEach((d) => {
+        newOptionsValueMapping[d.value] = true;
+      });
+
       selectedOptions.forEach((d) => {
-        if (newOptionsValue.indexOf(d.value) === -1) {
+        if (newOptionsValueMapping[d.value] === false) {
           d.isVisible = false;
           newOptions.push(d);
         }
@@ -939,8 +986,13 @@ export class VirtualSelect {
   }
 
   setSelectedOptions() {
-    let selectedValues = this.selectedValues;
-    this.selectedOptions = this.options.filter((d) => selectedValues.indexOf(d.value) !== -1);
+    let valuesMapping = {};
+
+    this.selectedValues.forEach((d) => {
+      valuesMapping[d] = true;
+    });
+
+    this.selectedOptions = this.options.filter((d) => valuesMapping[d.value] === true);
   }
 
   setSortedOptions() {
@@ -1043,13 +1095,22 @@ export class VirtualSelect {
     let selectedValues = this.selectedValues;
     let selectedLength = selectedValues.length;
     let noOfDisplayValues = this.noOfDisplayValues;
+    let showValueAsTags = this.showValueAsTags;
+    let $valueText = this.$valueText;
     let maximumValuesToShow = 50;
     let selectedValuesCount = 0;
-    let showAllText = this.isAllSelected && !this.hasServerSearch;
+    let showAllText = this.isAllSelected && !this.hasServerSearch && !this.disableAllOptionsSelectedText && !showValueAsTags;
 
+    /** show all values selected text without tooltip text */
     if (showAllText && this.hideValueTooltipOnSelectAll) {
-      this.$valueText.innerHTML = `All (${selectedLength})`;
+      $valueText.innerHTML = `${this.allOptionsSelectedText} (${selectedLength})`;
     } else {
+      let valuesMapping = {};
+
+      selectedValues.forEach((d) => {
+        valuesMapping[d] = true;
+      });
+
       for (let d of this.options) {
         if (d.isCurrentNew) {
           continue;
@@ -1061,13 +1122,24 @@ export class VirtualSelect {
 
         let value = d.value;
 
-        if (selectedValues.indexOf(value) !== -1) {
+        if (valuesMapping[value] === true) {
           let label = d.label;
           valueText.push(label);
           selectedValuesCount++;
 
           if (selectedValuesCount <= noOfDisplayValues) {
-            valueTooltip.push(`<span class="vscomp-value-tag">${label}</span>`);
+            if (showValueAsTags) {
+              let valueTagHtml = `<span class="vscomp-value-tag" data-value="${value}">
+                  <span class="vscomp-value-tag-content">${label}</span>
+                  <span class="vscomp-value-tag-clear-button">
+                    <i class="vscomp-clear-icon"></i>
+                  </span>
+                </span>`;
+
+              valueTooltip.push(valueTagHtml);
+            } else {
+              valueTooltip.push(label);
+            }
           }
         }
       }
@@ -1081,26 +1153,29 @@ export class VirtualSelect {
       const aggregatedValueText = valueText.join(', ');
 
       if (aggregatedValueText === '') {
-        this.$valueText.innerHTML = this.placeholder;
+        $valueText.innerHTML = this.placeholder;
       } else {
-        this.$valueText.innerHTML = aggregatedValueText;
+        $valueText.innerHTML = aggregatedValueText;
 
         if (this.multiple) {
           let maxValues = this.maxValues;
 
-          if (DomUtils.hasEllipsis(this.$valueText) || maxValues) {
-            let countText = `${selectedLength}`;
+          if (DomUtils.hasEllipsis($valueText) || maxValues || this.alwaysShowSelectedOptionsCount || showValueAsTags) {
+            let countText = `<span class="vscomp-selected-value-count">${selectedLength}</span>`;
 
             if (maxValues) {
-              countText += ` / ${maxValues}`;
+              countText += ` / <span class="vscomp-max-value-count">${maxValues}</span>`;
             }
 
+            /** show all values selected text with tooltip text */
             if (showAllText) {
-              this.$valueText.innerHTML = `All (${selectedLength})`;
+              $valueText.innerHTML = `${this.allOptionsSelectedText} (${selectedLength})`;
+            } else if (showValueAsTags) {
+              $valueText.innerHTML = valueTooltip.join('');
             } else {
-              let optionsSelectedText = this.optionsSelectedText || `option${selectedLength === 1 ? '' : 's'} selected`;
               /** replace comma delimitted list of selections with shorter text indicating selection count */
-              this.$valueText.innerHTML = `${countText} ${optionsSelectedText}`;
+              let optionsSelectedText = selectedLength === 1 ? this.optionSelectedText : this.optionsSelectedText;
+              $valueText.innerHTML = `${countText} ${optionsSelectedText}`;
             }
           } else {
             /** removing tooltip if full value text is visible */
@@ -1110,7 +1185,9 @@ export class VirtualSelect {
       }
     }
 
-    DomUtils.setData(this.$valueText, 'tooltip', valueTooltip.join(', '));
+    if (!showValueAsTags) {
+      DomUtils.setData($valueText, 'tooltip', valueTooltip.join(', '));
+    }
   }
 
   setSearchValue(value, skipInputSet = false, forceSet = false) {
@@ -1275,10 +1352,14 @@ export class VirtualSelect {
   }
 
   setSelectedProp() {
-    let selectedValues = this.selectedValues;
+    let valuesMapping = {};
+
+    this.selectedValues.forEach((d) => {
+      valuesMapping[d] = true;
+    });
 
     this.options.forEach((d) => {
-      if (selectedValues.indexOf(d.value) !== -1) {
+      if (valuesMapping[d.value] === true) {
         d.isSelected = true;
       }
     });
@@ -1289,11 +1370,15 @@ export class VirtualSelect {
       return;
     }
 
-    let availableValues = this.options.map((d) => d.value);
     let setNewOption = this.setNewOption.bind(this);
+    let availableValuesMapping = {};
+
+    this.options.forEach((d) => {
+      availableValuesMapping[d.value] = true;
+    });
 
     values.forEach((d) => {
-      if (d && availableValues.indexOf(d) === -1) {
+      if (d && availableValuesMapping[d] !== true) {
         setNewOption(d);
       }
     });
@@ -1386,8 +1471,13 @@ export class VirtualSelect {
   }
 
   getNewValue() {
-    let newValues = this.newValues;
-    let result = this.selectedValues.filter((d) => newValues.indexOf(d) !== -1);
+    let valuesMapping = {};
+
+    this.newValues.forEach((d) => {
+      valuesMapping[d] = true;
+    });
+
+    let result = this.selectedValues.filter((d) => valuesMapping[d] === true);
 
     return this.multiple ? result : result[0];
   }
@@ -1410,27 +1500,33 @@ export class VirtualSelect {
 
   getDisplayValue() {
     let displayValues = [];
-    let selectedValues = this.selectedValues;
+    let valuesMapping = {};
 
-    for (let d of this.options) {
-      if (selectedValues.indexOf(d.value) !== -1) {
+    this.selectedValues.forEach((d) => {
+      valuesMapping[d] = true;
+    });
+
+    this.options.forEach((d) => {
+      if (valuesMapping[d.value] === true) {
         displayValues.push(d.label);
       }
-    }
+    });
 
     return this.multiple ? displayValues : displayValues[0] || '';
   }
 
   getSelectedOptions() {
-    let selectedValues = this.selectedValues;
-    let selectedOptions = [];
     let valueKey = this.valueKey;
     let labelKey = this.labelKey;
+    let selectedOptions = [];
+    let valuesMapping = {};
+
+    this.selectedValues.forEach((d) => {
+      valuesMapping[d] = true;
+    });
 
     this.options.forEach((d) => {
-      let isSelected = selectedValues.indexOf(d.value) !== -1;
-
-      if (isSelected) {
+      if (valuesMapping[d.value] === true) {
         let data = {
           [valueKey]: d.value,
           [labelKey]: d.label,
@@ -1970,6 +2066,14 @@ export class VirtualSelect {
     this.onServerSearch(this.searchValue, this);
   }
 
+  removeValue($ele) {
+    let selectedValues = this.selectedValues;
+    let selectedValue = DomUtils.getData($ele, 'value');
+
+    Utils.removeItemFromArray(selectedValues, selectedValue);
+    this.setValueMethod(selectedValues);
+  }
+
   /** static methods - start */
   static init(options) {
     let $eleArray = options.ele;
@@ -2022,8 +2126,8 @@ export class VirtualSelect {
     this.virtualSelect.setValueMethod(value, silentChange);
   }
 
-  static setOptionsMethod(options) {
-    this.virtualSelect.setOptionsMethod(options);
+  static setOptionsMethod(options, keepValue) {
+    this.virtualSelect.setOptionsMethod(options, keepValue);
   }
 
   static setDisabledOptionsMethod(options) {

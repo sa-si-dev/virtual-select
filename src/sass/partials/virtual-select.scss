@@ -153,7 +153,7 @@ body.vscomp-popup-active {
   top: calc(100% + #{$dropboxMargin});
   left: 0;
   width: 100%;
-  z-index: $zIndex;
+  z-index: $zIndex + 1;
 }
 
 .vscomp-dropbox {
@@ -366,7 +366,6 @@ body.vscomp-popup-active {
       height: 100vh;
       overflow: auto;
       background-color: $overlayBg;
-      z-index: $zIndex;
     }
 
     .vscomp-dropbox {
@@ -508,6 +507,7 @@ body.vscomp-popup-active {
 
     .vscomp-dropbox-container {
       position: relative;
+      z-index: $zIndex;
     }
 
     .vscomp-dropbox {
@@ -530,6 +530,70 @@ body.vscomp-popup-active {
 
     .vscomp-options-loader {
       display: block;
+    }
+  }
+
+  &.show-value-as-tags {
+    .vscomp-toggle-button {
+      padding-top: 4px;
+      padding-bottom: 0;
+    }
+
+    .vscomp-value {
+      display: flex;
+      flex-wrap: wrap;
+      height: auto;
+      min-height: 28px;
+      overflow: auto;
+      white-space: normal;
+      text-overflow: unset;
+    }
+
+    .vscomp-value-tag {
+      @include ellipse;
+      display: inline-flex;
+      align-items: center;
+      max-width: 100%;
+      border: 1px solid #ddd;
+      margin: 0 4px 4px 0;
+      padding: 3px 3px 3px 8px;
+      font-size: 12px;
+      line-height: 16px;
+      border-radius: 20px;
+    }
+
+    .vscomp-value-tag-content {
+      @include ellipse;
+      width: calc(100% - #{$valueTagClearWidth});
+    }
+
+    .vscomp-value-tag-clear-button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: $valueTagClearWidth;
+      height: $valueTagClearWidth;
+
+      .vscomp-clear-icon {
+        -webkit-transform: scale(0.8);
+        transform: scale(0.8);
+      }
+    }
+
+    .vscomp-arrow {
+      height: 34px;
+    }
+
+    .vscomp-clear-button {
+      margin-top: 0;
+      top: 5px;
+    }
+
+    &:not(.has-value) {
+      .vscomp-value {
+        align-items: center;
+        padding-bottom: 4px;
+      }
     }
   }
 }
