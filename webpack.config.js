@@ -20,6 +20,7 @@ module.exports = (env, options) => {
     output: {
       filename: '[name].min.js',
       path: path.resolve(__dirname, 'dist'),
+      chunkFormat: 'array-push',
     },
 
     plugins: [
