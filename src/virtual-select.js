@@ -1,12 +1,10 @@
 import { Utils, DomUtils } from './utils';
 
-const virtualSelectVersion = 'v1.0.14';
 const dropboxCloseButtonFullHeight = 48;
 const searchHeight = 40;
 
 const keyDownMethodMapping = {
   13: 'onEnterPress',
-  27: 'onEscPress',
   38: 'onUpArrowPress',
   40: 'onDownArrowPress',
 };
@@ -16,6 +14,8 @@ export class VirtualSelect {
   /**
    * Create a VirtualSelect
    * @property {(element|string)} ele - Parent element to render VirtualSelect
+   * @property {string=self} dropboxWrapper - Parent element to render dropbox. (self, body, or any css selectror)
+   * Use this when container of dropdown has overflow scroll or hiddden value.
    * @property {object[]} options - Array of object to show as options
    * @property {(string|number)} options[].value - Value of the option
    * @property {(string|number)} options[].label - Display text of the option
@@ -74,6 +74,7 @@ export class VirtualSelect {
    * and only one value is selected (i.e. 1 option selected)
    * @property {string} [allOptionsSelectedText=All] - Text to use when displaying all values selected text (i.e. All (10))
    * @property {string} [clearButtonText=Clear] - Tooltip text for clear button
+   * @property {string} [moreText=more...] - Text to show when more than noOfDisplayValues options selected (i.e + 10 more...)
    */
   constructor(options) {
     try {
@@ -97,10 +98,6 @@ export class VirtualSelect {
     let valueTooltip = this.getTooltipAttrText('', !this.multiple, true);
     let clearButtonTooltip = this.getTooltipAttrText(this.clearButtonText);
 
-    let dropboxContainerStyle = {
-      'z-index': this.zIndex,
-    };
-
     if (this.additionalClasses) {
       wrapperClasses += ' ' + this.additionalClasses;
     }
@@ -113,26 +110,18 @@ export class VirtualSelect {
       }
     }
 
-    if (this.position === 'top') {
-      wrapperClasses += ' position-top';
-    }
-
     if (!this.hideClearButton) {
       wrapperClasses += ' has-clear-button';
     }
 
     if (this.keepAlwaysOpen) {
-      wrapperClasses += ' keep-always-open opened';
+      wrapperClasses += ' keep-always-open';
     } else {
       wrapperClasses += ' closed';
     }
 
     if (this.showAsPopup) {
       wrapperClasses += ' show-as-popup';
-    } else {
-      if (this.dropboxWidth) {
-        dropboxContainerStyle.width = this.dropboxWidth;
-      }
     }
 
     if (this.hasSearch) {
@@ -143,7 +132,7 @@ export class VirtualSelect {
       wrapperClasses += ' show-value-as-tags';
     }
 
-    let html = `<div class="${wrapperClasses}" tabindex="0">
+    let html = `<div class="vscomp-ele-wrapper ${wrapperClasses}" tabindex="0">
         <input type="hidden" name="${this.name}" class="vscomp-hidden-input">
 
         <div class="vscomp-toggle-button">
@@ -158,43 +147,85 @@ export class VirtualSelect {
           </div>
         </div>
 
-        <div class="vscomp-dropbox-container" ${DomUtils.getStyleText(dropboxContainerStyle)}>
-          <div class="vscomp-dropbox">
-            <div class="vscomp-search-wrapper"></div>
-
-            <div class="vscomp-options-container">
-              <div class="vscomp-options-loader"></div>
-
-              <div class="vscomp-options-list">
-                <div class="vscomp-options"></div>
-              </div>
-            </div>
-
-            <div class="vscomp-no-options">${this.noOptionsText}</div>
-            <div class="vscomp-no-search-results">${this.noSearchResultsText}</div>
-
-            <span class="vscomp-dropbox-close-button"><i class="vscomp-clear-icon"></i></span>
-          </div>
-        </div>
+        ${this.renderDropbox({ wrapperClasses })}
       </div>`;
 
     this.$ele.innerHTML = html;
     this.$body = document.querySelector('body');
     this.$wrapper = this.$ele.querySelector('.vscomp-wrapper');
+
+    if (this.hasDropboxWrapper) {
+      this.$allWrappers = [this.$wrapper, this.$dropboxWrapper];
+      this.$dropboxContainer = this.$dropboxWrapper.querySelector('.vscomp-dropbox-container');
+
+      DomUtils.addClass(this.$dropboxContainer, 'pop-comp-wrapper');
+    } else {
+      this.$allWrappers = [this.$wrapper];
+      this.$dropboxContainer = this.$wrapper.querySelector('.vscomp-dropbox-container');
+    }
+
     this.$toggleButton = this.$ele.querySelector('.vscomp-toggle-button');
     this.$clearButton = this.$ele.querySelector('.vscomp-clear-button');
-    this.$dropboxContainer = this.$ele.querySelector('.vscomp-dropbox-container');
-    this.$dropboxCloseButton = this.$ele.querySelector('.vscomp-dropbox-close-button');
-    this.$search = this.$ele.querySelector('.vscomp-search-wrapper');
-    this.$optionsContainer = this.$ele.querySelector('.vscomp-options-container');
-    this.$optionsList = this.$ele.querySelector('.vscomp-options-list');
-    this.$options = this.$ele.querySelector('.vscomp-options');
     this.$valueText = this.$ele.querySelector('.vscomp-value');
     this.$hiddenInput = this.$ele.querySelector('.vscomp-hidden-input');
-    this.$noOptions = this.$ele.querySelector('.vscomp-no-options');
-    this.$noSearchResults = this.$ele.querySelector('.vscomp-no-search-results');
+    this.$dropboxCloseButton = this.$dropboxContainer.querySelector('.vscomp-dropbox-close-button');
+    this.$search = this.$dropboxContainer.querySelector('.vscomp-search-wrapper');
+    this.$optionsContainer = this.$dropboxContainer.querySelector('.vscomp-options-container');
+    this.$optionsList = this.$dropboxContainer.querySelector('.vscomp-options-list');
+    this.$options = this.$dropboxContainer.querySelector('.vscomp-options');
+    this.$noOptions = this.$dropboxContainer.querySelector('.vscomp-no-options');
+    this.$noSearchResults = this.$dropboxContainer.querySelector('.vscomp-no-search-results');
 
     this.afterRenderWrapper();
+  }
+
+  renderDropbox({ wrapperClasses }) {
+    let $wrapper = this.dropboxWrapper !== 'self' ? document.querySelector(this.dropboxWrapper) : null;
+
+    let dropboxContainerStyle = {
+      'z-index': this.zIndex,
+    };
+
+    if (!this.showAsPopup) {
+      if (this.dropboxWidth) {
+        dropboxContainerStyle.width = this.dropboxWidth;
+      }
+    }
+
+    let html = `<div class="vscomp-dropbox-container" ${DomUtils.getStyleText(dropboxContainerStyle)}>
+        <div class="vscomp-dropbox">
+          <div class="vscomp-search-wrapper"></div>
+
+          <div class="vscomp-options-container">
+            <div class="vscomp-options-loader"></div>
+
+            <div class="vscomp-options-list">
+              <div class="vscomp-options"></div>
+            </div>
+          </div>
+
+          <div class="vscomp-no-options">${this.noOptionsText}</div>
+          <div class="vscomp-no-search-results">${this.noSearchResultsText}</div>
+
+          <span class="vscomp-dropbox-close-button"><i class="vscomp-clear-icon"></i></span>
+        </div>
+      </div>`;
+
+    if ($wrapper) {
+      let $dropboxWrapper = document.createElement('div');
+      this.$dropboxWrapper = $dropboxWrapper;
+      this.hasDropboxWrapper = true;
+      $dropboxWrapper.innerHTML = html;
+
+      $wrapper.appendChild($dropboxWrapper);
+      DomUtils.addClass($dropboxWrapper, `vscomp-dropbox-wrapper ${wrapperClasses}`);
+
+      return '';
+    } else {
+      this.hasDropboxWrapper = false;
+
+      return html;
+    }
   }
 
   renderOptions() {
@@ -287,10 +318,10 @@ export class VirtualSelect {
     let hasNoSearchResults = !hasNoOptions && !visibleOptions.length;
 
     if (!this.allowNewOption || this.hasServerSearch || this.showOptionsOnlyOnSearch) {
-      DomUtils.toggleClass(this.$wrapper, 'has-no-search-results', hasNoSearchResults);
+      DomUtils.toggleClass(this.$allWrappers, 'has-no-search-results', hasNoSearchResults);
     }
 
-    DomUtils.toggleClass(this.$wrapper, 'has-no-options', hasNoOptions);
+    DomUtils.toggleClass(this.$allWrappers, 'has-no-options', hasNoOptions);
     this.setOptionsPosition();
     this.setOptionsTooltip();
   }
@@ -321,10 +352,10 @@ export class VirtualSelect {
       </div>`;
 
     this.$search.innerHTML = html;
-    this.$searchInput = this.$ele.querySelector('.vscomp-search-input');
-    this.$searchClear = this.$ele.querySelector('.vscomp-search-clear');
-    this.$toggleAllButton = this.$ele.querySelector('.vscomp-toggle-all-button');
-    this.$toggleAllCheckbox = this.$ele.querySelector('.vscomp-toggle-all-checkbox');
+    this.$searchInput = this.$dropboxContainer.querySelector('.vscomp-search-input');
+    this.$searchClear = this.$dropboxContainer.querySelector('.vscomp-search-clear');
+    this.$toggleAllButton = this.$dropboxContainer.querySelector('.vscomp-toggle-all-button');
+    this.$toggleAllCheckbox = this.$dropboxContainer.querySelector('.vscomp-toggle-all-checkbox');
 
     this.addEvent(this.$searchInput, 'keyup change', 'onSearch');
     this.addEvent(this.$searchClear, 'click', 'onSearchClear');
@@ -335,7 +366,7 @@ export class VirtualSelect {
   /** dom event methods - start */
   addEvents() {
     this.addEvent(document, 'click', 'onDocumentClick');
-    this.addEvent(this.$wrapper, 'keydown', 'onKeyDown');
+    this.addEvent(this.$allWrappers, 'keydown', 'onKeyDown');
     this.addEvent(this.$toggleButton, 'click', 'onToggleButtonClick');
     this.addEvent(this.$clearButton, 'click', 'onClearButtonClick');
     this.addEvent(this.$dropboxContainer, 'click', 'onDropboxContainerClick');
@@ -344,6 +375,7 @@ export class VirtualSelect {
     this.addEvent(this.$options, 'click', 'onOptionsClick');
     this.addEvent(this.$options, 'mouseover', 'onOptionsMouseOver');
     this.addEvent(this.$options, 'touchmove', 'onOptionsTouchMove');
+    this.addMutationObserver();
   }
 
   addEvent($ele, events, method) {
@@ -369,7 +401,7 @@ export class VirtualSelect {
   onDocumentClick(e) {
     let $eleToKeepOpen = e.target.closest('.vscomp-wrapper');
 
-    if ($eleToKeepOpen !== this.$wrapper && this.isOpened()) {
+    if ($eleToKeepOpen !== this.$wrapper && $eleToKeepOpen !== this.$dropboxWrapper && this.isOpened()) {
       this.closeDropbox();
     }
   }
@@ -388,12 +420,6 @@ export class VirtualSelect {
       this.openDropbox();
     } else {
       this.selectFocusedOption();
-    }
-  }
-
-  onEscPress() {
-    if (this.isOpened()) {
-      this.closeDropbox();
     }
   }
 
@@ -478,6 +504,35 @@ export class VirtualSelect {
   onResize() {
     this.setOptionsContainerHeight(true);
   }
+
+  /** to remove dropboxWrapper on removing vscomp-ele when it is rendered outside of vscomp-ele */
+  addMutationObserver() {
+    if (!this.hasDropboxWrapper) {
+      return;
+    }
+
+    const $vscompEle = this.$ele;
+
+    this.mutationObserver = new MutationObserver((mutations) => {
+      mutations.some((mutation) => {
+        const $removedNodes = [...mutation.removedNodes];
+
+        const isMatching = $removedNodes.some(($ele) => {
+          if ($ele === $vscompEle || $ele.contains($vscompEle)) {
+            return true;
+          }
+        });
+
+        if (isMatching) {
+          this.destroy();
+        }
+
+        return isMatching;
+      });
+    });
+
+    this.mutationObserver.observe(document.querySelector('body'), { childList: true, subtree: true });
+  }
   /** dom event methods - end */
 
   /** before event methods - start */
@@ -503,15 +558,24 @@ export class VirtualSelect {
 
   /** after event methods - start */
   afterRenderWrapper() {
-    this.$ele.setAttribute('name', this.name);
-
+    DomUtils.setAttr(this.$ele, 'name', this.name);
     DomUtils.addClass(this.$ele, 'vscomp-ele');
+
     this.renderSearch();
+
+    if (!this.showAsPopup) {
+      this.setDropboxWrapperWidth();
+    }
+
     this.setOptionsHeight();
     this.setVisibleOptions();
     this.setOptionsContainerHeight();
     this.addEvents();
     this.setMethods();
+
+    if (!this.keepAlwaysOpen && !this.showAsPopup) {
+      this.initDropboxPopover();
+    }
 
     if (this.initialSelectedValue) {
       this.setValueMethod(this.initialSelectedValue, this.silentInitialValueSet);
@@ -582,6 +646,7 @@ export class VirtualSelect {
     let convertToBoolean = Utils.convertToBoolean;
 
     this.$ele = options.ele;
+    this.dropboxWrapper = options.dropboxWrapper;
     this.valueKey = options.valueKey;
     this.labelKey = options.labelKey;
     this.descriptionKey = options.descriptionKey;
@@ -614,6 +679,7 @@ export class VirtualSelect {
     this.optionSelectedText = options.optionSelectedText;
     this.allOptionsSelectedText = options.allOptionsSelectedText;
     this.clearButtonText = options.clearButtonText;
+    this.moreText = options.moreText;
     this.placeholder = options.placeholder;
     this.position = options.position;
     this.dropboxWidth = options.dropboxWidth;
@@ -635,7 +701,6 @@ export class VirtualSelect {
     this.newValues = [];
     this.events = {};
     this.tooltipEnterDelay = 200;
-    this.transitionDuration = 250;
     this.searchValue = '';
     this.searchValueOriginal = '';
     this.isAllSelected = false;
@@ -650,6 +715,10 @@ export class VirtualSelect {
       this.disableSelectAll = true;
     }
 
+    if (this.keepAlwaysOpen) {
+      this.dropboxWrapper = 'self';
+    }
+
     this.showAsPopup = this.showDropboxAsPopup && !this.keepAlwaysOpen && window.innerWidth <= parseFloat(this.popupDropboxBreakpoint);
     this.hasSearchContainer = this.hasSearch || (this.multiple && !this.disableSelectAll);
     this.optionsCount = this.getOptionsCount(options.optionsCount);
@@ -659,6 +728,7 @@ export class VirtualSelect {
 
   setDefaultProps(options) {
     let defaultOptions = {
+      dropboxWrapper: 'self',
       valueKey: 'value',
       labelKey: 'label',
       descriptionKey: 'description',
@@ -677,6 +747,7 @@ export class VirtualSelect {
       selectAllText: 'Select All',
       searchPlaceholderText: 'Search...',
       clearButtonText: 'Clear',
+      moreText: 'more...',
       optionsSelectedText: 'options selected',
       optionSelectedText: 'option selected',
       allOptionsSelectedText: 'All',
@@ -717,6 +788,7 @@ export class VirtualSelect {
       multiple: 'multiple',
       placeholder: 'placeholder',
       name: 'name',
+      'data-dropbox-wrapper': 'dropboxWrapper',
       'data-value-key': 'valueKey',
       'data-label-key': 'labelKey',
       'data-description-key': 'descriptionKey',
@@ -736,6 +808,7 @@ export class VirtualSelect {
       'data-option-selected-text': 'optionSelectedText',
       'data-all-options-selected-text': 'allOptionsSelectedText',
       'data-clear-button-text': 'clearButtonText',
+      'data-more-text': 'moreText',
       'data-silent-initial-value-set': 'silentInitialValueSet',
       'data-dropbox-width': 'dropboxWidth',
       'data-z-index': 'zIndex',
@@ -789,6 +862,11 @@ export class VirtualSelect {
     $ele.getSelectedOptions = VirtualSelect.getSelectedOptionsMethod;
     $ele.open = VirtualSelect.openMethod;
     $ele.close = VirtualSelect.closeMethod;
+    $ele.destroy = VirtualSelect.destroyMethod;
+
+    if (this.hasDropboxWrapper) {
+      this.$dropboxWrapper.virtualSelect = this;
+    }
   }
 
   setValueMethod(value, silentChange) {
@@ -982,7 +1060,7 @@ export class VirtualSelect {
       this.setValueText();
     }
 
-    DomUtils.removeClass(this.$wrapper, 'server-searching');
+    DomUtils.removeClass(this.$allWrappers, 'server-searching');
   }
 
   setSelectedOptions() {
@@ -1081,8 +1159,8 @@ export class VirtualSelect {
     this.$hiddenInput.value = newValue;
     this.isMaxValuesSelected = this.maxValues && this.maxValues <= this.selectedValues.length ? true : false;
     this.setValueText();
-    DomUtils.toggleClass(this.$wrapper, 'has-value', Utils.isNotEmpty(this.selectedValues));
-    DomUtils.toggleClass(this.$wrapper, 'max-value-selected', this.isMaxValuesSelected);
+    DomUtils.toggleClass(this.$allWrappers, 'has-value', Utils.isNotEmpty(this.selectedValues));
+    DomUtils.toggleClass(this.$allWrappers, 'max-value-selected', this.isMaxValuesSelected);
 
     if (triggerEvent) {
       DomUtils.dispatchEvent(this.$ele, 'change');
@@ -1147,7 +1225,7 @@ export class VirtualSelect {
       let moreSelectedOptions = selectedLength - noOfDisplayValues;
 
       if (moreSelectedOptions > 0) {
-        valueTooltip.push(`<span class="vscomp-value-tag more-value-count">+ ${moreSelectedOptions} more...</span>`);
+        valueTooltip.push(`<span class="vscomp-value-tag more-value-count">+ ${moreSelectedOptions} ${this.moreText}</span>`);
       }
 
       const aggregatedValueText = valueText.join(', ');
@@ -1203,7 +1281,7 @@ export class VirtualSelect {
     this.searchValue = searchValue;
     this.searchValueOriginal = value;
 
-    DomUtils.toggleClass(this.$wrapper, 'has-search-value', value);
+    DomUtils.toggleClass(this.$allWrappers, 'has-search-value', value);
 
     this.afterSetSearchValue();
   }
@@ -1295,31 +1373,6 @@ export class VirtualSelect {
     this.afterSetOptionsContainerHeight(reset);
   }
 
-  setDropboxPosition() {
-    if (this.position !== 'auto') {
-      return;
-    }
-
-    let moreVisibleSides = DomUtils.getMoreVisibleSides(this.$wrapper);
-    let showOnLeft = false;
-
-    /** check that is dropbox hidden on right edge - only if custom width given */
-    if (this.dropboxWidth) {
-      let buttonCoords = this.$toggleButton.getBoundingClientRect();
-      let viewportWidth = window.innerWidth;
-      let dropboxWidth = parseFloat(this.dropboxWidth);
-      let hiddenOnRight = buttonCoords.left + dropboxWidth > viewportWidth;
-      let hiddenOnLeft = dropboxWidth > buttonCoords.right;
-
-      if (hiddenOnRight && !hiddenOnLeft) {
-        showOnLeft = true;
-      }
-    }
-
-    DomUtils.toggleClass(this.$wrapper, 'position-top', moreVisibleSides.vertical === 'top');
-    DomUtils.toggleClass(this.$wrapper, 'position-left', showOnLeft);
-  }
-
   setNewOption(newValue) {
     let value = newValue || this.searchValueOriginal.trim();
 
@@ -1382,6 +1435,12 @@ export class VirtualSelect {
         setNewOption(d);
       }
     });
+  }
+
+  setDropboxWrapperWidth() {
+    let width = this.dropboxWidth || `${this.$wrapper.offsetWidth}px`;
+
+    DomUtils.setStyle(this.$dropboxContainer, 'max-width', width);
   }
   /** set methods - end */
 
@@ -1589,34 +1648,62 @@ export class VirtualSelect {
   }
   /** get methods - end */
 
+  initDropboxPopover() {
+    let data = {
+      ele: this.$ele,
+      target: this.$dropboxContainer,
+      position: this.position,
+      zIndex: this.zIndex,
+      margin: 4,
+      transitionDistance: 30,
+      hideArrowIcon: true,
+      disableManualAction: true,
+      disableUpdatePosition: !this.hasDropboxWrapper,
+      afterShow: this.afterShowPopper.bind(this),
+      afterHide: this.afterHidePopper.bind(this),
+    };
+
+    this.dropboxPopover = new PopoverComponent(data);
+  }
+
   openDropbox(isSilent) {
+    this.isSilentOpen = isSilent;
+
     if (!isSilent) {
       DomUtils.dispatchEvent(this.$ele, 'beforeOpen');
     }
 
-    this.setDropboxPosition();
-    DomUtils.removeClass(this.$wrapper, 'closed');
+    DomUtils.removeClass(this.$allWrappers, 'closed');
 
-    setTimeout(() => {
-      DomUtils.addClass(this.$wrapper, 'opened');
+    if (this.dropboxPopover) {
+      this.dropboxPopover.show();
+    } else {
+      this.afterShowPopper();
+    }
+  }
 
-      if (!isSilent) {
-        this.moveSelectedOptionsFirst();
-        DomUtils.addClass(this.$wrapper, 'focused');
+  afterShowPopper() {
+    let isSilent = this.isSilentOpen;
+    this.isSilentOpen = false;
 
-        if (this.showAsPopup) {
-          DomUtils.addClass(this.$body, 'vscomp-popup-active');
-          this.isPopupActive = true;
-        } else {
-          this.focusSearchInput();
-        }
+    if (!isSilent) {
+      this.moveSelectedOptionsFirst();
+      DomUtils.addClass(this.$allWrappers, 'focused');
 
-        DomUtils.dispatchEvent(this.$ele, 'afterOpen');
+      if (this.showAsPopup) {
+        DomUtils.addClass(this.$body, 'vscomp-popup-active');
+        this.isPopupActive = true;
+      } else {
+        this.focusSearchInput();
       }
-    }, 0);
+
+      DomUtils.dispatchEvent(this.$ele, 'afterOpen');
+    }
   }
 
   closeDropbox(isSilent) {
+    this.isSilentClose = isSilent;
+
     if (this.keepAlwaysOpen) {
       this.removeOptionFocus();
       return;
@@ -1626,27 +1713,32 @@ export class VirtualSelect {
       DomUtils.dispatchEvent(this.$ele, 'beforeClose');
     }
 
-    let transitionDuration = isSilent ? 0 : this.transitionDuration;
+    if (this.dropboxPopover) {
+      this.dropboxPopover.hide();
+    } else {
+      this.afterHidePopper();
+    }
+  }
 
-    setTimeout(() => {
-      DomUtils.removeClass(this.$wrapper, 'opened focused');
-      this.removeOptionFocus();
+  afterHidePopper() {
+    let isSilent = this.isSilentClose;
+    this.isSilentClose = false;
 
-      if (!isSilent) {
-        if (this.isPopupActive) {
-          DomUtils.removeClass(this.$body, 'vscomp-popup-active');
-          this.isPopupActive = false;
-        }
+    DomUtils.removeClass(this.$allWrappers, 'focused');
+    this.removeOptionFocus();
+
+    if (!isSilent) {
+      if (this.isPopupActive) {
+        DomUtils.removeClass(this.$body, 'vscomp-popup-active');
+        this.isPopupActive = false;
       }
-    }, 0);
+    }
 
-    setTimeout(() => {
-      DomUtils.addClass(this.$wrapper, 'closed');
+    DomUtils.addClass(this.$allWrappers, 'closed');
 
-      if (!isSilent) {
-        DomUtils.dispatchEvent(this.$ele, 'afterClose');
-      }
-    }, transitionDuration);
+    if (!isSilent) {
+      DomUtils.dispatchEvent(this.$ele, 'afterClose');
+    }
   }
 
   moveSelectedOptionsFirst() {
@@ -1672,7 +1764,7 @@ export class VirtualSelect {
   }
 
   isOpened() {
-    return DomUtils.hasClass(this.$wrapper, 'opened');
+    return !DomUtils.hasClass(this.$wrapper, 'closed');
   }
 
   focusSearchInput() {
@@ -1792,7 +1884,7 @@ export class VirtualSelect {
         }
 
         selectedValues = [selectedValue];
-        let $prevSelectedOption = this.$ele.querySelector('.vscomp-option.selected');
+        let $prevSelectedOption = this.$dropboxContainer.querySelector('.vscomp-option.selected');
 
         if ($prevSelectedOption) {
           DomUtils.toggleClass($prevSelectedOption, 'selected', false);
@@ -2059,8 +2151,8 @@ export class VirtualSelect {
   }
 
   serverSearch() {
-    DomUtils.removeClass(this.$wrapper, 'has-no-search-results');
-    DomUtils.addClass(this.$wrapper, 'server-searching');
+    DomUtils.removeClass(this.$allWrappers, 'has-no-search-results');
+    DomUtils.addClass(this.$allWrappers, 'server-searching');
 
     this.setSelectedOptions();
     this.onServerSearch(this.searchValue, this);
@@ -2072,6 +2164,20 @@ export class VirtualSelect {
 
     Utils.removeItemFromArray(selectedValues, selectedValue);
     this.setValueMethod(selectedValues);
+  }
+
+  destroy() {
+    let $ele = this.$ele;
+    $ele.virtualSelect = undefined;
+    $ele.value = undefined;
+    $ele.innerHTML = '';
+
+    if (this.hasDropboxWrapper) {
+      this.$dropboxWrapper.remove();
+      this.mutationObserver.disconnect();
+    }
+
+    DomUtils.removeClass($ele, 'vscomp-ele');
   }
 
   /** static methods - start */
@@ -2113,7 +2219,7 @@ export class VirtualSelect {
       return;
     }
 
-    $form.querySelectorAll('.vscomp-wrapper').forEach(($ele) => {
+    $form.querySelectorAll('.vscomp-ele-wrapper').forEach(($ele) => {
       $ele.parentElement.virtualSelect.reset();
     });
   }
@@ -2150,10 +2256,6 @@ export class VirtualSelect {
     return this.virtualSelect.getNewValue();
   }
 
-  static version() {
-    return virtualSelectVersion;
-  }
-
   static getDisplayValueMethod() {
     return this.virtualSelect.getDisplayValue();
   }
@@ -2170,8 +2272,12 @@ export class VirtualSelect {
     return this.virtualSelect.closeDropbox();
   }
 
+  static destroyMethod() {
+    return this.virtualSelect.destroy();
+  }
+
   static onResizeMethod() {
-    document.querySelectorAll('.vscomp-wrapper').forEach(($ele) => {
+    document.querySelectorAll('.vscomp-ele-wrapper').forEach(($ele) => {
       $ele.parentElement.virtualSelect.onResize();
     });
   }

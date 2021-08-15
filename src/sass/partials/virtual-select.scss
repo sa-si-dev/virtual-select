@@ -29,6 +29,12 @@ body.vscomp-popup-active {
   }
 }
 
+.vscomp-dropbox-wrapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
 .vscomp-toggle-button {
   display: flex;
   position: relative;
@@ -149,19 +155,13 @@ body.vscomp-popup-active {
 }
 
 .vscomp-dropbox-container {
-  position: absolute;
-  top: calc(100% + #{$dropboxMargin});
-  left: 0;
   width: 100%;
   z-index: $zIndex + 1;
 }
 
 .vscomp-dropbox {
-  opacity: 0;
-  box-shadow: $boxShadow1;
+  width: 100%;
   background-color: $primaryBg;
-  @include prefix(transition-duration, $transitionDuration);
-  @include prefix(transform, translate3d(0, -$transitionDistance, 0));
 }
 
 .vscomp-options-container {
@@ -314,6 +314,18 @@ body.vscomp-popup-active {
   }
 }
 
+.vscomp-ele {
+  &[disabled] {
+    cursor: not-allowed;
+    user-select: none;
+
+    .vscomp-wrapper {
+      pointer-events: none;
+      opacity: 0.7;
+    }
+  }
+}
+
 .vscomp-wrapper {
   .checkbox-icon {
     display: inline-flex;
@@ -336,24 +348,6 @@ body.vscomp-popup-active {
     }
   }
 
-  &.position-top {
-    .vscomp-dropbox-container {
-      top: auto;
-      bottom: calc(100% + #{$dropboxMargin});
-    }
-
-    .vscomp-dropbox {
-      @include prefix(transform, translate3d(0, $transitionDistance, 0));
-    }
-  }
-
-  &.position-left {
-    .vscomp-dropbox-container {
-      right: 0;
-      left: auto;
-    }
-  }
-
   &.show-as-popup {
     .vscomp-dropbox-container {
       display: flex;
@@ -365,6 +359,7 @@ body.vscomp-popup-active {
       width: 100vw;
       height: 100vh;
       overflow: auto;
+      opacity: 1;
       background-color: $overlayBg;
     }
 
@@ -427,19 +422,13 @@ body.vscomp-popup-active {
   &.focused,
   &:focus {
     .vscomp-toggle-button {
-      box-shadow: $boxShadow2;
-    }
-  }
-
-  &.opened {
-    .vscomp-dropbox {
-      opacity: 1;
-      @include prefix(transform, translate3d(0, 0, 0));
+      box-shadow: $boxShadow1;
     }
   }
 
   &.closed {
-    .vscomp-dropbox-container {
+    .vscomp-dropbox-container,
+    &.vscomp-dropbox-wrapper {
       display: none;
     }
   }
@@ -519,7 +508,7 @@ body.vscomp-popup-active {
     &.focused,
     &:focus,
     &:hover {
-      box-shadow: $boxShadow2;
+      box-shadow: $boxShadow1;
     }
   }
 
@@ -535,8 +524,7 @@ body.vscomp-popup-active {
 
   &.show-value-as-tags {
     .vscomp-toggle-button {
-      padding-top: 4px;
-      padding-bottom: 0;
+      padding: 4px 22px 0 10px;
     }
 
     .vscomp-value {
@@ -556,10 +544,14 @@ body.vscomp-popup-active {
       max-width: 100%;
       border: 1px solid #ddd;
       margin: 0 4px 4px 0;
-      padding: 3px 3px 3px 8px;
+      padding: 2px 3px 2px 8px;
       font-size: 12px;
       line-height: 16px;
       border-radius: 20px;
+
+      &.more-value-count {
+        padding-right: 8px;
+      }
     }
 
     .vscomp-value-tag-content {
@@ -589,10 +581,24 @@ body.vscomp-popup-active {
       top: 5px;
     }
 
+    &.has-value {
+      .vscomp-arrow {
+        display: none;
+      }
+
+      .vscomp-clear-button {
+        right: 2px;
+      }
+    }
+
     &:not(.has-value) {
+      .vscomp-toggle-button {
+        padding-bottom: 2px;
+      }
+
       .vscomp-value {
         align-items: center;
-        padding-bottom: 4px;
+        padding-bottom: 3px;
       }
     }
   }

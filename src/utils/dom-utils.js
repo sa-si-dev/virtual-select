@@ -59,27 +59,6 @@ export class DomUtils {
     return $ele.scrollWidth > $ele.offsetWidth;
   }
 
-  static getMoreVisibleSides($ele) {
-    if (!$ele) {
-      return {};
-    }
-
-    let box = $ele.getBoundingClientRect();
-    let availableWidth = window.innerWidth;
-    let availableHeight = window.innerHeight;
-    let leftArea = box.left;
-    let topArea = box.top;
-    let rightArea = availableWidth - leftArea - box.width;
-    let bottomArea = availableHeight - topArea - box.height;
-    let horizontal = leftArea > rightArea ? 'left' : 'right';
-    let vertical = topArea > bottomArea ? 'top' : 'bottom';
-
-    return {
-      horizontal,
-      vertical,
-    };
-  }
-
   static getData($ele, name, type) {
     if (!$ele) {
       return;
@@ -106,6 +85,14 @@ export class DomUtils {
     }
 
     $ele.dataset[name] = value;
+  }
+
+  static setAttr($ele, name, value) {
+    if (!$ele) {
+      return;
+    }
+
+    $ele.setAttribute(name, value);
   }
 
   static setStyle($ele, name, value) {
