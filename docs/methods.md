@@ -13,6 +13,7 @@
 - [getSelectedOptions()](#getselectedoptions)
 - [open()](#open)
 - [close()](#close)
+- [destroy()](#destroy)
 
 ### Get selected value
 
@@ -127,4 +128,12 @@ To close dropbox programmatically
 
 ```js
 document.querySelector('#sample-select').close();
+```
+
+### destroy()
+
+To destroy the virtual select instance from the element
+
+```js
+document.querySelector('#sample-select').destroy();
 ```

@@ -3,6 +3,7 @@
 | Name | Type | Default value | Description |
 | --- | --- | --- | ---- |
 | ele | String \| Element | | DOM element to initialize plugin<br/>String - #sample-select <br/>Element - document.querySelector('#sample-select') |
+| dropboxWrapper | String | self | Parent element to render dropbox. (self, body, or any css selectror) <br/> Use this when container of dropdown has overflow scroll or hiddden value. |
 | options | Array | [] | List of options <br/>[<br/>  { label: 'Option 1', value: '1' }, <br/>  { label: 'Option 2', value: '2' }<br/>  ...<br/>] |
 | options[].alias | String \| Array | | Alternative labels to use on search.<br/>Array of string or comma separated string. |
 | options[].options | Array | | List of options for option group |
@@ -20,7 +21,7 @@
 | disableSelectAll | Boolean | false | Disable select all feature of multiple select |
 | optionsCount | Number | 5 \| 4 | No.of options to show on viewport <br/>4 - When hasOptionDescription is true |
 | optionHeight | String | 40px \| 50px | Height of each dropdown options <br/>50px - When hasOptionDescription is true |
-| position | String | auto | Position of dropbox (top, bottom, auto) |
+| position | String | auto | Position of dropbox (auto, top, bottom, top left, top right, bottom left, bottom right) |
 | selectedValue | String \| Array | | Single value or array of values to select on init |
 | silentInitialValueSet | Boolean | false | To avoid "change event" trigger on setting initial value |
 | dropboxWidth | String | | Custom width for dropbox |
@@ -62,6 +63,7 @@ Update below properties to change display texts.
 | optionSelectedText | String | option selected | Text to use when displaying no.of values selected text and only one value is selected (i.e. 1 option selected) |
 | allOptionsSelectedText | String | All | Text to use when displaying all values selected text (i.e. All (10)) |
 | clearButtonText | String | Clear | Tooltip text for clear button |
+| moreText | String | more... | Text to show when more than noOfDisplayValues options selected (i.e + 10 more...) |
 
 ## Using properties on initialization
 
