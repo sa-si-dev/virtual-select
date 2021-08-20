@@ -562,11 +562,6 @@ export class VirtualSelect {
     DomUtils.addClass(this.$ele, 'vscomp-ele');
 
     this.renderSearch();
-
-    if (!this.showAsPopup) {
-      this.setDropboxWrapperWidth();
-    }
-
     this.setOptionsHeight();
     this.setVisibleOptions();
     this.setOptionsContainerHeight();
@@ -1438,6 +1433,10 @@ export class VirtualSelect {
   }
 
   setDropboxWrapperWidth() {
+    if (this.showAsPopup) {
+      return;
+    }
+
     let width = this.dropboxWidth || `${this.$wrapper.offsetWidth}px`;
 
     DomUtils.setStyle(this.$dropboxContainer, 'max-width', width);
@@ -1672,6 +1671,8 @@ export class VirtualSelect {
     if (!isSilent) {
       DomUtils.dispatchEvent(this.$ele, 'beforeOpen');
     }
+
+    this.setDropboxWrapperWidth();
 
     DomUtils.removeClass(this.$allWrappers, 'closed');
 

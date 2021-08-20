@@ -4,7 +4,7 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
 const FileManagerPlugin = require('filemanager-webpack-plugin');
 
-const banner = `Virtual Select v1.0.15
+const banner = `Virtual Select v1.0.16
 https://sa-si-dev.github.io/virtual-select
 Licensed under MIT (https://github.com/sa-si-dev/virtual-select/blob/master/LICENSE)`;
 
@@ -13,8 +13,8 @@ module.exports = (env, options) => {
     target: 'es5',
 
     entry: {
-      styles: './src/styles.js',
-      'virtual-select': ['./node_modules/popover-plugin/dist/popover.min.js', './src/virtual-select.js'],
+      styles: ['./src/styles.js', './node_modules/popover-plugin/dist/popover.min.css'],
+      'virtual-select': ['./src/virtual-select.js', './node_modules/popover-plugin/dist/popover.min.js'],
     },
 
     output: {
@@ -61,6 +61,10 @@ module.exports = (env, options) => {
           test: /\.scss$/,
           exclude: /(node_modules)/,
           use: [MiniCssExtractPlugin.loader, 'css-loader', 'sass-loader'],
+        },
+        {
+          test: /\.css$/,
+          use: [MiniCssExtractPlugin.loader, 'css-loader'],
         },
         {
           test: /\.m?js$/,
