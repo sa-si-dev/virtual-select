@@ -11,6 +11,10 @@
   @include prefix(transform, rotate(45deg) translate(1px, -4px));
 }
 
+@mixin checkbox-checked-rtl {
+  @include prefix(transform, rotate(45deg) translate(-4px, 1px));
+}
+
 @mixin ellipse {
   text-overflow: ellipsis;
   white-space: nowrap;

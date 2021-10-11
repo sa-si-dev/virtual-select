@@ -1,0 +1,102 @@
+.vscomp-wrapper.text-direction-rtl {
+  direction: rtl;
+
+  .vscomp-toggle-button {
+    padding: 7px 10px 7px $arrowWidth;
+  }
+
+  .vscomp-arrow {
+    right: auto;
+    left: 0;
+  }
+
+  .vscomp-clear-button {
+    right: auto !important;
+    left: $arrowWidth;
+  }
+
+  .checkbox-icon {
+    margin-right: 0;
+    margin-left: $optionCheckboxMargin;
+
+    &.checked::after {
+      @include checkbox-checked-rtl;
+    }
+  }
+
+  .vscomp-search-container {
+    padding: 0 15px 0 5px;
+  }
+
+  .vscomp-toggle-all-label {
+    text-align: right;
+  }
+
+  .vscomp-option {
+    text-align: right;
+
+    &.group-option {
+      padding-right: 30px;
+    }
+  }
+
+  .vscomp-new-option-icon {
+    right: auto;
+    left: 0;
+
+    &::before {
+      border-left-color: $primaryColor;
+      border-right-color: transparent;
+    }
+
+    &::after {
+      right: auto;
+      left: 1px;
+    }
+  }
+
+  &.multiple {
+    .vscomp-option {
+      &.selected .checkbox-icon::after {
+        @include checkbox-checked-rtl;
+      }
+    }
+  }
+
+  &.has-clear-button {
+    .vscomp-toggle-button {
+      padding-left: #{$arrowWidth + $clearButtonWidth};
+    }
+  }
+
+  &.keep-always-open {
+    .vscomp-toggle-button {
+      padding-left: $clearButtonWidth;
+    }
+
+    .vscomp-clear-button {
+      left: 5px;
+    }
+  }
+
+  &.show-value-as-tags {
+    .vscomp-toggle-button {
+      padding: 4px 10px 0 22px;
+    }
+
+    .vscomp-value-tag {
+      margin: 0 0 4px 4px;
+      padding: 2px 8px 2px 3px;
+
+      &.more-value-count {
+        padding-left: 8px;
+      }
+    }
+
+    &.has-value {
+      .vscomp-clear-button {
+        left: 2px;
+      }
+    }
+  }
+}

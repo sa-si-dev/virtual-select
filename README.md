@@ -5,6 +5,7 @@
 - Support more than 100000 dropdown options
 - Support multi-select
 - Support search feature
+- Support Right-to-Left text
 
 [Documentation](https://sa-si-dev.github.io/virtual-select)
 

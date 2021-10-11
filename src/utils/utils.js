@@ -38,7 +38,7 @@ export class Utils {
   }
 
   static removeItemFromArray(array, value, cloneArray) {
-    if (!Array.isArray(array) || !array.length || !value) {
+    if (!Array.isArray(array) || !array.length) {
       return array;
     }
 

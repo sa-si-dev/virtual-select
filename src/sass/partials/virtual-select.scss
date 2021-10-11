@@ -194,8 +194,14 @@ body.vscomp-popup-active {
   }
 
   &.group-title {
-    opacity: 0.6;
-    cursor: default;
+    .vscomp-option-text {
+      opacity: 0.6;
+      cursor: default;
+    }
+
+    &.selected {
+      background-color: transparent;
+    }
   }
 
   &.group-option {
@@ -332,7 +338,7 @@ body.vscomp-popup-active {
     position: relative;
     width: 15px;
     height: 15px;
-    margin-right: 10px;
+    margin-right: $optionCheckboxMargin;
 
     &::after {
       content: '';

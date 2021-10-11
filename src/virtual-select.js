@@ -35,6 +35,7 @@ export class VirtualSelect {
    * @property {string} [optionsCount=5|4] - No.of options to show on viewport
    * @property {string} [optionHeight=40px|50px] - Height of each dropdown options
    * @property {string} [position=auto] - Position of dropbox (top, bottom, auto)
+   * @property {string} [textDirection=ltr] - Direction of text (ltr or rtl)
    * @property {array} [disabledOptions] - Options to disable (array of values)
    * @property {(string|array)} [selectedValue] - Single value or array of values to select on init
    * @property {boolean} [silentInitialValueSet=false] - To avoid "change event" trigger on setting initial value
@@ -63,6 +64,7 @@ export class VirtualSelect {
    * @property {boolean} [disableAllOptionsSelectedText=false] - By default, when all values selected "All (10)" value text would be shown.
    * Set true to show value text as "10 options selected".
    * @property {boolean} [showValueAsTags=false] - Show each selected values as tags with remove icon
+   * @property {boolean} [disableOptionGroupCheckbox=false] - Disable option group title checkbox
    *
    * @property {string} [placeholder=Select] - Text to show when no options selected
    * @property {string} [noOptionsText=No options found] - Text to show when no options to show
@@ -130,6 +132,10 @@ export class VirtualSelect {
 
     if (this.showValueAsTags) {
       wrapperClasses += ' show-value-as-tags';
+    }
+
+    if (this.textDirection) {
+      wrapperClasses += ` text-direction-${this.textDirection}`;
     }
 
     let html = `<div class="vscomp-ele-wrapper ${wrapperClasses}" tabindex="0">
@@ -236,6 +242,7 @@ export class VirtualSelect {
     let markSearchResults = this.markSearchResults && this.searchValue ? true : false;
     let searchRegex;
     let labelRenderer = this.labelRenderer;
+    let disableOptionGroupCheckbox = this.disableOptionGroupCheckbox;
     let hasLabelRenderer = typeof labelRenderer === 'function';
 
     let styleText = DomUtils.getStyleText({
@@ -262,6 +269,7 @@ export class VirtualSelect {
       let leftSection = checkboxHtml;
       let rightSection = '';
       let description = '';
+      let groupIndexText = '';
 
       if (d.isFocused) {
         optionClasses += ' focused';
@@ -273,15 +281,19 @@ export class VirtualSelect {
 
       if (d.isGroupTitle) {
         optionClasses += ' group-title';
-        leftSection = '';
-      } else {
-        if (d.isSelected) {
-          optionClasses += ' selected';
+
+        if (disableOptionGroupCheckbox) {
+          leftSection = '';
         }
+      }
+
+      if (d.isSelected) {
+        optionClasses += ' selected';
       }
 
       if (d.isGroupOption) {
         optionClasses += ' group-option';
+        groupIndexText = `data-group-index="${d.groupIndex}"`;
       }
 
       if (hasLabelRenderer) {
@@ -303,7 +315,9 @@ export class VirtualSelect {
         }
       }
 
-      html += `<div class="${optionClasses}" data-value="${d.value}" data-index="${d.index}" data-visible-index="${d.visibleIndex}" ${styleText}>
+      html += `<div class="${optionClasses}" data-value="${d.value}" data-index="${d.index}" data-visible-index="${d.visibleIndex}"
+          ${groupIndexText} ${styleText}
+        >
           ${leftSection}
           <span class="vscomp-option-text" ${optionTooltip}>
             ${optionLabel}
@@ -462,7 +476,28 @@ export class VirtualSelect {
   }
 
   onOptionsClick(e) {
-    this.selectOption(e.target.closest('.vscomp-option:not(.disabled):not(.group-title)'));
+    let $option = e.target.closest('.vscomp-option');
+
+    if ($option && !DomUtils.hasClass($option, 'disabled')) {
+      if (DomUtils.hasClass($option, 'group-title')) {
+        if (!this.disableOptionGroupCheckbox) {
+          this.onGroupTitleClick($option);
+        }
+      } else {
+        this.selectOption($option);
+      }
+    }
+  }
+
+  onGroupTitleClick($ele) {
+    if (!$ele) {
+      return;
+    }
+
+    let isAdding = !DomUtils.hasClass($ele, 'selected');
+
+    this.toggleGroupTitleCheckbox($ele, isAdding);
+    this.toggleGroupOptions($ele, isAdding);
   }
 
   onDropboxContainerClick(e) {
@@ -666,6 +701,7 @@ export class VirtualSelect {
     this.alwaysShowSelectedOptionsCount = convertToBoolean(options.alwaysShowSelectedOptionsCount);
     this.disableAllOptionsSelectedText = convertToBoolean(options.disableAllOptionsSelectedText);
     this.showValueAsTags = convertToBoolean(options.showValueAsTags);
+    this.disableOptionGroupCheckbox = convertToBoolean(options.disableOptionGroupCheckbox);
     this.noOptionsText = options.noOptionsText;
     this.noSearchResultsText = options.noSearchResultsText;
     this.selectAllText = options.selectAllText;
@@ -677,6 +713,7 @@ export class VirtualSelect {
     this.moreText = options.moreText;
     this.placeholder = options.placeholder;
     this.position = options.position;
+    this.textDirection = options.textDirection;
     this.dropboxWidth = options.dropboxWidth;
     this.tooltipFontSize = options.tooltipFontSize;
     this.tooltipAlignment = options.tooltipAlignment;
@@ -708,6 +745,7 @@ export class VirtualSelect {
 
     if (this.maxValues || this.hasServerSearch || this.showOptionsOnlyOnSearch) {
       this.disableSelectAll = true;
+      this.disableOptionGroupCheckbox = true;
     }
 
     if (this.keepAlwaysOpen) {
@@ -767,6 +805,7 @@ export class VirtualSelect {
       alwaysShowSelectedOptionsCount: false,
       disableAllOptionsSelectedText: false,
       showValueAsTags: false,
+      disableOptionGroupCheckbox: false,
     };
 
     if (options.hasOptionDescription) {
@@ -795,6 +834,7 @@ export class VirtualSelect {
       'data-options-count': 'optionsCount',
       'data-option-height': 'optionHeight',
       'data-position': 'position',
+      'data-text-direction': 'textDirection',
       'data-no-options-text': 'noOptionsText',
       'data-no-search-results-text': 'noSearchResultsText',
       'data-select-all-text': 'selectAllText',
@@ -826,6 +866,7 @@ export class VirtualSelect {
       'data-always-show-selected-options-count': 'alwaysShowSelectedOptionsCount',
       'data-disable-all-options-selected-text': 'disableAllOptionsSelectedText',
       'data-show-value-as-tags': 'showValueAsTags',
+      'data-disable-option-group-checkbox': 'disableOptionGroupCheckbox',
     };
 
     for (let k in mapping) {
@@ -865,25 +906,26 @@ export class VirtualSelect {
   }
 
   setValueMethod(value, silentChange) {
-    if (!Array.isArray(value)) {
-      value = [value];
-    }
-
-    value = value.map((v) => {
-      return v || v == 0 ? v.toString() : '';
-    });
-
+    let valuesMapping = {};
     let validValues = [];
 
-    if (this.allowNewOption && value) {
-      this.setNewOptionsFromValue(value);
+    if (value) {
+      if (!Array.isArray(value)) {
+        value = [value];
+      }
+
+      value = value.map((v) => {
+        return v || v == 0 ? v.toString() : '';
+      });
+
+      if (this.allowNewOption && value) {
+        this.setNewOptionsFromValue(value);
+      }
+
+      value.forEach((d) => {
+        valuesMapping[d] = true;
+      });
     }
-
-    let valuesMapping = {};
-
-    value.forEach((d) => {
-      valuesMapping[d] = true;
-    });
 
     this.options.forEach((d) => {
       if (valuesMapping[d.value] === true && !d.isDisabled && !d.isGroupTitle) {
@@ -908,9 +950,13 @@ export class VirtualSelect {
     this.afterSetOptions(keepValue);
   }
 
-  setDisabledOptionsMethod(disabledOptions) {
+  setDisabledOptionsMethod(disabledOptions, keepValue = false) {
     this.setDisabledOptions(disabledOptions, true);
-    this.setValueMethod(null);
+
+    if (!keepValue) {
+      this.setValueMethod(null);
+    }
+
     this.setVisibleOptions();
   }
 
@@ -1515,15 +1561,13 @@ export class VirtualSelect {
   getOptionIndex(value) {
     let index;
 
-    if (value) {
-      this.options.some((d) => {
-        if (d.value == value) {
-          index = d.index;
+    this.options.some((d) => {
+      if (d.value == value) {
+        index = d.index;
 
-          return true;
-        }
-      });
-    }
+        return true;
+      }
+    });
 
     return index;
   }
@@ -1879,6 +1923,7 @@ export class VirtualSelect {
       if (this.multiple) {
         selectedValues.push(selectedValue);
         this.toggleAllOptionsClass();
+        this.toggleGroupOptionsParent($ele);
       } else {
         if (selectedValues.length) {
           this.toggleSelectedProp(this.getOptionIndex(selectedValues[0]), false);
@@ -1900,6 +1945,7 @@ export class VirtualSelect {
         DomUtils.toggleClass($ele, 'selected');
         Utils.removeItemFromArray(selectedValues, selectedValue);
         this.toggleAllOptionsClass(false);
+        this.toggleGroupOptionsParent($ele, false);
       }
     }
 
@@ -1927,7 +1973,7 @@ export class VirtualSelect {
     let selectAllOnlyVisible = this.selectAllOnlyVisible;
 
     this.options.forEach((d) => {
-      if (d.isDisabled || d.isCurrentNew || d.isGroupTitle) {
+      if (d.isDisabled || d.isCurrentNew) {
         return;
       }
 
@@ -1936,7 +1982,9 @@ export class VirtualSelect {
       } else {
         d.isSelected = true;
 
-        selectedValues.push(d.value);
+        if (!d.isGroupTitle) {
+          selectedValues.push(d.value);
+        }
       }
     });
 
@@ -1975,6 +2023,92 @@ export class VirtualSelect {
     }
 
     return isAllSelected;
+  }
+
+  isAllGroupOptionsSelected(groupIndex) {
+    let isAllSelected = false;
+
+    if (this.options.length) {
+      isAllSelected = !this.options.some((d) => {
+        return !d.isSelected && !d.isDisabled && !d.isGroupTitle && d.groupIndex === groupIndex;
+      });
+    }
+
+    return isAllSelected;
+  }
+
+  toggleGroupOptionsParent($option, isSelected) {
+    if (!this.hasOptionGroup || this.disableOptionGroupCheckbox || !$option) {
+      return;
+    }
+
+    let groupIndex = DomUtils.getData($option, 'groupIndex', 'number');
+    let $group = this.$options.querySelector(`.vscomp-option[data-index="${groupIndex}"]`);
+    let isAllSelected = typeof isSelected === 'boolean' ? isSelected : this.isAllGroupOptionsSelected(groupIndex);
+
+    this.toggleGroupTitleCheckbox($group, isAllSelected);
+  }
+
+  toggleGroupOptions($ele, isSelected) {
+    if (!this.hasOptionGroup || this.disableOptionGroupCheckbox || !$ele) {
+      return;
+    }
+
+    let groupIndex = DomUtils.getData($ele, 'index', 'number');
+    let selectedValues = this.selectedValues;
+    let selectAllOnlyVisible = this.selectAllOnlyVisible;
+    let valuesMapping = {};
+    let removeItemFromArray = Utils.removeItemFromArray;
+
+    this.selectedValues.forEach((d) => {
+      valuesMapping[d] = true;
+    });
+
+    this.options.forEach((d) => {
+      if (d.isDisabled || d.groupIndex !== groupIndex) {
+        return;
+      }
+
+      let value = d.value;
+
+      if (!isSelected || (selectAllOnlyVisible && !d.isVisible)) {
+        d.isSelected = false;
+
+        if (valuesMapping[value]) {
+          removeItemFromArray(selectedValues, value);
+        }
+      } else {
+        d.isSelected = true;
+
+        if (!valuesMapping[value]) {
+          selectedValues.push(value);
+        }
+      }
+    });
+
+    this.toggleAllOptionsClass(isSelected ? null : false);
+    this.setValue(selectedValues, true);
+
+    /** using setTimeout to fix the issue of dropbox getting closed on select */
+    setTimeout(() => {
+      this.renderOptions();
+    }, 0);
+  }
+
+  toggleGroupTitleCheckbox($ele, isSelected) {
+    if (!$ele) {
+      return;
+    }
+
+    let selectedIndex = DomUtils.getData($ele, 'index');
+
+    this.toggleSelectedProp(selectedIndex, isSelected);
+
+    if (isSelected) {
+      DomUtils.addClass($ele, 'selected');
+    } else {
+      DomUtils.removeClass($ele, 'selected');
+    }
   }
 
   toggleFocusedProp(index, isFocused = false) {
@@ -2229,16 +2363,16 @@ export class VirtualSelect {
     this.virtualSelect.reset();
   }
 
-  static setValueMethod(value, silentChange) {
-    this.virtualSelect.setValueMethod(value, silentChange);
+  static setValueMethod(...params) {
+    this.virtualSelect.setValueMethod(...params);
   }
 
-  static setOptionsMethod(options, keepValue) {
-    this.virtualSelect.setOptionsMethod(options, keepValue);
+  static setOptionsMethod(...params) {
+    this.virtualSelect.setOptionsMethod(...params);
   }
 
-  static setDisabledOptionsMethod(options) {
-    this.virtualSelect.setDisabledOptionsMethod(options);
+  static setDisabledOptionsMethod(...params) {
+    this.virtualSelect.setDisabledOptionsMethod(...params);
   }
 
   static toggleSelectAll(isSelected) {
