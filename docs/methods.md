@@ -3,6 +3,7 @@
 - [Get selected value](#get-selected-value)
 - [setValue()](#setvalue)
 - [reset()](#reset)
+- [Disable element](#disable-element)
 - [setOptions()](#setoptions)
 - [setDisabledOptions()](#setdisabledoptions)
 - [toggleSelectAll()](#toggleselectall)
@@ -41,6 +42,16 @@ document.querySelector('#sample-select').setValue(value);
 
 ```js
 document.querySelector('#sample-select').reset();
+```
+
+### Disable element
+
+```js
+/** disable element */
+document.querySelector('#sample-select').setAttribute('disabled', '');
+
+/** enable element */
+document.querySelector('#sample-select').removeAttribute('disabled');
 ```
 
 ### setOptions()
