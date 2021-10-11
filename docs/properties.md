@@ -22,6 +22,7 @@
 | optionsCount | Number | 5 \| 4 | No.of options to show on viewport <br/>4 - When hasOptionDescription is true |
 | optionHeight | String | 40px \| 50px | Height of each dropdown options <br/>50px - When hasOptionDescription is true |
 | position | String | auto | Position of dropbox (auto, top, bottom, top left, top right, bottom left, bottom right) |
+| textDirection | String | ltr | Direction of text (ltr or rtl) |
 | selectedValue | String \| Array | | Single value or array of values to select on init |
 | silentInitialValueSet | Boolean | false | To avoid "change event" trigger on setting initial value |
 | dropboxWidth | String | | Custom width for dropbox |
@@ -47,6 +48,7 @@
 | alwaysShowSelectedOptionsCount | Boolean | false | By default, no.of options selected text would be shown when there is no enough space to show all selected values. Set true to override this. |
 | disableAllOptionsSelectedText | Boolean | false | By default, when all values selected "All (10)" value text would be shown. Set true to show value text as "10 options selected". |
 | showValueAsTags | Boolean | false | Show each selected values as tags with remove icon |
+| disableOptionGroupCheckbox | Boolean | false | Disable option group title checkbox |
 
 # Text Properties
 

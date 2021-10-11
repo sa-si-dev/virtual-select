@@ -22,6 +22,7 @@
 - [Show options only on search](#show-options-only-on-search)
 - [Add image/icon](#add-imageicon)
 - [Show values as tags](#show-values-as-tags)
+- [Right-to-Left text](#right-to-left-text)
 
 ## Default dropdown
 
@@ -338,6 +339,19 @@ Show each selected values as tags with remove icon
 VirtualSelect.init({
   ...
   showValueAsTags: true,
+});
+```
+
+## Right-to-Left text
+
+For right-to-left text direction languages
+
+<div id="direction-rtl-select"></div>
+
+```js
+VirtualSelect.init({
+  ...
+  textDirection: 'rtl',
 });
 ```
 

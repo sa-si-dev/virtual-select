@@ -189,7 +189,7 @@ function initPageExamples() {
     Object.assign({}, virtualSelectOptions, {
       ele: '#option-group-select',
       options: getGroupOptions(),
-      search: true,
+      multiple: true,
     })
   );
 
@@ -331,6 +331,14 @@ function initPageExamples() {
       ele: '#show-value-as-tags-select',
       multiple: true,
       showValueAsTags: true,
+    })
+  );
+
+  VirtualSelect.init(
+    Object.assign({}, virtualSelectOptions, {
+      ele: '#direction-rtl-select',
+      multiple: true,
+      textDirection: 'rtl',
     })
   );
 }

@@ -5,6 +5,7 @@
 - Support more than 100000 dropdown options
 - Support multi-select
 - Support search feature
+- Support Right-to-Left text
 
 [GitHub](https://github.com/{{repo}})
 [Get Started](#get-started)

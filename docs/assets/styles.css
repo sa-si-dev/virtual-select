@@ -103,6 +103,11 @@ section.cover {
   transform: scale(1.4);
 }
 
+.vscomp-wrapper.text-direction-rtl .vscomp-option-text .flag {
+  margin-right: 0;
+  margin-left: 12px;
+}
+
 #show-value-as-tags-select {
   max-width: 400px;
 }

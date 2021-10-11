@@ -25,6 +25,11 @@ $('#sample-select').val();
 
 ### setValue()
 
+**Arguments:**
+
+- value - single value or array of values
+- noEventTrigger - set true to avoid event trigger
+
 ```js
 var value = 3; /** for single select */
 var value = [2, 3]; /** for multi-select */
@@ -40,6 +45,11 @@ document.querySelector('#sample-select').reset();
 
 ### setOptions()
 
+**Arguments:**
+
+- options - list of options details
+- keepValue - set true to keep selected value
+
 ```js
 var options = [
   { label: 'Options 1', value: '1' },
@@ -52,6 +62,11 @@ document.querySelector('#sample-select').setOptions(options);
 
 ### setDisabledOptions()
 
+**Arguments:**
+
+- disabledOptions - list of disabled option's values
+- keepValue - set true to keep selected value
+
 ```js
 var disabledOptions = [2, 6, 9];
 
@@ -59,6 +74,10 @@ document.querySelector('#sample-select').setDisabledOptions(disabledOptions);
 ```
 
 ### toggleSelectAll()
+
+**Arguments:**
+
+- isAllSelected
 
 Select / Deselect all options
 
@@ -79,6 +98,10 @@ document.querySelector('#sample-select').isAllSelected();
 ```
 
 ### addOption()
+
+**Arguments:**
+
+- optionDetails
 
 To add a new option with existing options
 
