@@ -7,5 +7,5 @@
 - Support search feature
 - Support Right-to-Left text
 
-[GitHub](https://github.com/{{repo}})
+[GitHub](https://github.com/sa-si-dev/virtual-select)
 [Get Started](#get-started)
