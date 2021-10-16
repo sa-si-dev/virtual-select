@@ -244,6 +244,7 @@ body.vscomp-popup-active {
 .vscomp-option-text {
   @include ellipse;
   width: 100%;
+  user-select: none;
 }
 
 .vscomp-option-description {

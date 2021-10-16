@@ -484,7 +484,7 @@ export class VirtualSelect {
           this.onGroupTitleClick($option);
         }
       } else {
-        this.selectOption($option);
+        this.selectOption($option, { event: e });
       }
     }
   }
@@ -1712,7 +1712,9 @@ export class VirtualSelect {
   openDropbox(isSilent) {
     this.isSilentOpen = isSilent;
 
-    if (!isSilent) {
+    if (isSilent) {
+      DomUtils.setStyle(this.$dropboxContainer, 'display', 'inline-flex');
+    } else {
       DomUtils.dispatchEvent(this.$ele, 'beforeOpen');
     }
 
@@ -1720,7 +1722,7 @@ export class VirtualSelect {
 
     DomUtils.removeClass(this.$allWrappers, 'closed');
 
-    if (this.dropboxPopover) {
+    if (this.dropboxPopover && !isSilent) {
       this.dropboxPopover.show();
     } else {
       this.afterShowPopper();
@@ -1754,11 +1756,13 @@ export class VirtualSelect {
       return;
     }
 
-    if (!isSilent) {
+    if (isSilent) {
+      DomUtils.setStyle(this.$dropboxContainer, 'display', 'none');
+    } else {
       DomUtils.dispatchEvent(this.$ele, 'beforeClose');
     }
 
-    if (this.dropboxPopover) {
+    if (this.dropboxPopover && !isSilent) {
       this.dropboxPopover.hide();
     } else {
       this.afterHidePopper();
@@ -1894,7 +1898,7 @@ export class VirtualSelect {
     this.toggleFocusedProp(null);
   }
 
-  selectOption($ele) {
+  selectOption($ele, { event }) {
     if (!$ele) {
       return;
     }
@@ -1915,7 +1919,10 @@ export class VirtualSelect {
 
     let selectedValues = this.selectedValues;
     let selectedValue = DomUtils.getData($ele, 'value');
-    let selectedIndex = DomUtils.getData($ele, 'index');
+    let selectedIndex = DomUtils.getData($ele, 'index', 'number');
+    let shouldSelectRange = false;
+    let lastSelectedOptionIndex = this.lastSelectedOptionIndex;
+    this.lastSelectedOptionIndex = null;
 
     this.toggleSelectedProp(selectedIndex, isAdding);
 
@@ -1924,6 +1931,10 @@ export class VirtualSelect {
         selectedValues.push(selectedValue);
         this.toggleAllOptionsClass();
         this.toggleGroupOptionsParent($ele);
+
+        if (event.shiftKey) {
+          shouldSelectRange = true;
+        }
       } else {
         if (selectedValues.length) {
           this.toggleSelectedProp(this.getOptionIndex(selectedValues[0]), false);
@@ -1938,6 +1949,8 @@ export class VirtualSelect {
 
         this.closeDropbox();
       }
+
+      this.lastSelectedOptionIndex = selectedIndex;
 
       DomUtils.toggleClass($ele, 'selected');
     } else {
@@ -1954,10 +1967,74 @@ export class VirtualSelect {
     }
 
     this.setValue(selectedValues, true);
+
+    if (shouldSelectRange) {
+      this.selectRangeOptions(lastSelectedOptionIndex, selectedIndex);
+    }
   }
 
   selectFocusedOption() {
     this.selectOption(this.$dropboxContainer.querySelector('.vscomp-option.focused'));
+  }
+
+  selectRangeOptions(lastSelectedOptionIndex, selectedIndex) {
+    if (typeof lastSelectedOptionIndex !== 'number' || this.maxValues) {
+      return;
+    }
+
+    let selectedValues = this.selectedValues;
+    let hasOptionGroup = this.hasOptionGroup;
+    let groupIndexes = {};
+    let startIndex;
+    let endIndex;
+
+    if (lastSelectedOptionIndex < selectedIndex) {
+      startIndex = lastSelectedOptionIndex;
+      endIndex = selectedIndex;
+    } else {
+      startIndex = selectedIndex;
+      endIndex = lastSelectedOptionIndex;
+    }
+
+    this.options.forEach((d) => {
+      if (d.isDisabled || d.isGroupTitle || !d.isVisible || d.isSelected) {
+        return;
+      }
+
+      let index = d.index;
+
+      if (index > startIndex && index < endIndex) {
+        if (hasOptionGroup) {
+          let groupIndex = d.groupIndex;
+
+          if (typeof groupIndex === 'number') {
+            groupIndexes[groupIndex] = true;
+          }
+        }
+
+        d.isSelected = true;
+
+        selectedValues.push(d.value);
+      }
+    });
+
+    this.toggleAllOptionsClass();
+    this.setValue(selectedValues, true);
+
+    groupIndexes = Object.keys(groupIndexes);
+
+    if (groupIndexes.length) {
+      let toggleGroupTitleProp = this.toggleGroupTitleProp.bind(this);
+
+      groupIndexes.forEach((i) => {
+        toggleGroupTitleProp(parseInt(i));
+      });
+    }
+
+    /** using setTimeout to fix the issue of dropbox getting closed on select */
+    setTimeout(() => {
+      this.renderOptions();
+    }, 0);
   }
 
   toggleAllOptions(isSelected) {
@@ -2049,6 +2126,12 @@ export class VirtualSelect {
     this.toggleGroupTitleCheckbox($group, isAllSelected);
   }
 
+  toggleGroupTitleProp(groupIndex, isSelected) {
+    let isAllSelected = typeof isSelected === 'boolean' ? isSelected : this.isAllGroupOptionsSelected(groupIndex);
+
+    this.toggleSelectedProp(groupIndex, isAllSelected);
+  }
+
   toggleGroupOptions($ele, isSelected) {
     if (!this.hasOptionGroup || this.disableOptionGroupCheckbox || !$ele) {
       return;
@@ -2060,7 +2143,7 @@ export class VirtualSelect {
     let valuesMapping = {};
     let removeItemFromArray = Utils.removeItemFromArray;
 
-    this.selectedValues.forEach((d) => {
+    selectedValues.forEach((d) => {
       valuesMapping[d] = true;
     });
 
@@ -2100,7 +2183,7 @@ export class VirtualSelect {
       return;
     }
 
-    let selectedIndex = DomUtils.getData($ele, 'index');
+    let selectedIndex = DomUtils.getData($ele, 'index', 'number');
 
     this.toggleSelectedProp(selectedIndex, isSelected);
 
