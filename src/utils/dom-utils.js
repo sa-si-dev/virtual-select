@@ -103,6 +103,16 @@ export class DomUtils {
     $ele.style[name] = value;
   }
 
+  static setStyles($ele, props) {
+    if (!$ele || !props) {
+      return;
+    }
+
+    Object.keys(props).forEach((name) => {
+      $ele.style[name] = props[name];
+    });
+  }
+
   static getElements($ele) {
     if (!$ele) {
       return;
@@ -144,21 +154,6 @@ export class DomUtils {
         $this.dispatchEvent(new Event(eventName, { bubbles: true }));
       });
     }, 0);
-  }
-
-  /** convert object to style attribute */
-  static getStyleText(props, skipAttrName) {
-    let result = '';
-
-    for (let k in props) {
-      result += `${k}: ${props[k]};`;
-    }
-
-    if (result && !skipAttrName) {
-      result = `style="${result}"`;
-    }
-
-    return result;
   }
 
   /** convert object to dom attributes */
