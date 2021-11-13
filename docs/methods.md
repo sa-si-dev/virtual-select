@@ -14,6 +14,7 @@
 - [getSelectedOptions()](#getselectedoptions)
 - [open()](#open)
 - [close()](#close)
+- [focus()](#focus)
 - [destroy()](#destroy)
 
 ### Get selected value
@@ -162,6 +163,14 @@ To close dropbox programmatically
 
 ```js
 document.querySelector('#sample-select').close();
+```
+
+### focus()
+
+To focus dropdown element programmatically
+
+```js
+document.querySelector('#sample-select').focus();
 ```
 
 ### destroy()
