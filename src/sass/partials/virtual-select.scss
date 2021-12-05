@@ -170,6 +170,14 @@ body.vscomp-popup-active {
   overflow: auto;
 }
 
+.vscomp-options-bottom-freezer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+}
+
 .vscomp-option {
   display: flex;
   flex-wrap: wrap;

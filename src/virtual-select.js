@@ -83,6 +83,7 @@ export class VirtualSelect {
    */
   constructor(options) {
     try {
+      this.createSecureTextElements();
       this.setProps(options);
       this.setDisabledOptions(options.disabledOptions);
       this.setOptions(options.options);
@@ -203,6 +204,7 @@ export class VirtualSelect {
             </div>
           </div>
 
+          <div class="vscomp-options-bottom-freezer"></div>
           <div class="vscomp-no-options">${this.noOptionsText}</div>
           <div class="vscomp-no-search-results">${this.noSearchResultsText}</div>
 
@@ -612,7 +614,7 @@ export class VirtualSelect {
 
     DomUtils.toggleClass(this.$allWrappers, 'has-no-options', hasNoOptions);
 
-    this.setOptionStyles();
+    this.setOptionAttr();
     this.setOptionsPosition();
     this.setOptionsTooltip();
   }
@@ -1260,7 +1262,7 @@ export class VirtualSelect {
 
           if (selectedValuesCount <= noOfDisplayValues) {
             if (showValueAsTags) {
-              let valueTagHtml = `<span class="vscomp-value-tag" data-value="${value}">
+              let valueTagHtml = `<span class="vscomp-value-tag" data-index="${d.index}">
                   <span class="vscomp-value-tag-content">${label}</span>
                   <span class="vscomp-value-tag-clear-button">
                     <i class="vscomp-clear-icon"></i>
@@ -1303,6 +1305,9 @@ export class VirtualSelect {
               $valueText.innerHTML = `${this.allOptionsSelectedText} (${selectedLength})`;
             } else if (showValueAsTags) {
               $valueText.innerHTML = valueTooltip.join('');
+              this.$valueTags = $valueText.querySelectorAll('.vscomp-value-tag');
+
+              this.setValueTagAttr();
             } else {
               /** replace comma delimitted list of selections with shorter text indicating selection count */
               let optionsSelectedText = selectedLength === 1 ? this.optionSelectedText : this.optionsSelectedText;
@@ -1514,16 +1519,44 @@ export class VirtualSelect {
     DomUtils.setStyles(this.$dropboxContainer, styles);
   }
 
-  setOptionStyles() {
+  setOptionAttr() {
     let $visibleOptions = this.$visibleOptions;
+    let options = this.options;
     let optionHeight = this.optionHeight + 'px';
     let setStyle = DomUtils.setStyle;
+    let getData = DomUtils.getData;
+    let setData = DomUtils.setData;
 
     if ($visibleOptions && $visibleOptions.length) {
       $visibleOptions.forEach(($option) => {
+        let optionDetails = options[getData($option, 'index')];
+
         setStyle($option, 'height', optionHeight);
+        setData($option, 'value', optionDetails.value);
       });
     }
+  }
+
+  setValueTagAttr() {
+    let $valueTags = this.$valueTags;
+
+    if (!$valueTags || !$valueTags.length) {
+      return;
+    }
+
+    let getData = DomUtils.getData;
+    let setData = DomUtils.setData;
+    let options = this.options;
+
+    $valueTags.forEach(($valueTag) => {
+      let index = getData($valueTag, 'index');
+
+      if (typeof index !== 'undefined') {
+        let optionDetails = options[index];
+
+        setData($valueTag, 'value', optionDetails.value);
+      }
+    });
   }
   /** set methods - end */
 
@@ -1797,7 +1830,7 @@ export class VirtualSelect {
     }
 
     if (isSilent) {
-      DomUtils.setStyle(this.$dropboxContainer, 'display', 'none');
+      DomUtils.setStyle(this.$dropboxContainer, 'display', '');
     } else {
       DomUtils.dispatchEvent(this.$ele, 'beforeClose');
     }
@@ -2442,12 +2475,21 @@ export class VirtualSelect {
     DomUtils.removeClass($ele, 'vscomp-ele');
   }
 
+  createSecureTextElements() {
+    this.$secureDiv = document.createElement('div');
+    this.$secureText = document.createTextNode('');
+
+    this.$secureDiv.appendChild(this.$secureText);
+  }
+
   secureText(text) {
     if (!text || !this.enableSecureText) {
       return text;
     }
 
-    return String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    this.$secureText.nodeValue = text;
+
+    return this.$secureDiv.innerHTML;
   }
 
   /** static methods - start */
