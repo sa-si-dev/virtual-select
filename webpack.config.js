@@ -4,7 +4,7 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
 const FileManagerPlugin = require('filemanager-webpack-plugin');
 
-const banner = `Virtual Select v1.0.20
+const banner = `Virtual Select v1.0.21
 https://sa-si-dev.github.io/virtual-select
 Licensed under MIT (https://github.com/sa-si-dev/virtual-select/blob/master/LICENSE)`;
 
@@ -40,6 +40,7 @@ module.exports = (env, options) => {
             copy: [
               { source: 'node_modules/tooltip-plugin/dist', destination: 'docs/assets' },
               { source: 'dist', destination: 'docs/assets' },
+              { source: 'dist', destination: 'dist-archive' },
             ],
           },
         },

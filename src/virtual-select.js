@@ -906,6 +906,8 @@ export class VirtualSelect {
     $ele.open = VirtualSelect.openMethod;
     $ele.close = VirtualSelect.closeMethod;
     $ele.focus = VirtualSelect.focusMethod;
+    $ele.enable = VirtualSelect.enableMethod;
+    $ele.disable = VirtualSelect.disableMethod;
     $ele.destroy = VirtualSelect.destroyMethod;
 
     if (this.hasDropboxWrapper) {
@@ -963,28 +965,51 @@ export class VirtualSelect {
 
     if (!keepValue) {
       this.setValueMethod(null);
+      this.toggleAllOptionsClass();
     }
 
     this.setVisibleOptions();
   }
 
-  setDisabledOptions(disabledOptions = [], setOptionsProp = false) {
-    disabledOptions = disabledOptions.map((d) => d.toString());
-    this.disabledOptions = disabledOptions;
+  setDisabledOptions(disabledOptions, setOptionsProp = false) {
+    let disabledOptionsArr = [];
 
-    let disabledOptionsMapping = {};
+    if (!disabledOptions) {
+      if (setOptionsProp) {
+        this.options.forEach((d) => {
+          d.isDisabled = false;
 
-    disabledOptions.forEach((d) => {
-      disabledOptionsMapping[d] = true;
-    });
+          return d;
+        });
+      }
+    } else if (disabledOptions === true) {
+      if (setOptionsProp) {
+        this.options.forEach((d) => {
+          d.isDisabled = true;
 
-    if (setOptionsProp && disabledOptions.length) {
-      this.options.forEach((d) => {
-        d.isDisabled = disabledOptionsMapping[d.value] === true;
+          disabledOptionsArr.push(d.value);
 
-        return d;
+          return d;
+        });
+      }
+    } else {
+      disabledOptionsArr = disabledOptions.map((d) => d.toString());
+      let disabledOptionsMapping = {};
+
+      disabledOptionsArr.forEach((d) => {
+        disabledOptionsMapping[d] = true;
       });
+
+      if (setOptionsProp) {
+        this.options.forEach((d) => {
+          d.isDisabled = disabledOptionsMapping[d.value] === true;
+
+          return d;
+        });
+      }
     }
+
+    this.disabledOptions = disabledOptionsArr;
   }
 
   setOptions(options) {
@@ -2166,7 +2191,7 @@ export class VirtualSelect {
   isAllOptionsSelected() {
     let isAllSelected = false;
 
-    if (this.options.length) {
+    if (this.options.length && this.selectedValues.length) {
       isAllSelected = !this.options.some((d) => {
         return !d.isSelected && !d.isDisabled && !d.isGroupTitle;
       });
@@ -2461,6 +2486,16 @@ export class VirtualSelect {
     this.$wrapper.focus();
   }
 
+  enable() {
+    this.$ele.removeAttribute('disabled');
+    this.$hiddenInput.removeAttribute('disabled');
+  }
+
+  disable() {
+    this.$ele.setAttribute('disabled', '');
+    this.$hiddenInput.setAttribute('disabled', '');
+  }
+
   destroy() {
     let $ele = this.$ele;
     $ele.virtualSelect = undefined;
@@ -2586,6 +2621,14 @@ export class VirtualSelect {
 
   static focusMethod() {
     return this.virtualSelect.focus();
+  }
+
+  static enableMethod() {
+    return this.virtualSelect.enable();
+  }
+
+  static disableMethod() {
+    return this.virtualSelect.disable();
   }
 
   static destroyMethod() {
