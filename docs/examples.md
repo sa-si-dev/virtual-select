@@ -23,6 +23,7 @@
 - [Add image/icon](#add-imageicon)
 - [Show values as tags](#show-values-as-tags)
 - [Right-to-Left text](#right-to-left-text)
+- [Disable/Enable](#disable-enable)
 
 ## Default dropdown
 
@@ -354,6 +355,23 @@ VirtualSelect.init({
   textDirection: 'rtl',
 });
 ```
+
+## Disable/Enable
+
+Switch dropdown state element programmatically
+
+<div id="disable-enable"></div> <label><input type=checkbox id=disable-enable-switch checked> enable</label>
+
+```js
+document.querySelector('#disable-enable-switch').addEventListener('change', function (e) {
+  if (event.target.checked) {
+    document.querySelector('#sample-select').enable();
+  } else {
+    document.querySelector('#sample-select').disable();
+  }
+});
+```
+
 
 <script>
   initPageExamples();
