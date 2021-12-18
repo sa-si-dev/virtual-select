@@ -15,6 +15,8 @@
 - [open()](#open)
 - [close()](#close)
 - [focus()](#focus)
+- [enable()](#enable)
+- [disable()](#disable)
 - [destroy()](#destroy)
 
 ### Get selected value
@@ -76,13 +78,16 @@ document.querySelector('#sample-select').setOptions(options);
 
 **Arguments:**
 
-- disabledOptions - list of disabled option's values
+- disabledOptions - list of disabled option's values or `true` to disable all options
 - keepValue - set true to keep selected value
 
 ```js
 var disabledOptions = [2, 6, 9];
 
 document.querySelector('#sample-select').setDisabledOptions(disabledOptions);
+
+/** to disable all options */
+document.querySelector('#sample-select').setDisabledOptions(true);
 ```
 
 ### toggleSelectAll()
@@ -171,6 +176,22 @@ To focus dropdown element programmatically
 
 ```js
 document.querySelector('#sample-select').focus();
+```
+
+### enable()
+
+To enable dropdown element programmatically
+
+```js
+document.querySelector('#sample-select').enable();
+```
+
+### disable()
+
+To disable dropdown element programmatically
+
+```js
+document.querySelector('#sample-select').disable();
 ```
 
 ### destroy()
