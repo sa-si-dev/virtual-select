@@ -95,6 +95,22 @@ export class DomUtils {
     $ele.setAttribute(name, value);
   }
 
+  static setAttrFromEle($from, $to, attrList, valueLessProps) {
+    const values = {};
+
+    attrList.forEach((attr) => {
+      values[attr] = $from.getAttribute(attr);
+    });
+
+    attrList.forEach((attr) => {
+      let value = values[attr];
+
+      if (value || (valueLessProps.indexOf(attr) !== -1 && value === '')) {
+        $to.setAttribute(attr, value);
+      }
+    });
+  }
+
   static setStyle($ele, name, value) {
     if (!$ele) {
       return;

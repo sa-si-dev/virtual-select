@@ -9,6 +9,65 @@ const keyDownMethodMapping = {
   40: 'onDownArrowPress',
 };
 
+const valueLessProps = ['multiple', 'disabled', 'required', 'autofocus'];
+
+const attrPropsMapping = {
+  id: 'id',
+  multiple: 'multiple',
+  placeholder: 'placeholder',
+  name: 'name',
+  disabled: 'disabled',
+  required: 'required',
+  autofocus: 'autofocus',
+  'data-dropbox-wrapper': 'dropboxWrapper',
+  'data-value-key': 'valueKey',
+  'data-label-key': 'labelKey',
+  'data-description-key': 'descriptionKey',
+  'data-alias-key': 'aliasKey',
+  'data-search': 'search',
+  'data-hide-clear-button': 'hideClearButton',
+  'data-auto-select-first-option': 'autoSelectFirstOption',
+  'data-has-option-description': 'hasOptionDescription',
+  'data-options-count': 'optionsCount',
+  'data-option-height': 'optionHeight',
+  'data-position': 'position',
+  'data-text-direction': 'textDirection',
+  'data-no-options-text': 'noOptionsText',
+  'data-no-search-results-text': 'noSearchResultsText',
+  'data-select-all-text': 'selectAllText',
+  'data-search-placeholder-text': 'searchPlaceholderText',
+  'data-options-selected-text': 'optionsSelectedText',
+  'data-option-selected-text': 'optionSelectedText',
+  'data-all-options-selected-text': 'allOptionsSelectedText',
+  'data-clear-button-text': 'clearButtonText',
+  'data-more-text': 'moreText',
+  'data-silent-initial-value-set': 'silentInitialValueSet',
+  'data-dropbox-width': 'dropboxWidth',
+  'data-z-index': 'zIndex',
+  'data-no-of-display-values': 'noOfDisplayValues',
+  'data-allow-new-option': 'allowNewOption',
+  'data-mark-search-results': 'markSearchResults',
+  'data-tooltip-font-size': 'tooltipFontSize',
+  'data-tooltip-alignment': 'tooltipAlignment',
+  'data-tooltip-max-width': 'tooltipMaxWidth',
+  'data-show-selected-options-first': 'showSelectedOptionsFirst',
+  'data-disable-select-all': 'disableSelectAll',
+  'data-keep-always-open': 'keepAlwaysOpen',
+  'data-max-values': 'maxValues',
+  'data-additional-classes': 'additionalClasses',
+  'data-show-dropbox-as-popup': 'showDropboxAsPopup',
+  'data-popup-dropbox-breakpoint': 'popupDropboxBreakpoint',
+  'data-hide-value-tooltip-on-select-all': 'hideValueTooltipOnSelectAll',
+  'data-show-options-only-on-search': 'showOptionsOnlyOnSearch',
+  'data-select-all-only-visible': 'selectAllOnlyVisible',
+  'data-always-show-selected-options-count': 'alwaysShowSelectedOptionsCount',
+  'data-disable-all-options-selected-text': 'disableAllOptionsSelectedText',
+  'data-show-value-as-tags': 'showValueAsTags',
+  'data-disable-option-group-checkbox': 'disableOptionGroupCheckbox',
+  'data-enable-secure-text': 'enableSecureText',
+  'data-set-value-as-array': 'setValueAsArray',
+};
+
 /** Class representing VirtualSelect */
 export class VirtualSelect {
   /**
@@ -28,6 +87,8 @@ export class VirtualSelect {
    * @property {string} [aliasKey=alias] - Key name to get alias from options object
    * @property {boolean} [multiple=false] - Enable multiselect
    * @property {boolean} [search=false] - Enable search
+   * @property {boolean} [disabled=false] - Disable dropdown
+   * @property {boolean} [autofocus=false] - Autofocus dropdown on load
    * @property {boolean} [hideClearButton=false] - Hide clear button
    * @property {boolean} [autoSelectFirstOption=false] - Select first option by default on load
    * @property {boolean} [hasOptionDescription=false] - Has description to show along with label
@@ -413,11 +474,13 @@ export class VirtualSelect {
     }
   }
 
-  onEnterPress() {
-    if (!this.isOpened()) {
-      this.openDropbox();
-    } else {
+  onEnterPress(e) {
+    e.preventDefault();
+
+    if (this.isOpened()) {
       this.selectFocusedOption();
+    } else {
+      this.openDropbox();
     }
   }
 
@@ -577,7 +640,6 @@ export class VirtualSelect {
 
   /** after event methods - start */
   afterRenderWrapper() {
-    DomUtils.setAttr(this.$ele, 'name', this.name);
     DomUtils.addClass(this.$ele, 'vscomp-ele');
 
     this.renderSearch();
@@ -586,7 +648,7 @@ export class VirtualSelect {
     this.setVisibleOptions();
     this.setOptionsContainerHeight();
     this.addEvents();
-    this.setMethods();
+    this.setEleProps();
 
     if (!this.keepAlwaysOpen && !this.showAsPopup) {
       this.initDropboxPopover();
@@ -600,6 +662,14 @@ export class VirtualSelect {
 
     if (this.showOptionsOnlyOnSearch) {
       this.setSearchValue('', false, true);
+    }
+
+    if (this.initialDisabled) {
+      this.disable();
+    }
+
+    if (this.autofocus) {
+      this.focus();
     }
   }
 
@@ -705,6 +775,9 @@ export class VirtualSelect {
     this.disableOptionGroupCheckbox = convertToBoolean(options.disableOptionGroupCheckbox);
     this.enableSecureText = convertToBoolean(options.enableSecureText);
     this.setValueAsArray = convertToBoolean(options.setValueAsArray);
+    this.initialDisabled = convertToBoolean(options.disabled);
+    this.required = convertToBoolean(options.required);
+    this.autofocus = convertToBoolean(options.autofocus);
     this.noOptionsText = options.noOptionsText;
     this.noSearchResultsText = options.noSearchResultsText;
     this.selectAllText = options.selectAllText;
@@ -822,77 +895,32 @@ export class VirtualSelect {
   }
 
   setPropsFromElementAttr(options) {
-    let $ele = options.ele;
-    let mapping = {
-      multiple: 'multiple',
-      placeholder: 'placeholder',
-      name: 'name',
-      'data-dropbox-wrapper': 'dropboxWrapper',
-      'data-value-key': 'valueKey',
-      'data-label-key': 'labelKey',
-      'data-description-key': 'descriptionKey',
-      'data-alias-key': 'aliasKey',
-      'data-search': 'search',
-      'data-hide-clear-button': 'hideClearButton',
-      'data-auto-select-first-option': 'autoSelectFirstOption',
-      'data-has-option-description': 'hasOptionDescription',
-      'data-options-count': 'optionsCount',
-      'data-option-height': 'optionHeight',
-      'data-position': 'position',
-      'data-text-direction': 'textDirection',
-      'data-no-options-text': 'noOptionsText',
-      'data-no-search-results-text': 'noSearchResultsText',
-      'data-select-all-text': 'selectAllText',
-      'data-search-placeholder-text': 'searchPlaceholderText',
-      'data-options-selected-text': 'optionsSelectedText',
-      'data-option-selected-text': 'optionSelectedText',
-      'data-all-options-selected-text': 'allOptionsSelectedText',
-      'data-clear-button-text': 'clearButtonText',
-      'data-more-text': 'moreText',
-      'data-silent-initial-value-set': 'silentInitialValueSet',
-      'data-dropbox-width': 'dropboxWidth',
-      'data-z-index': 'zIndex',
-      'data-no-of-display-values': 'noOfDisplayValues',
-      'data-allow-new-option': 'allowNewOption',
-      'data-mark-search-results': 'markSearchResults',
-      'data-tooltip-font-size': 'tooltipFontSize',
-      'data-tooltip-alignment': 'tooltipAlignment',
-      'data-tooltip-max-width': 'tooltipMaxWidth',
-      'data-show-selected-options-first': 'showSelectedOptionsFirst',
-      'data-disable-select-all': 'disableSelectAll',
-      'data-keep-always-open': 'keepAlwaysOpen',
-      'data-max-values': 'maxValues',
-      'data-additional-classes': 'additionalClasses',
-      'data-show-dropbox-as-popup': 'showDropboxAsPopup',
-      'data-popup-dropbox-breakpoint': 'popupDropboxBreakpoint',
-      'data-hide-value-tooltip-on-select-all': 'hideValueTooltipOnSelectAll',
-      'data-show-options-only-on-search': 'showOptionsOnlyOnSearch',
-      'data-select-all-only-visible': 'selectAllOnlyVisible',
-      'data-always-show-selected-options-count': 'alwaysShowSelectedOptionsCount',
-      'data-disable-all-options-selected-text': 'disableAllOptionsSelectedText',
-      'data-show-value-as-tags': 'showValueAsTags',
-      'data-disable-option-group-checkbox': 'disableOptionGroupCheckbox',
-      'data-enable-secure-text': 'enableSecureText',
-      'data-set-value-as-array': 'setValueAsArray',
-    };
+    const $ele = options.ele;
 
-    for (let k in mapping) {
+    for (let k in attrPropsMapping) {
       let value = $ele.getAttribute(k);
 
-      if (k === 'multiple' && (value === '' || value === 'true')) {
+      if (valueLessProps.indexOf(k) !== -1 && (value === '' || value === 'true')) {
         value = true;
       }
 
       if (value) {
-        options[mapping[k]] = value;
+        options[attrPropsMapping[k]] = value;
       }
     }
   }
 
-  setMethods() {
+  setEleProps() {
     let $ele = this.$ele;
     $ele.virtualSelect = this;
     $ele.value = this.multiple ? [] : '';
+    $ele.name = this.name;
+    $ele.disabled = false;
+    $ele.required = this.required;
+    $ele.autofocus = this.autofocus;
+    $ele.multiple = this.multiple;
+    $ele.form = $ele.closest('form');
+
     $ele.reset = VirtualSelect.reset;
     $ele.setValue = VirtualSelect.setValueMethod;
     $ele.setOptions = VirtualSelect.setOptionsMethod;
@@ -1081,9 +1109,13 @@ export class VirtualSelect {
 
     options.forEach(prepareOption);
 
+    let optionsLength = preparedOptions.length;
+    let $ele = this.$ele;
+    $ele.options = preparedOptions;
+    $ele.length = optionsLength;
     this.options = preparedOptions;
-    this.visibleOptionsCount = preparedOptions.length;
-    this.lastOptionIndex = this.options.length - 1;
+    this.visibleOptionsCount = optionsLength;
+    this.lastOptionIndex = optionsLength - 1;
     this.newValues = [];
     this.hasOptionGroup = hasOptionGroup;
     this.setSortedOptions();
@@ -2487,11 +2519,15 @@ export class VirtualSelect {
   }
 
   enable() {
+    this.$ele.disabled = false;
+
     this.$ele.removeAttribute('disabled');
     this.$hiddenInput.removeAttribute('disabled');
   }
 
   disable() {
+    this.$ele.disabled = true;
+
     this.$ele.setAttribute('disabled', '');
     this.$hiddenInput.setAttribute('disabled', '');
   }
@@ -2545,7 +2581,7 @@ export class VirtualSelect {
       }
     }
 
-    if ($eleArray.length === undefined) {
+    if ($eleArray.length === undefined || $eleArray.forEach === undefined) {
       $eleArray = [$eleArray];
       singleEle = true;
     }
@@ -2553,10 +2589,53 @@ export class VirtualSelect {
     let instances = [];
     $eleArray.forEach(($ele) => {
       options.ele = $ele;
+
+      if ($ele.tagName === 'SELECT') {
+        VirtualSelect.setPropsFromSelect(options);
+      }
+
       instances.push(new VirtualSelect(options));
     });
 
     return singleEle ? instances[0] : instances;
+  }
+
+  static setPropsFromSelect(props) {
+    const $ele = props.ele;
+    const $options = $ele.querySelectorAll('option');
+    const options = [];
+    const disabledOptions = [];
+    const selectedValue = [];
+
+    /** getting options */
+    $options.forEach(function ($option) {
+      let value = $option.value;
+
+      options.push({
+        label: $option.innerHTML,
+        value,
+      });
+
+      if ($option.disabled) {
+        disabledOptions.push(value);
+      }
+
+      if ($option.selected) {
+        selectedValue.push(value);
+      }
+    });
+
+    /** creating div element to initiate plugin and removing native element */
+    const $newEle = document.createElement('div');
+
+    DomUtils.setAttrFromEle($ele, $newEle, Object.keys(attrPropsMapping), valueLessProps);
+    $ele.parentNode.insertBefore($newEle, $ele);
+    $ele.remove();
+
+    props.ele = $newEle;
+    props.options = options;
+    props.disabledOptions = disabledOptions;
+    props.selectedValue = selectedValue;
   }
 
   static resetForm(e) {
