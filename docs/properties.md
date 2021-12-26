@@ -15,6 +15,8 @@
 | disabledOptions | Array | [] | List of values to disable options <br/>e.g - [2, 3, 9] |
 | multiple | Boolean | false | Enable multi-select |
 | search | Boolean | false - for single select <br/>true - for multi-select | Enable search feature |
+| disabled | Boolean | false | Disable dropdown |
+| autofocus | Boolean | false | Autofocus dropdown on load |
 | hideClearButton | Boolean | false | Hide clear value button |
 | autoSelectFirstOption | Boolean | false | Select first option by default on load |
 | hasOptionDescription | Boolean | false | Has description to show along with label |
@@ -110,3 +112,5 @@ To use an property as an attribute, property name should be `hyphenated` and pre
 - multiple
 - placeholder
 - name
+- disabled
+- autofocus

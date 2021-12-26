@@ -64,7 +64,7 @@ npm install --save virtual-select-plugin
 <script src="node_modules/tooltip-plugin/dist/tooltip.min.js"></script>
 ```
 
-## Initiatize plugin
+## Initialize plugin
 
 ```html
 <div id="sample-select"></div>
@@ -79,6 +79,28 @@ VirtualSelect.init({
     { label: 'Options 3', value: '3' },
   ],
 });
+```
+
+## Initialize from native select element (not recommended)
+
+Not recommended to use native element to initiate the plugin when no.of options is more, since it might affect the performance.
+
+```html
+<select multiple
+  name="native-select" placeholder="Native Select"
+  data-search="false" data-silent-initial-value-set="true"
+>
+  <option value="1" disabled>Option 1</option>
+  <option value="2">Option 2</option>
+  <option value="3" selected>Option 3</option>
+  <option value="4" selected>Option 4</option>
+  <option value="5">Option 5</option>
+  <option value="6">Option 6</option>
+</select>
+```
+
+```js
+VirtualSelect.init({ ele: 'select' });
 ```
 
 <script>

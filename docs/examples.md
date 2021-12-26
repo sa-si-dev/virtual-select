@@ -360,18 +360,18 @@ VirtualSelect.init({
 
 Switch dropdown state element programmatically
 
-<div id="disable-enable"></div> <label><input type=checkbox id=disable-enable-switch checked> enable</label>
+<div id="disable-enable"></div>
+<label><input type=checkbox id=disable-enable-switch checked> Enable</label>
 
 ```js
 document.querySelector('#disable-enable-switch').addEventListener('change', function (e) {
-  if (event.target.checked) {
+  if (e.target.checked) {
     document.querySelector('#sample-select').enable();
   } else {
     document.querySelector('#sample-select').disable();
   }
 });
 ```
-
 
 <script>
   initPageExamples();

@@ -347,12 +347,12 @@ function initPageExamples() {
       ele: '#disable-enable',
     })
   );
-  document.querySelector('#disable-enable-switch').addEventListener('change', function (e) {
-  if (event.target.checked) {
-    document.querySelector('#disable-enable').enable();
-  } else {
-    document.querySelector('#disable-enable').disable();
-  }
-});
 
+  document.querySelector('#disable-enable-switch').addEventListener('change', function (e) {
+    if (e.target.checked) {
+      document.querySelector('#disable-enable').enable();
+    } else {
+      document.querySelector('#disable-enable').disable();
+    }
+  });
 }
