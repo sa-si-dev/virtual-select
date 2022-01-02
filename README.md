@@ -6,6 +6,7 @@
 - Support multi-select
 - Support search feature
 - Support Right-to-Left text
+- Support loading options from server (API)
 
 [Documentation](https://sa-si-dev.github.io/virtual-select)
 

@@ -3,7 +3,6 @@
 - [Get selected value](#get-selected-value)
 - [setValue()](#setvalue)
 - [reset()](#reset)
-- [Disable element](#disable-element)
 - [setOptions()](#setoptions)
 - [setDisabledOptions()](#setdisabledoptions)
 - [toggleSelectAll()](#toggleselectall)
@@ -18,6 +17,7 @@
 - [enable()](#enable)
 - [disable()](#disable)
 - [destroy()](#destroy)
+- [setServerOptions()](#setserveroptions)
 
 ### Get selected value
 
@@ -45,16 +45,6 @@ document.querySelector('#sample-select').setValue(value);
 
 ```js
 document.querySelector('#sample-select').reset();
-```
-
-### Disable element
-
-```js
-/** disable element */
-document.querySelector('#sample-select').setAttribute('disabled', '');
-
-/** enable element */
-document.querySelector('#sample-select').removeAttribute('disabled');
 ```
 
 ### setOptions()
@@ -200,4 +190,22 @@ To destroy the virtual select instance from the element
 
 ```js
 document.querySelector('#sample-select').destroy();
+```
+
+### setServerOptions()
+
+Use this method to set options while loading options from server.
+
+```js
+VirtualSelect.init({
+  ...
+  onServerSearch: onSampleSelectServerSearch,
+});
+
+function onSampleSelectServerSearch(searchValue, virtualSelect) {
+  /** project developer has to define anyMehodToGetDataFromServer function to make API call */
+  anyMehodToGetDataFromServer(searchValue).then(function(newOptions) {
+    virtualSelect.setServerOptions(newOptions);
+  });
+}
 ```
