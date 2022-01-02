@@ -2574,9 +2574,9 @@ export class VirtualSelect {
     let singleEle = false;
 
     if (typeof $eleArray === 'string') {
-      $eleArray = document.querySelector($eleArray);
+      $eleArray = document.querySelectorAll($eleArray);
 
-      if (!$eleArray) {
+      if ($eleArray.length === 0) {
         return;
       }
     }
