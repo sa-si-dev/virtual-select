@@ -157,7 +157,7 @@ export class DomUtils {
     });
   }
 
-  static dispatchEvent($ele, eventName) {
+  static dispatchEvent($ele, eventName, bubbles = true) {
     if (!$ele) {
       return;
     }
@@ -167,7 +167,7 @@ export class DomUtils {
     /** using setTimeout to trigger asynchronous event */
     setTimeout(() => {
       $ele.forEach(($this) => {
-        $this.dispatchEvent(new Event(eventName, { bubbles: true }));
+        $this.dispatchEvent(new CustomEvent(eventName, { bubbles }));
       });
     }, 0);
   }

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>vs demo</title>
+    <link rel="stylesheet" href="/dist/virtual-select.min.css">
+    <script type="application/javascript" src="classList-polyfill-ie9plus.js"></script>
+    <script type="application/javascript" src="https://unpkg.com/custom-event-polyfill@1.0.7/polyfill.js"></script>
+    <script type="application/javascript" src="https://unpkg.com/element-closest-polyfill@1.0.4/index.js"></script>
+    <script type="application/javascript" src="https://unpkg.com/core-js-bundle@3.20.2/minified.js"></script>
+    <script type="application/javascript" src="/dist/virtual-select.min.js"></script>
+</head>
+<body>
+<form>
+    <div id="sample-select1"></div>
+    <div id="sample-select2"></div>
+</form>
+<script>
+    var el1 = document.getElementById('sample-select1');
+    var el2 = document.getElementById('sample-select2');
+    var opts1 = [
+        {label: 'GP1 Options 1', value: '1'},
+        {label: 'GP1 Options 2', value: '2'},
+        {label: 'GP1 Options 3', value: '3'},
+    ];
+    var opts2 = [
+        {label: 'GP2 Options 1', value: '1'},
+        {label: 'GP2 Options 2', value: '2'},
+        {label: 'GP2 Options 3', value: '3'},
+    ];
+    VirtualSelect.init({
+        ele: [el1, el2],
+        multiple: true,
+        enableSecureText: true,
+        options: [],
+    });
+
+    el1.addEventListener('change', function (e) {
+        el2.setOptions(opts2)
+    });
+    setTimeout(function () {
+        el1.setOptions(opts1);
+    }, 1000)
+</script>
+</body>
+</html>
