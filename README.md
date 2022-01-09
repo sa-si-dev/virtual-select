@@ -28,5 +28,3 @@ npm install --save virtual-select-plugin
 <link rel="stylesheet" href="node_modules/tooltip-plugin/dist/tooltip.min.css">
 <script src="node_modules/tooltip-plugin/dist/tooltip.min.js"></script>
 ```
-
-Particularly, to use under IE11, please check `examples/ie11compatible`.  

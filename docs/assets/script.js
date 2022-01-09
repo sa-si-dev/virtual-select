@@ -355,4 +355,20 @@ function initPageExamples() {
       document.querySelector('#disable-enable').disable();
     }
   });
+
+  VirtualSelect.init(
+    Object.assign({}, virtualSelectOptions, {
+      ele: '#validation-select',
+      multiple: true,
+      required: true,
+    })
+  );
+
+  document.querySelector('#validation-form').addEventListener('submit', function (e) {
+    e.preventDefault();
+
+    if (VirtualSelect.validate(this)) {
+      alert('Form submitted');
+    }
+  });
 }

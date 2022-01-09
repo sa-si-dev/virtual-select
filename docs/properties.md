@@ -16,6 +16,7 @@
 | multiple | Boolean | false | Enable multi-select |
 | search | Boolean | false - for single select <br/>true - for multi-select | Enable search feature |
 | disabled | Boolean | false | Disable dropdown |
+| required | Boolean | false | Enable required validation. <br/>It would be triggered automatically on form submit and value change. <br/>To trigger it manually use [validate()](methods?id=validate) method |
 | autofocus | Boolean | false | Autofocus dropdown on load |
 | hideClearButton | Boolean | false | Hide clear value button |
 | autoSelectFirstOption | Boolean | false | Select first option by default on load |
@@ -53,6 +54,7 @@
 | disableOptionGroupCheckbox | Boolean | false | Disable option group title checkbox |
 | enableSecureText | Boolean | false | Set true to replace HTML tags from option's text (value and label) to prevent XSS attack. This feature is not enabled by default to avoid performance issue. |
 | setValueAsArray | Boolean | false | Set value for hidden input in array format (e.g. '["1", "2"]') |
+| disableValidation | Boolean | false | Disable required validation |
 
 # Text Properties
 

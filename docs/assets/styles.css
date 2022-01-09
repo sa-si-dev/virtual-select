@@ -85,6 +85,26 @@ section.cover {
 }
 /* theme customization - end */
 
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 2rem;
+  border: 1px solid var(--theme-color, #42b983);
+  box-sizing: border-box;
+  color: var(--theme-color, #42b983);
+  display: inline-flex;
+  font-size: 14px;
+  letter-spacing: 0.1rem;
+  margin: 0.5rem 1rem;
+  padding: 0.5em 1rem;
+  text-decoration: none;
+  transition: all 0.15s ease;
+  background-color: var(--theme-color, #42b983);
+  color: #fff;
+  cursor: pointer;
+}
+
 .get-started-example {
   display: flex;
   justify-content: space-between;
@@ -110,4 +130,8 @@ section.cover {
 
 #show-value-as-tags-select {
   max-width: 400px;
+}
+
+#validation-select {
+  margin-bottom: 20px;
 }

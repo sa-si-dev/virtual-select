@@ -6,3 +6,4 @@
 * [Q&A](https://github.com/{{repo}}/discussions/categories/q-a)
 * [Changelog](https://github.com/{{repo}}/releases)
 * [Archive](https://github.com/{{repo}}/tree/master/dist-archive)
+* [IE11 Compatibility](ie11-compatibility.md)

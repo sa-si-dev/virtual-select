@@ -24,6 +24,7 @@
 - [Show values as tags](#show-values-as-tags)
 - [Right-to-Left text](#right-to-left-text)
 - [Disable/Enable](#disable-enable)
+- [Validation](#validation)
 
 ## Default dropdown
 
@@ -373,6 +374,36 @@ document.querySelector('#disable-enable-switch').addEventListener('change', func
 });
 ```
 
+## Validation
+
+<form id="validation-form">
+  <div id="validation-select"></div>
+
+  <div>
+    <button class="btn" type="reset">Reset</button>
+    <button class="btn" type="submit">Submit</button>
+  </div>
+</form>
+
+```js
+VirtualSelect.init({
+  ...
+  required: true,
+});
+
+/** To validate a single dropdown */
+document.querySelector('#sample-select').validate();
+
+/** To validate all dropdowns on form submit */
+document.querySelector('#sample-form').addEventListener('submit', function() {
+  if (VirtualSelect.validate(this)) {
+    alert('Form submitted');
+  }
+});
+```
+
 <script>
-  initPageExamples();
+  setTimeout(function() {
+    initPageExamples();
+  }, 0);
 </script>

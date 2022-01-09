@@ -18,6 +18,8 @@
 - [disable()](#disable)
 - [destroy()](#destroy)
 - [setServerOptions()](#setserveroptions)
+- [validate()](#validate)
+- [toggleRequired()](#togglerequired)
 
 ### Get selected value
 
@@ -208,4 +210,29 @@ function onSampleSelectServerSearch(searchValue, virtualSelect) {
     virtualSelect.setServerOptions(newOptions);
   });
 }
+```
+
+### validate()
+
+To trigger required validation programmatically
+
+```js
+/** To validate a single dropdown */
+document.querySelector('#sample-select').validate();
+
+/** To validate all dropdowns inside a form or form container */
+VirtualSelect.validate(document.querySelector('#sample-form'));
+VirtualSelect.validate(document.querySelector('#feedback-container'));
+```
+
+### toggleRequired()
+
+To update required property value
+
+**Arguments:**
+
+- isRequired - true/false
+
+```js
+document.querySelector('#sample-select').toggleRequired(true);
 ```
