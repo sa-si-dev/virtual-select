@@ -4,3 +4,4 @@ node_modules
 
 .github
 docs
+dist-archive

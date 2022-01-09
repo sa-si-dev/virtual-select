@@ -157,7 +157,7 @@ export class DomUtils {
     });
   }
 
-  static dispatchEvent($ele, eventName, bubbles = true) {
+  static dispatchEvent($ele, eventName, bubbles = false) {
     if (!$ele) {
       return;
     }

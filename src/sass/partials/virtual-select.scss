@@ -119,7 +119,7 @@ body.vscomp-popup-active {
   justify-content: center;
   align-items: center;
   border-radius: 50%;
-  margin-top: -#{$clearButtonWidth / 2};
+  margin-top: math.div($clearButtonWidth, -2);
 
   &:hover {
     background: $focusColor;
@@ -139,7 +139,7 @@ body.vscomp-popup-active {
   justify-content: center;
   position: absolute;
   left: 50%;
-  margin-left: -#{$dropboxCloseButtonWidth / 2};
+  margin-left: math.div($dropboxCloseButtonWidth, -2);
   bottom: -#{$dropboxCloseButtonWidth + $dropboxCloseButtonOffset};
   width: $dropboxCloseButtonWidth;
   height: $dropboxCloseButtonWidth;
@@ -229,7 +229,7 @@ body.vscomp-popup-active {
     position: absolute;
     top: 0;
     right: 0;
-    border: #{$newOptionIconWidth / 2} solid $primaryColor;
+    border: math.div($newOptionIconWidth, 2) solid $primaryColor;
     border-left-color: transparent;
     border-bottom-color: transparent;
   }
@@ -244,8 +244,8 @@ body.vscomp-popup-active {
     right: 1px;
     font-size: 18px;
     color: #fff;
-    width: #{$newOptionIconWidth / 2};
-    height: #{$newOptionIconWidth / 2};
+    width: math.div($newOptionIconWidth, 2);
+    height: math.div($newOptionIconWidth, 2);
   }
 }
 
@@ -383,7 +383,7 @@ body.vscomp-popup-active {
       width: 80%;
       max-height: calc(80% - #{$dropboxCloseButtonWidth + $dropboxCloseButtonOffset});
       max-width: 500px;
-      margin-top: -#{($dropboxCloseButtonWidth + $dropboxCloseButtonOffset) / 2};
+      margin-top: math.div(($dropboxCloseButtonWidth + $dropboxCloseButtonOffset), -2);
     }
 
     .vscomp-dropbox-close-button {
@@ -534,6 +534,12 @@ body.vscomp-popup-active {
 
     .vscomp-options-loader {
       display: block;
+    }
+  }
+
+  &.has-error {
+    .vscomp-toggle-button {
+      border-color: $errorColor;
     }
   }
 

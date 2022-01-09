@@ -66,6 +66,7 @@ const attrPropsMapping = {
   'data-disable-option-group-checkbox': 'disableOptionGroupCheckbox',
   'data-enable-secure-text': 'enableSecureText',
   'data-set-value-as-array': 'setValueAsArray',
+  'data-disable-validation': 'disableValidation',
 };
 
 /** Class representing VirtualSelect */
@@ -88,6 +89,7 @@ export class VirtualSelect {
    * @property {boolean} [multiple=false] - Enable multiselect
    * @property {boolean} [search=false] - Enable search
    * @property {boolean} [disabled=false] - Disable dropdown
+   * @property {boolean} [required=false] - Enable required validation
    * @property {boolean} [autofocus=false] - Autofocus dropdown on load
    * @property {boolean} [hideClearButton=false] - Hide clear button
    * @property {boolean} [autoSelectFirstOption=false] - Select first option by default on load
@@ -129,6 +131,7 @@ export class VirtualSelect {
    * @property {boolean} [enableSecureText=false] - Set true to replace HTML tags from option's text (value and label) to prevent XSS attack.
    * This feature is not enabled by default to avoid performance issue.
    * @property {boolean} [setValueAsArray=false] - Set value for hidden input in array format (e.g. '["1", "2"]')
+   * @property {boolean} [disableValidation=false] - Disable required validation
    *
    * @property {string} [placeholder=Select] - Text to show when no options selected
    * @property {string} [noOptionsText=No options found] - Text to show when no options to show
@@ -775,6 +778,7 @@ export class VirtualSelect {
     this.disableOptionGroupCheckbox = convertToBoolean(options.disableOptionGroupCheckbox);
     this.enableSecureText = convertToBoolean(options.enableSecureText);
     this.setValueAsArray = convertToBoolean(options.setValueAsArray);
+    this.disableValidation = convertToBoolean(options.disableValidation);
     this.initialDisabled = convertToBoolean(options.disabled);
     this.required = convertToBoolean(options.required);
     this.autofocus = convertToBoolean(options.autofocus);
@@ -845,12 +849,6 @@ export class VirtualSelect {
       optionsCount: 5,
       noOfDisplayValues: 50,
       optionHeight: '40px',
-      multiple: false,
-      hideClearButton: false,
-      autoSelectFirstOption: false,
-      hasOptionDescription: false,
-      silentInitialValueSet: false,
-      disableSelectAll: false,
       noOptionsText: 'No options found',
       noSearchResultsText: 'No results found',
       selectAllText: 'Select All',
@@ -863,27 +861,15 @@ export class VirtualSelect {
       placeholder: 'Select',
       position: 'auto',
       zIndex: options.keepAlwaysOpen ? 1 : 2,
-      allowNewOption: false,
-      markSearchResults: false,
       tooltipFontSize: '14px',
       tooltipAlignment: 'center',
       tooltipMaxWidth: '300px',
-      showSelectedOptionsFirst: false,
       name: '',
       additionalClasses: '',
-      keepAlwaysOpen: false,
       maxValues: 0,
       showDropboxAsPopup: true,
       popupDropboxBreakpoint: '576px',
       hideValueTooltipOnSelectAll: true,
-      showOptionsOnlyOnSearch: false,
-      selectAllOnlyVisible: false,
-      alwaysShowSelectedOptionsCount: false,
-      disableAllOptionsSelectedText: false,
-      showValueAsTags: false,
-      disableOptionGroupCheckbox: false,
-      enableSecureText: false,
-      setValueAsArray: false,
     };
 
     if (options.hasOptionDescription) {
@@ -937,6 +923,8 @@ export class VirtualSelect {
     $ele.enable = VirtualSelect.enableMethod;
     $ele.disable = VirtualSelect.disableMethod;
     $ele.destroy = VirtualSelect.destroyMethod;
+    $ele.validate = VirtualSelect.validateMethod;
+    $ele.toggleRequired = VirtualSelect.toggleRequiredMethod;
 
     if (this.hasDropboxWrapper) {
       this.$dropboxWrapper.virtualSelect = this;
@@ -979,7 +967,7 @@ export class VirtualSelect {
     }
 
     this.beforeValueSet();
-    this.setValue(validValues, !silentChange);
+    this.setValue(validValues, { disableEvent: silentChange });
     this.afterValueSet();
   }
 
@@ -1252,7 +1240,7 @@ export class VirtualSelect {
     });
   }
 
-  setValue(value, triggerEvent) {
+  setValue(value, { disableEvent = false, disableValidation = false } = {}) {
     if (!value) {
       this.selectedValues = [];
     } else if (Array.isArray(value)) {
@@ -1264,7 +1252,10 @@ export class VirtualSelect {
     let newValue = this.multiple ? this.selectedValues : this.selectedValues[0] || '';
     this.$ele.value = newValue;
     this.isMaxValuesSelected = this.maxValues && this.maxValues <= this.selectedValues.length ? true : false;
+
+    this.toggleAllOptionsClass();
     this.setValueText();
+
     DomUtils.toggleClass(this.$allWrappers, 'has-value', Utils.isNotEmpty(this.selectedValues));
     DomUtils.toggleClass(this.$allWrappers, 'max-value-selected', this.isMaxValuesSelected);
 
@@ -1274,8 +1265,12 @@ export class VirtualSelect {
       this.$hiddenInput.value = newValue;
     }
 
-    if (triggerEvent) {
-      DomUtils.dispatchEvent(this.$ele, 'change');
+    if (!disableValidation) {
+      this.validate();
+    }
+
+    if (!disableEvent) {
+      DomUtils.dispatchEvent(this.$ele, 'change', true);
     }
   }
 
@@ -2096,7 +2091,7 @@ export class VirtualSelect {
       this.beforeSelectNewValue();
     }
 
-    this.setValue(selectedValues, true);
+    this.setValue(selectedValues);
 
     if (shouldSelectRange) {
       this.selectRangeOptions(lastSelectedOptionIndex, selectedIndex);
@@ -2149,7 +2144,7 @@ export class VirtualSelect {
     });
 
     this.toggleAllOptionsClass();
-    this.setValue(selectedValues, true);
+    this.setValue(selectedValues);
 
     groupIndexes = Object.keys(groupIndexes);
 
@@ -2196,7 +2191,7 @@ export class VirtualSelect {
     });
 
     this.toggleAllOptionsClass(isSelected);
-    this.setValue(selectedValues, true);
+    this.setValue(selectedValues);
     this.renderOptions();
   }
 
@@ -2300,7 +2295,7 @@ export class VirtualSelect {
     });
 
     this.toggleAllOptionsClass(isSelected ? null : false);
-    this.setValue(selectedValues, true);
+    this.setValue(selectedValues);
 
     /** using setTimeout to fix the issue of dropbox getting closed on select */
     setTimeout(() => {
@@ -2355,16 +2350,20 @@ export class VirtualSelect {
     }
   }
 
-  reset() {
+  reset(formReset = false) {
     this.options.forEach((d) => {
       d.isSelected = false;
     });
 
     this.beforeValueSet(true);
-    this.setValue(null, true);
+    this.setValue(null, { disableValidation: formReset });
     this.afterValueSet();
 
-    DomUtils.dispatchEvent(this.$ele, 'reset', false);
+    if (formReset) {
+      DomUtils.removeClass(this.$allWrappers, 'has-error');
+    }
+
+    DomUtils.dispatchEvent(this.$ele, 'reset');
   }
 
   addOption(data, rerender) {
@@ -2532,6 +2531,22 @@ export class VirtualSelect {
     this.$hiddenInput.setAttribute('disabled', '');
   }
 
+  validate() {
+    if (this.disableValidation) {
+      return true;
+    }
+
+    let hasError = false;
+
+    if (this.required && Utils.isEmpty(this.selectedValues)) {
+      hasError = true;
+    }
+
+    DomUtils.toggleClass(this.$allWrappers, 'has-error', hasError);
+
+    return !hasError;
+  }
+
   destroy() {
     let $ele = this.$ele;
     $ele.virtualSelect = undefined;
@@ -2561,6 +2576,11 @@ export class VirtualSelect {
     this.$secureText.nodeValue = text;
 
     return this.$secureDiv.innerHTML;
+  }
+
+  toggleRequired(isRequired) {
+    this.required = Utils.convertToBoolean(isRequired);
+    this.$ele.required = this.required;
   }
 
   /** static methods - start */
@@ -2638,7 +2658,7 @@ export class VirtualSelect {
     props.selectedValue = selectedValue;
   }
 
-  static resetForm(e) {
+  static onFormReset(e) {
     let $form = e.target.closest('form');
 
     if (!$form) {
@@ -2646,8 +2666,32 @@ export class VirtualSelect {
     }
 
     $form.querySelectorAll('.vscomp-ele-wrapper').forEach(($ele) => {
-      $ele.parentElement.virtualSelect.reset();
+      $ele.parentElement.virtualSelect.reset(true);
     });
+  }
+
+  static onFormSubmit(e) {
+    if (!VirtualSelect.validate(e.target.closest('form'))) {
+      e.preventDefault();
+    }
+  }
+
+  static validate($container) {
+    if (!$container) {
+      return true;
+    }
+
+    let hasError = false;
+
+    $container.querySelectorAll('.vscomp-ele-wrapper').forEach(($ele) => {
+      let result = $ele.parentElement.virtualSelect.validate();
+
+      if (!hasError && !result) {
+        hasError = true;
+      }
+    });
+
+    return !hasError;
   }
 
   static reset() {
@@ -2714,6 +2758,14 @@ export class VirtualSelect {
     return this.virtualSelect.destroy();
   }
 
+  static validateMethod() {
+    return this.virtualSelect.validate();
+  }
+
+  static toggleRequiredMethod(isRequired) {
+    return this.virtualSelect.toggleRequired(isRequired);
+  }
+
   static onResizeMethod() {
     document.querySelectorAll('.vscomp-ele-wrapper').forEach(($ele) => {
       $ele.parentElement.virtualSelect.onResize();
@@ -2722,7 +2774,8 @@ export class VirtualSelect {
   /** static methods - end */
 }
 
-document.addEventListener('reset', VirtualSelect.resetForm);
+document.addEventListener('reset', VirtualSelect.onFormReset);
+document.addEventListener('submit', VirtualSelect.onFormSubmit);
 window.addEventListener('resize', VirtualSelect.onResizeMethod);
 
 window.VirtualSelect = VirtualSelect;
