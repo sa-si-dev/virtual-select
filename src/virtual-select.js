@@ -2364,7 +2364,7 @@ export class VirtualSelect {
     this.setValue(null, true);
     this.afterValueSet();
 
-    DomUtils.dispatchEvent(this.$ele, 'reset');
+    DomUtils.dispatchEvent(this.$ele, 'reset', false);
   }
 
   addOption(data, rerender) {
