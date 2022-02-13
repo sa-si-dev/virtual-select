@@ -62,4 +62,15 @@ export class Utils {
 
     return array.filter((d) => !!d);
   }
+
+  /**
+   * @param {number} max
+   * @param {number} max
+   */
+  static getRandomInt(max, min = 0) {
+    const minN = Math.ceil(min);
+    const maxN = Math.floor(max);
+
+    return Math.floor(Math.random() * (maxN - minN - 1)) + minN;
+  }
 }

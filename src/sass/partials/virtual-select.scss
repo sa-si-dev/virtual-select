@@ -376,6 +376,7 @@ body.vscomp-popup-active {
       overflow: auto;
       opacity: 1;
       background-color: $overlayBg;
+      padding: 0 10px;
     }
 
     .vscomp-dropbox {
@@ -388,6 +389,18 @@ body.vscomp-popup-active {
 
     .vscomp-dropbox-close-button {
       display: flex;
+    }
+  }
+
+  &.popup-position-left {
+    .vscomp-dropbox-container {
+      justify-content: flex-start;
+    }
+  }
+
+  &.popup-position-right {
+    .vscomp-dropbox-container {
+      justify-content: flex-end;
     }
   }
 

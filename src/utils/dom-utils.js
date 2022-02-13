@@ -129,6 +129,16 @@ export class DomUtils {
     });
   }
 
+  static setAria($ele, name, value) {
+    let attrName = name;
+
+    if (attrName !== 'role') {
+      attrName = `aria-${attrName}`;
+    }
+
+    $ele.setAttribute(attrName, value);
+  }
+
   static getElements($ele) {
     if (!$ele) {
       return;
@@ -189,5 +199,10 @@ export class DomUtils {
     }
 
     return html;
+  }
+
+  /** convert "maxValue" to "data-max-value" */
+  static convertPropToDataAttr(prop) {
+    return prop ? `data-${prop}`.replace(/([A-Z])/g, '-$1').toLowerCase() : '';
   }
 }
