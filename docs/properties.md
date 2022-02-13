@@ -43,8 +43,10 @@
 | additionalClasses | String | | Additional classes for wrapper element |
 | showDropboxAsPopup | Boolean | true | Show dropbox as popup on small screen like mobile |
 | popupDropboxBreakpoint | String | 576px | Maximum screen width that allowed to show dropbox as popup |
+| popupPosition | String | center | Position of the popup (left, center, or right) |
 | onServerSearch | Function | | Callback function to integrate server search |
 | labelRenderer | Function | | Callback function to render label, which could be used to add image, icon, or custom content |
+| ariaLabelledby | String | | ID of the label element to use as a11y attribute aria-labelledby |
 | hideValueTooltipOnSelectAll | Boolean | true | Hide value tooltip if all options selected |
 | showOptionsOnlyOnSearch | Boolean | false | Show options to select only if search value is not empty |
 | selectAllOnlyVisible | Boolean | false | Select only visible options on clicking select all checkbox when options filtered by search |
@@ -54,6 +56,7 @@
 | disableOptionGroupCheckbox | Boolean | false | Disable option group title checkbox |
 | enableSecureText | Boolean | false | Set true to replace HTML tags from option's text (value and label) to prevent XSS attack. This feature is not enabled by default to avoid performance issue. |
 | setValueAsArray | Boolean | false | Set value for hidden input in array format (e.g. '["1", "2"]') |
+| emptyValue | String | | Empty value to use for hidden input when no value is selected (e.g. 'null' or '[]' or 'none') |
 | disableValidation | Boolean | false | Disable required validation |
 
 # Text Properties
@@ -87,7 +90,7 @@ VirtualSelect.init({
 
 ## Using properties as DOM attributes
 
-To use an property as an attribute, property name should be `hyphenated` and prefixed with `data-*` (e.g. `noOptionsText` => `data-no-options-text`)
+To use a property as an attribute, property name should be `hyphenated` and prefixed with `data-*` (e.g. `noOptionsText` => `data-no-options-text`)
 
 ```html
 <div id="sample-select"
