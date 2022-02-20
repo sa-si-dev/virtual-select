@@ -8,6 +8,7 @@
 | options[].alias | String \| Array | | Alternative labels to use on search.<br/>Array of string or comma separated string. |
 | options[].options | Array | | List of options for option group |
 | options[].description | String | | Text to show along with label |
+| options[].customData | Any | | Any custom data to store with the options and it would be available with getSelectedOptions() result. |
 | valueKey | String | value | Object key to use to get value from options array |
 | labelKey | String | label | Object key to use to get label from options array |
 | descriptionKey | String | description | Object key to use to get description from options array |
@@ -58,6 +59,7 @@
 | setValueAsArray | Boolean | false | Set value for hidden input in array format (e.g. '["1", "2"]') |
 | emptyValue | String | | Empty value to use for hidden input when no value is selected (e.g. 'null' or '[]' or 'none') |
 | disableValidation | Boolean | false | Disable required validation |
+| useGroupValue | Boolean | false | Group's value would be returned when all of its child options selected |
 
 # Text Properties
 

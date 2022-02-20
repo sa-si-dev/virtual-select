@@ -64,6 +64,7 @@ const dataProps = [
   'tooltipMaxWidth',
   'valueKey',
   'zIndex',
+  'useGroupValue',
 ];
 
 /** Class representing VirtualSelect */
@@ -76,9 +77,10 @@ export class VirtualSelect {
    * @property {object[]} options - Array of object to show as options
    * @property {(string|number)} options[].value - Value of the option
    * @property {(string|number)} options[].label - Display text of the option
-   * @property {(string|number)} options[].description - Text to show along with label
-   * @property {(string|array)} options[].alias - Alternative labels to use on search. Array of string or comma separated string.
-   * @property {array} options[].options - List of options for option group
+   * @property {(string|number)} [options[].description] - Text to show along with label
+   * @property {(string|array)} [options[].alias] - Alternative labels to use on search. Array of string or comma separated string.
+   * @property {any} [options[].customData] - Any custom data to store with the options and it would be available with getSelectedOptions() result.
+   * @property {array} [options[].options] - List of options for option group
    * @property {string} [valueKey=value] - Object key to use to get value from options array
    * @property {string} [labelKey=label] - Object key to use to get label from options array
    * @property {string} [descriptionKey=description] - Object key to use to get description from options array
@@ -132,6 +134,7 @@ export class VirtualSelect {
    * @property {boolean} [setValueAsArray=false] - Set value for hidden input in array format (e.g. '["1", "2"]')
    * @property {string} [emptyValue=''] - Empty value to use for hidden input when no value is selected (e.g. 'null' or '[]' or 'none')
    * @property {boolean} [disableValidation=false] - Disable required validation
+   * @property {boolean} [useGroupValue=false] - Group's value would be returned when all of its child options selected
    *
    * @property {string} [placeholder=Select] - Text to show when no options selected
    * @property {string} [noOptionsText=No options found] - Text to show when no options to show
@@ -547,9 +550,7 @@ export class VirtualSelect {
 
     if ($option && !DomUtils.hasClass($option, 'disabled')) {
       if (DomUtils.hasClass($option, 'group-title')) {
-        if (!this.disableOptionGroupCheckbox) {
-          this.onGroupTitleClick($option);
-        }
+        this.onGroupTitleClick($option);
       } else {
         this.selectOption($option, { event: e });
       }
@@ -557,7 +558,7 @@ export class VirtualSelect {
   }
 
   onGroupTitleClick($ele) {
-    if (!$ele) {
+    if (!$ele || !this.multiple || this.disableOptionGroupCheckbox) {
       return;
     }
 
@@ -799,6 +800,7 @@ export class VirtualSelect {
     this.initialDisabled = convertToBoolean(options.disabled);
     this.required = convertToBoolean(options.required);
     this.autofocus = convertToBoolean(options.autofocus);
+    this.useGroupValue = convertToBoolean(options.useGroupValue);
     this.noOptionsText = options.noOptionsText;
     this.noSearchResultsText = options.noSearchResultsText;
     this.selectAllText = options.selectAllText;
@@ -957,23 +959,40 @@ export class VirtualSelect {
   setValueMethod(value, silentChange) {
     let valuesMapping = {};
     let validValues = [];
+    let isMultiSelect = this.multiple;
 
     if (value) {
       if (!Array.isArray(value)) {
         value = [value];
       }
 
+      if (isMultiSelect) {
+        let maxValues = this.maxValues;
+
+        if (maxValues && value.length > maxValues) {
+          value.splice(maxValues);
+        }
+      } else {
+        if (value.length > 1) {
+          value = [value[0]];
+        }
+      }
+
       value = value.map((v) => {
         return v || v == 0 ? v.toString() : '';
       });
 
-      if (this.allowNewOption && value) {
-        this.setNewOptionsFromValue(value);
+      if (this.useGroupValue) {
+        value = this.setGroupOptionsValue(value);
       }
 
       value.forEach((d) => {
         valuesMapping[d] = true;
       });
+
+      if (this.allowNewOption && value) {
+        this.setNewOptionsFromValue(value);
+      }
     }
 
     this.options.forEach((d) => {
@@ -985,13 +1004,52 @@ export class VirtualSelect {
       }
     });
 
-    if (!this.multiple) {
+    if (isMultiSelect) {
+      if (this.hasOptionGroup) {
+        this.setGroupsSelectedProp();
+      }
+    } else {
       validValues = validValues[0];
     }
 
     this.beforeValueSet();
     this.setValue(validValues, { disableEvent: silentChange });
     this.afterValueSet();
+  }
+
+  setGroupOptionsValue(preparedValues) {
+    let selectedValues = [];
+    let selectedGroups = {};
+    let valuesMapping = {};
+
+    preparedValues.forEach((d) => {
+      valuesMapping[d] = true;
+    });
+
+    this.options.forEach((d) => {
+      let value = d.value;
+      let isSelected = valuesMapping[value] === true;
+
+      if (d.isGroupTitle) {
+        if (isSelected) {
+          selectedGroups[d.index] = true;
+        }
+      } else if (isSelected || selectedGroups[d.groupIndex]) {
+        selectedValues.push(value);
+      }
+    });
+
+    return selectedValues;
+  }
+
+  setGroupsSelectedProp() {
+    const isAllGroupOptionsSelected = this.isAllGroupOptionsSelected.bind(this);
+
+    this.options.forEach((d) => {
+      if (d.isGroupTitle) {
+        d.isSelected = isAllGroupOptionsSelected(d.index);
+      }
+    });
   }
 
   setOptionsMethod(options, keepValue) {
@@ -1102,6 +1160,10 @@ export class VirtualSelect {
         option.description = secureText(getString(d[descriptionKey]));
       }
 
+      if (d.customData) {
+        option.customData = d.customData;
+      }
+
       preparedOptions.push(option);
       index++;
 
@@ -1182,13 +1244,7 @@ export class VirtualSelect {
   }
 
   setSelectedOptions() {
-    let valuesMapping = {};
-
-    this.selectedValues.forEach((d) => {
-      valuesMapping[d] = true;
-    });
-
-    this.selectedOptions = this.options.filter((d) => valuesMapping[d.value] === true);
+    this.selectedOptions = this.options.filter((d) => d.isSelected);
   }
 
   setSortedOptions() {
@@ -1272,8 +1328,9 @@ export class VirtualSelect {
       this.selectedValues = [value];
     }
 
-    let newValue = this.multiple ? this.selectedValues : this.selectedValues[0] || '';
+    let newValue = this.getValue();
     this.$ele.value = newValue;
+    this.$hiddenInput.value = this.getInputValue(newValue);
     this.isMaxValuesSelected = this.maxValues && this.maxValues <= this.selectedValues.length ? true : false;
 
     this.toggleAllOptionsClass();
@@ -1281,12 +1338,6 @@ export class VirtualSelect {
 
     DomUtils.toggleClass(this.$allWrappers, 'has-value', Utils.isNotEmpty(this.selectedValues));
     DomUtils.toggleClass(this.$allWrappers, 'max-value-selected', this.isMaxValuesSelected);
-
-    if (this.setValueAsArray && this.multiple && newValue && newValue.length) {
-      this.$hiddenInput.value = JSON.stringify(newValue);
-    } else {
-      this.$hiddenInput.value = newValue.length ? newValue : this.emptyValue;
-    }
 
     if (!disableValidation) {
       this.validate();
@@ -1638,7 +1689,57 @@ export class VirtualSelect {
   }
 
   getValue() {
-    return this.multiple ? this.selectedValues : this.selectedValues[0];
+    let value;
+
+    if (this.multiple) {
+      if (this.useGroupValue) {
+        value = this.getGroupValue();
+      } else {
+        value = this.selectedValues;
+      }
+    } else {
+      value = this.selectedValues[0] || '';
+    }
+
+    return value;
+  }
+
+  getGroupValue() {
+    let selectedValues = [];
+    let selectedGroups = {};
+
+    this.options.forEach((d) => {
+      if (!d.isSelected) {
+        return;
+      }
+
+      let value = d.value;
+
+      if (d.isGroupTitle) {
+        if (value) {
+          selectedGroups[d.index] = true;
+          selectedValues.push(value);
+        }
+      } else if (selectedGroups[d.groupIndex] !== true) {
+        selectedValues.push(value);
+      }
+    });
+
+    return selectedValues;
+  }
+
+  getInputValue(preparedValue) {
+    let value = preparedValue;
+
+    if (value && value.length) {
+      if (this.setValueAsArray && this.multiple) {
+        value = JSON.stringify(value);
+      }
+    } else {
+      value = this.emptyValue;
+    }
+
+    return value;
   }
 
   getFirstVisibleOptionIndex() {
@@ -1747,14 +1848,9 @@ export class VirtualSelect {
 
   getDisplayValue() {
     let displayValues = [];
-    let valuesMapping = {};
-
-    this.selectedValues.forEach((d) => {
-      valuesMapping[d] = true;
-    });
 
     this.options.forEach((d) => {
-      if (valuesMapping[d.value] === true) {
+      if (d.isSelected) {
         displayValues.push(d.label);
       }
     });
@@ -1767,14 +1863,9 @@ export class VirtualSelect {
     let labelKey = this.labelKey;
     let selectedValues = this.selectedValues;
     let selectedOptions = [];
-    let valuesMapping = {};
-
-    selectedValues.forEach((d) => {
-      valuesMapping[d] = true;
-    });
 
     this.options.forEach((d) => {
-      if (valuesMapping[d.value] === true) {
+      if (d.isSelected) {
         if (fullDetails) {
           selectedOptions.push(d);
         } else {
@@ -1785,6 +1876,10 @@ export class VirtualSelect {
 
           if (d.isNew) {
             data.isNew = true;
+          }
+
+          if (d.customData) {
+            data.customData = d.customData;
           }
 
           selectedOptions.push(data);
@@ -2447,9 +2542,12 @@ export class VirtualSelect {
 
   sortOptions(options) {
     return options.sort((a, b) => {
-      if (!a.isSelected && !b.isSelected) {
+      let aIsSelected = a.isSelected || a.isAnySelected;
+      let bIsSelected = b.isSelected || b.isAnySelected;
+
+      if (!aIsSelected && !bIsSelected) {
         return 0;
-      } else if (a.isSelected && (!b.isSelected || a.index < b.index)) {
+      } else if (aIsSelected && (!bIsSelected || a.index < b.index)) {
         return -1;
       } else {
         return 1;
@@ -2458,14 +2556,14 @@ export class VirtualSelect {
   }
 
   sortOptionsGroup(options) {
-    let sortOptions = this.sortOptions;
+    let sortOptions = this.sortOptions.bind(this);
     options = this.structureOptionGroup(options);
 
     options.forEach((d) => {
       let childOptions = d.options;
-      d.isSelected = childOptions.some((e) => e.isSelected);
+      d.isAnySelected = childOptions.some((e) => e.isSelected);
 
-      if (d.isSelected) {
+      if (d.isAnySelected) {
         sortOptions(childOptions);
       }
     });
@@ -2664,9 +2762,12 @@ export class VirtualSelect {
 
     if (typeof $eleArray === 'string') {
       $eleArray = document.querySelectorAll($eleArray);
+      let eleLength = $eleArray.length;
 
-      if ($eleArray.length === 0) {
+      if (eleLength === 0) {
         return;
+      } else if (eleLength === 1) {
+        singleEle = true;
       }
     }
 
