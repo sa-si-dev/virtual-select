@@ -1,0 +1,33 @@
+{
+  "env": {
+    "browser": true,
+    "es2020": true
+  },
+
+  "extends": ["airbnb-base"],
+
+  "settings": {
+    "import/resolver": "webpack"
+  },
+
+  "parserOptions": {
+    "sourceType": "module"
+  },
+
+  "rules": {
+    "import/prefer-default-export": "off",
+    "max-len": [
+      "error",
+      {
+        "code": 120
+      }
+    ],
+    "object-curly-newline": [
+      "error",
+      {
+        "ObjectPattern": { "multiline": true }
+      }
+    ],
+    "operator-linebreak": ["error", "after", { "overrides": { "?": "before", ":": "before" } }]
+  }
+}

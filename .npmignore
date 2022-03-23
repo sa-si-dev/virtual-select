@@ -1,6 +1,7 @@
 .vscode
 .DS_Store
 node_modules
+ts-types
 
 .github
 docs

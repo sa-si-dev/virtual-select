@@ -1,3 +1,5 @@
+/* eslint-disable */
+// @ts-nocheck
 import { Utils } from './index';
 
 export class DomUtils {

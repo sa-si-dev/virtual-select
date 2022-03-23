@@ -14,7 +14,7 @@ module.exports = (env, options) => {
     target: 'es5',
 
     entry: {
-      styles: ['./src/styles.js', './node_modules/popover-plugin/dist/popover.min.css'],
+      'styles': ['./src/styles.js', './node_modules/popover-plugin/dist/popover.min.css'],
       'virtual-select': ['./src/virtual-select.js', './node_modules/popover-plugin/dist/popover.min.js'],
     },
 
@@ -63,7 +63,7 @@ module.exports = (env, options) => {
         {
           test: /\.scss$/,
           exclude: /(node_modules)/,
-          use: [MiniCssExtractPlugin.loader, 'css-loader', 'sass-loader'],
+          use: [MiniCssExtractPlugin.loader, 'css-loader', 'postcss-loader', 'sass-loader'],
         },
         {
           test: /\.css$/,

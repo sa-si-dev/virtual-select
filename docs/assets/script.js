@@ -1,3 +1,5 @@
+/* eslint-disable */
+// @ts-nocheck
 let config = {
   name: 'Virtual Select',
   repo: 'sa-si-dev/virtual-select',

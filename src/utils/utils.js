@@ -1,3 +1,5 @@
+/* eslint-disable */
+// @ts-nocheck
 export class Utils {
   static getString(text) {
     return text || text === 0 ? text.toString() : '';
