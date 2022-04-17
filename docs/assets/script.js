@@ -1,11 +1,11 @@
-/* eslint-disable */
-// @ts-nocheck
-let config = {
+/* eslint-disable no-use-before-define */
+const config = {
   name: 'Virtual Select',
   repo: 'sa-si-dev/virtual-select',
 };
 
-let flagClasses = ['gu', 'mn', 'va', 'tibet', 'fo', 'th', 'tr', 'tl', 'kz', 'zm', 'uz', 'dk', 'scotland', 'gi', 'gy', 'bj', 'fr', 'mo', 'ir', 'io', 'tm', 'ch', 'mt', 'nl', 'gp', 'im', 'tv', 'mu', 'pe', 'vi', 'hn', 'ss', 'ae', 'td', 'pw', 'nu', 'bt', 'ms', 'cv', 'es', 'mh', 'la', 'vn', 'py', 'br', 'ye', 'ie', 'gh', 'cg', 'cu', 'hu', 'sg', 'at', 'lk', 'vu', 'bo', 'jo', 'er', 'za', 'rs', 'nr', 'ls', 'jm', 'tz', 'ki', 'sj', 'cz', 'pg', 'lv', 'do', 'lu', 'no', 'kw', 'mx', 'yt', 'ly', 'cy', 'ph', 'my', 'sm', 'et', 'ru', 'tj', 'ai', 'pl', 'kp', 'uy', 'gb', 'gs', 'kurdistan', 'rw', 'ec', 'mm', 'pa', 'wales', 'kg', 've', 'tk', 'ca', 'is', 'ke', 'ro', 'gq', 'pt', 'tf', 'ad', 'sk', 'pm', 'om', 'an', 'ws', 'sh', 'mp', 'gt', 'cf', 'zanzibar', 'mw', 'catalonia', 'ug', 'je', 'km', 'in', 'bf', 'mc', 'sy', 'sn', 'kr', 'eu', 'bn', 'st', 'england', 'lc', 'dm', 'be', 'ni', 'ua', 'mz', 'pf', 'tn', 'ee', 'xk', 'sx', 'sd', 'gd', 'ci', 'sz', 'cl', 'fi', 'ga', 'jp', 'de', 'np', 're', 'bg', 'sc', 'ng', 'qa', 'mk', 'aw', 'kn', 'al', 'bw', 'um', 'ky', 'tt', 'so', 'lt', 'by', 'bb', 'us', 'md', 'ag', 'hm', 'as', 'eg', 'sv', 'sl', 'fk', 'am', 'ck', 'tw', 'kh', 'to', 'se', 'cd', 'pn', 'gr', 'id', 'vc', 'somaliland', 'bi', 'pk', 'pr', 'bd', 'co', 'fm', 'bm', 'ar', 'bv', 'sb', 'mq', 'eh', 'bh', 'it', 'hr', 'sa', 'mv', 'mg', 'dz', 'gg', 'gm', 'af', 'li', 'sr', 'vg', 'cr', 'tc', 'ao', 'ma', 'mr', 'gn', 'ne', 'nf', 'wf', 'hk', 'gf', 'ps', 'ic', 'cw', 'ml', 'ax', 'gl', 'dj', 'cn', 'ht', 'lr', 'tg', 'ba', 'ge', 'bz', 'au', 'iq', 'cm', 'gw', 'az', 'na', 'fj', 'zw', 'bs', 'il', 'nz', 'me', 'si', 'nc', 'lb'];
+// eslint-disable-next-line max-len
+const flagClasses = ['gu', 'mn', 'va', 'tibet', 'fo', 'th', 'tr', 'tl', 'kz', 'zm', 'uz', 'dk', 'scotland', 'gi', 'gy', 'bj', 'fr', 'mo', 'ir', 'io', 'tm', 'ch', 'mt', 'nl', 'gp', 'im', 'tv', 'mu', 'pe', 'vi', 'hn', 'ss', 'ae', 'td', 'pw', 'nu', 'bt', 'ms', 'cv', 'es', 'mh', 'la', 'vn', 'py', 'br', 'ye', 'ie', 'gh', 'cg', 'cu', 'hu', 'sg', 'at', 'lk', 'vu', 'bo', 'jo', 'er', 'za', 'rs', 'nr', 'ls', 'jm', 'tz', 'ki', 'sj', 'cz', 'pg', 'lv', 'do', 'lu', 'no', 'kw', 'mx', 'yt', 'ly', 'cy', 'ph', 'my', 'sm', 'et', 'ru', 'tj', 'ai', 'pl', 'kp', 'uy', 'gb', 'gs', 'kurdistan', 'rw', 'ec', 'mm', 'pa', 'wales', 'kg', 've', 'tk', 'ca', 'is', 'ke', 'ro', 'gq', 'pt', 'tf', 'ad', 'sk', 'pm', 'om', 'an', 'ws', 'sh', 'mp', 'gt', 'cf', 'zanzibar', 'mw', 'catalonia', 'ug', 'je', 'km', 'in', 'bf', 'mc', 'sy', 'sn', 'kr', 'eu', 'bn', 'st', 'england', 'lc', 'dm', 'be', 'ni', 'ua', 'mz', 'pf', 'tn', 'ee', 'xk', 'sx', 'sd', 'gd', 'ci', 'sz', 'cl', 'fi', 'ga', 'jp', 'de', 'np', 're', 'bg', 'sc', 'ng', 'qa', 'mk', 'aw', 'kn', 'al', 'bw', 'um', 'ky', 'tt', 'so', 'lt', 'by', 'bb', 'us', 'md', 'ag', 'hm', 'as', 'eg', 'sv', 'sl', 'fk', 'am', 'ck', 'tw', 'kh', 'to', 'se', 'cd', 'pn', 'gr', 'id', 'vc', 'somaliland', 'bi', 'pk', 'pr', 'bd', 'co', 'fm', 'bm', 'ar', 'bv', 'sb', 'mq', 'eh', 'bh', 'it', 'hr', 'sa', 'mv', 'mg', 'dz', 'gg', 'gm', 'af', 'li', 'sr', 'vg', 'cr', 'tc', 'ao', 'ma', 'mr', 'gn', 'ne', 'nf', 'wf', 'hk', 'gf', 'ps', 'ic', 'cw', 'ml', 'ax', 'gl', 'dj', 'cn', 'ht', 'lr', 'tg', 'ba', 'ge', 'bz', 'au', 'iq', 'cm', 'gw', 'az', 'na', 'fj', 'zw', 'bs', 'il', 'nz', 'me', 'si', 'nc', 'lb'];
 
 window.$docsify = {
   name: config.name,
@@ -23,15 +23,13 @@ window.$docsify = {
   plugins: [docsifyPlugin],
 };
 
-function docsifyPlugin(hook, vm) {
+function docsifyPlugin(hook) {
   hook.beforeEach(docsifyPluginBeforeEach);
   hook.doneEach(docsifyPluginDoneEach);
 }
 
 function docsifyPluginBeforeEach(content) {
-  content = replacePlaceholders(content);
-
-  return content;
+  return replacePlaceholders(content);
 }
 
 function docsifyPluginDoneEach() {
@@ -40,7 +38,7 @@ function docsifyPluginDoneEach() {
 }
 
 function replacePlaceholdersForElement(selector) {
-  var ele = document.querySelector(selector);
+  const ele = document.querySelector(selector);
 
   if (!ele) {
     return;
@@ -50,30 +48,28 @@ function replacePlaceholdersForElement(selector) {
 }
 
 function replacePlaceholders(content) {
-  Object.keys(config).forEach(function (placeholder) {
-    var value = config[placeholder];
+  let result = content;
+
+  Object.keys(config).forEach((placeholder) => {
+    const value = config[placeholder];
 
     if (value) {
-      var regexp = new RegExp('{{' + placeholder + '}}', 'g');
-      content = content.replace(regexp, value);
+      const regexp = new RegExp(`{{${placeholder}}}`, 'g');
+      result = result.replace(regexp, value);
     }
   });
 
-  return content;
+  return result;
 }
 
-function getOptions(count, includeDesc) {
-  if (!count) {
-    count = 100000;
-  }
+function getOptions(count = 100000, includeDesc = false) {
+  const optionsData = [];
 
-  var optionsData = [];
-
-  for (var i = 1; i <= count; i++) {
-    let optionData = { value: i, label: 'Option ' + i };
+  for (let i = 1; i <= count; i += 1) {
+    const optionData = { value: i, label: `Option ${i}` };
 
     if (includeDesc) {
-      optionData.description = 'Description ' + i;
+      optionData.description = `Description ${i}`;
     }
 
     optionsData.push(optionData);
@@ -83,27 +79,27 @@ function getOptions(count, includeDesc) {
 }
 
 function getGroupOptions() {
-  let optGroupData = [];
+  const optGroupData = [];
 
-  for (let i = 1; i <= 3; i++) {
-    let label = `Option group ${i}`;
-    let options = [];
+  for (let i = 1; i <= 3; i += 1) {
+    const groupLabel = `Option group ${i}`;
+    const options = [];
 
-    for (let j = 1; j <= 3; j++) {
-      let value = `${i}-${j}`;
-      let label = `Option ${value}`;
+    for (let j = 1; j <= 3; j += 1) {
+      const value = `${i}-${j}`;
+      const label = `Option ${value}`;
 
-      options.push({ value: value, label: label });
+      options.push({ value, label });
     }
 
-    optGroupData.push({ label: label, options: options });
+    optGroupData.push({ label: groupLabel, options });
   }
 
   return optGroupData;
 }
 
 function onSampleServerSearch(searchValue, virtualSelect) {
-  let newOptions = searchValue ? getOptions().filter((d) => d.label.toLowerCase().indexOf(searchValue) !== -1) : [];
+  const newOptions = searchValue ? getOptions().filter((d) => d.label.toLowerCase().indexOf(searchValue) !== -1) : [];
 
   setTimeout(() => {
     virtualSelect.setServerOptions(newOptions);
@@ -116,7 +112,7 @@ function sampleLabelRenderer(data) {
   /** skipping options those are added newly by allowNewOption feature */
   if (!data.isCurrentNew && !data.isNew) {
     /** project developer has to add their own logic to create image/icon tag */
-    let flagIndex = data.value % flagClasses.length;
+    const flagIndex = data.value % flagClasses.length;
     prefix = `<i class="flag flag-${flagClasses[flagIndex]}"></i>`;
   } else {
     /** common image/icon could be added for new options */
@@ -126,18 +122,15 @@ function sampleLabelRenderer(data) {
 }
 
 function initVirtualSelect(options) {
-  VirtualSelect.init(
-    Object.assign(
-      {
-        options: getOptions(),
-        zIndex: 99,
-        dropboxWrapper: 'body',
-      },
-      options,
-    ),
-  );
+  VirtualSelect.init({
+    options: getOptions(),
+    zIndex: 99,
+    dropboxWrapper: 'body',
+    ...options,
+  });
 }
 
+// eslint-disable-next-line no-unused-vars
 function initPageGetStarted() {
   replacePlaceholdersForElement('.cover-main');
 
@@ -154,6 +147,7 @@ function initPageGetStarted() {
   });
 }
 
+// eslint-disable-next-line no-unused-vars
 function initPageExamples() {
   initVirtualSelect({
     ele: '#single-select',
@@ -204,7 +198,6 @@ function initPageExamples() {
 
   initVirtualSelect({
     ele: '#custom-width-select',
-    position: 'bottom right',
     dropboxWidth: '130px',
   });
 
@@ -252,7 +245,7 @@ function initPageExamples() {
 
   initVirtualSelect({
     ele: '#with-description-select',
-    options: getOptions(null, true),
+    options: getOptions(undefined, true),
     hasOptionDescription: true,
   });
 
@@ -303,11 +296,13 @@ function initPageExamples() {
     ele: '#disable-enable',
   });
 
-  document.querySelector('#disable-enable-switch').addEventListener('change', function (e) {
+  document.querySelector('#disable-enable-switch').addEventListener('change', (e) => {
+    const $ele = document.querySelector('#disable-enable');
+
     if (e.target.checked) {
-      document.querySelector('#disable-enable').enable();
+      $ele.enable();
     } else {
-      document.querySelector('#disable-enable').disable();
+      $ele.disable();
     }
   });
 
@@ -317,10 +312,11 @@ function initPageExamples() {
     required: true,
   });
 
-  document.querySelector('#validation-form').addEventListener('submit', function (e) {
+  document.querySelector('#validation-form').addEventListener('submit', (e) => {
     e.preventDefault();
 
-    if (VirtualSelect.validate(this)) {
+    if (VirtualSelect.validate(e.target)) {
+      // eslint-disable-next-line no-alert
       alert('Form submitted');
     }
   });

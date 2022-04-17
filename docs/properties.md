@@ -16,6 +16,7 @@
 | disabledOptions | Array | [] | List of values to disable options <br/>e.g - [2, 3, 9] |
 | multiple | Boolean | false | Enable multi-select |
 | search | Boolean | false - for single select <br/>true - for multi-select | Enable search feature |
+| searchGroup | Boolean | false | Include group title for searching |
 | disabled | Boolean | false | Disable dropdown |
 | required | Boolean | false | Enable required validation. <br/>It would be triggered automatically on form submit and value change. <br/>To trigger it manually use [validate()](methods?id=validate) method |
 | autofocus | Boolean | false | Autofocus dropdown on load |
@@ -25,7 +26,7 @@
 | disableSelectAll | Boolean | false | Disable select all feature of multiple select |
 | optionsCount | Number | 5 \| 4 | No.of options to show on viewport <br/>4 - When hasOptionDescription is true |
 | optionHeight | String | 40px \| 50px | Height of each dropdown options <br/>50px - When hasOptionDescription is true |
-| position | String | bottom | Position of dropbox (auto, top, bottom, top left, top right, bottom left, bottom right) |
+| position | String | bottom left | Position of dropbox (auto, top, bottom, top left, top right, bottom left, bottom right) |
 | textDirection | String | ltr | Direction of text (ltr or rtl) |
 | selectedValue | String \| Array | | Single value or array of values to select on init |
 | silentInitialValueSet | Boolean | false | To avoid "change event" trigger on setting initial value |
@@ -60,6 +61,7 @@
 | emptyValue | String | | Empty value to use for hidden input when no value is selected (e.g. 'null' or '[]' or 'none') |
 | disableValidation | Boolean | false | Disable required validation |
 | useGroupValue | Boolean | false | Group's value would be returned when all of its child options selected |
+| maxWidth | String | 250px | Maximum width for the select element |
 
 # Text Properties
 

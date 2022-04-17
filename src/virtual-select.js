@@ -39,6 +39,7 @@ const dataProps = [
   'labelKey',
   'markSearchResults',
   'maxValues',
+  'maxWidth',
   'moreText',
   'noOfDisplayValues',
   'noOptionsText',
@@ -65,92 +66,15 @@ const dataProps = [
   'tooltipAlignment',
   'tooltipFontSize',
   'tooltipMaxWidth',
+  'useGroupValue',
   'valueKey',
   'zIndex',
-  'useGroupValue',
 ];
 
 /** Class representing VirtualSelect */
 export class VirtualSelect {
   /**
-   * Create a VirtualSelect
-   * @property {(element|string)} ele - Parent element to render VirtualSelect
-   * @property {string=self} dropboxWrapper - Parent element to render dropbox. (self, body, or any css selectror)
-   * Use this when container of dropdown has overflow scroll or hiddden value.
-   * @property {object[]} options - Array of object to show as options
-   * @property {(string|number)} options[].value - Value of the option
-   * @property {(string|number)} options[].label - Display text of the option
-   * @property {(string|number)} [options[].description] - Text to show along with label
-   * @property {(string|array)} [options[].alias] - Alternative labels to use on search. Array of string or comma separated string.
-   * @property {any} [options[].customData] - Any custom data to store with the options and it would be available with getSelectedOptions() result.
-   * @property {array} [options[].options] - List of options for option group
-   * @property {string} [valueKey=value] - Object key to use to get value from options array
-   * @property {string} [labelKey=label] - Object key to use to get label from options array
-   * @property {string} [descriptionKey=description] - Object key to use to get description from options array
-   * @property {string} [aliasKey=alias] - Key name to get alias from options object
-   * @property {boolean} [multiple=false] - Enable multiselect
-   * @property {boolean} [search=false] - Enable search
-   * @property {boolean} [searchGroup=false] - Include group title for searching
-   * @property {boolean} [disabled=false] - Disable dropdown
-   * @property {boolean} [required=false] - Enable required validation
-   * @property {boolean} [autofocus=false] - Autofocus dropdown on load
-   * @property {boolean} [hideClearButton=false] - Hide clear button
-   * @property {boolean} [autoSelectFirstOption=false] - Select first option by default on load
-   * @property {boolean} [hasOptionDescription=false] - Has description to show along with label
-   * @property {boolean} [disableSelectAll=false] - Disable select all feature of multiple select
-   * @property {string} [optionsCount=5|4] - No.of options to show on viewport
-   * @property {string} [optionHeight=40px|50px] - Height of each dropdown options
-   * @property {string} [position=bottom] - Position of dropbox (top, bottom, auto)
-   * @property {string} [textDirection=ltr] - Direction of text (ltr or rtl)
-   * @property {array} [disabledOptions] - Options to disable (array of values)
-   * @property {(string|array)} [selectedValue] - Single value or array of values to select on init
-   * @property {boolean} [silentInitialValueSet=false] - To avoid "change event" trigger on setting initial value
-   * @property {string} [dropboxWidth] - Custom width for dropbox
-   * @property {number} [zIndex=1] - CSS z-index value for dropbox
-   * @property {number} [noOfDisplayValues=50] - Maximum no.of values to show in the tooltip for multi-select
-   * @property {boolean} [allowNewOption=false] - Allow to add new option by searching
-   * @property {boolean} [markSearchResults=false] - Mark matched term in label
-   * @property {string} [tooltipFontSize=14px] - Font size for tooltip
-   * @property {string} [tooltipAlignment=center] - CSS Text alignment for tooltip
-   * @property {string} [tooltipMaxWidth=300px] - CSS max width for tooltip
-   * @property {boolean} [showSelectedOptionsFirst=false] - Show selected options at the top of the dropbox
-   * @property {string} [name] - Name attribute for hidden input
-   * @property {boolean} [keepAlwaysOpen] - Keep dropbox always open with fixed height
-   * @property {number} [maxValues=0] - Maximum no.of options allowed to choose in multiple select
-   * @property {string} [additionalClasses] - Additional classes for wrapper element
-   * @property {boolean} [showDropboxAsPopup=true] - Show dropbox as popup on small screen like mobile
-   * @property {string} [popupDropboxBreakpoint=576px] - Maximum screen width that allowed to show dropbox as popup
-   * @property {string} [popupPosition=center] - Position of the popup (left, center, or right)
-   * @property {function} [onServerSearch] - Callback function to integrate server search
-   * @property {function} [labelRenderer] - Callback function to render label, which could be used to add image, icon, or custom content
-   * @property {string} [ariaLabelledby] - ID of the label element to use as a11y attribute aria-labelledby
-   * @property {boolean} [hideValueTooltipOnSelectAll=true] - Hide value tooltip if all options selected
-   * @property {boolean} [showOptionsOnlyOnSearch=false] - Show options to select only if search value is not empty
-   * @property {boolean} [selectAllOnlyVisible=false] - Select only visible options on clicking select all checkbox when options filtered by search
-   * @property {boolean} [alwaysShowSelectedOptionsCount=false] - By default, no.of options selected text would be shown
-   * when there is no enough space to show all selected values. Set true to override this.
-   * @property {boolean} [disableAllOptionsSelectedText=false] - By default, when all values selected "All (10)" value text would be shown.
-   * Set true to show value text as "10 options selected".
-   * @property {boolean} [showValueAsTags=false] - Show each selected values as tags with remove icon
-   * @property {boolean} [disableOptionGroupCheckbox=false] - Disable option group title checkbox
-   * @property {boolean} [enableSecureText=false] - Set true to replace HTML tags from option's text (value and label) to prevent XSS attack.
-   * This feature is not enabled by default to avoid performance issue.
-   * @property {boolean} [setValueAsArray=false] - Set value for hidden input in array format (e.g. '["1", "2"]')
-   * @property {string} [emptyValue=''] - Empty value to use for hidden input when no value is selected (e.g. 'null' or '[]' or 'none')
-   * @property {boolean} [disableValidation=false] - Disable required validation
-   * @property {boolean} [useGroupValue=false] - Group's value would be returned when all of its child options selected
-   *
-   * @property {string} [placeholder=Select] - Text to show when no options selected
-   * @property {string} [noOptionsText=No options found] - Text to show when no options to show
-   * @property {string} [noSearchResultsText=No results found] - Text to show when no results on search
-   * @property {string} [selectAllText=Select all] - Text to show near select all checkbox when search is disabled
-   * @property {string} [searchPlaceholderText=Search...] - Text to show as placeholder for search input
-   * @property {string} [optionsSelectedText=options selected] - Text to use when displaying no.of values selected text (i.e. 3 options selected)
-   * @property {string} [optionSelectedText=option selected] - Text to use when displaying no.of values selected text
-   * and only one value is selected (i.e. 1 option selected)
-   * @property {string} [allOptionsSelectedText=All] - Text to use when displaying all values selected text (i.e. All (10))
-   * @property {string} [clearButtonText=Clear] - Tooltip text for clear button
-   * @property {string} [moreText=more...] - Text to show when more than noOfDisplayValues options selected (i.e + 10 more...)
+   * @param {virtualSelectOptions} options
    */
   constructor(options) {
     try {
@@ -160,7 +84,9 @@ export class VirtualSelect {
       this.setOptions(options.options);
       this.render();
     } catch (e) {
-      console.warn(`Couldn't initiate Virtual Select`);
+      // eslint-disable-next-line no-console
+      console.warn('Couldn\'t initiate Virtual Select');
+      // eslint-disable-next-line no-console
       console.error(e);
     }
   }
@@ -171,7 +97,7 @@ export class VirtualSelect {
       return;
     }
 
-    const uniqueId = this.uniqueId;
+    const { uniqueId } = this;
     let wrapperClasses = 'vscomp-wrapper';
     let valueTooltip = this.getTooltipAttrText(this.placeholder, true, true);
     let clearButtonTooltip = this.getTooltipAttrText(this.clearButtonText);
@@ -322,6 +248,7 @@ export class VirtualSelect {
     let disableOptionGroupCheckbox = this.disableOptionGroupCheckbox;
     let hasLabelRenderer = typeof labelRenderer === 'function';
     const uniqueId = this.uniqueId;
+    const searchGroup = this.searchGroup;
     const convertToBoolean = Utils.convertToBoolean;
 
     if (markSearchResults) {
@@ -389,7 +316,7 @@ export class VirtualSelect {
         optionClasses += ' current-new';
         rightSection += newOptionIconHtml;
       } else {
-        if (markSearchResults && !d.isGroupTitle) {
+        if (markSearchResults && (!d.isGroupTitle || searchGroup)) {
           optionLabel = optionLabel.replace(searchRegex, '<mark>$1</mark>');
         }
       }
@@ -672,6 +599,7 @@ export class VirtualSelect {
     DomUtils.addClass(this.$ele, 'vscomp-ele');
 
     this.renderSearch();
+    this.setEleStyles();
     this.setDropboxStyles();
     this.setOptionsHeight();
     this.setVisibleOptions();
@@ -770,6 +698,9 @@ export class VirtualSelect {
   /** after event methods - end */
 
   /** set methods - start */
+  /**
+   * @param {virtualSelectOptions} options
+   */
   setProps(options) {
     options = this.setDefaultProps(options);
     this.setPropsFromElementAttr(options);
@@ -786,7 +717,7 @@ export class VirtualSelect {
     this.optionHeight = parseFloat(this.optionHeightText);
     this.multiple = convertToBoolean(options.multiple);
     this.hasSearch = convertToBoolean(options.search);
-    // this.searchGroup = convertToBoolean(options.searchGroup);
+    this.searchGroup = convertToBoolean(options.searchGroup);
     this.hideClearButton = convertToBoolean(options.hideClearButton);
     this.autoSelectFirstOption = convertToBoolean(options.autoSelectFirstOption);
     this.hasOptionDescription = convertToBoolean(options.hasOptionDescription);
@@ -839,8 +770,11 @@ export class VirtualSelect {
     this.initialSelectedValue = options.selectedValue === 0 ? '0' : options.selectedValue;
     this.emptyValue = options.emptyValue;
     this.ariaLabelledby = options.ariaLabelledby;
+    this.maxWidth = options.maxWidth;
 
+    /** @type {string[]} */
     this.selectedValues = [];
+    /** @type {virtualSelectOption[]} */
     this.selectedOptions = [];
     this.newValues = [];
     this.events = {};
@@ -892,7 +826,7 @@ export class VirtualSelect {
       optionSelectedText: 'option selected',
       allOptionsSelectedText: 'All',
       placeholder: 'Select',
-      position: 'bottom',
+      position: 'bottom left',
       zIndex: options.keepAlwaysOpen ? 1 : 2,
       tooltipFontSize: '14px',
       tooltipAlignment: 'center',
@@ -968,6 +902,7 @@ export class VirtualSelect {
 
   setValueMethod(value, silentChange) {
     let valuesMapping = {};
+    let valuesOrder = {};
     let validValues = [];
     let isMultiSelect = this.multiple;
 
@@ -996,8 +931,9 @@ export class VirtualSelect {
         value = this.setGroupOptionsValue(value);
       }
 
-      value.forEach((d) => {
+      value.forEach((d, i) => {
         valuesMapping[d] = true;
+        valuesOrder[d] = i;
       });
 
       if (this.allowNewOption && value) {
@@ -1018,6 +954,9 @@ export class VirtualSelect {
       if (this.hasOptionGroup) {
         this.setGroupsSelectedProp();
       }
+
+      /** sorting validValues in the given values order */
+      validValues.sort((a, b) => valuesOrder[a] - valuesOrder[b]);
     } else {
       validValues = validValues[0];
     }
@@ -1361,6 +1300,7 @@ export class VirtualSelect {
   }
 
   setValueText() {
+    const multiple = this.multiple;
     let valueText = [];
     let valueTooltip = [];
     let selectedValues = this.selectedValues;
@@ -1420,7 +1360,7 @@ export class VirtualSelect {
       } else {
         $valueText.innerHTML = aggregatedValueText;
 
-        if (this.multiple) {
+        if (multiple) {
           let maxValues = this.maxValues;
 
           if (DomUtils.hasEllipsis($valueText) || maxValues || this.alwaysShowSelectedOptionsCount || showValueAsTags) {
@@ -1461,8 +1401,12 @@ export class VirtualSelect {
 
     DomUtils.setData($valueText, 'tooltip', tooltipText);
 
-    if (this.multiple) {
+    if (multiple) {
       DomUtils.setData($valueText, 'tooltipEllipsisOnly', selectedLength === 0);
+
+      if (showValueAsTags) {
+        this.updatePosition();
+      }
     }
   }
 
@@ -1555,6 +1499,7 @@ export class VirtualSelect {
     if (reset) {
       if (this.showAsPopup) {
         this.optionsCount = this.getOptionsCount();
+        this.halfOptionsCount = Math.ceil(this.optionsCount / 2);
         optionsHeight = this.getOptionsHeight();
         this.optionsHeight = optionsHeight;
       }
@@ -1644,6 +1589,17 @@ export class VirtualSelect {
     let width = this.dropboxWidth || `${this.$wrapper.offsetWidth}px`;
 
     DomUtils.setStyle(this.$dropboxContainer, 'max-width', width);
+  }
+
+  setEleStyles() {
+    const maxWidth = this.maxWidth;
+    const styles = {};
+
+    if (maxWidth) {
+      styles['max-width'] = maxWidth;
+    }
+
+    DomUtils.setStyles(this.$ele, styles);
   }
 
   setDropboxStyles() {
@@ -2807,6 +2763,12 @@ export class VirtualSelect {
 
     let instances = [];
     $eleArray.forEach(($ele) => {
+      /** skipping initialization on calling init method multiple times */
+      if ($ele.virtualSelect) {
+        instances.push($ele.virtualSelect);
+        return;
+      }
+
       options.ele = $ele;
 
       if ($ele.tagName === 'SELECT') {

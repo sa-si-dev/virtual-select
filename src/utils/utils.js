@@ -1,22 +1,35 @@
-/* eslint-disable */
-// @ts-nocheck
 export class Utils {
+  /**
+   * @param {any} text
+   * @returns {string}
+   */
   static getString(text) {
     return text || text === 0 ? text.toString() : '';
   }
 
+  /**
+   * @param {any} value
+   * @param {boolean} defaultValue
+   * @returns {boolean}
+   */
   static convertToBoolean(value, defaultValue = false) {
+    let result;
+
     if (value === true || value === 'true') {
-      value = true;
+      result = true;
     } else if (value === false || value === 'false') {
-      value = false;
+      result = false;
     } else {
-      value = defaultValue;
+      result = defaultValue;
     }
 
-    return value;
+    return result;
   }
 
+  /**
+   * @param {any} value
+   * @returns {boolean}
+   */
   static isEmpty(value) {
     let result = false;
 
@@ -35,28 +48,39 @@ export class Utils {
     return result;
   }
 
+  /**
+   * @param {any} value
+   * @returns {boolean}
+   */
   static isNotEmpty(value) {
     return !this.isEmpty(value);
   }
 
-  static removeItemFromArray(array, value, cloneArray) {
+  /**
+   * @param {any[]} array
+   * @param {any} value
+   * @param {boolean} cloneArray
+   * @returns {any[]}
+   */
+  static removeItemFromArray(array, value, cloneArray = false) {
     if (!Array.isArray(array) || !array.length) {
       return array;
     }
 
-    if (cloneArray) {
-      array = [...array];
-    }
-
-    let index = array.indexOf(value);
+    const inputArr = cloneArray ? [...array] : array;
+    const index = inputArr.indexOf(value);
 
     if (index !== -1) {
-      array.splice(index, 1);
+      inputArr.splice(index, 1);
     }
 
-    return array;
+    return inputArr;
   }
 
+  /**
+   * @param {any[]} array
+   * @returns {any[]}
+   */
   static removeArrayEmpty(array) {
     if (!Array.isArray(array) || !array.length) {
       return [];
@@ -68,6 +92,7 @@ export class Utils {
   /**
    * @param {number} max
    * @param {number} max
+   * @returns {number}
    */
   static getRandomInt(max, min = 0) {
     const minN = Math.ceil(min);

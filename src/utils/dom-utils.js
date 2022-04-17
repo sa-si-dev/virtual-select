@@ -1,48 +1,60 @@
 /* eslint-disable */
 // @ts-nocheck
-import { Utils } from './index';
+import { Utils } from './utils';
 
 export class DomUtils {
-  static addClass($ele, className) {
+  /**
+   * @param {HTMLElement | NodeListOf<HTMLElement>} $ele
+   * @param {string} classNames
+   */
+  static addClass($ele, classNames) {
     if (!$ele) {
       return;
     }
 
-    className = className.split(' ');
+    const classNamesArr = classNames.split(' ');
 
     DomUtils.getElements($ele).forEach(($this) => {
-      $this.classList.add(...className);
+      $this.classList.add(...classNamesArr);
     });
   }
 
-  static removeClass($ele, className) {
+  /**
+   * @param {HTMLElement | NodeListOf<HTMLElement>} $ele
+   * @param {string} classNames
+   */
+  static removeClass($ele, classNames) {
     if (!$ele) {
       return;
     }
 
-    className = className.split(' ');
+    const classNamesArr = classNames.split(' ');
 
     DomUtils.getElements($ele).forEach(($this) => {
-      $this.classList.remove(...className);
+      $this.classList.remove(...classNamesArr);
     });
   }
 
-  static toggleClass($ele, className, isAdd) {
+  /**
+   * @param {HTMLElement | NodeListOf<HTMLElement>} $ele
+   * @param {string} classNames
+   * @param {boolean} [isAdd]
+   */
+  static toggleClass($ele, classNames, isAdd) {
     if (!$ele) {
       return;
     }
+
+    /** @type {boolean | undefined} */
+    let isAdding;
 
     if (isAdd !== undefined) {
-      isAdd = Boolean(isAdd);
+      isAdding = Boolean(isAdd);
     }
 
-    let isAdded;
-
     DomUtils.getElements($ele).forEach(($this) => {
-      isAdded = $this.classList.toggle(className, isAdd);
+      $this.classList.toggle(classNames, isAdding);
     });
-
-    return isAdded;
   }
 
   static hasClass($ele, className) {
@@ -141,16 +153,16 @@ export class DomUtils {
     $ele.setAttribute(attrName, value);
   }
 
+  /**
+   * @param {any} $ele
+   * @returns {any[]}
+   */
   static getElements($ele) {
     if (!$ele) {
-      return;
+      return [];
     }
 
-    if ($ele.forEach === undefined) {
-      $ele = [$ele];
-    }
-
-    return $ele;
+    return $ele.forEach === undefined ? [$ele] : $ele;
   }
 
   static addEvent($ele, events, callback) {
@@ -184,7 +196,10 @@ export class DomUtils {
     }, 0);
   }
 
-  /** convert object to dom attributes */
+  /**
+   * convert object to dom attributes
+   * @param {any} data
+   */
   static getAttributesText(data) {
     let html = '';
 
@@ -192,18 +207,19 @@ export class DomUtils {
       return html;
     }
 
-    for (let k in data) {
-      let value = data[k];
-
-      if (value !== undefined) {
-        html += ` ${k}="${value}" `;
+    Object.entries(data).forEach(([k, v]) => {
+      if (v !== undefined) {
+        html += ` ${k}="${v}" `;
       }
-    }
+    });
 
     return html;
   }
 
-  /** convert "maxValue" to "data-max-value" */
+  /**
+   * convert "maxValue" to "data-max-value"
+   * @param {string} prop
+   */
   static convertPropToDataAttr(prop) {
     return prop ? `data-${prop}`.replace(/([A-Z])/g, '-$1').toLowerCase() : '';
   }
