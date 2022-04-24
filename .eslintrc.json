@@ -20,6 +20,9 @@
 
   "rules": {
     "import/prefer-default-export": "off",
+    "quote-props": ["error", "consistent"],
+    "operator-linebreak": ["error", "after", { "overrides": { "?": "before", ":": "before" } }],
+    "radix": ["error", "as-needed"],
     "max-len": [
       "error",
       {
@@ -31,7 +34,6 @@
       {
         "ObjectPattern": { "multiline": true }
       }
-    ],
-    "operator-linebreak": ["error", "after", { "overrides": { "?": "before", ":": "before" } }]
+    ]
   }
 }

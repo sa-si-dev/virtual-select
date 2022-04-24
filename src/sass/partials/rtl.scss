@@ -2,22 +2,22 @@
   direction: rtl;
 
   .vscomp-toggle-button {
-    padding: 7px 10px 7px $arrowWidth;
+    padding: 7px 10px 7px $arrow-width;
   }
 
   .vscomp-arrow {
-    right: auto;
     left: 0;
+    right: auto;
   }
 
   .vscomp-clear-button {
+    left: $arrow-width;
     right: auto !important;
-    left: $arrowWidth;
   }
 
   .checkbox-icon {
+    margin-left: $option-checkbox-margin;
     margin-right: 0;
-    margin-left: $optionCheckboxMargin;
 
     &.checked::after {
       @include checkbox-checked-rtl;
@@ -41,17 +41,17 @@
   }
 
   .vscomp-new-option-icon {
-    right: auto;
     left: 0;
+    right: auto;
 
     &::before {
-      border-left-color: $primaryColor;
+      border-left-color: $primary-color;
       border-right-color: transparent;
     }
 
     &::after {
-      right: auto;
       left: 1px;
+      right: auto;
     }
   }
 
@@ -65,13 +65,13 @@
 
   &.has-clear-button {
     .vscomp-toggle-button {
-      padding-left: #{$arrowWidth + $clearButtonWidth};
+      padding-left: #{$arrow-width + $clear-button-width};
     }
   }
 
   &.keep-always-open {
     .vscomp-toggle-button {
-      padding-left: $clearButtonWidth;
+      padding-left: $clear-button-width;
     }
 
     .vscomp-clear-button {

@@ -1,22 +1,22 @@
-body.vscomp-popup-active {
-  overflow: hidden;
+.vscomp-popup-active {
+  overflow: hidden !important;
 }
 
 .vscomp-ele {
   display: inline-block;
-  width: 100%;
   max-width: 250px;
+  width: 100%;
 }
 
 .vscomp-wrapper {
+  color: $font-color;
   display: inline-flex;
-  position: relative;
-  width: 100%;
-  font-family: $fontFamily;
-  font-size: $fontSize;
-  color: $fontColor;
-  text-align: left;
   flex-wrap: wrap;
+  font-family: $font-family;
+  font-size: $font-size;
+  position: relative;
+  text-align: left;
+  width: 100%;
 
   *,
   *::before,
@@ -30,67 +30,67 @@ body.vscomp-popup-active {
 }
 
 .vscomp-dropbox-wrapper {
+  left: 0;
   position: absolute;
   top: 0;
-  left: 0;
 }
 
 .vscomp-toggle-button {
-  display: flex;
-  position: relative;
   align-items: center;
-  width: 100%;
-  padding: 7px $arrowWidth 7px 10px;
-  border: 1px solid $borderColor;
-  background-color: $primaryBg;
+  background-color: $primary-bg;
+  border: 1px solid $border-color;
   cursor: pointer;
+  display: flex;
+  padding: 7px $arrow-width 7px 10px;
+  position: relative;
+  width: 100%;
 }
 
 .vscomp-value {
-  max-width: 100%;
   height: 20px;
   line-height: 20px;
+  max-width: 100%;
   overflow: hidden;
-  white-space: nowrap;
   text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .vscomp-arrow {
-  position: absolute;
-  display: flex;
-  top: 0;
-  right: 0;
-  width: $arrowWidth;
-  height: 100%;
   align-items: center;
+  display: flex;
+  height: 100%;
   justify-content: center;
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: $arrow-width;
 
   &::after {
-    content: '';
     @include prefix(transform, rotate(45deg));
     border: 1px solid transparent;
-    border-right-color: $arrowColor;
-    border-bottom-color: $arrowColor;
-    width: $arrowSize;
-    height: $arrowSize;
+    border-bottom-color: $arrow-color;
+    border-right-color: $arrow-color;
+    content: '';
+    height: $arrow-size;
     margin-top: -6px;
+    width: $arrow-size;
   }
 }
 
 .vscomp-clear-icon {
+  height: $clear-icon-size;
   position: relative;
-  width: $clearIconSize;
-  height: $clearIconSize;
+  width: $clear-icon-size;
 
   &::before,
   &::after {
+    background-color: #999;
     content: '';
+    height: $clear-icon-size;
+    left: 5px;
     position: absolute;
     top: 0;
-    left: 5px;
     width: 2px;
-    height: $clearIconSize;
-    background-color: #999;
   }
 
   &::before {
@@ -104,48 +104,48 @@ body.vscomp-popup-active {
   &:hover {
     &::before,
     &::after {
-      background: $iconHoverColor;
+      background: $icon-hover-color;
     }
   }
 }
 
 .vscomp-clear-button {
-  position: absolute;
-  display: none;
-  top: 50%;
-  right: $arrowWidth;
-  width: $clearButtonWidth;
-  height: $clearButtonWidth;
-  justify-content: center;
   align-items: center;
   border-radius: 50%;
-  margin-top: math.div($clearButtonWidth, -2);
+  display: none;
+  height: $clear-button-width;
+  justify-content: center;
+  margin-top: math.div($clear-button-width, -2);
+  position: absolute;
+  right: $arrow-width;
+  top: 50%;
+  width: $clear-button-width;
 
   &:hover {
-    background: $focusColor;
+    background: $focus-color;
 
     .vscomp-clear-icon {
       &::before,
       &::after {
-        background-color: $iconHoverColor;
+        background-color: $icon-hover-color;
       }
     }
   }
 }
 
 .vscomp-dropbox-close-button {
-  display: none;
   align-items: center;
-  justify-content: center;
-  position: absolute;
-  left: 50%;
-  margin-left: math.div($dropboxCloseButtonWidth, -2);
-  bottom: -#{$dropboxCloseButtonWidth + $dropboxCloseButtonOffset};
-  width: $dropboxCloseButtonWidth;
-  height: $dropboxCloseButtonWidth;
-  background-color: $primaryBg;
+  background-color: $primary-bg;
   border-radius: 50%;
+  bottom: -#{$dropbox-close-button-width + $dropbox-close-button-offset};
   cursor: pointer;
+  display: none;
+  height: $dropbox-close-button-width;
+  justify-content: center;
+  left: 50%;
+  margin-left: math.div($dropbox-close-button-width, -2);
+  position: absolute;
+  width: $dropbox-close-button-width;
 }
 
 .vscomp-value-tag {
@@ -156,55 +156,54 @@ body.vscomp-popup-active {
 
 .vscomp-dropbox-container {
   width: 100%;
-  z-index: $zIndex + 1;
+  z-index: $z-index + 1;
 }
 
 .vscomp-dropbox {
+  background-color: $primary-bg;
   width: 100%;
-  background-color: $primaryBg;
 }
 
 .vscomp-options-container {
-  position: relative;
-  max-height: #{$dropboxHeight - $searchHeight};
+  max-height: #{$dropbox-height - $search-height};
   overflow: auto;
+  position: relative;
 }
 
 .vscomp-options-bottom-freezer {
-  position: absolute;
   bottom: 0;
-  left: 0;
-  right: 0;
   height: 2px;
+  left: 0;
+  position: absolute;
+  right: 0;
 }
 
 .vscomp-option {
-  display: flex;
-  flex-wrap: wrap;
-  position: relative;
-  align-items: center;
-  padding: 0 15px;
-  height: $optionHeight;
   align-items: center;
   cursor: pointer;
+  display: flex;
+  flex-wrap: wrap;
+  height: $option-height;
+  padding: 0 15px;
+  position: relative;
 
   &.selected {
-    background-color: $selectedColor;
+    background-color: $selected-color;
   }
 
   &.focused {
-    background-color: $focusColor;
+    background-color: $focus-color;
   }
 
   &.disabled {
-    opacity: 0.5;
     cursor: default;
+    opacity: 0.5;
   }
 
   &.group-title {
     .vscomp-option-text {
-      opacity: 0.6;
       cursor: default;
+      opacity: 0.6;
     }
 
     &.selected {
@@ -218,68 +217,68 @@ body.vscomp-popup-active {
 }
 
 .vscomp-new-option-icon {
+  height: $new-option-icon-width;
   position: absolute;
-  top: 0;
   right: 0;
-  width: $newOptionIconWidth;
-  height: $newOptionIconWidth;
+  top: 0;
+  width: $new-option-icon-width;
 
   &::before {
+    border: math.div($new-option-icon-width, 2) solid $primary-color;
+    border-bottom-color: transparent;
+    border-left-color: transparent;
     content: '';
     position: absolute;
-    top: 0;
     right: 0;
-    border: math.div($newOptionIconWidth, 2) solid $primaryColor;
-    border-left-color: transparent;
-    border-bottom-color: transparent;
+    top: 0;
   }
 
   &::after {
+    align-items: center;
+    color: #fff;
     content: '+';
     display: flex;
-    align-items: center;
+    font-size: 18px;
+    height: math.div($new-option-icon-width, 2);
     justify-content: center;
     position: absolute;
-    top: 0;
     right: 1px;
-    font-size: 18px;
-    color: #fff;
-    width: math.div($newOptionIconWidth, 2);
-    height: math.div($newOptionIconWidth, 2);
+    top: 0;
+    width: math.div($new-option-icon-width, 2);
   }
 }
 
 .vscomp-option-text {
   @include ellipse;
-  width: 100%;
   user-select: none;
+  width: 100%;
 }
 
 .vscomp-option-description {
   @include ellipse;
-  width: 100%;
+  color: $font-color-light;
+  font-size: $font-size-small;
   line-height: 15px;
-  color: $fontColorLight;
-  font-size: $fontSizeSmall;
+  width: 100%;
 }
 
 .vscomp-search-container {
-  display: flex;
   align-items: center;
-  position: relative;
-  height: $searchHeight;
+  border-bottom: 1px solid $border-color;
+  display: flex;
+  height: $search-height;
   padding: 0 5px 0 15px;
-  border-bottom: 1px solid $borderColor;
+  position: relative;
 }
 
 .vscomp-search-input {
-  border: none;
-  width: calc(100% - #{$searchClearWidth});
-  height: #{$searchHeight - 2px};
-  padding: 10px 0;
-  font-size: 15px;
   background-color: transparent;
+  border: 0;
   color: inherit;
+  font-size: 15px;
+  height: #{$search-height - 2px};
+  padding: 10px 0;
+  width: calc(100% - #{$search-clear-width});
 
   &:focus {
     outline: none;
@@ -287,16 +286,16 @@ body.vscomp-popup-active {
 }
 
 .vscomp-search-clear {
-  display: flex;
   align-items: center;
-  justify-content: center;
-  width: $searchClearWidth;
-  height: $searchClearWidth;
-  font-size: 25px;
   color: #999;
   cursor: pointer;
+  display: flex;
+  font-size: 25px;
+  height: $search-clear-width;
+  justify-content: center;
   user-select: none;
   visibility: hidden;
+  width: $search-clear-width;
 
   &:hover {
     color: inherit;
@@ -305,27 +304,27 @@ body.vscomp-popup-active {
 
 .vscomp-no-options,
 .vscomp-no-search-results {
+  align-items: center;
   display: none;
   justify-content: center;
-  align-items: center;
   padding: 20px 10px;
 }
 
 .vscomp-options-loader {
   display: none;
-  text-align: center;
   padding: 20px 0;
+  text-align: center;
 
   &::before {
+    @include prefix(animation, vscomp-animation-spin 0.8s infinite linear);
+    background-color: $primary-bg;
+    border-radius: 50%;
+    box-shadow: -4px -5px 3px -3px rgba(0, 0, 0, 0.3);
     content: '';
     display: inline-block;
-    height: $optionsLoaderSize;
-    width: $optionsLoaderSize;
+    height: $options-loader-size;
     opacity: 0.7;
-    border-radius: 50%;
-    background-color: $primaryBg;
-    box-shadow: -4px -5px 3px -3px rgba(0, 0, 0, 0.3);
-    @include prefix(animation, vscomp-animation-spin 0.8s infinite linear);
+    width: $options-loader-size;
   }
 }
 
@@ -335,8 +334,8 @@ body.vscomp-popup-active {
     user-select: none;
 
     .vscomp-wrapper {
-      pointer-events: none;
       opacity: 0.7;
+      pointer-events: none;
     }
   }
 }
@@ -344,18 +343,18 @@ body.vscomp-popup-active {
 .vscomp-wrapper {
   .checkbox-icon {
     display: inline-flex;
+    height: 15px;
+    margin-right: $option-checkbox-margin;
     position: relative;
     width: 15px;
-    height: 15px;
-    margin-right: $optionCheckboxMargin;
 
     &::after {
+      @include prefix(transition-duration, 0.2s);
+      border: 2px solid $checkbox-color;
       content: '';
       display: inline-block;
-      width: 100%;
       height: 100%;
-      border: 2px solid $checkboxColor;
-      @include prefix(transition-duration, 0.2s);
+      width: 100%;
     }
 
     &.checked::after {
@@ -365,26 +364,26 @@ body.vscomp-popup-active {
 
   &.show-as-popup {
     .vscomp-dropbox-container {
-      display: flex;
-      justify-content: center;
       align-items: center;
+      background-color: $overlay-bg;
+      display: flex;
+      height: 100vh;
+      justify-content: center;
+      left: 0;
+      opacity: 1;
+      overflow: auto;
+      padding: 0 10px;
       position: fixed;
       top: 0;
-      left: 0;
       width: 100vw;
-      height: 100vh;
-      overflow: auto;
-      opacity: 1;
-      background-color: $overlayBg;
-      padding: 0 10px;
     }
 
     .vscomp-dropbox {
+      margin-top: math.div(($dropbox-close-button-width + $dropbox-close-button-offset), -2);
+      max-height: calc(80% - #{$dropbox-close-button-width + $dropbox-close-button-offset});
+      max-width: 500px;
       position: relative;
       width: 80%;
-      max-height: calc(80% - #{$dropboxCloseButtonWidth + $dropboxCloseButtonOffset});
-      max-width: 500px;
-      margin-top: math.div(($dropboxCloseButtonWidth + $dropboxCloseButtonOffset), -2);
     }
 
     .vscomp-dropbox-close-button {
@@ -406,14 +405,14 @@ body.vscomp-popup-active {
 
   &.has-select-all {
     .vscomp-toggle-all-button {
-      display: flex;
       align-items: center;
       cursor: pointer;
+      display: flex;
     }
 
     .vscomp-search-input,
     .vscomp-toggle-all-label {
-      width: calc(100% - #{$searchClearWidth + $checkboxFullWidth});
+      width: calc(100% - #{$search-clear-width + $checkbox-full-width});
     }
 
     .vscomp-toggle-all-label {
@@ -434,11 +433,11 @@ body.vscomp-popup-active {
   &.multiple {
     .vscomp-option {
       .vscomp-option-text {
-        width: calc(100% - #{$checkboxFullWidth});
+        width: calc(100% - #{$checkbox-full-width});
       }
 
       .vscomp-option-description {
-        padding-left: $checkboxFullWidth;
+        padding-left: $checkbox-full-width;
       }
 
       &.selected .checkbox-icon::after {
@@ -450,7 +449,7 @@ body.vscomp-popup-active {
   &.focused,
   &:focus {
     .vscomp-toggle-button {
-      box-shadow: $boxShadow1;
+      box-shadow: $box-shadow1;
     }
   }
 
@@ -473,7 +472,7 @@ body.vscomp-popup-active {
     }
 
     .vscomp-toggle-button {
-      padding-right: #{$arrowWidth + $clearButtonWidth};
+      padding-right: #{$arrow-width + $clear-button-width};
     }
   }
 
@@ -511,7 +510,7 @@ body.vscomp-popup-active {
 
   &.keep-always-open {
     .vscomp-toggle-button {
-      padding-right: $clearButtonWidth;
+      padding-right: $clear-button-width;
     }
 
     .vscomp-clear-button {
@@ -524,19 +523,19 @@ body.vscomp-popup-active {
 
     .vscomp-dropbox-container {
       position: relative;
-      z-index: $zIndex;
+      z-index: $z-index;
     }
 
     .vscomp-dropbox {
       @include prefix(transition-duration, 0s);
+      border: 1px solid $border-color;
       box-shadow: none;
-      border: 1px solid $borderColor;
     }
 
     &.focused,
     &:focus,
     &:hover {
-      box-shadow: $boxShadow1;
+      box-shadow: $box-shadow1;
     }
   }
 
@@ -552,7 +551,7 @@ body.vscomp-popup-active {
 
   &.has-error {
     .vscomp-toggle-button {
-      border-color: $errorColor;
+      border-color: $error-color;
     }
   }
 
@@ -567,21 +566,21 @@ body.vscomp-popup-active {
       height: auto;
       min-height: 28px;
       overflow: auto;
-      white-space: normal;
       text-overflow: unset;
+      white-space: normal;
     }
 
     .vscomp-value-tag {
       @include ellipse;
-      display: inline-flex;
       align-items: center;
-      max-width: 100%;
       border: 1px solid #ddd;
-      margin: 0 4px 4px 0;
-      padding: 2px 3px 2px 8px;
+      border-radius: 20px;
+      display: inline-flex;
       font-size: 12px;
       line-height: 16px;
-      border-radius: 20px;
+      margin: 0 4px 4px 0;
+      max-width: 100%;
+      padding: 2px 3px 2px 8px;
 
       &.more-value-count {
         padding-right: 8px;
@@ -590,18 +589,17 @@ body.vscomp-popup-active {
 
     .vscomp-value-tag-content {
       @include ellipse;
-      width: calc(100% - #{$valueTagClearWidth});
+      width: calc(100% - #{$value-tag-clear-width});
     }
 
     .vscomp-value-tag-clear-button {
-      display: flex;
       align-items: center;
+      display: flex;
+      height: $value-tag-clear-width;
       justify-content: center;
-      width: $valueTagClearWidth;
-      height: $valueTagClearWidth;
+      width: $value-tag-clear-width;
 
       .vscomp-clear-icon {
-        -webkit-transform: scale(0.8);
         transform: scale(0.8);
       }
     }

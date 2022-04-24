@@ -1,7 +1,9 @@
 const path = require('path');
 const webpack = require('webpack');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+// eslint-disable-next-line import/no-extraneous-dependencies
 const TerserPlugin = require('terser-webpack-plugin');
+const UnminifiedWebpackPlugin = require('unminified-webpack-plugin');
 const FileManagerPlugin = require('filemanager-webpack-plugin');
 const { version } = require('./package.json');
 
@@ -37,7 +39,7 @@ module.exports = (env, options) => {
             delete: ['dist'],
           },
           onEnd: {
-            delete: ['dist/styles.min.js'],
+            delete: ['dist/styles.min.js', 'dist/styles.js', 'dist/virtual-select.css'],
             copy: [
               { source: 'node_modules/tooltip-plugin/dist', destination: 'docs/assets' },
               { source: 'dist', destination: 'docs/assets' },
@@ -55,6 +57,8 @@ module.exports = (env, options) => {
         new TerserPlugin({
           extractComments: false,
         }),
+
+        new UnminifiedWebpackPlugin(),
       ],
     },
 

@@ -4,11 +4,11 @@
 }
 
 @mixin checkbox-checked {
-  width: 50%;
-  border-color: $primaryColor;
+  @include prefix(transform, rotate(45deg) translate(1px, -4px));
+  border-color: $primary-color;
   border-left-color: transparent;
   border-top-color: transparent;
-  @include prefix(transform, rotate(45deg) translate(1px, -4px));
+  width: 50%;
 }
 
 @mixin checkbox-checked-rtl {
@@ -16,7 +16,7 @@
 }
 
 @mixin ellipse {
+  overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  overflow: hidden;
 }

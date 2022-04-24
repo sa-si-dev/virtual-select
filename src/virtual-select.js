@@ -85,7 +85,7 @@ export class VirtualSelect {
       this.render();
     } catch (e) {
       // eslint-disable-next-line no-console
-      console.warn('Couldn\'t initiate Virtual Select');
+      console.warn("Couldn't initiate Virtual Select");
       // eslint-disable-next-line no-console
       console.error(e);
     }
@@ -99,13 +99,13 @@ export class VirtualSelect {
 
     const { uniqueId } = this;
     let wrapperClasses = 'vscomp-wrapper';
-    let valueTooltip = this.getTooltipAttrText(this.placeholder, true, true);
-    let clearButtonTooltip = this.getTooltipAttrText(this.clearButtonText);
-    let ariaLabelledbyText = this.ariaLabelledby ? `aria-labelledby="${this.ariaLabelledby}"` : '';
+    const valueTooltip = this.getTooltipAttrText(this.placeholder, true, true);
+    const clearButtonTooltip = this.getTooltipAttrText(this.clearButtonText);
+    const ariaLabelledbyText = this.ariaLabelledby ? `aria-labelledby="${this.ariaLabelledby}"` : '';
     let isExpanded = false;
 
     if (this.additionalClasses) {
-      wrapperClasses += ' ' + this.additionalClasses;
+      wrapperClasses += ` ${this.additionalClasses}`;
     }
 
     if (this.multiple) {
@@ -144,11 +144,12 @@ export class VirtualSelect {
     }
 
     if (this.popupPosition) {
-      wrapperClasses += ' popup-position-' + this.popupPosition.toLowerCase();
+      wrapperClasses += ` popup-position-${this.popupPosition.toLowerCase()}`;
     }
 
-    let html = `<div id="vscomp-ele-wrapper-${uniqueId}" class="vscomp-ele-wrapper ${wrapperClasses}" tabindex="0" role="combobox"
-        aria-haspopup="listbox" aria-controls="vscomp-dropbox-container-${uniqueId}" aria-expanded="${isExpanded}" ${ariaLabelledbyText}
+    const html = `<div id="vscomp-ele-wrapper-${uniqueId}" class="vscomp-ele-wrapper ${wrapperClasses}" tabindex="0"
+        role="combobox" aria-haspopup="listbox" aria-controls="vscomp-dropbox-container-${uniqueId}"
+        aria-expanded="${isExpanded}" ${ariaLabelledbyText}
       >
         <input type="hidden" name="${this.name}" class="vscomp-hidden-input">
 
@@ -198,9 +199,9 @@ export class VirtualSelect {
   }
 
   renderDropbox({ wrapperClasses }) {
-    let $wrapper = this.dropboxWrapper !== 'self' ? document.querySelector(this.dropboxWrapper) : null;
+    const $wrapper = this.dropboxWrapper !== 'self' ? document.querySelector(this.dropboxWrapper) : null;
 
-    let html = `<div id="vscomp-dropbox-container-${this.uniqueId}" role="listbox" class="vscomp-dropbox-container">
+    const html = `<div id="vscomp-dropbox-container-${this.uniqueId}" role="listbox" class="vscomp-dropbox-container">
         <div class="vscomp-dropbox">
           <div class="vscomp-search-wrapper"></div>
 
@@ -221,7 +222,7 @@ export class VirtualSelect {
       </div>`;
 
     if ($wrapper) {
-      let $dropboxWrapper = document.createElement('div');
+      const $dropboxWrapper = document.createElement('div');
       this.$dropboxWrapper = $dropboxWrapper;
       this.hasDropboxWrapper = true;
       $dropboxWrapper.innerHTML = html;
@@ -230,26 +231,23 @@ export class VirtualSelect {
       DomUtils.addClass($dropboxWrapper, `vscomp-dropbox-wrapper ${wrapperClasses}`);
 
       return '';
-    } else {
-      this.hasDropboxWrapper = false;
-
-      return html;
     }
+
+    this.hasDropboxWrapper = false;
+
+    return html;
   }
 
   renderOptions() {
     let html = '';
-    let visibleOptions = this.getVisibleOptions();
+    const visibleOptions = this.getVisibleOptions();
     let checkboxHtml = '';
     let newOptionIconHtml = '';
-    let markSearchResults = this.markSearchResults && this.searchValue ? true : false;
+    const markSearchResults = !!(this.markSearchResults && this.searchValue);
     let searchRegex;
-    let labelRenderer = this.labelRenderer;
-    let disableOptionGroupCheckbox = this.disableOptionGroupCheckbox;
-    let hasLabelRenderer = typeof labelRenderer === 'function';
-    const uniqueId = this.uniqueId;
-    const searchGroup = this.searchGroup;
-    const convertToBoolean = Utils.convertToBoolean;
+    const { labelRenderer, disableOptionGroupCheckbox, uniqueId, searchGroup } = this;
+    const hasLabelRenderer = typeof labelRenderer === 'function';
+    const { convertToBoolean } = Utils;
 
     if (markSearchResults) {
       searchRegex = new RegExp(`(${this.searchValue})`, 'gi');
@@ -260,20 +258,20 @@ export class VirtualSelect {
     }
 
     if (this.allowNewOption) {
-      let newOptionTooltip = this.getTooltipAttrText('New Option');
+      const newOptionTooltip = this.getTooltipAttrText('New Option');
       newOptionIconHtml = `<span class="vscomp-new-option-icon" ${newOptionTooltip}></span>`;
     }
 
     visibleOptions.forEach((d) => {
-      let index = d.index;
+      const { index } = d;
       let optionLabel;
       let optionClasses = 'vscomp-option';
-      let optionTooltip = this.getTooltipAttrText('', true, true);
+      const optionTooltip = this.getTooltipAttrText('', true, true);
       let leftSection = checkboxHtml;
       let rightSection = '';
       let description = '';
       let groupIndexText = '';
-      let isSelected = convertToBoolean(d.isSelected);
+      const isSelected = convertToBoolean(d.isSelected);
       let ariaDisabledText = '';
 
       if (d.isFocused) {
@@ -315,14 +313,13 @@ export class VirtualSelect {
       if (d.isCurrentNew) {
         optionClasses += ' current-new';
         rightSection += newOptionIconHtml;
-      } else {
-        if (markSearchResults && (!d.isGroupTitle || searchGroup)) {
-          optionLabel = optionLabel.replace(searchRegex, '<mark>$1</mark>');
-        }
+      } else if (markSearchResults && (!d.isGroupTitle || searchGroup)) {
+        optionLabel = optionLabel.replace(searchRegex, '<mark>$1</mark>');
       }
 
-      html += `<div role="option" aria-selected="${isSelected}" id="vscomp-option-${uniqueId}-${index}" class="${optionClasses}" data-value="${d.value}"
-          data-index="${index}" data-visible-index="${d.visibleIndex}" ${groupIndexText} ${ariaDisabledText}
+      html += `<div role="option" aria-selected="${isSelected}" id="vscomp-option-${uniqueId}-${index}"
+          class="${optionClasses}" data-value="${d.value}" data-index="${index}" data-visible-index="${d.visibleIndex}"
+          ${groupIndexText} ${ariaDisabledText}
         >
           ${leftSection}
           <span class="vscomp-option-text" ${optionTooltip}>
@@ -359,7 +356,7 @@ export class VirtualSelect {
       <span class="vscomp-search-clear">&times;</span>`;
     }
 
-    let html = `<div class="vscomp-search-container">
+    const html = `<div class="vscomp-search-container">
         ${checkboxHtml}
         ${searchInput}
       </div>`;
@@ -396,10 +393,10 @@ export class VirtualSelect {
       return;
     }
 
-    events = Utils.removeArrayEmpty(events.split(' '));
+    const eventsArray = Utils.removeArrayEmpty(events.split(' '));
 
-    events.forEach((event) => {
-      let eventsKey = `${method}-${event}`;
+    eventsArray.forEach((event) => {
+      const eventsKey = `${method}-${event}`;
       let callback = this.events[eventsKey];
 
       if (!callback) {
@@ -412,7 +409,7 @@ export class VirtualSelect {
   }
 
   onDocumentClick(e) {
-    let $eleToKeepOpen = e.target.closest('.vscomp-wrapper');
+    const $eleToKeepOpen = e.target.closest('.vscomp-wrapper');
 
     if ($eleToKeepOpen !== this.$wrapper && $eleToKeepOpen !== this.$dropboxWrapper && this.isOpened()) {
       this.closeDropbox();
@@ -420,8 +417,8 @@ export class VirtualSelect {
   }
 
   onKeyDown(e) {
-    let key = e.which || e.keyCode;
-    let method = keyDownMethodMapping[key];
+    const key = e.which || e.keyCode;
+    const method = keyDownMethodMapping[key];
 
     if (method) {
       this[method](e);
@@ -442,7 +439,7 @@ export class VirtualSelect {
     e.preventDefault();
 
     if (this.isOpened()) {
-      this.focusOption('next');
+      this.focusOption({ direction: 'next' });
     } else {
       this.openDropbox();
     }
@@ -452,14 +449,14 @@ export class VirtualSelect {
     e.preventDefault();
 
     if (this.isOpened()) {
-      this.focusOption('previous');
+      this.focusOption({ direction: 'previous' });
     } else {
       this.openDropbox();
     }
   }
 
   onToggleButtonClick(e) {
-    let $target = e.target;
+    const $target = e.target;
 
     if ($target.closest('.vscomp-value-tag-clear-button')) {
       this.removeValue($target.closest('.vscomp-value-tag'));
@@ -477,7 +474,7 @@ export class VirtualSelect {
   }
 
   onOptionsClick(e) {
-    let $option = e.target.closest('.vscomp-option');
+    const $option = e.target.closest('.vscomp-option');
 
     if ($option && !DomUtils.hasClass($option, 'disabled')) {
       if (DomUtils.hasClass($option, 'group-title')) {
@@ -493,7 +490,7 @@ export class VirtualSelect {
       return;
     }
 
-    let isAdding = !DomUtils.hasClass($ele, 'selected');
+    const isAdding = !DomUtils.hasClass($ele, 'selected');
 
     this.toggleGroupTitleCheckbox($ele, isAdding);
     this.toggleGroupOptions($ele, isAdding);
@@ -510,13 +507,13 @@ export class VirtualSelect {
   }
 
   onOptionsMouseOver(e) {
-    let $ele = e.target.closest('.vscomp-option');
+    const $ele = e.target.closest('.vscomp-option');
 
     if ($ele && this.isOpened()) {
       if (DomUtils.hasClass($ele, 'disabled') || DomUtils.hasClass($ele, 'group-title')) {
         this.removeOptionFocus();
       } else {
-        this.focusOption(null, $ele);
+        this.focusOption({ $option: $ele });
       }
     }
   }
@@ -554,12 +551,7 @@ export class VirtualSelect {
     this.mutationObserver = new MutationObserver((mutations) => {
       mutations.some((mutation) => {
         const $removedNodes = [...mutation.removedNodes];
-
-        const isMatching = $removedNodes.some(($ele) => {
-          if ($ele === $vscompEle || $ele.contains($vscompEle)) {
-            return true;
-          }
-        });
+        const isMatching = $removedNodes.some(($ele) => !!($ele === $vscompEle || $ele.contains($vscompEle)));
 
         if (isMatching) {
           this.destroy();
@@ -579,8 +571,8 @@ export class VirtualSelect {
   }
 
   beforeSelectNewValue() {
-    let newOption = this.getNewOption();
-    let newIndex = newOption.index;
+    const newOption = this.getNewOption();
+    const newIndex = newOption.index;
 
     this.newValues.push(newOption.value);
     this.setOptionProp(newIndex, 'isCurrentNew', false);
@@ -631,9 +623,9 @@ export class VirtualSelect {
   }
 
   afterRenderOptions() {
-    let visibleOptions = this.getVisibleOptions();
-    let hasNoOptions = !this.options.length && !this.hasServerSearch;
-    let hasNoSearchResults = !hasNoOptions && !visibleOptions.length;
+    const visibleOptions = this.getVisibleOptions();
+    const hasNoOptions = !this.options.length && !this.hasServerSearch;
+    const hasNoSearchResults = !hasNoOptions && !visibleOptions.length;
 
     if (!this.allowNewOption || this.hasServerSearch || this.showOptionsOnlyOnSearch) {
       DomUtils.toggleClass(this.$allWrappers, 'has-no-search-results', hasNoSearchResults);
@@ -664,6 +656,8 @@ export class VirtualSelect {
     if (this.selectAllOnlyVisible) {
       this.toggleAllOptionsClass();
     }
+
+    this.focusOption({ focusFirst: true });
   }
 
   afterSetVisibleOptionsCount() {
@@ -699,13 +693,13 @@ export class VirtualSelect {
 
   /** set methods - start */
   /**
-   * @param {virtualSelectOptions} options
+   * @param {virtualSelectOptions} params
    */
-  setProps(options) {
-    options = this.setDefaultProps(options);
+  setProps(params) {
+    const options = this.setDefaultProps(params);
     this.setPropsFromElementAttr(options);
 
-    let convertToBoolean = Utils.convertToBoolean;
+    const { convertToBoolean } = Utils;
 
     this.$ele = options.ele;
     this.dropboxWrapper = options.dropboxWrapper;
@@ -798,7 +792,8 @@ export class VirtualSelect {
       this.dropboxWrapper = 'self';
     }
 
-    this.showAsPopup = this.showDropboxAsPopup && !this.keepAlwaysOpen && window.innerWidth <= parseFloat(this.popupDropboxBreakpoint);
+    this.showAsPopup =
+      this.showDropboxAsPopup && !this.keepAlwaysOpen && window.innerWidth <= parseFloat(this.popupDropboxBreakpoint);
     this.hasSearchContainer = this.hasSearch || (this.multiple && !this.disableSelectAll);
     this.optionsCount = this.getOptionsCount(options.optionsCount);
     this.halfOptionsCount = Math.ceil(this.optionsCount / 2);
@@ -806,8 +801,11 @@ export class VirtualSelect {
     this.uniqueId = this.getUniqueId();
   }
 
+  /**
+   * @param {virtualSelectOptions} options
+   */
   setDefaultProps(options) {
-    let defaultOptions = {
+    const defaultOptions = {
       dropboxWrapper: 'self',
       valueKey: 'value',
       labelKey: 'label',
@@ -852,7 +850,7 @@ export class VirtualSelect {
   setPropsFromElementAttr(options) {
     const $ele = options.ele;
 
-    for (let k in attrPropsMapping) {
+    for (const k in attrPropsMapping) {
       let value = $ele.getAttribute(k);
 
       if (valueLessProps.indexOf(k) !== -1 && (value === '' || value === 'true')) {
@@ -866,7 +864,7 @@ export class VirtualSelect {
   }
 
   setEleProps() {
-    let $ele = this.$ele;
+    const { $ele } = this;
     $ele.virtualSelect = this;
     $ele.value = this.multiple ? [] : '';
     $ele.name = this.name;
@@ -900,11 +898,12 @@ export class VirtualSelect {
     }
   }
 
-  setValueMethod(value, silentChange) {
-    let valuesMapping = {};
-    let valuesOrder = {};
+  setValueMethod(newValue, silentChange) {
+    const valuesMapping = {};
+    const valuesOrder = {};
     let validValues = [];
-    let isMultiSelect = this.multiple;
+    const isMultiSelect = this.multiple;
+    let value = newValue;
 
     if (value) {
       if (!Array.isArray(value)) {
@@ -912,7 +911,7 @@ export class VirtualSelect {
       }
 
       if (isMultiSelect) {
-        let maxValues = this.maxValues;
+        const { maxValues } = this;
 
         if (maxValues && value.length > maxValues) {
           value.splice(maxValues);
@@ -943,9 +942,11 @@ export class VirtualSelect {
 
     this.options.forEach((d) => {
       if (valuesMapping[d.value] === true && !d.isDisabled && !d.isGroupTitle) {
+        // eslint-disable-next-line no-param-reassign
         d.isSelected = true;
         validValues.push(d.value);
       } else {
+        // eslint-disable-next-line no-param-reassign
         d.isSelected = false;
       }
     });
@@ -958,7 +959,8 @@ export class VirtualSelect {
       /** sorting validValues in the given values order */
       validValues.sort((a, b) => valuesOrder[a] - valuesOrder[b]);
     } else {
-      validValues = validValues[0];
+      /** taking first value for single select */
+      [validValues] = validValues;
     }
 
     this.beforeValueSet();
@@ -967,17 +969,17 @@ export class VirtualSelect {
   }
 
   setGroupOptionsValue(preparedValues) {
-    let selectedValues = [];
-    let selectedGroups = {};
-    let valuesMapping = {};
+    const selectedValues = [];
+    const selectedGroups = {};
+    const valuesMapping = {};
 
     preparedValues.forEach((d) => {
       valuesMapping[d] = true;
     });
 
     this.options.forEach((d) => {
-      let value = d.value;
-      let isSelected = valuesMapping[value] === true;
+      const { value } = d;
+      const isSelected = valuesMapping[value] === true;
 
       if (d.isGroupTitle) {
         if (isSelected) {
@@ -996,6 +998,7 @@ export class VirtualSelect {
 
     this.options.forEach((d) => {
       if (d.isGroupTitle) {
+        // eslint-disable-next-line no-param-reassign
         d.isSelected = isAllGroupOptionsSelected(d.index);
       }
     });
@@ -1023,6 +1026,7 @@ export class VirtualSelect {
     if (!disabledOptions) {
       if (setOptionsProp) {
         this.options.forEach((d) => {
+          // eslint-disable-next-line no-param-reassign
           d.isDisabled = false;
 
           return d;
@@ -1031,6 +1035,7 @@ export class VirtualSelect {
     } else if (disabledOptions === true) {
       if (setOptionsProp) {
         this.options.forEach((d) => {
+          // eslint-disable-next-line no-param-reassign
           d.isDisabled = true;
 
           disabledOptionsArr.push(d.value);
@@ -1040,7 +1045,7 @@ export class VirtualSelect {
       }
     } else {
       disabledOptionsArr = disabledOptions.map((d) => d.toString());
-      let disabledOptionsMapping = {};
+      const disabledOptionsMapping = {};
 
       disabledOptionsArr.forEach((d) => {
         disabledOptionsMapping[d] = true;
@@ -1048,6 +1053,7 @@ export class VirtualSelect {
 
       if (setOptionsProp) {
         this.options.forEach((d) => {
+          // eslint-disable-next-line no-param-reassign
           d.isDisabled = disabledOptionsMapping[d.value] === true;
 
           return d;
@@ -1063,30 +1069,26 @@ export class VirtualSelect {
       options = [];
     }
 
-    let preparedOptions = [];
-    let hasDisabledOptions = this.disabledOptions.length;
-    let valueKey = this.valueKey;
-    let labelKey = this.labelKey;
-    let descriptionKey = this.descriptionKey;
-    let aliasKey = this.aliasKey;
-    let hasOptionDescription = this.hasOptionDescription;
-    let getString = Utils.getString;
-    let secureText = this.secureText.bind(this);
-    let convertToBoolean = Utils.convertToBoolean;
-    let getAlias = this.getAlias.bind(this);
+    const preparedOptions = [];
+    const hasDisabledOptions = this.disabledOptions.length;
+    const { valueKey, labelKey, descriptionKey, aliasKey, hasOptionDescription } = this;
+    const { getString, convertToBoolean } = Utils;
+    const secureText = this.secureText.bind(this);
+    const getAlias = this.getAlias.bind(this);
     let index = 0;
     let hasOptionGroup = false;
-    let disabledOptionsMapping = {};
+    const disabledOptionsMapping = {};
+    let hasEmptyValueOption = false;
 
     this.disabledOptions.forEach((d) => {
       disabledOptionsMapping[d] = true;
     });
 
-    let prepareOption = (d) => {
-      let value = secureText(getString(d[valueKey]));
-      let childOptions = d.options;
-      let isGroupTitle = childOptions ? true : false;
-      let option = {
+    const prepareOption = (d) => {
+      const value = secureText(getString(d[valueKey]));
+      const childOptions = d.options;
+      const isGroupTitle = childOptions ? true : false;
+      const option = {
         index,
         value,
         label: secureText(getString(d[labelKey])),
@@ -1095,6 +1097,10 @@ export class VirtualSelect {
         isNew: d.isNew || false,
         isGroupTitle,
       };
+
+      if (!hasEmptyValueOption && value === '') {
+        hasEmptyValueOption = true;
+      }
 
       if (hasDisabledOptions) {
         option.isDisabled = disabledOptionsMapping[value] === true;
@@ -1114,14 +1120,16 @@ export class VirtualSelect {
       }
 
       preparedOptions.push(option);
-      index++;
+      index += 1;
 
       if (isGroupTitle) {
-        let groupIndex = option.index;
+        const groupIndex = option.index;
         hasOptionGroup = true;
 
         childOptions.forEach((d) => {
+          // eslint-disable-next-line no-param-reassign
           d.isGroupOption = true;
+          // eslint-disable-next-line no-param-reassign
           d.groupIndex = groupIndex;
 
           prepareOption(d);
@@ -1131,8 +1139,8 @@ export class VirtualSelect {
 
     options.forEach(prepareOption);
 
-    let optionsLength = preparedOptions.length;
-    let $ele = this.$ele;
+    const optionsLength = preparedOptions.length;
+    const { $ele } = this;
     $ele.options = preparedOptions;
     $ele.length = optionsLength;
     this.options = preparedOptions;
@@ -1140,19 +1148,20 @@ export class VirtualSelect {
     this.lastOptionIndex = optionsLength - 1;
     this.newValues = [];
     this.hasOptionGroup = hasOptionGroup;
+    this.hasEmptyValueOption = hasEmptyValueOption;
     this.setSortedOptions();
   }
 
   setServerOptions(options = []) {
     this.setOptionsMethod(options, true);
 
-    let selectedOptions = this.selectedOptions;
-    let newOptions = this.options;
+    const { selectedOptions } = this;
+    const newOptions = this.options;
     let optionsUpdated = false;
 
     /** merging already seleted options details with new options */
     if (selectedOptions.length) {
-      let newOptionsValueMapping = {};
+      const newOptionsValueMapping = {};
       optionsUpdated = true;
 
       newOptions.forEach((d) => {
@@ -1161,6 +1170,7 @@ export class VirtualSelect {
 
       selectedOptions.forEach((d) => {
         if (newOptionsValueMapping[d.value] === false) {
+          // eslint-disable-next-line no-param-reassign
           d.isVisible = false;
           newOptions.push(d);
         }
@@ -1171,7 +1181,7 @@ export class VirtualSelect {
 
     /** merging new search option */
     if (this.allowNewOption && this.searchValue) {
-      let hasExactOption = newOptions.some((d) => d.label.toLowerCase() === this.searchValue);
+      const hasExactOption = newOptions.some((d) => d.label.toLowerCase() === this.searchValue);
 
       if (!hasExactOption) {
         optionsUpdated = true;
@@ -1214,10 +1224,10 @@ export class VirtualSelect {
 
   setVisibleOptions() {
     let visibleOptions = [...this.sortedOptions];
-    let maxOptionsToShow = this.optionsCount * 2;
-    let startIndex = this.getVisibleStartIndex();
-    let newOption = this.getNewOption();
-    let endIndex = startIndex + maxOptionsToShow - 1;
+    const maxOptionsToShow = this.optionsCount * 2;
+    const startIndex = this.getVisibleStartIndex();
+    const newOption = this.getNewOption();
+    const endIndex = startIndex + maxOptionsToShow - 1;
     let i = 0;
 
     if (newOption) {
@@ -1230,8 +1240,9 @@ export class VirtualSelect {
 
       if (d.isVisible && !d.isCurrentNew) {
         inView = i >= startIndex && i <= endIndex;
+        // eslint-disable-next-line no-param-reassign
         d.visibleIndex = i;
-        i++;
+        i += 1;
       }
 
       return inView;
@@ -1250,17 +1261,17 @@ export class VirtualSelect {
       startIndex = this.getVisibleStartIndex();
     }
 
-    let top = startIndex * this.optionHeight;
+    const top = startIndex * this.optionHeight;
     this.$options.style.transform = `translate3d(0, ${top}px, 0)`;
     DomUtils.setData(this.$options, 'top', top);
   }
 
   setOptionsTooltip() {
-    let visibleOptions = this.getVisibleOptions();
-    let hasOptionDescription = this.hasOptionDescription;
+    const visibleOptions = this.getVisibleOptions();
+    const { hasOptionDescription } = this;
 
     visibleOptions.forEach((d) => {
-      let $optionEle = this.$dropboxContainer.querySelector(`.vscomp-option[data-index="${d.index}"]`);
+      const $optionEle = this.$dropboxContainer.querySelector(`.vscomp-option[data-index="${d.index}"]`);
 
       DomUtils.setData($optionEle.querySelector('.vscomp-option-text'), 'tooltip', d.label);
 
@@ -1271,7 +1282,9 @@ export class VirtualSelect {
   }
 
   setValue(value, { disableEvent = false, disableValidation = false } = {}) {
-    if (!value) {
+    const isValidValue = (this.hasEmptyValueOption && value === '') || value;
+
+    if (!isValidValue) {
       this.selectedValues = [];
     } else if (Array.isArray(value)) {
       this.selectedValues = [...value];
@@ -1279,7 +1292,7 @@ export class VirtualSelect {
       this.selectedValues = [value];
     }
 
-    let newValue = this.getValue();
+    const newValue = this.getValue();
     this.$ele.value = newValue;
     this.$hiddenInput.value = this.getInputValue(newValue);
     this.isMaxValuesSelected = this.maxValues && this.maxValues <= this.selectedValues.length ? true : false;
@@ -1300,27 +1313,24 @@ export class VirtualSelect {
   }
 
   setValueText() {
-    const multiple = this.multiple;
-    let valueText = [];
+    const { multiple, selectedValues, noOfDisplayValues, showValueAsTags, $valueText } = this;
+    const valueText = [];
     let valueTooltip = [];
-    let selectedValues = this.selectedValues;
-    let selectedLength = selectedValues.length;
-    let noOfDisplayValues = this.noOfDisplayValues;
-    let showValueAsTags = this.showValueAsTags;
-    let $valueText = this.$valueText;
+    const selectedLength = selectedValues.length;
     let selectedValuesCount = 0;
-    let showAllText = this.isAllSelected && !this.hasServerSearch && !this.disableAllOptionsSelectedText && !showValueAsTags;
+    const showAllText =
+      this.isAllSelected && !this.hasServerSearch && !this.disableAllOptionsSelectedText && !showValueAsTags;
 
     /** show all values selected text without tooltip text */
     if (showAllText && this.hideValueTooltipOnSelectAll) {
       $valueText.innerHTML = `${this.allOptionsSelectedText} (${selectedLength})`;
     } else {
-      let selectedOptions = this.getSelectedOptions({
+      const selectedOptions = this.getSelectedOptions({
         fullDetails: true,
         keepSelectionOrder: true,
       });
 
-      for (let d of selectedOptions) {
+      for (const d of selectedOptions) {
         if (d.isCurrentNew) {
           continue;
         }
@@ -1329,12 +1339,12 @@ export class VirtualSelect {
           break;
         }
 
-        let label = d.label;
+        const { label } = d;
         valueText.push(label);
         selectedValuesCount++;
 
         if (showValueAsTags) {
-          let valueTagHtml = `<span class="vscomp-value-tag" data-index="${d.index}">
+          const valueTagHtml = `<span class="vscomp-value-tag" data-index="${d.index}">
               <span class="vscomp-value-tag-content">${label}</span>
               <span class="vscomp-value-tag-clear-button">
                 <i class="vscomp-clear-icon"></i>
@@ -1347,10 +1357,12 @@ export class VirtualSelect {
         }
       }
 
-      let moreSelectedOptions = selectedLength - noOfDisplayValues;
+      const moreSelectedOptions = selectedLength - noOfDisplayValues;
 
       if (moreSelectedOptions > 0) {
-        valueTooltip.push(`<span class="vscomp-value-tag more-value-count">+ ${moreSelectedOptions} ${this.moreText}</span>`);
+        valueTooltip.push(
+          `<span class="vscomp-value-tag more-value-count">+ ${moreSelectedOptions} ${this.moreText}</span>`
+        );
       }
 
       const aggregatedValueText = valueText.join(', ');
@@ -1361,7 +1373,7 @@ export class VirtualSelect {
         $valueText.innerHTML = aggregatedValueText;
 
         if (multiple) {
-          let maxValues = this.maxValues;
+          const { maxValues } = this;
 
           if (DomUtils.hasEllipsis($valueText) || maxValues || this.alwaysShowSelectedOptionsCount || showValueAsTags) {
             let countText = `<span class="vscomp-selected-value-count">${selectedLength}</span>`;
@@ -1380,7 +1392,7 @@ export class VirtualSelect {
               this.setValueTagAttr();
             } else {
               /** replace comma delimitted list of selections with shorter text indicating selection count */
-              let optionsSelectedText = selectedLength === 1 ? this.optionSelectedText : this.optionsSelectedText;
+              const optionsSelectedText = selectedLength === 1 ? this.optionSelectedText : this.optionsSelectedText;
               $valueText.innerHTML = `${countText} ${optionsSelectedText}`;
             }
           } else {
@@ -1419,7 +1431,7 @@ export class VirtualSelect {
       this.$searchInput.value = value;
     }
 
-    let searchValue = value.replace(/\\/g, '').toLowerCase().trim();
+    const searchValue = value.replace(/\\/g, '').toLowerCase().trim();
     this.searchValue = searchValue;
     this.searchValueOriginal = value;
 
@@ -1432,10 +1444,8 @@ export class VirtualSelect {
     let visibleOptionsCount = 0;
     let hasExactOption = false;
     let visibleOptionGroupsMapping;
-    let searchValue = this.searchValue;
-    let searchGroup = this.searchGroup;
-    let showOptionsOnlyOnSearch = this.showOptionsOnlyOnSearch;
-    let isOptionVisible = this.isOptionVisible.bind(this);
+    const { searchValue, searchGroup, showOptionsOnlyOnSearch } = this;
+    const isOptionVisible = this.isOptionVisible.bind(this);
 
     if (this.hasOptionGroup) {
       visibleOptionGroupsMapping = this.getVisibleOptionGroupsMapping(searchValue);
@@ -1449,6 +1459,7 @@ export class VirtualSelect {
       let result;
 
       if (showOptionsOnlyOnSearch && !searchValue) {
+        // eslint-disable-next-line no-param-reassign
         d.isVisible = false;
         result = {
           isVisible: false,
@@ -1459,7 +1470,7 @@ export class VirtualSelect {
       }
 
       if (result.isVisible) {
-        visibleOptionsCount++;
+        visibleOptionsCount += 1;
       }
 
       if (!hasExactOption) {
@@ -1518,21 +1529,21 @@ export class VirtualSelect {
   }
 
   setNewOption(newValue) {
-    let value = newValue || this.searchValueOriginal.trim();
+    const value = newValue || this.searchValueOriginal.trim();
 
     if (!value) {
       return;
     }
 
-    let newOption = this.getNewOption();
+    const newOption = this.getNewOption();
 
     if (newOption) {
-      let newIndex = newOption.index;
+      const newIndex = newOption.index;
 
       this.setOptionProp(newIndex, 'value', this.secureText(value));
       this.setOptionProp(newIndex, 'label', this.secureText(value));
     } else {
-      let data = {
+      const data = {
         value,
         label: value,
       };
@@ -1549,7 +1560,7 @@ export class VirtualSelect {
   }
 
   setSelectedProp() {
-    let valuesMapping = {};
+    const valuesMapping = {};
 
     this.selectedValues.forEach((d) => {
       valuesMapping[d] = true;
@@ -1557,6 +1568,7 @@ export class VirtualSelect {
 
     this.options.forEach((d) => {
       if (valuesMapping[d.value] === true) {
+        // eslint-disable-next-line no-param-reassign
         d.isSelected = true;
       }
     });
@@ -1567,8 +1579,8 @@ export class VirtualSelect {
       return;
     }
 
-    let setNewOption = this.setNewOption.bind(this);
-    let availableValuesMapping = {};
+    const setNewOption = this.setNewOption.bind(this);
+    const availableValuesMapping = {};
 
     this.options.forEach((d) => {
       availableValuesMapping[d.value] = true;
@@ -1586,13 +1598,13 @@ export class VirtualSelect {
       return;
     }
 
-    let width = this.dropboxWidth || `${this.$wrapper.offsetWidth}px`;
+    const width = this.dropboxWidth || `${this.$wrapper.offsetWidth}px`;
 
     DomUtils.setStyle(this.$dropboxContainer, 'max-width', width);
   }
 
   setEleStyles() {
-    const maxWidth = this.maxWidth;
+    const { maxWidth } = this;
     const styles = {};
 
     if (maxWidth) {
@@ -1603,9 +1615,9 @@ export class VirtualSelect {
   }
 
   setDropboxStyles() {
-    let dropboxWidth = this.dropboxWidth;
-    let styles = {};
-    let containerStyles = {
+    const { dropboxWidth } = this;
+    const styles = {};
+    const containerStyles = {
       'z-index': this.zIndex,
     };
 
@@ -1622,16 +1634,14 @@ export class VirtualSelect {
   }
 
   setOptionAttr() {
-    let $visibleOptions = this.$visibleOptions;
-    let options = this.options;
-    let optionHeight = this.optionHeight + 'px';
-    let setStyle = DomUtils.setStyle;
-    let getData = DomUtils.getData;
-    let setData = DomUtils.setData;
+    const { $visibleOptions } = this;
+    const { options } = this;
+    const optionHeight = `${this.optionHeight}px`;
+    const { setStyle, getData, setData } = DomUtils;
 
     if ($visibleOptions && $visibleOptions.length) {
       $visibleOptions.forEach(($option) => {
-        let optionDetails = options[getData($option, 'index')];
+        const optionDetails = options[getData($option, 'index')];
 
         setStyle($option, 'height', optionHeight);
         setData($option, 'value', optionDetails.value);
@@ -1640,25 +1650,50 @@ export class VirtualSelect {
   }
 
   setValueTagAttr() {
-    let $valueTags = this.$valueTags;
+    const { $valueTags } = this;
 
     if (!$valueTags || !$valueTags.length) {
       return;
     }
 
-    let getData = DomUtils.getData;
-    let setData = DomUtils.setData;
-    let options = this.options;
+    const { getData, setData } = DomUtils;
+    const { options } = this;
 
     $valueTags.forEach(($valueTag) => {
-      let index = getData($valueTag, 'index');
+      const index = getData($valueTag, 'index');
 
       if (typeof index !== 'undefined') {
-        let optionDetails = options[index];
+        const optionDetails = options[index];
 
         setData($valueTag, 'value', optionDetails.value);
       }
     });
+  }
+
+  setScrollTop() {
+    const selectedValues = this.selectedValues;
+
+    if (this.showSelectedOptionsFirst || selectedValues.length === 0) {
+      return;
+    }
+
+    const valuesMapping = {};
+    let selectedOptionIndex;
+
+    selectedValues.forEach((d) => {
+      valuesMapping[d] = true;
+    });
+
+    this.options.some((d) => {
+      if (valuesMapping[d.value]) {
+        selectedOptionIndex = d.visibleIndex;
+        return true;
+      }
+    });
+
+    if (selectedOptionIndex) {
+      this.$optionsContainer.scrollTop = this.optionHeight * selectedOptionIndex;
+    }
   }
   /** set methods - end */
 
@@ -1684,15 +1719,15 @@ export class VirtualSelect {
   }
 
   getGroupValue() {
-    let selectedValues = [];
-    let selectedGroups = {};
+    const selectedValues = [];
+    const selectedGroups = {};
 
     this.options.forEach((d) => {
       if (!d.isSelected) {
         return;
       }
 
-      let value = d.value;
+      const { value } = d;
 
       if (d.isGroupTitle) {
         if (value) {
@@ -1726,7 +1761,7 @@ export class VirtualSelect {
   }
 
   getVisibleStartIndex() {
-    let firstVisibleOptionIndex = this.getFirstVisibleOptionIndex();
+    const firstVisibleOptionIndex = this.getFirstVisibleOptionIndex();
     let startIndex = firstVisibleOptionIndex - this.halfOptionsCount;
 
     if (startIndex < 0) {
@@ -1737,7 +1772,7 @@ export class VirtualSelect {
   }
 
   getTooltipAttrText(text, ellipsisOnly = false, allowHtml = false) {
-    let data = {
+    const data = {
       'data-tooltip': text || '',
       'data-tooltip-enter-delay': this.tooltipEnterDelay,
       'data-tooltip-z-index': this.zIndex,
@@ -1756,10 +1791,10 @@ export class VirtualSelect {
       return;
     }
 
-    let getString = Utils.getString;
-    let secureText = this.secureText.bind(this);
+    const { getString } = Utils;
+    const secureText = this.secureText.bind(this);
 
-    let newOption = {
+    const newOption = {
       index: data.index,
       value: secureText(getString(data.value)),
       label: secureText(getString(data.label)),
@@ -1774,7 +1809,7 @@ export class VirtualSelect {
   }
 
   getNewOption() {
-    let lastOption = this.options[this.lastOptionIndex];
+    const lastOption = this.options[this.lastOptionIndex];
 
     if (!lastOption || !lastOption.isCurrentNew) {
       return;
@@ -1798,35 +1833,35 @@ export class VirtualSelect {
   }
 
   getNewValue() {
-    let valuesMapping = {};
+    const valuesMapping = {};
 
     this.newValues.forEach((d) => {
       valuesMapping[d] = true;
     });
 
-    let result = this.selectedValues.filter((d) => valuesMapping[d] === true);
+    const result = this.selectedValues.filter((d) => valuesMapping[d] === true);
 
     return this.multiple ? result : result[0];
   }
 
   getAlias(alias) {
-    if (alias) {
-      if (Array.isArray(alias)) {
-        alias = alias.join(',');
+    let result = alias;
+
+    if (result) {
+      if (Array.isArray(result)) {
+        result = result.join(',');
       } else {
-        alias = alias.toString().trim();
+        result = result.toString().trim();
       }
 
-      alias = alias.toLowerCase();
-    } else {
-      alias = '';
+      result = result.toLowerCase();
     }
 
-    return alias;
+    return result || '';
   }
 
   getDisplayValue() {
-    let displayValues = [];
+    const displayValues = [];
 
     this.options.forEach((d) => {
       if (d.isSelected) {
@@ -1838,17 +1873,15 @@ export class VirtualSelect {
   }
 
   getSelectedOptions({ fullDetails = false, keepSelectionOrder = false } = {}) {
-    let valueKey = this.valueKey;
-    let labelKey = this.labelKey;
-    let selectedValues = this.selectedValues;
-    let selectedOptions = [];
+    const { valueKey, labelKey, selectedValues } = this;
+    const selectedOptions = [];
 
     this.options.forEach((d) => {
-      if (d.isSelected) {
+      if (d.isSelected && !d.isGroupTitle) {
         if (fullDetails) {
           selectedOptions.push(d);
         } else {
-          let data = {
+          const data = {
             [valueKey]: d.value,
             [labelKey]: d.label,
           };
@@ -1867,7 +1900,7 @@ export class VirtualSelect {
     });
 
     if (keepSelectionOrder) {
-      let valuesOrder = {};
+      const valuesOrder = {};
 
       selectedValues.forEach((d, i) => {
         valuesOrder[d] = i;
@@ -1880,9 +1913,9 @@ export class VirtualSelect {
   }
 
   getVisibleOptionGroupsMapping(searchValue) {
-    let options = this.options;
-    let result = {};
-    let isOptionVisible = this.isOptionVisible.bind(this);
+    let { options } = this;
+    const result = {};
+    const isOptionVisible = this.isOptionVisible.bind(this);
     options = this.structureOptionGroup(options);
 
     options.forEach((d) => {
@@ -1913,7 +1946,7 @@ export class VirtualSelect {
   }
 
   getSibling($ele, direction) {
-    let propName = direction === 'next' ? 'nextElementSibling' : 'previousElementSibling';
+    const propName = direction === 'next' ? 'nextElementSibling' : 'previousElementSibling';
 
     do {
       if ($ele) {
@@ -1925,8 +1958,8 @@ export class VirtualSelect {
   }
 
   getUniqueId() {
-    let uniqueId = Utils.getRandomInt(10000);
-    let isAlreadyUsed = document.querySelector(`#vscomp-ele-wrapper-${uniqueId}`);
+    const uniqueId = Utils.getRandomInt(10000);
+    const isAlreadyUsed = document.querySelector(`#vscomp-ele-wrapper-${uniqueId}`);
 
     if (isAlreadyUsed) {
       return this.getUniqueId();
@@ -1937,7 +1970,7 @@ export class VirtualSelect {
   /** get methods - end */
 
   initDropboxPopover() {
-    let data = {
+    const data = {
       ele: this.$ele,
       target: this.$dropboxContainer,
       position: this.position,
@@ -1976,11 +2009,12 @@ export class VirtualSelect {
   }
 
   afterShowPopper() {
-    let isSilent = this.isSilentOpen;
+    const isSilent = this.isSilentOpen;
     this.isSilentOpen = false;
 
     if (!isSilent) {
       this.moveSelectedOptionsFirst();
+      this.setScrollTop();
       DomUtils.addClass(this.$allWrappers, 'focused');
 
       if (this.showAsPopup) {
@@ -2018,7 +2052,7 @@ export class VirtualSelect {
   }
 
   afterHidePopper() {
-    let isSilent = this.isSilentClose;
+    const isSilent = this.isSilentClose;
     this.isSilentClose = false;
 
     DomUtils.removeClass(this.$allWrappers, 'focused');
@@ -2061,6 +2095,10 @@ export class VirtualSelect {
   }
 
   updatePosition() {
+    if (!this.dropboxPopover) {
+      return;
+    }
+
     this.$ele.updatePosition();
   }
 
@@ -2069,23 +2107,25 @@ export class VirtualSelect {
   }
 
   focusSearchInput() {
-    let $ele = this.$searchInput;
+    const $ele = this.$searchInput;
 
     if ($ele) {
       $ele.focus();
     }
   }
 
-  focusOption(direction, ele) {
-    let $focusedEle = this.$dropboxContainer.querySelector('.vscomp-option.focused');
+  focusOption({ direction, $option, focusFirst } = {}) {
+    const $focusedEle = this.$dropboxContainer.querySelector('.vscomp-option.focused');
     let $newFocusedEle;
 
-    if (ele) {
-      $newFocusedEle = ele;
-    } else if (!$focusedEle) {
+    if ($option) {
+      $newFocusedEle = $option;
+    } else if (!$focusedEle || focusFirst) {
       /* if no element on focus choose first visible one */
-      let firstVisibleOptionIndex = this.getFirstVisibleOptionIndex();
-      $newFocusedEle = this.$dropboxContainer.querySelector(`.vscomp-option[data-visible-index="${firstVisibleOptionIndex}"]`);
+      const firstVisibleOptionIndex = this.getFirstVisibleOptionIndex();
+      $newFocusedEle = this.$dropboxContainer.querySelector(
+        `.vscomp-option[data-visible-index="${firstVisibleOptionIndex}"]`
+      );
 
       if (DomUtils.hasClass($newFocusedEle, 'disabled') || DomUtils.hasClass($newFocusedEle, 'group-title')) {
         $newFocusedEle = this.getSibling($newFocusedEle, 'next');
@@ -2115,16 +2155,16 @@ export class VirtualSelect {
     }
 
     let newScrollTop;
-    let containerRect = this.$optionsContainer.getBoundingClientRect();
-    let optionRect = $focusedEle.getBoundingClientRect();
-    let containerTop = containerRect.top;
-    let containerBottom = containerRect.bottom;
-    let containerHeight = containerRect.height;
-    let optionTop = optionRect.top;
-    let optionBottom = optionRect.bottom;
-    let optionHeight = optionRect.height;
-    let optionOffsetTop = $focusedEle.offsetTop;
-    let optionsTop = DomUtils.getData(this.$options, 'top', 'number');
+    const containerRect = this.$optionsContainer.getBoundingClientRect();
+    const optionRect = $focusedEle.getBoundingClientRect();
+    const containerTop = containerRect.top;
+    const containerBottom = containerRect.bottom;
+    const containerHeight = containerRect.height;
+    const optionTop = optionRect.top;
+    const optionBottom = optionRect.bottom;
+    const optionHeight = optionRect.height;
+    const optionOffsetTop = $focusedEle.offsetTop;
+    const optionsTop = DomUtils.getData(this.$options, 'top', 'number');
 
     /* if option hidden on top */
     if (containerTop > optionTop) {
@@ -2140,7 +2180,7 @@ export class VirtualSelect {
   }
 
   removeOptionFocus() {
-    let $focusedEle = this.$dropboxContainer.querySelector('.vscomp-option.focused');
+    const $focusedEle = this.$dropboxContainer.querySelector('.vscomp-option.focused');
 
     if (!$focusedEle) {
       return;
@@ -2155,7 +2195,7 @@ export class VirtualSelect {
       return;
     }
 
-    let isAdding = !DomUtils.hasClass($ele, 'selected');
+    const isAdding = !DomUtils.hasClass($ele, 'selected');
 
     if (isAdding) {
       if (this.multiple && this.isMaxValuesSelected) {
@@ -2169,11 +2209,11 @@ export class VirtualSelect {
       }
     }
 
-    let selectedValues = this.selectedValues;
-    let selectedValue = DomUtils.getData($ele, 'value');
-    let selectedIndex = DomUtils.getData($ele, 'index', 'number');
+    let { selectedValues } = this;
+    const selectedValue = DomUtils.getData($ele, 'value');
+    const selectedIndex = DomUtils.getData($ele, 'index', 'number');
     let shouldSelectRange = false;
-    let lastSelectedOptionIndex = this.lastSelectedOptionIndex;
+    const { lastSelectedOptionIndex } = this;
     this.lastSelectedOptionIndex = null;
 
     this.toggleSelectedProp(selectedIndex, isAdding);
@@ -2193,7 +2233,7 @@ export class VirtualSelect {
         }
 
         selectedValues = [selectedValue];
-        let $prevSelectedOption = this.$dropboxContainer.querySelector('.vscomp-option.selected');
+        const $prevSelectedOption = this.$dropboxContainer.querySelector('.vscomp-option.selected');
 
         if ($prevSelectedOption) {
           this.toggleOptionSelectedState($prevSelectedOption, false);
@@ -2234,8 +2274,7 @@ export class VirtualSelect {
       return;
     }
 
-    let selectedValues = this.selectedValues;
-    let hasOptionGroup = this.hasOptionGroup;
+    const { selectedValues, hasOptionGroup } = this;
     let groupIndexes = {};
     let startIndex;
     let endIndex;
@@ -2253,17 +2292,18 @@ export class VirtualSelect {
         return;
       }
 
-      let index = d.index;
+      const { index } = d;
 
       if (index > startIndex && index < endIndex) {
         if (hasOptionGroup) {
-          let groupIndex = d.groupIndex;
+          const { groupIndex } = d;
 
           if (typeof groupIndex === 'number') {
             groupIndexes[groupIndex] = true;
           }
         }
 
+        // eslint-disable-next-line no-param-reassign
         d.isSelected = true;
 
         selectedValues.push(d.value);
@@ -2276,7 +2316,7 @@ export class VirtualSelect {
     groupIndexes = Object.keys(groupIndexes);
 
     if (groupIndexes.length) {
-      let toggleGroupTitleProp = this.toggleGroupTitleProp.bind(this);
+      const toggleGroupTitleProp = this.toggleGroupTitleProp.bind(this);
 
       groupIndexes.forEach((i) => {
         toggleGroupTitleProp(parseInt(i));
@@ -2298,8 +2338,8 @@ export class VirtualSelect {
       isSelected = !DomUtils.hasClass(this.$toggleAllCheckbox, 'checked');
     }
 
-    let selectedValues = [];
-    let selectAllOnlyVisible = this.selectAllOnlyVisible;
+    const selectedValues = [];
+    const { selectAllOnlyVisible } = this;
 
     this.options.forEach((d) => {
       if (d.isDisabled || d.isCurrentNew) {
@@ -2307,8 +2347,10 @@ export class VirtualSelect {
       }
 
       if (!isSelected || (selectAllOnlyVisible && !d.isVisible)) {
+        // eslint-disable-next-line no-param-reassign
         d.isSelected = false;
       } else {
+        // eslint-disable-next-line no-param-reassign
         d.isSelected = true;
 
         if (!d.isGroupTitle) {
@@ -2371,15 +2413,15 @@ export class VirtualSelect {
       return;
     }
 
-    let groupIndex = DomUtils.getData($option, 'groupIndex', 'number');
-    let $group = this.$options.querySelector(`.vscomp-option[data-index="${groupIndex}"]`);
-    let isAllSelected = typeof isSelected === 'boolean' ? isSelected : this.isAllGroupOptionsSelected(groupIndex);
+    const groupIndex = DomUtils.getData($option, 'groupIndex', 'number');
+    const $group = this.$options.querySelector(`.vscomp-option[data-index="${groupIndex}"]`);
+    const isAllSelected = typeof isSelected === 'boolean' ? isSelected : this.isAllGroupOptionsSelected(groupIndex);
 
     this.toggleGroupTitleCheckbox($group, isAllSelected);
   }
 
   toggleGroupTitleProp(groupIndex, isSelected) {
-    let isAllSelected = typeof isSelected === 'boolean' ? isSelected : this.isAllGroupOptionsSelected(groupIndex);
+    const isAllSelected = typeof isSelected === 'boolean' ? isSelected : this.isAllGroupOptionsSelected(groupIndex);
 
     this.toggleSelectedProp(groupIndex, isAllSelected);
   }
@@ -2389,11 +2431,10 @@ export class VirtualSelect {
       return;
     }
 
-    let groupIndex = DomUtils.getData($ele, 'index', 'number');
-    let selectedValues = this.selectedValues;
-    let selectAllOnlyVisible = this.selectAllOnlyVisible;
-    let valuesMapping = {};
-    let removeItemFromArray = Utils.removeItemFromArray;
+    const groupIndex = DomUtils.getData($ele, 'index', 'number');
+    const { selectedValues, selectAllOnlyVisible } = this;
+    const valuesMapping = {};
+    const { removeItemFromArray } = Utils;
 
     selectedValues.forEach((d) => {
       valuesMapping[d] = true;
@@ -2404,15 +2445,17 @@ export class VirtualSelect {
         return;
       }
 
-      let value = d.value;
+      const { value } = d;
 
       if (!isSelected || (selectAllOnlyVisible && !d.isVisible)) {
+        // eslint-disable-next-line no-param-reassign
         d.isSelected = false;
 
         if (valuesMapping[value]) {
           removeItemFromArray(selectedValues, value);
         }
       } else {
+        // eslint-disable-next-line no-param-reassign
         d.isSelected = true;
 
         if (!valuesMapping[value]) {
@@ -2435,7 +2478,7 @@ export class VirtualSelect {
       return;
     }
 
-    let selectedIndex = DomUtils.getData($ele, 'index', 'number');
+    const selectedIndex = DomUtils.getData($ele, 'index', 'number');
 
     this.toggleSelectedProp(selectedIndex, isSelected);
     this.toggleOptionSelectedState($ele, isSelected);
@@ -2455,13 +2498,13 @@ export class VirtualSelect {
   }
 
   scrollToTop() {
-    let isClosed = !this.isOpened();
+    const isClosed = !this.isOpened();
 
     if (isClosed) {
       this.openDropbox(true);
     }
 
-    let scrollTop = this.$optionsContainer.scrollTop;
+    const { scrollTop } = this.$optionsContainer;
 
     if (scrollTop > 0) {
       this.$optionsContainer.scrollTop = 0;
@@ -2474,6 +2517,7 @@ export class VirtualSelect {
 
   reset(formReset = false) {
     this.options.forEach((d) => {
+      // eslint-disable-next-line no-param-reassign
       d.isSelected = false;
     });
 
@@ -2495,7 +2539,7 @@ export class VirtualSelect {
 
     this.lastOptionIndex++;
     data.index = this.lastOptionIndex;
-    let newOption = this.getOptionObj(data);
+    const newOption = this.getOptionObj(data);
 
     this.options.push(newOption);
     this.sortedOptions.push(newOption);
@@ -2516,7 +2560,7 @@ export class VirtualSelect {
   }
 
   removeNewOption() {
-    let newOption = this.getNewOption();
+    const newOption = this.getNewOption();
 
     if (newOption) {
       this.removeOption(newOption.index);
@@ -2525,8 +2569,8 @@ export class VirtualSelect {
 
   sortOptions(options) {
     return options.sort((a, b) => {
-      let aIsSelected = a.isSelected || a.isAnySelected;
-      let bIsSelected = b.isSelected || b.isAnySelected;
+      const aIsSelected = a.isSelected || a.isAnySelected;
+      const bIsSelected = b.isSelected || b.isAnySelected;
 
       if (!aIsSelected && !bIsSelected) {
         return 0;
@@ -2539,11 +2583,12 @@ export class VirtualSelect {
   }
 
   sortOptionsGroup(options) {
-    let sortOptions = this.sortOptions.bind(this);
+    const sortOptions = this.sortOptions.bind(this);
     options = this.structureOptionGroup(options);
 
     options.forEach((d) => {
-      let childOptions = d.options;
+      const childOptions = d.options;
+      // eslint-disable-next-line no-param-reassign
       d.isAnySelected = childOptions.some((e) => e.isSelected);
 
       if (d.isAnySelected) {
@@ -2557,10 +2602,10 @@ export class VirtualSelect {
   }
 
   isOptionVisible({ data, searchValue, hasExactOption, visibleOptionGroupsMapping, searchGroup }) {
-    let value = data.label.toLowerCase();
-    let description = data.description;
-    let alias = data.alias;
-    let isVisible = value.indexOf(searchValue) !== -1;
+    const value = data.value.toLowerCase();
+    const label = data.label.toLowerCase();
+    const { description, alias } = data;
+    let isVisible = label.indexOf(searchValue) !== -1;
 
     if (data.isGroupTitle) {
       if (!searchGroup || !isVisible) {
@@ -2579,7 +2624,7 @@ export class VirtualSelect {
     data.isVisible = isVisible;
 
     if (!hasExactOption) {
-      hasExactOption = value === searchValue;
+      hasExactOption = label === searchValue || value === searchValue;
     }
 
     return {
@@ -2589,13 +2634,14 @@ export class VirtualSelect {
   }
 
   structureOptionGroup(options) {
-    let result = [];
-    let childOptions = {};
+    const result = [];
+    const childOptions = {};
 
     /** getting all group title */
     options.forEach((d) => {
       if (d.isGroupTitle) {
-        let childArray = [];
+        const childArray = [];
+        // eslint-disable-next-line no-param-reassign
         d.options = childArray;
         childOptions[d.index] = childArray;
 
@@ -2633,8 +2679,8 @@ export class VirtualSelect {
   }
 
   removeValue($ele) {
-    let selectedValues = this.selectedValues;
-    let selectedValue = DomUtils.getData($ele, 'value');
+    const { selectedValues } = this;
+    const selectedValue = DomUtils.getData($ele, 'value');
 
     Utils.removeItemFromArray(selectedValues, selectedValue);
     this.setValueMethod(selectedValues);
@@ -2677,7 +2723,7 @@ export class VirtualSelect {
   }
 
   destroy() {
-    let $ele = this.$ele;
+    const { $ele } = this;
     $ele.virtualSelect = undefined;
     $ele.value = undefined;
     $ele.innerHTML = '';
@@ -2747,7 +2793,7 @@ export class VirtualSelect {
 
     if (typeof $eleArray === 'string') {
       $eleArray = document.querySelectorAll($eleArray);
-      let eleLength = $eleArray.length;
+      const eleLength = $eleArray.length;
 
       if (eleLength === 0) {
         return;
@@ -2761,7 +2807,7 @@ export class VirtualSelect {
       singleEle = true;
     }
 
-    let instances = [];
+    const instances = [];
     $eleArray.forEach(($ele) => {
       /** skipping initialization on calling init method multiple times */
       if ($ele.virtualSelect) {
@@ -2782,7 +2828,7 @@ export class VirtualSelect {
   }
 
   static getAttrProps() {
-    const convertPropToDataAttr = DomUtils.convertPropToDataAttr;
+    const { convertPropToDataAttr } = DomUtils;
     const result = {};
 
     nativeProps.forEach((d) => {
@@ -2798,28 +2844,41 @@ export class VirtualSelect {
 
   static setPropsFromSelect(props) {
     const $ele = props.ele;
-    const $options = $ele.querySelectorAll('option');
-    const options = [];
     const disabledOptions = [];
     const selectedValue = [];
 
-    /** getting options */
-    $options.forEach(function ($option) {
-      let value = $option.value;
+    const getNativeOptions = ($container) => {
+      const options = [];
+      const $options = Array.from($container.children);
 
-      options.push({
-        label: $option.innerHTML,
-        value,
+      $options.forEach(function ($option) {
+        const { value } = $option;
+        const option = {
+          value,
+        };
+
+        if ($option.tagName === 'OPTGROUP') {
+          option.label = $option.getAttribute('label');
+          option.options = getNativeOptions($option);
+        } else {
+          option.label = $option.innerHTML;
+        }
+
+        options.push(option);
+
+        if ($option.disabled) {
+          disabledOptions.push(value);
+        }
+
+        if ($option.selected) {
+          selectedValue.push(value);
+        }
       });
 
-      if ($option.disabled) {
-        disabledOptions.push(value);
-      }
+      return options;
+    };
 
-      if ($option.selected) {
-        selectedValue.push(value);
-      }
-    });
+    const optionsList = getNativeOptions($ele);
 
     /** creating div element to initiate plugin and removing native element */
     const $newEle = document.createElement('div');
@@ -2829,13 +2888,13 @@ export class VirtualSelect {
     $ele.remove();
 
     props.ele = $newEle;
-    props.options = options;
+    props.options = optionsList;
     props.disabledOptions = disabledOptions;
     props.selectedValue = selectedValue;
   }
 
   static onFormReset(e) {
-    let $form = e.target.closest('form');
+    const $form = e.target.closest('form');
 
     if (!$form) {
       return;
@@ -2860,7 +2919,7 @@ export class VirtualSelect {
     let hasError = false;
 
     $container.querySelectorAll('.vscomp-ele-wrapper').forEach(($ele) => {
-      let result = $ele.parentElement.virtualSelect.validate();
+      const result = $ele.parentElement.virtualSelect.validate();
 
       if (!hasError && !result) {
         hasError = true;
