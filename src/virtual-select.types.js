@@ -10,6 +10,7 @@
  * @property {string} [aliasKey=alias] - Key name to get alias from options object
  * @property {boolean} [multiple=false] - Enable multiselect
  * @property {boolean} [search=false] - Enable search
+ * @property {boolean} [searchByStartsWith=false] - Search options by startsWith() method
  * @property {boolean} [searchGroup=false] - Include group title for searching
  * @property {boolean} [disabled=false] - Disable dropdown
  * @property {boolean} [required=false] - Enable required validation

@@ -16,6 +16,7 @@
 | disabledOptions | Array | [] | List of values to disable options <br/>e.g - [2, 3, 9] |
 | multiple | Boolean | false | Enable multi-select |
 | search | Boolean | false - for single select <br/>true - for multi-select | Enable search feature |
+| searchByStartsWith | Boolean | false | Search options by startsWith() method |
 | searchGroup | Boolean | false | Include group title for searching |
 | disabled | Boolean | false | Disable dropdown |
 | required | Boolean | false | Enable required validation. <br/>It would be triggered automatically on form submit and value change. <br/>To trigger it manually use [validate()](methods?id=validate) method |
