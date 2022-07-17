@@ -67,6 +67,8 @@
  * @property {boolean} [disableValidation=false] - Disable required validation
  * @property {boolean} [useGroupValue=false] - Group's value would be returned when all of its child options selected
  * @property {string} [maxWidth='250px'] - Maximum width for the select element
+ * @property {number} [updatePositionThrottle=100] - Throttle time for updating dropbox position
+ * on scroll event (in milliseconds)
  *
  * @property {string} [placeholder=Select] - Text to show when no options selected
  * @property {string} [noOptionsText='No options found'] - Text to show when no options to show

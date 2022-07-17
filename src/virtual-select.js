@@ -68,6 +68,7 @@ const dataProps = [
   'tooltipAlignment',
   'tooltipFontSize',
   'tooltipMaxWidth',
+  'updatePositionThrottle',
   'useGroupValue',
   'valueKey',
   'zIndex',
@@ -369,7 +370,7 @@ export class VirtualSelect {
     this.$toggleAllButton = this.$dropboxContainer.querySelector('.vscomp-toggle-all-button');
     this.$toggleAllCheckbox = this.$dropboxContainer.querySelector('.vscomp-toggle-all-checkbox');
 
-    this.addEvent(this.$searchInput, 'keyup change', 'onSearch');
+    this.addEvent(this.$searchInput, 'input', 'onSearch');
     this.addEvent(this.$searchClear, 'click', 'onSearchClear');
     this.addEvent(this.$toggleAllButton, 'click', 'onToggleAllOptions');
   }
@@ -755,6 +756,7 @@ export class VirtualSelect {
     this.tooltipFontSize = options.tooltipFontSize;
     this.tooltipAlignment = options.tooltipAlignment;
     this.tooltipMaxWidth = options.tooltipMaxWidth;
+    this.updatePositionThrottle = options.updatePositionThrottle;
     this.noOfDisplayValues = parseInt(options.noOfDisplayValues);
     this.zIndex = parseInt(options.zIndex);
     this.maxValues = parseInt(options.maxValues);
@@ -832,6 +834,7 @@ export class VirtualSelect {
       tooltipFontSize: '14px',
       tooltipAlignment: 'center',
       tooltipMaxWidth: '300px',
+      updatePositionThrottle: 100,
       name: '',
       additionalClasses: '',
       maxValues: 0,
@@ -1999,6 +2002,7 @@ export class VirtualSelect {
       hideArrowIcon: true,
       disableManualAction: true,
       disableUpdatePosition: !this.hasDropboxWrapper,
+      updatePositionThrottle: this.updatePositionThrottle,
       afterShow: this.afterShowPopper.bind(this),
       afterHide: this.afterHidePopper.bind(this),
     };

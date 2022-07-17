@@ -4,7 +4,7 @@
 | --- | --- | --- | ---- |
 | ele | String \| Element | | DOM element to initialize plugin<br/>String - #sample-select <br/>Element - document.querySelector('#sample-select') |
 | dropboxWrapper | String | self | Parent element to render dropbox. (self, body, or any css selectror) <br/> Use this when container of dropdown has overflow scroll or hiddden value. |
-| options | Array | [] | List of options <br/>[<br/>  { label: 'Option 1', value: '1' }, <br/>  { label: 'Option 2', value: '2' }<br/>  ...<br/>] |
+| options | Array | [] | List of options <br/>[<br/>  { label: 'Option 1', value: '1' }, <br/>  { label: 'Option 2', value: '2' }<br/>  ...<br/>]<br/><br/> Use array of strings when label and value are same<br/>['value 1', 'value 2'] |
 | options[].alias | String \| Array | | Alternative labels to use on search.<br/>Array of string or comma separated string. |
 | options[].options | Array | | List of options for option group |
 | options[].description | String | | Text to show along with label |
@@ -63,6 +63,7 @@
 | disableValidation | Boolean | false | Disable required validation |
 | useGroupValue | Boolean | false | Group's value would be returned when all of its child options selected |
 | maxWidth | String | 250px | Maximum width for the select element |
+| updatePositionThrottle | Number | 100 | Throttle time for updating dropbox position on scroll event (in milliseconds) |
 
 # Text Properties
 
