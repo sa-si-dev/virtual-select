@@ -2289,6 +2289,7 @@ export class VirtualSelect {
     let { selectedValues } = this;
     const selectedValue = DomUtils.getData($ele, 'value');
     const selectedIndex = DomUtils.getData($ele, 'index', 'number');
+    const isNewOption = DomUtils.hasClass($ele, 'current-new');
     let shouldSelectRange = false;
     const { lastSelectedOptionIndex } = this;
     this.lastSelectedOptionIndex = null;
@@ -2317,7 +2318,10 @@ export class VirtualSelect {
         }
 
         this.closeDropbox();
-        this.setSearchValue('');
+
+        if (!isNewOption) {
+          this.setSearchValue('');
+        }
       }
 
       this.lastSelectedOptionIndex = selectedIndex;
@@ -2330,7 +2334,7 @@ export class VirtualSelect {
       this.toggleGroupOptionsParent($ele, false);
     }
 
-    if (DomUtils.hasClass($ele, 'current-new')) {
+    if (isNewOption) {
       this.beforeSelectNewValue();
     }
 
@@ -2797,10 +2801,11 @@ export class VirtualSelect {
     let hasError = false;
     const { selectedValues, minValues } = this;
 
-    if (this.required &&
+    if (
+      this.required &&
       (Utils.isEmpty(selectedValues) ||
-      /** required minium options not selected */
-      (this.multiple && minValues && selectedValues.length < minValues))
+        /** required minium options not selected */
+        (this.multiple && minValues && selectedValues.length < minValues))
     ) {
       hasError = true;
     }
