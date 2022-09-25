@@ -2873,6 +2873,7 @@ var VirtualSelect = /*#__PURE__*/function () {
       var selectedValues = this.selectedValues;
       var selectedValue = DomUtils.getData($ele, 'value');
       var selectedIndex = DomUtils.getData($ele, 'index', 'number');
+      var isNewOption = DomUtils.hasClass($ele, 'current-new');
       var shouldSelectRange = false;
       var lastSelectedOptionIndex = this.lastSelectedOptionIndex;
       this.lastSelectedOptionIndex = null;
@@ -2900,7 +2901,10 @@ var VirtualSelect = /*#__PURE__*/function () {
           }
 
           this.closeDropbox();
-          this.setSearchValue('');
+
+          if (!isNewOption) {
+            this.setSearchValue('');
+          }
         }
 
         this.lastSelectedOptionIndex = selectedIndex;
@@ -2912,7 +2916,7 @@ var VirtualSelect = /*#__PURE__*/function () {
         this.toggleGroupOptionsParent($ele, false);
       }
 
-      if (DomUtils.hasClass($ele, 'current-new')) {
+      if (isNewOption) {
         this.beforeSelectNewValue();
       }
 
