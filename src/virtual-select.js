@@ -1,3 +1,4 @@
+/** cSpell:ignore nocheck, Labelledby, vscomp, tabindex, combobox, haspopup, listbox, activedescendant */
 /* eslint-disable class-methods-use-this */
 // @ts-nocheck
 import { Utils, DomUtils } from './utils';
@@ -41,6 +42,7 @@ const dataProps = [
   'markSearchResults',
   'maxValues',
   'maxWidth',
+  'minValues',
   'moreText',
   'noOfDisplayValues',
   'noOptionsText',
@@ -276,6 +278,10 @@ export class VirtualSelect {
       let groupIndexText = '';
       const isSelected = convertToBoolean(d.isSelected);
       let ariaDisabledText = '';
+
+      if (d.classNames) {
+        optionClasses += ` ${d.classNames}`;
+      }
 
       if (d.isFocused) {
         optionClasses += ' focused';
@@ -583,7 +589,6 @@ export class VirtualSelect {
 
     /** using setTimeout to fix the issue of dropbox getting closed on select */
     setTimeout(() => {
-      this.isClearingSearchValue = true;
       this.setSearchValue('');
       this.focusSearchInput();
     }, 0);
@@ -651,13 +656,11 @@ export class VirtualSelect {
   }
 
   afterSetSearchValue() {
-    if (this.hasServerSearch && !this.isClearingSearchValue) {
+    if (this.hasServerSearch) {
       this.serverSearch();
     } else {
       this.setVisibleOptionsCount();
     }
-    
-    this.isClearingSearchValue = false;
 
     if (this.selectAllOnlyVisible) {
       this.toggleAllOptionsClass();
@@ -763,6 +766,7 @@ export class VirtualSelect {
     this.noOfDisplayValues = parseInt(options.noOfDisplayValues);
     this.zIndex = parseInt(options.zIndex);
     this.maxValues = parseInt(options.maxValues);
+    this.minValues = parseInt(options.minValues);
     this.name = this.secureText(options.name);
     this.additionalClasses = options.additionalClasses;
     this.popupDropboxBreakpoint = options.popupDropboxBreakpoint;
@@ -783,7 +787,6 @@ export class VirtualSelect {
     this.tooltipEnterDelay = 200;
     this.searchValue = '';
     this.searchValueOriginal = '';
-    this.isClearingSearchValue = false;
     this.isAllSelected = false;
 
     if ((options.search === undefined && this.multiple) || this.allowNewOption || this.showOptionsOnlyOnSearch) {
@@ -889,6 +892,7 @@ export class VirtualSelect {
     $ele.setValue = VirtualSelect.setValueMethod;
     $ele.setOptions = VirtualSelect.setOptionsMethod;
     $ele.setDisabledOptions = VirtualSelect.setDisabledOptionsMethod;
+    $ele.setEnabledOptions = VirtualSelect.setEnabledOptionsMethod;
     $ele.toggleSelectAll = VirtualSelect.toggleSelectAll;
     $ele.isAllSelected = VirtualSelect.isAllSelected;
     $ele.addOption = VirtualSelect.addOptionMethod;
@@ -1072,6 +1076,55 @@ export class VirtualSelect {
     this.disabledOptions = disabledOptionsArr;
   }
 
+  setEnabledOptionsMethod(disabledOptions, keepValue = false) {
+    this.setEnabledOptions(disabledOptions);
+
+    if (!keepValue) {
+      this.setValueMethod(null);
+      this.toggleAllOptionsClass();
+    }
+
+    this.setVisibleOptions();
+  }
+
+  setEnabledOptions(enabledOptions) {
+    if (enabledOptions === undefined) {
+      return;
+    }
+
+    const disabledOptionsArr = [];
+
+    if (enabledOptions === true) {
+      this.options.forEach((d) => {
+        // eslint-disable-next-line no-param-reassign
+        d.isDisabled = false;
+
+        return d;
+      });
+    } else {
+      const enabledOptionsMapping = {};
+
+      enabledOptions.forEach((d) => {
+        enabledOptionsMapping[d] = true;
+      });
+
+      this.options.forEach((d) => {
+        const isDisabled = enabledOptionsMapping[d.value] !== true;
+
+        // eslint-disable-next-line no-param-reassign
+        d.isDisabled = isDisabled;
+
+        if (isDisabled) {
+          disabledOptionsArr.push(d.value);
+        }
+
+        return d;
+      });
+    }
+
+    this.disabledOptions = disabledOptionsArr;
+  }
+
   setOptions(options = []) {
     const preparedOptions = [];
     const hasDisabledOptions = this.disabledOptions.length;
@@ -1105,6 +1158,7 @@ export class VirtualSelect {
         isVisible: convertToBoolean(d.isVisible, true),
         isNew: d.isNew || false,
         isGroupTitle,
+        classNames: d.classNames,
       };
 
       if (!hasEmptyValueOption && value === '') {
@@ -1168,7 +1222,7 @@ export class VirtualSelect {
     const newOptions = this.options;
     let optionsUpdated = false;
 
-    /** merging already seleted options details with new options */
+    /** merging already selected options details with new options */
     if (selectedOptions.length) {
       const newOptionsValueMapping = {};
       optionsUpdated = true;
@@ -1178,7 +1232,7 @@ export class VirtualSelect {
       });
 
       selectedOptions.forEach((d) => {
-        if (newOptionsValueMapping[d.value] === false) {
+        if (newOptionsValueMapping[d.value] !== true) {
           // eslint-disable-next-line no-param-reassign
           d.isVisible = false;
           newOptions.push(d);
@@ -1398,7 +1452,7 @@ export class VirtualSelect {
 
               this.setValueTagAttr();
             } else {
-              /** replace comma delimitted list of selections with shorter text indicating selection count */
+              /** replace comma separated list of selections with shorter text indicating selection count */
               const optionsSelectedText = selectedLength === 1 ? this.optionSelectedText : this.optionsSelectedText;
               $valueText.innerHTML = `${countText} ${optionsSelectedText}`;
             }
@@ -2263,6 +2317,7 @@ export class VirtualSelect {
         }
 
         this.closeDropbox();
+        this.setSearchValue('');
       }
 
       this.lastSelectedOptionIndex = selectedIndex;
@@ -2740,8 +2795,13 @@ export class VirtualSelect {
     }
 
     let hasError = false;
+    const { selectedValues, minValues } = this;
 
-    if (this.required && Utils.isEmpty(this.selectedValues)) {
+    if (this.required &&
+      (Utils.isEmpty(selectedValues) ||
+      /** required minium options not selected */
+      (this.multiple && minValues && selectedValues.length < minValues))
+    ) {
       hasError = true;
     }
 
@@ -2982,6 +3042,10 @@ export class VirtualSelect {
 
   static setDisabledOptionsMethod(...params) {
     this.virtualSelect.setDisabledOptionsMethod(...params);
+  }
+
+  static setEnabledOptionsMethod(...params) {
+    this.virtualSelect.setEnabledOptionsMethod(...params);
   }
 
   static toggleSelectAll(isSelected) {

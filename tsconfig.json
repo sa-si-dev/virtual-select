@@ -7,7 +7,9 @@
     "outDir": "ts-types",
     "allowJs": true,
     "checkJs": true,
-    "strict": true
+    "strict": true,
+    "declaration": true,
+    "emitDeclarationOnly": true
   },
 
   "include": ["src/**/*"]

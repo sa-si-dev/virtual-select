@@ -8,6 +8,7 @@
 | options[].alias | String \| Array | | Alternative labels to use on search.<br/>Array of string or comma separated string. |
 | options[].options | Array | | List of options for option group |
 | options[].description | String | | Text to show along with label |
+| options[].classNames | String | | Additional class names to customize specific option |
 | options[].customData | Any | | Any custom data to store with the options and it would be available with getSelectedOptions() result. |
 | valueKey | String | value | Object key to use to get value from options array |
 | labelKey | String | label | Object key to use to get label from options array |
@@ -43,6 +44,7 @@
 | name | String | | Name attribute for hidden input<br>It would be useful for form submit to server |
 | keepAlwaysOpen | Boolean | false | Keep dropbox always open with fixed height |
 | maxValues | Number | 0 | Maximum no.of options allowed to choose in multiple select<br>0 - for no limit |
+| minValues | Number | | Minimum no.of options should be selected to succeed required validation |
 | additionalClasses | String | | Additional classes for wrapper element |
 | showDropboxAsPopup | Boolean | true | Show dropbox as popup on small screen like mobile |
 | popupDropboxBreakpoint | String | 576px | Maximum screen width that allowed to show dropbox as popup |

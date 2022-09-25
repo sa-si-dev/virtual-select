@@ -1,6 +1,6 @@
 {
   "name": "virtual-select-plugin",
-  "version": "1.0.31",
+  "version": "1.0.32",
   "description": "A javascript plugin for dropdown with virtual scroll",
   "scripts": {
     "start": "webpack --mode development --watch",
@@ -34,7 +34,7 @@
     "eslint-plugin-import": "^2.26.0",
     "filemanager-webpack-plugin": "^7.0.0",
     "mini-css-extract-plugin": "^2.6.1",
-    "popover-plugin": "^1.0.10",
+    "popover-plugin": "^1.0.11",
     "postcss-loader": "^7.0.1",
     "sass": "^1.53.0",
     "sass-loader": "^13.0.2",

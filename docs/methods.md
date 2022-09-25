@@ -5,6 +5,7 @@
 - [reset()](#reset)
 - [setOptions()](#setoptions)
 - [setDisabledOptions()](#setdisabledoptions)
+- [setEnabledOptions()](#setenabledoptions)
 - [toggleSelectAll()](#toggleselectall)
 - [isAllSelected()](#isallselected)
 - [addOption()](#addoption)
@@ -80,6 +81,22 @@ document.querySelector('#sample-select').setDisabledOptions(disabledOptions);
 
 /** to disable all options */
 document.querySelector('#sample-select').setDisabledOptions(true);
+```
+
+### setEnabledOptions()
+
+**Arguments:**
+
+- enabledOptions - list of enabled option's values or `true` to enable all options
+- keepValue - set true to keep selected value
+
+```js
+var enabledOptions = [2, 6, 9];
+
+document.querySelector('#sample-select').setEnabledOptions(enabledOptions);
+
+/** to enable all options */
+document.querySelector('#sample-select').setEnabledOptions(true);
 ```
 
 ### toggleSelectAll()
