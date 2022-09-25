@@ -583,6 +583,7 @@ export class VirtualSelect {
 
     /** using setTimeout to fix the issue of dropbox getting closed on select */
     setTimeout(() => {
+      this.isClearingSearchValue = true;
       this.setSearchValue('');
       this.focusSearchInput();
     }, 0);
@@ -650,11 +651,13 @@ export class VirtualSelect {
   }
 
   afterSetSearchValue() {
-    if (this.hasServerSearch) {
+    if (this.hasServerSearch && !this.isClearingSearchValue) {
       this.serverSearch();
     } else {
       this.setVisibleOptionsCount();
     }
+    
+    this.isClearingSearchValue = false;
 
     if (this.selectAllOnlyVisible) {
       this.toggleAllOptionsClass();
@@ -780,6 +783,7 @@ export class VirtualSelect {
     this.tooltipEnterDelay = 200;
     this.searchValue = '';
     this.searchValueOriginal = '';
+    this.isClearingSearchValue = false;
     this.isAllSelected = false;
 
     if ((options.search === undefined && this.multiple) || this.allowNewOption || this.showOptionsOnlyOnSearch) {
