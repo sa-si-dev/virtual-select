@@ -558,16 +558,24 @@ export class VirtualSelect {
     const $vscompEle = this.$ele;
 
     this.mutationObserver = new MutationObserver((mutations) => {
-      mutations.some((mutation) => {
-        const $removedNodes = [...mutation.removedNodes];
-        const isMatching = $removedNodes.some(($ele) => !!($ele === $vscompEle || $ele.contains($vscompEle)));
+      let isAdded = false;
+      let isRemoved = false;
 
-        if (isMatching) {
-          this.destroy();
+      mutations.some((mutation) => {
+        if (!isAdded) {
+          const $addedNodes = [...mutation.addedNodes];
+          isAdded = $addedNodes.some(($ele) => !!($ele === $vscompEle || $ele.contains($vscompEle)));
         }
 
-        return isMatching;
+        if (!isRemoved) {
+          const $removedNodes = [...mutation.removedNodes];
+          isRemoved = $removedNodes.some(($ele) => !!($ele === $vscompEle || $ele.contains($vscompEle)));
+        }
       });
+
+      if (isRemoved && !isAdded) {
+        this.destroy();
+      }
     });
 
     this.mutationObserver.observe(document.querySelector('body'), { childList: true, subtree: true });
