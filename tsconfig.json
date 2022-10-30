@@ -9,8 +9,9 @@
     "checkJs": true,
     "strict": true,
     "declaration": true,
+    "types": ["cypress"],
     "emitDeclarationOnly": true
   },
 
-  "include": ["src/**/*"]
+  "include": ["src/**/*", "cypress/**/*"]
 }
