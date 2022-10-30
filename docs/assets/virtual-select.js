@@ -1673,11 +1673,10 @@ var VirtualSelect = /*#__PURE__*/function () {
 
       var prepareOption = function prepareOption(d) {
         if (virtual_select_typeof(d) !== 'object') {
+          var _d2;
+
           // eslint-disable-next-line no-param-reassign
-          d = {
-            value: d,
-            label: d
-          };
+          d = (_d2 = {}, _defineProperty(_d2, valueKey, d), _defineProperty(_d2, labelKey, d), _d2);
         }
 
         var value = secureText(getString(d[valueKey]));
