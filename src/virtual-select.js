@@ -1150,7 +1150,7 @@ export class VirtualSelect {
     const prepareOption = (d) => {
       if (typeof d !== 'object') {
         // eslint-disable-next-line no-param-reassign
-        d = { value: d, label: d };
+        d = { [valueKey]: d, [labelKey]: d };
       }
 
       const value = secureText(getString(d[valueKey]));
