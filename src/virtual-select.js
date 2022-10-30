@@ -561,15 +561,13 @@ export class VirtualSelect {
       let isAdded = false;
       let isRemoved = false;
 
-      mutations.some((mutation) => {
+      mutations.forEach((mutation) => {
         if (!isAdded) {
-          const $addedNodes = [...mutation.addedNodes];
-          isAdded = $addedNodes.some(($ele) => !!($ele === $vscompEle || $ele.contains($vscompEle)));
+          isAdded = [...mutation.addedNodes].some(($ele) => !!($ele === $vscompEle || $ele.contains($vscompEle)));
         }
 
         if (!isRemoved) {
-          const $removedNodes = [...mutation.removedNodes];
-          isRemoved = $removedNodes.some(($ele) => !!($ele === $vscompEle || $ele.contains($vscompEle)));
+          isRemoved = [...mutation.removedNodes].some(($ele) => !!($ele === $vscompEle || $ele.contains($vscompEle)));
         }
       });
 
@@ -2184,7 +2182,7 @@ export class VirtualSelect {
   }
 
   updatePosition() {
-    if (!this.dropboxPopover) {
+    if (!this.dropboxPopover || !this.isOpened()) {
       return;
     }
 
