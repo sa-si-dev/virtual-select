@@ -50,6 +50,7 @@
 | popupDropboxBreakpoint | String | 576px | Maximum screen width that allowed to show dropbox as popup |
 | popupPosition | String | center | Position of the popup (left, center, or right) |
 | onServerSearch | Function | | Callback function to integrate server search |
+| searchDelay | Number | 300 | Delay time in milliseconds to trigger onServerSearch callback function |
 | labelRenderer | Function | | Callback function to render label, which could be used to add image, icon, or custom content |
 | ariaLabelledby | String | | ID of the label element to use as a11y attribute aria-labelledby |
 | hideValueTooltipOnSelectAll | Boolean | true | Hide value tooltip if all options selected |

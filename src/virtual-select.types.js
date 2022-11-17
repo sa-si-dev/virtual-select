@@ -46,6 +46,7 @@
  * @property {string} [popupDropboxBreakpoint='576px'] Maximum screen width that allowed to show dropbox as popup
  * @property {string} [popupPosition=center] Position of the popup (left, center, or right)
  * @property {function} [onServerSearch] Callback function to integrate server search
+ * @property {number} [searchDelay=300] Delay time in milliseconds to trigger onServerSearch callback function
  * @property {function} [labelRenderer] Callback function to render label, which could be used to add image,
  * icon, or custom content
  * @property {string} [ariaLabelledby] ID of the label element to use as a11y attribute aria-labelledby
