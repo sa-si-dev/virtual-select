@@ -1213,7 +1213,9 @@ export class VirtualSelect {
       }
     };
 
-    options.forEach(prepareOption);
+    if (Array.isArray(options)) {
+      options.forEach(prepareOption);
+    }
 
     const optionsLength = preparedOptions.length;
     const { $ele } = this;
@@ -2506,7 +2508,12 @@ export class VirtualSelect {
       return;
     }
 
-    const groupIndex = DomUtils.getData($option, 'groupIndex', 'number');
+    let groupIndex = DomUtils.getData($option, 'groupIndex');
+
+    if (groupIndex !== undefined) {
+      groupIndex = parseInt(groupIndex);
+    }
+
     const $group = this.$options.querySelector(`.vscomp-option[data-index="${groupIndex}"]`);
     const isAllSelected = typeof isSelected === 'boolean' ? isSelected : this.isAllGroupOptionsSelected(groupIndex);
 
