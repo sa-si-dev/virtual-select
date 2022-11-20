@@ -1,5 +1,5 @@
 /*!
- * Virtual Select v1.0.34
+ * Virtual Select v1.0.35
  * https://sa-si-dev.github.io/virtual-select
  * Licensed under MIT (https://github.com/sa-si-dev/virtual-select/blob/master/LICENSE)
  *//******/ (function() { // webpackBootstrap
@@ -570,7 +570,7 @@ var keyDownMethodMapping = {
 var valueLessProps = ['autofocus', 'disabled', 'multiple', 'required'];
 var nativeProps = ['autofocus', 'class', 'disabled', 'id', 'multiple', 'name', 'placeholder', 'required'];
 var attrPropsMapping;
-var dataProps = ['additionalClasses', 'aliasKey', 'allOptionsSelectedText', 'allowNewOption', 'alwaysShowSelectedOptionsCount', 'ariaLabelledby', 'autoSelectFirstOption', 'clearButtonText', 'descriptionKey', 'disableAllOptionsSelectedText', 'disableOptionGroupCheckbox', 'disableSelectAll', 'disableValidation', 'dropboxWidth', 'dropboxWrapper', 'emptyValue', 'enableSecureText', 'hasOptionDescription', 'hideClearButton', 'hideValueTooltipOnSelectAll', 'keepAlwaysOpen', 'labelKey', 'markSearchResults', 'maxValues', 'maxWidth', 'minValues', 'moreText', 'noOfDisplayValues', 'noOptionsText', 'noSearchResultsText', 'optionHeight', 'optionSelectedText', 'optionsCount', 'optionsSelectedText', 'popupDropboxBreakpoint', 'popupPosition', 'position', 'search', 'searchByStartsWith', 'searchGroup', 'searchPlaceholderText', 'selectAllOnlyVisible', 'selectAllText', 'setValueAsArray', 'showDropboxAsPopup', 'showOptionsOnlyOnSearch', 'showSelectedOptionsFirst', 'showValueAsTags', 'silentInitialValueSet', 'textDirection', 'tooltipAlignment', 'tooltipFontSize', 'tooltipMaxWidth', 'updatePositionThrottle', 'useGroupValue', 'valueKey', 'zIndex'];
+var dataProps = ['additionalClasses', 'aliasKey', 'allOptionsSelectedText', 'allowNewOption', 'alwaysShowSelectedOptionsCount', 'ariaLabelledby', 'autoSelectFirstOption', 'clearButtonText', 'descriptionKey', 'disableAllOptionsSelectedText', 'disableOptionGroupCheckbox', 'disableSelectAll', 'disableValidation', 'dropboxWidth', 'dropboxWrapper', 'emptyValue', 'enableSecureText', 'hasOptionDescription', 'hideClearButton', 'hideValueTooltipOnSelectAll', 'keepAlwaysOpen', 'labelKey', 'markSearchResults', 'maxValues', 'maxWidth', 'minValues', 'moreText', 'noOfDisplayValues', 'noOptionsText', 'noSearchResultsText', 'optionHeight', 'optionSelectedText', 'optionsCount', 'optionsSelectedText', 'popupDropboxBreakpoint', 'popupPosition', 'position', 'search', 'searchByStartsWith', 'searchDelay', 'searchGroup', 'searchPlaceholderText', 'selectAllOnlyVisible', 'selectAllText', 'setValueAsArray', 'showDropboxAsPopup', 'showOptionsOnlyOnSearch', 'showSelectedOptionsFirst', 'showValueAsTags', 'silentInitialValueSet', 'textDirection', 'tooltipAlignment', 'tooltipFontSize', 'tooltipMaxWidth', 'updatePositionThrottle', 'useGroupValue', 'valueKey', 'zIndex'];
 /** Class representing VirtualSelect */
 
 var VirtualSelect = /*#__PURE__*/function () {
@@ -1159,8 +1159,13 @@ var VirtualSelect = /*#__PURE__*/function () {
   }, {
     key: "afterSetSearchValue",
     value: function afterSetSearchValue() {
+      var _this5 = this;
+
       if (this.hasServerSearch) {
-        this.serverSearch();
+        clearInterval(this.serverSearchTimeout);
+        this.serverSearchTimeout = setTimeout(function () {
+          _this5.serverSearch();
+        }, this.searchDelay);
       } else {
         this.setVisibleOptionsCount();
       }
@@ -1287,6 +1292,7 @@ var VirtualSelect = /*#__PURE__*/function () {
       this.emptyValue = options.emptyValue;
       this.ariaLabelledby = options.ariaLabelledby;
       this.maxWidth = options.maxWidth;
+      this.searchDelay = options.searchDelay;
       /** @type {string[]} */
 
       this.selectedValues = [];
@@ -1361,7 +1367,8 @@ var VirtualSelect = /*#__PURE__*/function () {
         popupDropboxBreakpoint: '576px',
         popupPosition: 'center',
         hideValueTooltipOnSelectAll: true,
-        emptyValue: ''
+        emptyValue: '',
+        searchDelay: 300
       };
 
       if (options.hasOptionDescription) {
@@ -1730,7 +1737,10 @@ var VirtualSelect = /*#__PURE__*/function () {
         }
       };
 
-      options.forEach(prepareOption);
+      if (Array.isArray(options)) {
+        options.forEach(prepareOption);
+      }
+
       var optionsLength = preparedOptions.length;
       var $ele = this.$ele;
       $ele.options = preparedOptions;
@@ -1746,7 +1756,7 @@ var VirtualSelect = /*#__PURE__*/function () {
   }, {
     key: "setServerOptions",
     value: function setServerOptions() {
-      var _this5 = this;
+      var _this6 = this;
 
       var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
       this.setOptionsMethod(options, true);
@@ -1775,7 +1785,7 @@ var VirtualSelect = /*#__PURE__*/function () {
 
       if (this.allowNewOption && this.searchValue) {
         var hasExactOption = newOptions.some(function (d) {
-          return d.label.toLowerCase() === _this5.searchValue;
+          return d.label.toLowerCase() === _this6.searchValue;
         });
 
         if (!hasExactOption) {
@@ -1866,12 +1876,12 @@ var VirtualSelect = /*#__PURE__*/function () {
   }, {
     key: "setOptionsTooltip",
     value: function setOptionsTooltip() {
-      var _this6 = this;
+      var _this7 = this;
 
       var visibleOptions = this.getVisibleOptions();
       var hasOptionDescription = this.hasOptionDescription;
       visibleOptions.forEach(function (d) {
-        var $optionEle = _this6.$dropboxContainer.querySelector(".vscomp-option[data-index=\"".concat(d.index, "\"]"));
+        var $optionEle = _this7.$dropboxContainer.querySelector(".vscomp-option[data-index=\"".concat(d.index, "\"]"));
 
         DomUtils.setData($optionEle.querySelector('.vscomp-option-text'), 'tooltip', d.label);
 
@@ -2939,7 +2949,7 @@ var VirtualSelect = /*#__PURE__*/function () {
   }, {
     key: "selectRangeOptions",
     value: function selectRangeOptions(lastSelectedOptionIndex, selectedIndex) {
-      var _this7 = this;
+      var _this8 = this;
 
       if (typeof lastSelectedOptionIndex !== 'number' || this.maxValues) {
         return;
@@ -2994,7 +3004,7 @@ var VirtualSelect = /*#__PURE__*/function () {
 
 
       setTimeout(function () {
-        _this7.renderOptions();
+        _this8.renderOptions();
       }, 0);
     }
   }, {
@@ -3087,7 +3097,12 @@ var VirtualSelect = /*#__PURE__*/function () {
         return;
       }
 
-      var groupIndex = DomUtils.getData($option, 'groupIndex', 'number');
+      var groupIndex = DomUtils.getData($option, 'groupIndex');
+
+      if (groupIndex !== undefined) {
+        groupIndex = parseInt(groupIndex);
+      }
+
       var $group = this.$options.querySelector(".vscomp-option[data-index=\"".concat(groupIndex, "\"]"));
       var isAllSelected = typeof isSelected === 'boolean' ? isSelected : this.isAllGroupOptionsSelected(groupIndex);
       this.toggleGroupTitleCheckbox($group, isAllSelected);
@@ -3101,7 +3116,7 @@ var VirtualSelect = /*#__PURE__*/function () {
   }, {
     key: "toggleGroupOptions",
     value: function toggleGroupOptions($ele, isSelected) {
-      var _this8 = this;
+      var _this9 = this;
 
       if (!this.hasOptionGroup || this.disableOptionGroupCheckbox || !$ele) {
         return;
@@ -3143,7 +3158,7 @@ var VirtualSelect = /*#__PURE__*/function () {
       /** using setTimeout to fix the issue of dropbox getting closed on select */
 
       setTimeout(function () {
-        _this8.renderOptions();
+        _this9.renderOptions();
       }, 0);
     }
   }, {
