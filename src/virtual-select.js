@@ -56,6 +56,7 @@ const dataProps = [
   'position',
   'search',
   'searchByStartsWith',
+  'searchDelay',
   'searchGroup',
   'searchPlaceholderText',
   'selectAllOnlyVisible',
@@ -663,7 +664,11 @@ export class VirtualSelect {
 
   afterSetSearchValue() {
     if (this.hasServerSearch) {
-      this.serverSearch();
+      clearInterval(this.serverSearchTimeout);
+
+      this.serverSearchTimeout = setTimeout(() => {
+        this.serverSearch();
+      }, this.searchDelay);
     } else {
       this.setVisibleOptionsCount();
     }
@@ -783,6 +788,7 @@ export class VirtualSelect {
     this.emptyValue = options.emptyValue;
     this.ariaLabelledby = options.ariaLabelledby;
     this.maxWidth = options.maxWidth;
+    this.searchDelay = options.searchDelay;
 
     /** @type {string[]} */
     this.selectedValues = [];
@@ -856,6 +862,7 @@ export class VirtualSelect {
       popupPosition: 'center',
       hideValueTooltipOnSelectAll: true,
       emptyValue: '',
+      searchDelay: 300,
     };
 
     if (options.hasOptionDescription) {
