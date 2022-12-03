@@ -1,5 +1,5 @@
 /*!
- * Virtual Select v1.0.35
+ * Virtual Select v1.0.36
  * https://sa-si-dev.github.io/virtual-select
  * Licensed under MIT (https://github.com/sa-si-dev/virtual-select/blob/master/LICENSE)
  *//******/ (function() { // webpackBootstrap
@@ -570,7 +570,7 @@ var keyDownMethodMapping = {
 var valueLessProps = ['autofocus', 'disabled', 'multiple', 'required'];
 var nativeProps = ['autofocus', 'class', 'disabled', 'id', 'multiple', 'name', 'placeholder', 'required'];
 var attrPropsMapping;
-var dataProps = ['additionalClasses', 'aliasKey', 'allOptionsSelectedText', 'allowNewOption', 'alwaysShowSelectedOptionsCount', 'ariaLabelledby', 'autoSelectFirstOption', 'clearButtonText', 'descriptionKey', 'disableAllOptionsSelectedText', 'disableOptionGroupCheckbox', 'disableSelectAll', 'disableValidation', 'dropboxWidth', 'dropboxWrapper', 'emptyValue', 'enableSecureText', 'hasOptionDescription', 'hideClearButton', 'hideValueTooltipOnSelectAll', 'keepAlwaysOpen', 'labelKey', 'markSearchResults', 'maxValues', 'maxWidth', 'minValues', 'moreText', 'noOfDisplayValues', 'noOptionsText', 'noSearchResultsText', 'optionHeight', 'optionSelectedText', 'optionsCount', 'optionsSelectedText', 'popupDropboxBreakpoint', 'popupPosition', 'position', 'search', 'searchByStartsWith', 'searchDelay', 'searchGroup', 'searchPlaceholderText', 'selectAllOnlyVisible', 'selectAllText', 'setValueAsArray', 'showDropboxAsPopup', 'showOptionsOnlyOnSearch', 'showSelectedOptionsFirst', 'showValueAsTags', 'silentInitialValueSet', 'textDirection', 'tooltipAlignment', 'tooltipFontSize', 'tooltipMaxWidth', 'updatePositionThrottle', 'useGroupValue', 'valueKey', 'zIndex'];
+var dataProps = ['additionalClasses', 'aliasKey', 'allOptionsSelectedText', 'allowNewOption', 'alwaysShowSelectedOptionsCount', 'alwaysShowSelectedOptionsLabel', 'ariaLabelledby', 'autoSelectFirstOption', 'clearButtonText', 'descriptionKey', 'disableAllOptionsSelectedText', 'disableOptionGroupCheckbox', 'disableSelectAll', 'disableValidation', 'dropboxWidth', 'dropboxWrapper', 'emptyValue', 'enableSecureText', 'hasOptionDescription', 'hideClearButton', 'hideValueTooltipOnSelectAll', 'keepAlwaysOpen', 'labelKey', 'markSearchResults', 'maxValues', 'maxWidth', 'minValues', 'moreText', 'noOfDisplayValues', 'noOptionsText', 'noSearchResultsText', 'optionHeight', 'optionSelectedText', 'optionsCount', 'optionsSelectedText', 'popupDropboxBreakpoint', 'popupPosition', 'position', 'search', 'searchByStartsWith', 'searchDelay', 'searchGroup', 'searchPlaceholderText', 'selectAllOnlyVisible', 'selectAllText', 'setValueAsArray', 'showDropboxAsPopup', 'showOptionsOnlyOnSearch', 'showSelectedOptionsFirst', 'showValueAsTags', 'silentInitialValueSet', 'textDirection', 'tooltipAlignment', 'tooltipFontSize', 'tooltipMaxWidth', 'updatePositionThrottle', 'useGroupValue', 'valueKey', 'zIndex'];
 /** Class representing VirtualSelect */
 
 var VirtualSelect = /*#__PURE__*/function () {
@@ -1150,10 +1150,8 @@ var VirtualSelect = /*#__PURE__*/function () {
   }, {
     key: "afterSetOptionsContainerHeight",
     value: function afterSetOptionsContainerHeight(reset) {
-      if (reset) {
-        if (this.showAsPopup) {
-          this.setVisibleOptions();
-        }
+      if (reset && this.showAsPopup) {
+        this.setVisibleOptions();
       }
     }
   }, {
@@ -1251,6 +1249,7 @@ var VirtualSelect = /*#__PURE__*/function () {
       this.showOptionsOnlyOnSearch = convertToBoolean(options.showOptionsOnlyOnSearch);
       this.selectAllOnlyVisible = convertToBoolean(options.selectAllOnlyVisible);
       this.alwaysShowSelectedOptionsCount = convertToBoolean(options.alwaysShowSelectedOptionsCount);
+      this.alwaysShowSelectedOptionsLabel = convertToBoolean(options.alwaysShowSelectedOptionsLabel);
       this.disableAllOptionsSelectedText = convertToBoolean(options.disableAllOptionsSelectedText);
       this.showValueAsTags = convertToBoolean(options.showValueAsTags);
       this.disableOptionGroupCheckbox = convertToBoolean(options.disableOptionGroupCheckbox);
@@ -1418,6 +1417,7 @@ var VirtualSelect = /*#__PURE__*/function () {
       $ele.getNewValue = VirtualSelect.getNewValueMethod;
       $ele.getDisplayValue = VirtualSelect.getDisplayValueMethod;
       $ele.getSelectedOptions = VirtualSelect.getSelectedOptionsMethod;
+      $ele.getDisabledOptions = VirtualSelect.getDisabledOptionsMethod;
       $ele.open = VirtualSelect.openMethod;
       $ele.close = VirtualSelect.closeMethod;
       $ele.focus = VirtualSelect.focusMethod;
@@ -1985,8 +1985,9 @@ var VirtualSelect = /*#__PURE__*/function () {
 
           if (multiple) {
             var maxValues = this.maxValues;
+            var showSelectedCount = this.alwaysShowSelectedOptionsCount || DomUtils.hasEllipsis($valueText);
 
-            if (DomUtils.hasEllipsis($valueText) || maxValues || this.alwaysShowSelectedOptionsCount || showValueAsTags) {
+            if (showSelectedCount || maxValues || showValueAsTags) {
               var countText = "<span class=\"vscomp-selected-value-count\">".concat(selectedLength, "</span>");
 
               if (maxValues) {
@@ -2001,7 +2002,7 @@ var VirtualSelect = /*#__PURE__*/function () {
                 $valueText.innerHTML = valueTooltip.join('');
                 this.$valueTags = $valueText.querySelectorAll('.vscomp-value-tag');
                 this.setValueTagAttr();
-              } else {
+              } else if (!this.alwaysShowSelectedOptionsLabel) {
                 /** replace comma separated list of selections with shorter text indicating selection count */
                 var optionsSelectedText = selectedLength === 1 ? this.optionSelectedText : this.optionsSelectedText;
                 $valueText.innerHTML = "".concat(countText, " ").concat(optionsSelectedText);
@@ -2560,6 +2561,29 @@ var VirtualSelect = /*#__PURE__*/function () {
       return this.multiple || fullDetails ? selectedOptions : selectedOptions[0];
     }
   }, {
+    key: "getDisabledOptions",
+    value: function getDisabledOptions() {
+      var valueKey = this.valueKey,
+          labelKey = this.labelKey,
+          disabledOptions = this.disabledOptions;
+      var disabledOptionsValueMapping = {};
+      var result = [];
+      disabledOptions.forEach(function (value) {
+        disabledOptionsValueMapping[value] = true;
+      });
+      this.options.forEach(function (_ref4) {
+        var value = _ref4.value,
+            label = _ref4.label;
+
+        if (disabledOptionsValueMapping[value]) {
+          var _result$push;
+
+          result.push((_result$push = {}, _defineProperty(_result$push, valueKey, value), _defineProperty(_result$push, labelKey, label), _result$push));
+        }
+      });
+      return result;
+    }
+  }, {
     key: "getVisibleOptionGroupsMapping",
     value: function getVisibleOptionGroupsMapping(searchValue) {
       var options = this.options;
@@ -2786,10 +2810,10 @@ var VirtualSelect = /*#__PURE__*/function () {
   }, {
     key: "focusOption",
     value: function focusOption() {
-      var _ref4 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
-          direction = _ref4.direction,
-          $option = _ref4.$option,
-          focusFirst = _ref4.focusFirst;
+      var _ref5 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
+          direction = _ref5.direction,
+          $option = _ref5.$option,
+          focusFirst = _ref5.focusFirst;
 
       var $focusedEle = this.$dropboxContainer.querySelector('.vscomp-option.focused');
       var $newFocusedEle;
@@ -2866,8 +2890,8 @@ var VirtualSelect = /*#__PURE__*/function () {
   }, {
     key: "selectOption",
     value: function selectOption($ele) {
-      var _ref5 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
-          event = _ref5.event;
+      var _ref6 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
+          event = _ref6.event;
 
       if (!$ele) {
         return;
@@ -3009,36 +3033,40 @@ var VirtualSelect = /*#__PURE__*/function () {
     }
   }, {
     key: "toggleAllOptions",
-    value: function toggleAllOptions(isSelected) {
+    value: function toggleAllOptions(selectAll) {
       if (!this.multiple || this.disableSelectAll) {
         return;
       }
 
-      if (typeof isSelected !== 'boolean') {
-        // eslint-disable-next-line no-param-reassign
-        isSelected = !DomUtils.hasClass(this.$toggleAllCheckbox, 'checked');
-      }
-
+      var selectingAll = typeof isSelected === 'boolean' ? selectAll : !DomUtils.hasClass(this.$toggleAllCheckbox, 'checked');
       var selectedValues = [];
       var selectAllOnlyVisible = this.selectAllOnlyVisible;
       this.options.forEach(function (d) {
-        if (d.isDisabled || d.isCurrentNew) {
+        var option = d;
+
+        if (option.isDisabled || option.isCurrentNew) {
           return;
         }
 
-        if (!isSelected || selectAllOnlyVisible && !d.isVisible) {
-          // eslint-disable-next-line no-param-reassign
-          d.isSelected = false;
-        } else {
-          // eslint-disable-next-line no-param-reassign
-          d.isSelected = true;
+        var isVisible = option.isVisible,
+            isSelected = option.isSelected;
+        /** unselected items are */
 
-          if (!d.isGroupTitle) {
-            selectedValues.push(d.value);
+        if (
+        /** when unselecting all, selectAllOnlyVisible feature disabled or visible items or already unselected items */
+        !selectingAll && (!selectAllOnlyVisible || isVisible || !isSelected) ||
+        /** when selecting all, selectAllOnlyVisible feature enabled and hidden items those are not already selected */
+        selectingAll && selectAllOnlyVisible && !isVisible && !isSelected) {
+          option.isSelected = false;
+        } else {
+          option.isSelected = true;
+
+          if (!option.isGroupTitle) {
+            selectedValues.push(option.value);
           }
         }
       });
-      this.toggleAllOptionsClass(isSelected);
+      this.toggleAllOptionsClass(selectingAll);
       this.setValue(selectedValues);
       this.renderOptions();
     }
@@ -3050,28 +3078,35 @@ var VirtualSelect = /*#__PURE__*/function () {
       }
 
       var valuePassed = typeof isAllSelected === 'boolean';
+      var isAllVisibleSelected = false;
 
       if (!valuePassed) {
         // eslint-disable-next-line no-param-reassign
         isAllSelected = this.isAllOptionsSelected();
       }
+      /** when all options not selected, checking if all visible options selected */
 
-      DomUtils.toggleClass(this.$toggleAllCheckbox, 'checked', isAllSelected);
 
-      if (this.selectAllOnlyVisible && valuePassed) {
-        this.isAllSelected = this.isAllOptionsSelected();
-      } else {
-        this.isAllSelected = isAllSelected;
+      if (!isAllSelected && this.selectAllOnlyVisible) {
+        isAllVisibleSelected = this.isAllOptionsSelected(true);
       }
+
+      DomUtils.toggleClass(this.$toggleAllCheckbox, 'checked', isAllSelected || isAllVisibleSelected);
+      this.isAllSelected = isAllSelected;
     }
   }, {
     key: "isAllOptionsSelected",
-    value: function isAllOptionsSelected() {
+    value: function isAllOptionsSelected(visibleOnly) {
       var isAllSelected = false;
 
       if (this.options.length && this.selectedValues.length) {
-        isAllSelected = !this.options.some(function (d) {
-          return !d.isSelected && !d.isDisabled && !d.isGroupTitle;
+        isAllSelected = !this.options.some(
+        /**
+         * stop looping if any option is not selected
+         * for selectAllOnlyVisible case hidden option need not to be selected
+         */
+        function (d) {
+          return !d.isSelected && !d.isDisabled && !d.isGroupTitle && (!visibleOnly || d.isVisible);
         });
       }
 
@@ -3306,13 +3341,13 @@ var VirtualSelect = /*#__PURE__*/function () {
     }
   }, {
     key: "isOptionVisible",
-    value: function isOptionVisible(_ref6) {
-      var data = _ref6.data,
-          searchValue = _ref6.searchValue,
-          hasExactOption = _ref6.hasExactOption,
-          visibleOptionGroupsMapping = _ref6.visibleOptionGroupsMapping,
-          searchGroup = _ref6.searchGroup,
-          searchByStartsWith = _ref6.searchByStartsWith;
+    value: function isOptionVisible(_ref7) {
+      var data = _ref7.data,
+          searchValue = _ref7.searchValue,
+          hasExactOption = _ref7.hasExactOption,
+          visibleOptionGroupsMapping = _ref7.visibleOptionGroupsMapping,
+          searchGroup = _ref7.searchGroup,
+          searchByStartsWith = _ref7.searchByStartsWith;
       var value = data.value.toLowerCase();
       var label = data.label.toLowerCase();
       var description = data.description,
@@ -3719,6 +3754,11 @@ var VirtualSelect = /*#__PURE__*/function () {
     key: "getSelectedOptionsMethod",
     value: function getSelectedOptionsMethod(params) {
       return this.virtualSelect.getSelectedOptions(params);
+    }
+  }, {
+    key: "getDisabledOptionsMethod",
+    value: function getDisabledOptionsMethod() {
+      return this.virtualSelect.getDisabledOptions();
     }
   }, {
     key: "openMethod",
