@@ -12,6 +12,7 @@
 - [getNewValue()](#getnewvalue)
 - [getDisplayValue()](#getdisplayvalue)
 - [getSelectedOptions()](#getselectedoptions)
+- [getDisabledOptions()](#getdisabledoptions)
 - [open()](#open)
 - [close()](#close)
 - [focus()](#focus)
@@ -161,6 +162,14 @@ It would contains `isNew: true` property for options added newly by `allowNewOpt
 
 ```js
 document.querySelector('#sample-select').getSelectedOptions();
+```
+
+### getDisabledOptions()
+
+Get disabled option's details.
+
+```js
+document.querySelector('#sample-select').getDisabledOptions();
 ```
 
 ### open()
