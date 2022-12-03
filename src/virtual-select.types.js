@@ -55,7 +55,11 @@
  * @property {boolean} [selectAllOnlyVisible=false] Select only visible options on clicking select all checkbox when
  * options filtered by search
  * @property {boolean} [alwaysShowSelectedOptionsCount=false] By default, no.of options selected text would be shown
- * when there is no enough space to show all selected values. Set true to override this.
+ * when there is no enough space to show all selected values.
+ * Set true to show count even though there is enough space.
+ * @property {boolean} [alwaysShowSelectedOptionsLabel=false] By default, no.of options selected text would be shown
+ * when there is no enough space to show all selected values.
+ * Set true to show labels even though there is no enough space.
  * @property {boolean} [disableAllOptionsSelectedText=false] By default, when all values selected "All (10)"value
  * text would be shown.
  * Set true to show value text as "10 options selected".

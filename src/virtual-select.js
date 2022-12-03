@@ -22,6 +22,7 @@ const dataProps = [
   'allOptionsSelectedText',
   'allowNewOption',
   'alwaysShowSelectedOptionsCount',
+  'alwaysShowSelectedOptionsLabel',
   'ariaLabelledby',
   'autoSelectFirstOption',
   'clearButtonText',
@@ -655,10 +656,8 @@ export class VirtualSelect {
   }
 
   afterSetOptionsContainerHeight(reset) {
-    if (reset) {
-      if (this.showAsPopup) {
-        this.setVisibleOptions();
-      }
+    if (reset && this.showAsPopup) {
+      this.setVisibleOptions();
     }
   }
 
@@ -747,6 +746,7 @@ export class VirtualSelect {
     this.showOptionsOnlyOnSearch = convertToBoolean(options.showOptionsOnlyOnSearch);
     this.selectAllOnlyVisible = convertToBoolean(options.selectAllOnlyVisible);
     this.alwaysShowSelectedOptionsCount = convertToBoolean(options.alwaysShowSelectedOptionsCount);
+    this.alwaysShowSelectedOptionsLabel = convertToBoolean(options.alwaysShowSelectedOptionsLabel);
     this.disableAllOptionsSelectedText = convertToBoolean(options.disableAllOptionsSelectedText);
     this.showValueAsTags = convertToBoolean(options.showValueAsTags);
     this.disableOptionGroupCheckbox = convertToBoolean(options.disableOptionGroupCheckbox);
@@ -912,6 +912,7 @@ export class VirtualSelect {
     $ele.getNewValue = VirtualSelect.getNewValueMethod;
     $ele.getDisplayValue = VirtualSelect.getDisplayValueMethod;
     $ele.getSelectedOptions = VirtualSelect.getSelectedOptionsMethod;
+    $ele.getDisabledOptions = VirtualSelect.getDisabledOptionsMethod;
     $ele.open = VirtualSelect.openMethod;
     $ele.close = VirtualSelect.closeMethod;
     $ele.focus = VirtualSelect.focusMethod;
@@ -1451,7 +1452,9 @@ export class VirtualSelect {
         if (multiple) {
           const { maxValues } = this;
 
-          if (DomUtils.hasEllipsis($valueText) || maxValues || this.alwaysShowSelectedOptionsCount || showValueAsTags) {
+          const showSelectedCount = this.alwaysShowSelectedOptionsCount || DomUtils.hasEllipsis($valueText);
+
+          if (showSelectedCount || maxValues || showValueAsTags) {
             let countText = `<span class="vscomp-selected-value-count">${selectedLength}</span>`;
 
             if (maxValues) {
@@ -1466,7 +1469,7 @@ export class VirtualSelect {
               this.$valueTags = $valueText.querySelectorAll('.vscomp-value-tag');
 
               this.setValueTagAttr();
-            } else {
+            } else if (!this.alwaysShowSelectedOptionsLabel) {
               /** replace comma separated list of selections with shorter text indicating selection count */
               const optionsSelectedText = selectedLength === 1 ? this.optionSelectedText : this.optionsSelectedText;
               $valueText.innerHTML = `${countText} ${optionsSelectedText}`;
@@ -2003,6 +2006,27 @@ export class VirtualSelect {
     return this.multiple || fullDetails ? selectedOptions : selectedOptions[0];
   }
 
+  getDisabledOptions() {
+    const { valueKey, labelKey, disabledOptions } = this;
+    const disabledOptionsValueMapping = {};
+    const result = [];
+
+    disabledOptions.forEach((value) => {
+      disabledOptionsValueMapping[value] = true;
+    });
+
+    this.options.forEach(({ value, label }) => {
+      if (disabledOptionsValueMapping[value]) {
+        result.push({
+          [valueKey]: value,
+          [labelKey]: label,
+        });
+      }
+    });
+
+    return result;
+  }
+
   getVisibleOptionGroupsMapping(searchValue) {
     let { options } = this;
     const result = {};
@@ -2424,38 +2448,44 @@ export class VirtualSelect {
     }, 0);
   }
 
-  toggleAllOptions(isSelected) {
+  toggleAllOptions(selectAll) {
     if (!this.multiple || this.disableSelectAll) {
       return;
     }
 
-    if (typeof isSelected !== 'boolean') {
-      // eslint-disable-next-line no-param-reassign
-      isSelected = !DomUtils.hasClass(this.$toggleAllCheckbox, 'checked');
-    }
+    const selectingAll =
+      typeof isSelected === 'boolean' ? selectAll : !DomUtils.hasClass(this.$toggleAllCheckbox, 'checked');
 
     const selectedValues = [];
     const { selectAllOnlyVisible } = this;
 
     this.options.forEach((d) => {
-      if (d.isDisabled || d.isCurrentNew) {
+      const option = d;
+
+      if (option.isDisabled || option.isCurrentNew) {
         return;
       }
 
-      if (!isSelected || (selectAllOnlyVisible && !d.isVisible)) {
-        // eslint-disable-next-line no-param-reassign
-        d.isSelected = false;
-      } else {
-        // eslint-disable-next-line no-param-reassign
-        d.isSelected = true;
+      const { isVisible, isSelected } = option;
 
-        if (!d.isGroupTitle) {
-          selectedValues.push(d.value);
+      /** unselected items are */
+      if (
+        /** when unselecting all, selectAllOnlyVisible feature disabled or visible items or already unselected items */
+        (!selectingAll && (!selectAllOnlyVisible || isVisible || !isSelected)) ||
+        /** when selecting all, selectAllOnlyVisible feature enabled and hidden items those are not already selected */
+        (selectingAll && selectAllOnlyVisible && !isVisible && !isSelected)
+      ) {
+        option.isSelected = false;
+      } else {
+        option.isSelected = true;
+
+        if (!option.isGroupTitle) {
+          selectedValues.push(option.value);
         }
       }
     });
 
-    this.toggleAllOptionsClass(isSelected);
+    this.toggleAllOptionsClass(selectingAll);
     this.setValue(selectedValues);
     this.renderOptions();
   }
@@ -2466,26 +2496,34 @@ export class VirtualSelect {
     }
 
     const valuePassed = typeof isAllSelected === 'boolean';
+    let isAllVisibleSelected = false;
 
     if (!valuePassed) {
       // eslint-disable-next-line no-param-reassign
       isAllSelected = this.isAllOptionsSelected();
     }
 
-    DomUtils.toggleClass(this.$toggleAllCheckbox, 'checked', isAllSelected);
-
-    if (this.selectAllOnlyVisible && valuePassed) {
-      this.isAllSelected = this.isAllOptionsSelected();
-    } else {
-      this.isAllSelected = isAllSelected;
+    /** when all options not selected, checking if all visible options selected */
+    if (!isAllSelected && this.selectAllOnlyVisible) {
+      isAllVisibleSelected = this.isAllOptionsSelected(true);
     }
+
+    DomUtils.toggleClass(this.$toggleAllCheckbox, 'checked', isAllSelected || isAllVisibleSelected);
+
+    this.isAllSelected = isAllSelected;
   }
 
-  isAllOptionsSelected() {
+  isAllOptionsSelected(visibleOnly) {
     let isAllSelected = false;
 
     if (this.options.length && this.selectedValues.length) {
-      isAllSelected = !this.options.some((d) => !d.isSelected && !d.isDisabled && !d.isGroupTitle);
+      isAllSelected = !this.options.some(
+        /**
+         * stop looping if any option is not selected
+         * for selectAllOnlyVisible case hidden option need not to be selected
+         */
+        (d) => !d.isSelected && !d.isDisabled && !d.isGroupTitle && (!visibleOnly || d.isVisible),
+      );
     }
 
     return isAllSelected;
@@ -3095,6 +3133,10 @@ export class VirtualSelect {
 
   static getSelectedOptionsMethod(params) {
     return this.virtualSelect.getSelectedOptions(params);
+  }
+
+  static getDisabledOptionsMethod() {
+    return this.virtualSelect.getDisabledOptions();
   }
 
   static openMethod() {
