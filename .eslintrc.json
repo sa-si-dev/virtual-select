@@ -19,7 +19,28 @@
     "sourceType": "module"
   },
 
+  "plugins": ["sonarjs"],
+
   "rules": {
+    "sonarjs/no-all-duplicated-branches": "error",
+    "sonarjs/no-element-overwrite": "error",
+    "sonarjs/no-empty-collection": "error",
+    "sonarjs/no-identical-expressions": "error",
+    "sonarjs/no-use-of-empty-return-value": "error",
+    "sonarjs/no-collapsible-if": "error",
+    "sonarjs/no-collection-size-mischeck": "error",
+    "sonarjs/no-duplicated-branches": "error",
+    "sonarjs/no-identical-functions": "error",
+    "sonarjs/no-inverted-boolean-check": "error",
+    "sonarjs/no-nested-switch": "error",
+    "sonarjs/no-nested-template-literals": "error",
+    "sonarjs/no-redundant-boolean": "error",
+    "sonarjs/no-small-switch": "error",
+    "sonarjs/no-unused-collection": "error",
+    "sonarjs/prefer-immediate-return": "error",
+    "sonarjs/prefer-object-literal": "error",
+    "sonarjs/prefer-single-boolean-return": "error",
+
     "import/prefer-default-export": "off",
     "quote-props": ["error", "consistent"],
     "operator-linebreak": ["error", "after", { "overrides": { "?": "before", ":": "before" } }],
