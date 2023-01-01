@@ -255,9 +255,10 @@ export class VirtualSelect {
     const { labelRenderer, disableOptionGroupCheckbox, uniqueId, searchGroup } = this;
     const hasLabelRenderer = typeof labelRenderer === 'function';
     const { convertToBoolean } = Utils;
+    const { regexEscape } = Utils;
 
     if (markSearchResults) {
-      searchRegex = new RegExp(`(${this.searchValue})`, 'gi');
+      searchRegex = new RegExp(`(${regexEscape(this.searchValue)})`, 'gi');
     }
 
     if (this.multiple) {

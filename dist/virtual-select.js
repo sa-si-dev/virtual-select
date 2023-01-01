@@ -157,6 +157,20 @@ var Utils = /*#__PURE__*/function () {
       var maxN = Math.floor(max);
       return Math.floor(Math.random() * (maxN - minN - 1)) + minN;
     }
+    /**
+     *
+     *
+     * @static
+     * @param {string} text
+     * @return {string} 
+     * @memberof Utils
+     */
+
+  }, {
+    key: "regexEscape",
+    value: function regexEscape(text) {
+      return text.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+    }
   }]);
 
   return Utils;
@@ -720,9 +734,10 @@ var VirtualSelect = /*#__PURE__*/function () {
           searchGroup = this.searchGroup;
       var hasLabelRenderer = typeof labelRenderer === 'function';
       var convertToBoolean = Utils.convertToBoolean;
+      var regexEscape = Utils.regexEscape;
 
       if (markSearchResults) {
-        searchRegex = new RegExp("(".concat(this.searchValue, ")"), 'gi');
+        searchRegex = new RegExp("(".concat(regexEscape(this.searchValue), ")"), 'gi');
       }
 
       if (this.multiple) {

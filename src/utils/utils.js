@@ -100,4 +100,16 @@ export class Utils {
 
     return Math.floor(Math.random() * (maxN - minN - 1)) + minN;
   }
+
+
+  /**
+   * @static
+   * @param {string} text
+   * @return {string} 
+   * @memberof Utils
+   */
+  static regexEscape(text) {
+    return text.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'); 
+  };
+
 }
