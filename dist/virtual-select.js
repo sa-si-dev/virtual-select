@@ -1,5 +1,5 @@
 /*!
- * Virtual Select v1.0.36
+ * Virtual Select v1.0.37
  * https://sa-si-dev.github.io/virtual-select
  * Licensed under MIT (https://github.com/sa-si-dev/virtual-select/blob/master/LICENSE)
  *//******/ (function() { // webpackBootstrap
@@ -12,30 +12,21 @@ var __webpack_exports__ = {};
 
 ;// CONCATENATED MODULE: ./src/utils/utils.js
 function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread(); }
-
 function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
-
 function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
-
 function _iterableToArray(iter) { if (typeof Symbol !== "undefined" && iter[Symbol.iterator] != null || iter["@@iterator"] != null) return Array.from(iter); }
-
 function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) return _arrayLikeToArray(arr); }
-
 function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
-
 function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
-
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor); } }
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
-
+function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return _typeof(key) === "symbol" ? key : String(key); }
+function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (_typeof(res) !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
 var Utils = /*#__PURE__*/function () {
   function Utils() {
     _classCallCheck(this, Utils);
   }
-
   _createClass(Utils, null, [{
     key: "getString",
     value:
@@ -46,18 +37,17 @@ var Utils = /*#__PURE__*/function () {
     function getString(text) {
       return text || text === 0 ? text.toString() : '';
     }
+
     /**
      * @param {any} value
      * @param {boolean} defaultValue
      * @returns {boolean}
      */
-
   }, {
     key: "convertToBoolean",
     value: function convertToBoolean(value) {
       var defaultValue = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
       var result;
-
       if (value === true || value === 'true') {
         result = true;
       } else if (value === false || value === 'false') {
@@ -65,90 +55,80 @@ var Utils = /*#__PURE__*/function () {
       } else {
         result = defaultValue;
       }
-
       return result;
     }
+
     /**
      * @param {any} value
      * @returns {boolean}
      */
-
   }, {
     key: "isEmpty",
     value: function isEmpty(value) {
       var result = false;
-
       if (!value) {
         result = true;
       } else if (Array.isArray(value)) {
         if (value.length === 0) {
           result = true;
         }
-      } else if (_typeof(value) === 'object') {
-        if (Object.keys(value).length === 0) {
-          result = true;
-        }
+      } else if (_typeof(value) === 'object' && Object.keys(value).length === 0) {
+        result = true;
       }
-
       return result;
     }
+
     /**
      * @param {any} value
      * @returns {boolean}
      */
-
   }, {
     key: "isNotEmpty",
     value: function isNotEmpty(value) {
       return !this.isEmpty(value);
     }
+
     /**
      * @param {any[]} array
      * @param {any} value
      * @param {boolean} cloneArray
      * @returns {any[]}
      */
-
   }, {
     key: "removeItemFromArray",
     value: function removeItemFromArray(array, value) {
       var cloneArray = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
-
       if (!Array.isArray(array) || !array.length) {
         return array;
       }
-
       var inputArr = cloneArray ? _toConsumableArray(array) : array;
       var index = inputArr.indexOf(value);
-
       if (index !== -1) {
         inputArr.splice(index, 1);
       }
-
       return inputArr;
     }
+
     /**
      * @param {any[]} array
      * @returns {any[]}
      */
-
   }, {
     key: "removeArrayEmpty",
     value: function removeArrayEmpty(array) {
       if (!Array.isArray(array) || !array.length) {
         return [];
       }
-
       return array.filter(function (d) {
         return !!d;
       });
     }
+
     /**
      * @param {number} max
      * @param {number} max
      * @returns {number}
      */
-
   }, {
     key: "getRandomInt",
     value: function getRandomInt(max) {
@@ -157,57 +137,43 @@ var Utils = /*#__PURE__*/function () {
       var maxN = Math.floor(max);
       return Math.floor(Math.random() * (maxN - minN - 1)) + minN;
     }
+
     /**
-     *
-     *
      * @static
      * @param {string} text
-     * @return {string} 
+     * @return {string}
      * @memberof Utils
      */
-
   }, {
     key: "regexEscape",
     value: function regexEscape(text) {
-      return text.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+      return text.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
     }
   }]);
-
   return Utils;
 }();
 ;// CONCATENATED MODULE: ./src/utils/dom-utils.js
+function dom_utils_typeof(obj) { "@babel/helpers - typeof"; return dom_utils_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, dom_utils_typeof(obj); }
 function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || dom_utils_unsupportedIterableToArray(arr, i) || _nonIterableRest(); }
-
 function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
-
-function _iterableToArrayLimit(arr, i) { var _i = arr == null ? null : typeof Symbol !== "undefined" && arr[Symbol.iterator] || arr["@@iterator"]; if (_i == null) return; var _arr = []; var _n = true; var _d = false; var _s, _e; try { for (_i = _i.call(arr); !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"] != null) _i["return"](); } finally { if (_d) throw _e; } } return _arr; }
-
+function _iterableToArrayLimit(arr, i) { var _i = null == arr ? null : "undefined" != typeof Symbol && arr[Symbol.iterator] || arr["@@iterator"]; if (null != _i) { var _s, _e, _x, _r, _arr = [], _n = !0, _d = !1; try { if (_x = (_i = _i.call(arr)).next, 0 === i) { if (Object(_i) !== _i) return; _n = !1; } else for (; !(_n = (_s = _x.call(_i)).done) && (_arr.push(_s.value), _arr.length !== i); _n = !0) { ; } } catch (err) { _d = !0, _e = err; } finally { try { if (!_n && null != _i["return"] && (_r = _i["return"](), Object(_r) !== _r)) return; } finally { if (_d) throw _e; } } return _arr; } }
 function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
-
 function dom_utils_toConsumableArray(arr) { return dom_utils_arrayWithoutHoles(arr) || dom_utils_iterableToArray(arr) || dom_utils_unsupportedIterableToArray(arr) || dom_utils_nonIterableSpread(); }
-
 function dom_utils_nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
-
 function dom_utils_unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return dom_utils_arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return dom_utils_arrayLikeToArray(o, minLen); }
-
 function dom_utils_iterableToArray(iter) { if (typeof Symbol !== "undefined" && iter[Symbol.iterator] != null || iter["@@iterator"] != null) return Array.from(iter); }
-
 function dom_utils_arrayWithoutHoles(arr) { if (Array.isArray(arr)) return dom_utils_arrayLikeToArray(arr); }
-
 function dom_utils_arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
-
 function dom_utils_classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function dom_utils_defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
+function dom_utils_defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, dom_utils_toPropertyKey(descriptor.key), descriptor); } }
 function dom_utils_createClass(Constructor, protoProps, staticProps) { if (protoProps) dom_utils_defineProperties(Constructor.prototype, protoProps); if (staticProps) dom_utils_defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
-
+function dom_utils_toPropertyKey(arg) { var key = dom_utils_toPrimitive(arg, "string"); return dom_utils_typeof(key) === "symbol" ? key : String(key); }
+function dom_utils_toPrimitive(input, hint) { if (dom_utils_typeof(input) !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (dom_utils_typeof(res) !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
 
 var DomUtils = /*#__PURE__*/function () {
   function DomUtils() {
     dom_utils_classCallCheck(this, DomUtils);
   }
-
   dom_utils_createClass(DomUtils, null, [{
     key: "addClass",
     value:
@@ -219,105 +185,94 @@ var DomUtils = /*#__PURE__*/function () {
       if (!$ele) {
         return;
       }
-
       var classNamesArr = classNames.split(' ');
       DomUtils.getElements($ele).forEach(function ($this) {
         var _$this$classList;
-
         (_$this$classList = $this.classList).add.apply(_$this$classList, dom_utils_toConsumableArray(classNamesArr));
       });
     }
+
     /**
      * @param {HTMLElement | NodeListOf<HTMLElement>} $ele
      * @param {string} classNames
      */
-
   }, {
     key: "removeClass",
     value: function removeClass($ele, classNames) {
       if (!$ele) {
         return;
       }
-
       var classNamesArr = classNames.split(' ');
       DomUtils.getElements($ele).forEach(function ($this) {
         var _$this$classList2;
-
         (_$this$classList2 = $this.classList).remove.apply(_$this$classList2, dom_utils_toConsumableArray(classNamesArr));
       });
     }
+
     /**
      * @param {HTMLElement | NodeListOf<HTMLElement>} $ele
      * @param {string} classNames
      * @param {boolean} [isAdd]
      */
-
   }, {
     key: "toggleClass",
     value: function toggleClass($ele, classNames, isAdd) {
       if (!$ele) {
         return;
       }
+
       /** @type {boolean | undefined} */
-
-
       var isAdding;
-
       if (isAdd !== undefined) {
         isAdding = Boolean(isAdd);
       }
-
       DomUtils.getElements($ele).forEach(function ($this) {
         $this.classList.toggle(classNames, isAdding);
       });
     }
+
     /**
      * @param {HTMLElement} $ele
      * @param {string} className
      * @returns {boolean}
      */
-
   }, {
     key: "hasClass",
     value: function hasClass($ele, className) {
       if (!$ele) {
         return false;
       }
-
       return $ele.classList.contains(className);
     }
+
     /**
      * @param {HTMLElement} $ele
      * @returns {boolean}
      */
-
   }, {
     key: "hasEllipsis",
     value: function hasEllipsis($ele) {
       if (!$ele) {
         return false;
       }
-
       return $ele.scrollWidth > $ele.offsetWidth;
     }
+
     /**
      * @param {HTMLElement} $ele
      * @param {string} name
      * @param {string} [type]
      * @returns {any}
      */
-
   }, {
     key: "getData",
     value: function getData($ele, name, type) {
       if (!$ele) {
         return undefined;
       }
+
       /** @type {any} */
-
-
       var value = $ele ? $ele.dataset[name] : '';
-
       if (type === 'number') {
         value = parseFloat(value) || 0;
       } else if (value === 'true') {
@@ -325,47 +280,45 @@ var DomUtils = /*#__PURE__*/function () {
       } else if (value === 'false') {
         value = false;
       }
-
       return value;
     }
+
     /**
      * @param {HTMLElement} $ele
      * @param {string} name
      * @param {string} value
      */
-
   }, {
     key: "setData",
     value: function setData($ele, name, value) {
       if (!$ele) {
         return;
-      } // eslint-disable-next-line no-param-reassign
+      }
 
-
+      // eslint-disable-next-line no-param-reassign
       $ele.dataset[name] = value;
     }
+
     /**
      * @param {HTMLElement} $ele
      * @param {string} name
      * @param {string} value
      */
-
   }, {
     key: "setAttr",
     value: function setAttr($ele, name, value) {
       if (!$ele) {
         return;
       }
-
       $ele.setAttribute(name, value);
     }
+
     /**
      * @param {HTMLElement} $from
      * @param {HTMLElement} $to
      * @param {string[]} attrList
      * @param {string[]} valueLessProps
      */
-
   }, {
     key: "setAttrFromEle",
     value: function setAttrFromEle($from, $to, attrList, valueLessProps) {
@@ -376,91 +329,85 @@ var DomUtils = /*#__PURE__*/function () {
       });
       attrList.forEach(function (attr) {
         var value = values[attr];
-
         if (value || valueLessProps.indexOf(attr) !== -1 && value === '') {
           $to.setAttribute(attr, value);
         }
       });
     }
+
     /**
      * @param {HTMLElement} $ele
      * @param {string} name
      * @param {string} value
      */
-
   }, {
     key: "setStyle",
     value: function setStyle($ele, name, value) {
       if (!$ele) {
         return;
-      } // @ts-ignore
+      }
+
+      // @ts-ignore
       // eslint-disable-next-line no-param-reassign
-
-
       $ele.style[name] = value;
     }
+
     /**
      * @param {HTMLElement} $ele
      * @param {any} props
      */
-
   }, {
     key: "setStyles",
     value: function setStyles($ele, props) {
       if (!$ele || !props) {
         return;
       }
-
       Object.keys(props).forEach(function (name) {
         // @ts-ignore
         // eslint-disable-next-line no-param-reassign
         $ele.style[name] = props[name];
       });
     }
+
     /**
      * @param {HTMLElement} $ele
      * @param {string} name
      * @param {string} value
      */
-
   }, {
     key: "setAria",
     value: function setAria($ele, name, value) {
       var attrName = name;
-
       if (attrName !== 'role') {
         attrName = "aria-".concat(attrName);
       }
-
       $ele.setAttribute(attrName, value);
     }
+
     /**
      * @param {any} $ele
      * @returns {any[]}
      */
-
   }, {
     key: "getElements",
     value: function getElements($ele) {
       if (!$ele) {
         return [];
       }
-
       return $ele.forEach === undefined ? [$ele] : $ele;
     }
+
     /**
      * @param {HTMLElement} $ele
      * @param {string} events
      * @param {Function} callback
      */
-
   }, {
     key: "addEvent",
     value: function addEvent($ele, events, callback) {
       if (!$ele) {
         return;
       }
-
       var eventsArray = Utils.removeArrayEmpty(events.split(' '));
       eventsArray.forEach(function (event) {
         var $eleArray = DomUtils.getElements($ele);
@@ -469,24 +416,22 @@ var DomUtils = /*#__PURE__*/function () {
         });
       });
     }
+
     /**
      * @param {HTMLElement} $ele
      * @param {string} eventName
      * @param {boolean} [bubbles]
      */
-
   }, {
     key: "dispatchEvent",
     value: function dispatchEvent($ele, eventName) {
       var bubbles = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
-
       if (!$ele) {
         return;
       }
-
       var $eleArray = DomUtils.getElements($ele);
-      /** using setTimeout to trigger asynchronous event */
 
+      /** using setTimeout to trigger asynchronous event */
       setTimeout(function () {
         $eleArray.forEach(function ($this) {
           $this.dispatchEvent(new CustomEvent(eventName, {
@@ -495,82 +440,62 @@ var DomUtils = /*#__PURE__*/function () {
         });
       }, 0);
     }
+
     /**
      * convert object to dom attributes
      * @param {any} data
      */
-
   }, {
     key: "getAttributesText",
     value: function getAttributesText(data) {
       var html = '';
-
       if (!data) {
         return html;
       }
-
       Object.entries(data).forEach(function (_ref) {
         var _ref2 = _slicedToArray(_ref, 2),
-            k = _ref2[0],
-            v = _ref2[1];
-
+          k = _ref2[0],
+          v = _ref2[1];
         if (v !== undefined) {
           html += " ".concat(k, "=\"").concat(v, "\" ");
         }
       });
       return html;
     }
+
     /**
      * convert "maxValue" to "data-max-value"
      * @param {string} prop
      */
-
   }, {
     key: "convertPropToDataAttr",
     value: function convertPropToDataAttr(prop) {
       return prop ? "data-".concat(prop).replace(/([A-Z])/g, '-$1').toLowerCase() : '';
     }
   }]);
-
   return DomUtils;
 }();
 ;// CONCATENATED MODULE: ./src/virtual-select.js
 function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
-
 function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { _defineProperty(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
-
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
+function _defineProperty(obj, key, value) { key = virtual_select_toPropertyKey(key); if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 function virtual_select_typeof(obj) { "@babel/helpers - typeof"; return virtual_select_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, virtual_select_typeof(obj); }
-
 function virtual_select_slicedToArray(arr, i) { return virtual_select_arrayWithHoles(arr) || virtual_select_iterableToArrayLimit(arr, i) || virtual_select_unsupportedIterableToArray(arr, i) || virtual_select_nonIterableRest(); }
-
 function virtual_select_nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
-
-function virtual_select_iterableToArrayLimit(arr, i) { var _i = arr == null ? null : typeof Symbol !== "undefined" && arr[Symbol.iterator] || arr["@@iterator"]; if (_i == null) return; var _arr = []; var _n = true; var _d = false; var _s, _e; try { for (_i = _i.call(arr); !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"] != null) _i["return"](); } finally { if (_d) throw _e; } } return _arr; }
-
+function virtual_select_iterableToArrayLimit(arr, i) { var _i = null == arr ? null : "undefined" != typeof Symbol && arr[Symbol.iterator] || arr["@@iterator"]; if (null != _i) { var _s, _e, _x, _r, _arr = [], _n = !0, _d = !1; try { if (_x = (_i = _i.call(arr)).next, 0 === i) { if (Object(_i) !== _i) return; _n = !1; } else for (; !(_n = (_s = _x.call(_i)).done) && (_arr.push(_s.value), _arr.length !== i); _n = !0) { ; } } catch (err) { _d = !0, _e = err; } finally { try { if (!_n && null != _i["return"] && (_r = _i["return"](), Object(_r) !== _r)) return; } finally { if (_d) throw _e; } } return _arr; } }
 function virtual_select_arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
-
 function virtual_select_toConsumableArray(arr) { return virtual_select_arrayWithoutHoles(arr) || virtual_select_iterableToArray(arr) || virtual_select_unsupportedIterableToArray(arr) || virtual_select_nonIterableSpread(); }
-
 function virtual_select_nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
-
 function virtual_select_unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return virtual_select_arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return virtual_select_arrayLikeToArray(o, minLen); }
-
 function virtual_select_iterableToArray(iter) { if (typeof Symbol !== "undefined" && iter[Symbol.iterator] != null || iter["@@iterator"] != null) return Array.from(iter); }
-
 function virtual_select_arrayWithoutHoles(arr) { if (Array.isArray(arr)) return virtual_select_arrayLikeToArray(arr); }
-
 function virtual_select_arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
-
 function virtual_select_classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function virtual_select_defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
+function virtual_select_defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, virtual_select_toPropertyKey(descriptor.key), descriptor); } }
 function virtual_select_createClass(Constructor, protoProps, staticProps) { if (protoProps) virtual_select_defineProperties(Constructor.prototype, protoProps); if (staticProps) virtual_select_defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
-
+function virtual_select_toPropertyKey(arg) { var key = virtual_select_toPrimitive(arg, "string"); return virtual_select_typeof(key) === "symbol" ? key : String(key); }
+function virtual_select_toPrimitive(input, hint) { if (virtual_select_typeof(input) !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (virtual_select_typeof(res) !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
 /** cSpell:ignore nocheck, Labelledby, vscomp, tabindex, combobox, haspopup, listbox, activedescendant */
-
 /* eslint-disable class-methods-use-this */
 // @ts-nocheck
 
@@ -584,16 +509,15 @@ var keyDownMethodMapping = {
 var valueLessProps = ['autofocus', 'disabled', 'multiple', 'required'];
 var nativeProps = ['autofocus', 'class', 'disabled', 'id', 'multiple', 'name', 'placeholder', 'required'];
 var attrPropsMapping;
-var dataProps = ['additionalClasses', 'aliasKey', 'allOptionsSelectedText', 'allowNewOption', 'alwaysShowSelectedOptionsCount', 'alwaysShowSelectedOptionsLabel', 'ariaLabelledby', 'autoSelectFirstOption', 'clearButtonText', 'descriptionKey', 'disableAllOptionsSelectedText', 'disableOptionGroupCheckbox', 'disableSelectAll', 'disableValidation', 'dropboxWidth', 'dropboxWrapper', 'emptyValue', 'enableSecureText', 'hasOptionDescription', 'hideClearButton', 'hideValueTooltipOnSelectAll', 'keepAlwaysOpen', 'labelKey', 'markSearchResults', 'maxValues', 'maxWidth', 'minValues', 'moreText', 'noOfDisplayValues', 'noOptionsText', 'noSearchResultsText', 'optionHeight', 'optionSelectedText', 'optionsCount', 'optionsSelectedText', 'popupDropboxBreakpoint', 'popupPosition', 'position', 'search', 'searchByStartsWith', 'searchDelay', 'searchGroup', 'searchPlaceholderText', 'selectAllOnlyVisible', 'selectAllText', 'setValueAsArray', 'showDropboxAsPopup', 'showOptionsOnlyOnSearch', 'showSelectedOptionsFirst', 'showValueAsTags', 'silentInitialValueSet', 'textDirection', 'tooltipAlignment', 'tooltipFontSize', 'tooltipMaxWidth', 'updatePositionThrottle', 'useGroupValue', 'valueKey', 'zIndex'];
-/** Class representing VirtualSelect */
+var dataProps = ['additionalClasses', 'aliasKey', 'allOptionsSelectedText', 'allowNewOption', 'alwaysShowSelectedOptionsCount', 'alwaysShowSelectedOptionsLabel', 'ariaLabelledby', 'autoSelectFirstOption', 'clearButtonText', 'descriptionKey', 'disableAllOptionsSelectedText', 'disableOptionGroupCheckbox', 'disableSelectAll', 'disableValidation', 'dropboxWidth', 'dropboxWrapper', 'emptyValue', 'enableSecureText', 'focusSelectedOptionOnOpen', 'hasOptionDescription', 'hideClearButton', 'hideValueTooltipOnSelectAll', 'keepAlwaysOpen', 'labelKey', 'markSearchResults', 'maxValues', 'maxWidth', 'minValues', 'moreText', 'noOfDisplayValues', 'noOptionsText', 'noSearchResultsText', 'optionHeight', 'optionSelectedText', 'optionsCount', 'optionsSelectedText', 'popupDropboxBreakpoint', 'popupPosition', 'position', 'search', 'searchByStartsWith', 'searchDelay', 'searchGroup', 'searchPlaceholderText', 'selectAllOnlyVisible', 'selectAllText', 'setValueAsArray', 'showDropboxAsPopup', 'showOptionsOnlyOnSearch', 'showSelectedOptionsFirst', 'showValueAsTags', 'silentInitialValueSet', 'textDirection', 'tooltipAlignment', 'tooltipFontSize', 'tooltipMaxWidth', 'updatePositionThrottle', 'useGroupValue', 'valueKey', 'zIndex'];
 
+/** Class representing VirtualSelect */
 var VirtualSelect = /*#__PURE__*/function () {
   /**
    * @param {virtualSelectOptions} options
    */
   function VirtualSelect(options) {
     virtual_select_classCallCheck(this, VirtualSelect);
-
     try {
       this.createSecureTextElements();
       this.setProps(options);
@@ -602,78 +526,64 @@ var VirtualSelect = /*#__PURE__*/function () {
       this.render();
     } catch (e) {
       // eslint-disable-next-line no-console
-      console.warn("Couldn't initiate Virtual Select"); // eslint-disable-next-line no-console
-
+      console.warn("Couldn't initiate Virtual Select");
+      // eslint-disable-next-line no-console
       console.error(e);
     }
   }
+
   /** render methods - start */
-
-
   virtual_select_createClass(VirtualSelect, [{
     key: "render",
     value: function render() {
       if (!this.$ele) {
         return;
       }
-
       var uniqueId = this.uniqueId;
       var wrapperClasses = 'vscomp-wrapper';
       var valueTooltip = this.getTooltipAttrText(this.placeholder, true, true);
       var clearButtonTooltip = this.getTooltipAttrText(this.clearButtonText);
       var ariaLabelledbyText = this.ariaLabelledby ? "aria-labelledby=\"".concat(this.ariaLabelledby, "\"") : '';
       var isExpanded = false;
-
       if (this.additionalClasses) {
         wrapperClasses += " ".concat(this.additionalClasses);
       }
-
       if (this.multiple) {
         wrapperClasses += ' multiple';
-
         if (!this.disableSelectAll) {
           wrapperClasses += ' has-select-all';
         }
       }
-
       if (!this.hideClearButton) {
         wrapperClasses += ' has-clear-button';
       }
-
       if (this.keepAlwaysOpen) {
         wrapperClasses += ' keep-always-open';
         isExpanded = true;
       } else {
         wrapperClasses += ' closed';
       }
-
       if (this.showAsPopup) {
         wrapperClasses += ' show-as-popup';
       }
-
       if (this.hasSearch) {
         wrapperClasses += ' has-search-input';
       }
-
       if (this.showValueAsTags) {
         wrapperClasses += ' show-value-as-tags';
       }
-
       if (this.textDirection) {
         wrapperClasses += " text-direction-".concat(this.textDirection);
       }
-
       if (this.popupPosition) {
         wrapperClasses += " popup-position-".concat(this.popupPosition.toLowerCase());
       }
-
       var html = "<div id=\"vscomp-ele-wrapper-".concat(uniqueId, "\" class=\"vscomp-ele-wrapper ").concat(wrapperClasses, "\" tabindex=\"0\"\n        role=\"combobox\" aria-haspopup=\"listbox\" aria-controls=\"vscomp-dropbox-container-").concat(uniqueId, "\"\n        aria-expanded=\"").concat(isExpanded, "\" ").concat(ariaLabelledbyText, "\n      >\n        <input type=\"hidden\" name=\"").concat(this.name, "\" class=\"vscomp-hidden-input\">\n\n        <div class=\"vscomp-toggle-button\">\n          <div class=\"vscomp-value\" ").concat(valueTooltip, ">\n            ").concat(this.placeholder, "\n          </div>\n\n          <div class=\"vscomp-arrow\"></div>\n\n          <div class=\"vscomp-clear-button toggle-button-child\" ").concat(clearButtonTooltip, ">\n            <i class=\"vscomp-clear-icon\"></i>\n          </div>\n        </div>\n\n        ").concat(this.renderDropbox({
         wrapperClasses: wrapperClasses
       }), "\n      </div>");
       this.$ele.innerHTML = html;
       this.$body = document.querySelector('body');
       this.$wrapper = this.$ele.querySelector('.vscomp-wrapper');
-
       if (this.hasDropboxWrapper) {
         this.$allWrappers = [this.$wrapper, this.$dropboxWrapper];
         this.$dropboxContainer = this.$dropboxWrapper.querySelector('.vscomp-dropbox-container');
@@ -682,7 +592,6 @@ var VirtualSelect = /*#__PURE__*/function () {
         this.$allWrappers = [this.$wrapper];
         this.$dropboxContainer = this.$wrapper.querySelector('.vscomp-dropbox-container');
       }
-
       this.$toggleButton = this.$ele.querySelector('.vscomp-toggle-button');
       this.$clearButton = this.$ele.querySelector('.vscomp-clear-button');
       this.$valueText = this.$ele.querySelector('.vscomp-value');
@@ -703,7 +612,6 @@ var VirtualSelect = /*#__PURE__*/function () {
       var wrapperClasses = _ref.wrapperClasses;
       var $wrapper = this.dropboxWrapper !== 'self' ? document.querySelector(this.dropboxWrapper) : null;
       var html = "<div id=\"vscomp-dropbox-container-".concat(this.uniqueId, "\" role=\"listbox\" class=\"vscomp-dropbox-container\">\n        <div class=\"vscomp-dropbox\">\n          <div class=\"vscomp-search-wrapper\"></div>\n\n          <div class=\"vscomp-options-container\">\n            <div class=\"vscomp-options-loader\"></div>\n\n            <div class=\"vscomp-options-list\">\n              <div class=\"vscomp-options\"></div>\n            </div>\n          </div>\n\n          <div class=\"vscomp-options-bottom-freezer\"></div>\n          <div class=\"vscomp-no-options\">").concat(this.noOptionsText, "</div>\n          <div class=\"vscomp-no-search-results\">").concat(this.noSearchResultsText, "</div>\n\n          <span class=\"vscomp-dropbox-close-button\"><i class=\"vscomp-clear-icon\"></i></span>\n        </div>\n      </div>");
-
       if ($wrapper) {
         var $dropboxWrapper = document.createElement('div');
         this.$dropboxWrapper = $dropboxWrapper;
@@ -713,7 +621,6 @@ var VirtualSelect = /*#__PURE__*/function () {
         DomUtils.addClass($dropboxWrapper, "vscomp-dropbox-wrapper ".concat(wrapperClasses));
         return '';
       }
-
       this.hasDropboxWrapper = false;
       return html;
     }
@@ -721,7 +628,6 @@ var VirtualSelect = /*#__PURE__*/function () {
     key: "renderOptions",
     value: function renderOptions() {
       var _this = this;
-
       var html = '';
       var visibleOptions = this.getVisibleOptions();
       var checkboxHtml = '';
@@ -729,87 +635,69 @@ var VirtualSelect = /*#__PURE__*/function () {
       var markSearchResults = !!(this.markSearchResults && this.searchValue);
       var searchRegex;
       var labelRenderer = this.labelRenderer,
-          disableOptionGroupCheckbox = this.disableOptionGroupCheckbox,
-          uniqueId = this.uniqueId,
-          searchGroup = this.searchGroup;
+        disableOptionGroupCheckbox = this.disableOptionGroupCheckbox,
+        uniqueId = this.uniqueId,
+        searchGroup = this.searchGroup;
       var hasLabelRenderer = typeof labelRenderer === 'function';
       var convertToBoolean = Utils.convertToBoolean;
-      var regexEscape = Utils.regexEscape;
-
       if (markSearchResults) {
-        searchRegex = new RegExp("(".concat(regexEscape(this.searchValue), ")"), 'gi');
+        searchRegex = new RegExp("(".concat(Utils.regexEscape(this.searchValue), ")"), 'gi');
       }
-
       if (this.multiple) {
         checkboxHtml = '<span class="checkbox-icon"></span>';
       }
-
       if (this.allowNewOption) {
         var newOptionTooltip = this.getTooltipAttrText('New Option');
         newOptionIconHtml = "<span class=\"vscomp-new-option-icon\" ".concat(newOptionTooltip, "></span>");
       }
-
       visibleOptions.forEach(function (d) {
         var index = d.index;
         var optionLabel;
         var optionClasses = 'vscomp-option';
-
         var optionTooltip = _this.getTooltipAttrText('', true, true);
-
         var leftSection = checkboxHtml;
         var rightSection = '';
         var description = '';
         var groupIndexText = '';
         var isSelected = convertToBoolean(d.isSelected);
         var ariaDisabledText = '';
-
         if (d.classNames) {
           optionClasses += " ".concat(d.classNames);
         }
-
         if (d.isFocused) {
           optionClasses += ' focused';
         }
-
         if (d.isDisabled) {
           optionClasses += ' disabled';
           ariaDisabledText = 'aria-disabled="true"';
         }
-
         if (d.isGroupTitle) {
           optionClasses += ' group-title';
-
           if (disableOptionGroupCheckbox) {
             leftSection = '';
           }
         }
-
         if (isSelected) {
           optionClasses += ' selected';
         }
-
         if (d.isGroupOption) {
           optionClasses += ' group-option';
           groupIndexText = "data-group-index=\"".concat(d.groupIndex, "\"");
         }
-
         if (hasLabelRenderer) {
           optionLabel = labelRenderer(d);
         } else {
           optionLabel = d.label;
         }
-
         if (d.description) {
           description = "<div class=\"vscomp-option-description\" ".concat(optionTooltip, ">").concat(d.description, "</div>");
         }
-
         if (d.isCurrentNew) {
           optionClasses += ' current-new';
           rightSection += newOptionIconHtml;
         } else if (markSearchResults && (!d.isGroupTitle || searchGroup)) {
           optionLabel = optionLabel.replace(searchRegex, '<mark>$1</mark>');
         }
-
         html += "<div role=\"option\" aria-selected=\"".concat(isSelected, "\" id=\"vscomp-option-").concat(uniqueId, "-").concat(index, "\"\n          class=\"").concat(optionClasses, "\" data-value=\"").concat(d.value, "\" data-index=\"").concat(index, "\" data-visible-index=\"").concat(d.visibleIndex, "\"\n          ").concat(groupIndexText, " ").concat(ariaDisabledText, "\n        >\n          ").concat(leftSection, "\n          <span class=\"vscomp-option-text\" ").concat(optionTooltip, ">\n            ").concat(optionLabel, "\n          </span>\n          ").concat(description, "\n          ").concat(rightSection, "\n        </div>");
       });
       this.$options.innerHTML = html;
@@ -822,18 +710,14 @@ var VirtualSelect = /*#__PURE__*/function () {
       if (!this.hasSearchContainer) {
         return;
       }
-
       var checkboxHtml = '';
       var searchInput = '';
-
       if (this.multiple && !this.disableSelectAll) {
         checkboxHtml = "<span class=\"vscomp-toggle-all-button\">\n          <span class=\"checkbox-icon vscomp-toggle-all-checkbox\"></span>\n          <span class=\"vscomp-toggle-all-label\">".concat(this.selectAllText, "</span>\n        </span>");
       }
-
       if (this.hasSearch) {
         searchInput = "<input type=\"text\" class=\"vscomp-search-input\" placeholder=\"".concat(this.searchPlaceholderText, "\">\n      <span class=\"vscomp-search-clear\">&times;</span>");
       }
-
       var html = "<div class=\"vscomp-search-container\">\n        ".concat(checkboxHtml, "\n        ").concat(searchInput, "\n      </div>");
       this.$search.innerHTML = html;
       this.$searchInput = this.$dropboxContainer.querySelector('.vscomp-search-input');
@@ -847,7 +731,6 @@ var VirtualSelect = /*#__PURE__*/function () {
     /** render methods - end */
 
     /** dom event methods - start */
-
   }, {
     key: "addEvents",
     value: function addEvents() {
@@ -867,21 +750,17 @@ var VirtualSelect = /*#__PURE__*/function () {
     key: "addEvent",
     value: function addEvent($ele, events, method) {
       var _this2 = this;
-
       if (!$ele) {
         return;
       }
-
       var eventsArray = Utils.removeArrayEmpty(events.split(' '));
       eventsArray.forEach(function (event) {
         var eventsKey = "".concat(method, "-").concat(event);
         var callback = _this2.events[eventsKey];
-
         if (!callback) {
           callback = _this2[method].bind(_this2);
           _this2.events[eventsKey] = callback;
         }
-
         DomUtils.addEvent($ele, event, callback);
       });
     }
@@ -889,7 +768,6 @@ var VirtualSelect = /*#__PURE__*/function () {
     key: "onDocumentClick",
     value: function onDocumentClick(e) {
       var $eleToKeepOpen = e.target.closest('.vscomp-wrapper');
-
       if ($eleToKeepOpen !== this.$wrapper && $eleToKeepOpen !== this.$dropboxWrapper && this.isOpened()) {
         this.closeDropbox();
       }
@@ -899,7 +777,6 @@ var VirtualSelect = /*#__PURE__*/function () {
     value: function onKeyDown(e) {
       var key = e.which || e.keyCode;
       var method = keyDownMethodMapping[key];
-
       if (method) {
         this[method](e);
       }
@@ -908,7 +785,6 @@ var VirtualSelect = /*#__PURE__*/function () {
     key: "onEnterPress",
     value: function onEnterPress(e) {
       e.preventDefault();
-
       if (this.isOpened()) {
         this.selectFocusedOption();
       } else {
@@ -919,7 +795,6 @@ var VirtualSelect = /*#__PURE__*/function () {
     key: "onDownArrowPress",
     value: function onDownArrowPress(e) {
       e.preventDefault();
-
       if (this.isOpened()) {
         this.focusOption({
           direction: 'next'
@@ -932,7 +807,6 @@ var VirtualSelect = /*#__PURE__*/function () {
     key: "onUpArrowPress",
     value: function onUpArrowPress(e) {
       e.preventDefault();
-
       if (this.isOpened()) {
         this.focusOption({
           direction: 'previous'
@@ -945,7 +819,6 @@ var VirtualSelect = /*#__PURE__*/function () {
     key: "onToggleButtonClick",
     value: function onToggleButtonClick(e) {
       var $target = e.target;
-
       if ($target.closest('.vscomp-value-tag-clear-button')) {
         this.removeValue($target.closest('.vscomp-value-tag'));
       } else if (!$target.closest('.toggle-button-child')) {
@@ -966,7 +839,6 @@ var VirtualSelect = /*#__PURE__*/function () {
     key: "onOptionsClick",
     value: function onOptionsClick(e) {
       var $option = e.target.closest('.vscomp-option');
-
       if ($option && !DomUtils.hasClass($option, 'disabled')) {
         if (DomUtils.hasClass($option, 'group-title')) {
           this.onGroupTitleClick($option);
@@ -983,7 +855,6 @@ var VirtualSelect = /*#__PURE__*/function () {
       if (!$ele || !this.multiple || this.disableOptionGroupCheckbox) {
         return;
       }
-
       var isAdding = !DomUtils.hasClass($ele, 'selected');
       this.toggleGroupTitleCheckbox($ele, isAdding);
       this.toggleGroupOptions($ele, isAdding);
@@ -1004,7 +875,6 @@ var VirtualSelect = /*#__PURE__*/function () {
     key: "onOptionsMouseOver",
     value: function onOptionsMouseOver(e) {
       var $ele = e.target.closest('.vscomp-option');
-
       if ($ele && this.isOpened()) {
         if (DomUtils.hasClass($ele, 'disabled') || DomUtils.hasClass($ele, 'group-title')) {
           this.removeOptionFocus();
@@ -1042,17 +912,15 @@ var VirtualSelect = /*#__PURE__*/function () {
     value: function onResize() {
       this.setOptionsContainerHeight(true);
     }
-    /** to remove dropboxWrapper on removing vscomp-ele when it is rendered outside of vscomp-ele */
 
+    /** to remove dropboxWrapper on removing vscomp-ele when it is rendered outside of vscomp-ele */
   }, {
     key: "addMutationObserver",
     value: function addMutationObserver() {
       var _this3 = this;
-
       if (!this.hasDropboxWrapper) {
         return;
       }
-
       var $vscompEle = this.$ele;
       this.mutationObserver = new MutationObserver(function (mutations) {
         var isAdded = false;
@@ -1063,14 +931,12 @@ var VirtualSelect = /*#__PURE__*/function () {
               return !!($ele === $vscompEle || $ele.contains($vscompEle));
             });
           }
-
           if (!isRemoved) {
             isRemoved = virtual_select_toConsumableArray(mutation.removedNodes).some(function ($ele) {
               return !!($ele === $vscompEle || $ele.contains($vscompEle));
             });
           }
         });
-
         if (isRemoved && !isAdded) {
           _this3.destroy();
         }
@@ -1083,7 +949,6 @@ var VirtualSelect = /*#__PURE__*/function () {
     /** dom event methods - end */
 
     /** before event methods - start */
-
   }, {
     key: "beforeValueSet",
     value: function beforeValueSet(isReset) {
@@ -1093,24 +958,21 @@ var VirtualSelect = /*#__PURE__*/function () {
     key: "beforeSelectNewValue",
     value: function beforeSelectNewValue() {
       var _this4 = this;
-
       var newOption = this.getNewOption();
       var newIndex = newOption.index;
       this.newValues.push(newOption.value);
       this.setOptionProp(newIndex, 'isCurrentNew', false);
       this.setOptionProp(newIndex, 'isNew', true);
-      /** using setTimeout to fix the issue of dropbox getting closed on select */
 
+      /** using setTimeout to fix the issue of dropbox getting closed on select */
       setTimeout(function () {
         _this4.setSearchValue('');
-
         _this4.focusSearchInput();
       }, 0);
     }
     /** before event methods - end */
 
     /** after event methods - start */
-
   }, {
     key: "afterRenderWrapper",
     value: function afterRenderWrapper() {
@@ -1123,25 +985,20 @@ var VirtualSelect = /*#__PURE__*/function () {
       this.setOptionsContainerHeight();
       this.addEvents();
       this.setEleProps();
-
       if (!this.keepAlwaysOpen && !this.showAsPopup) {
         this.initDropboxPopover();
       }
-
       if (this.initialSelectedValue) {
         this.setValueMethod(this.initialSelectedValue, this.silentInitialValueSet);
       } else if (this.autoSelectFirstOption && this.visibleOptions.length) {
         this.setValueMethod(this.visibleOptions[0].value, this.silentInitialValueSet);
       }
-
       if (this.showOptionsOnlyOnSearch) {
         this.setSearchValue('', false, true);
       }
-
       if (this.initialDisabled) {
         this.disable();
       }
-
       if (this.autofocus) {
         this.focus();
       }
@@ -1152,11 +1009,9 @@ var VirtualSelect = /*#__PURE__*/function () {
       var visibleOptions = this.getVisibleOptions();
       var hasNoOptions = !this.options.length && !this.hasServerSearch;
       var hasNoSearchResults = !hasNoOptions && !visibleOptions.length;
-
       if (!this.allowNewOption || this.hasServerSearch || this.showOptionsOnlyOnSearch) {
         DomUtils.toggleClass(this.$allWrappers, 'has-no-search-results', hasNoSearchResults);
       }
-
       DomUtils.toggleClass(this.$allWrappers, 'has-no-options', hasNoOptions);
       this.setOptionAttr();
       this.setOptionsPosition();
@@ -1173,7 +1028,6 @@ var VirtualSelect = /*#__PURE__*/function () {
     key: "afterSetSearchValue",
     value: function afterSetSearchValue() {
       var _this5 = this;
-
       if (this.hasServerSearch) {
         clearInterval(this.serverSearchTimeout);
         this.serverSearchTimeout = setTimeout(function () {
@@ -1182,11 +1036,9 @@ var VirtualSelect = /*#__PURE__*/function () {
       } else {
         this.setVisibleOptionsCount();
       }
-
       if (this.selectAllOnlyVisible) {
         this.toggleAllOptionsClass();
       }
-
       this.focusOption({
         focusFirst: true
       });
@@ -1212,14 +1064,11 @@ var VirtualSelect = /*#__PURE__*/function () {
       if (keepValue) {
         this.setSelectedProp();
       }
-
       this.setOptionsHeight();
       this.setVisibleOptions();
-
       if (this.showOptionsOnlyOnSearch) {
         this.setSearchValue('', false, true);
       }
-
       if (!keepValue) {
         this.reset();
       }
@@ -1227,11 +1076,9 @@ var VirtualSelect = /*#__PURE__*/function () {
     /** after event methods - end */
 
     /** set methods - start */
-
     /**
      * @param {virtualSelectOptions} params
      */
-
   }, {
     key: "setProps",
     value: function setProps(params) {
@@ -1275,6 +1122,7 @@ var VirtualSelect = /*#__PURE__*/function () {
       this.required = convertToBoolean(options.required);
       this.autofocus = convertToBoolean(options.autofocus);
       this.useGroupValue = convertToBoolean(options.useGroupValue);
+      this.focusSelectedOptionOnOpen = convertToBoolean(options.focusSelectedOptionOnOpen);
       this.noOptionsText = options.noOptionsText;
       this.noSearchResultsText = options.noSearchResultsText;
       this.selectAllText = options.selectAllText;
@@ -1307,11 +1155,10 @@ var VirtualSelect = /*#__PURE__*/function () {
       this.ariaLabelledby = options.ariaLabelledby;
       this.maxWidth = options.maxWidth;
       this.searchDelay = options.searchDelay;
-      /** @type {string[]} */
 
+      /** @type {string[]} */
       this.selectedValues = [];
       /** @type {virtualSelectOption[]} */
-
       this.selectedOptions = [];
       this.newValues = [];
       this.events = {};
@@ -1319,22 +1166,17 @@ var VirtualSelect = /*#__PURE__*/function () {
       this.searchValue = '';
       this.searchValueOriginal = '';
       this.isAllSelected = false;
-
       if (options.search === undefined && this.multiple || this.allowNewOption || this.showOptionsOnlyOnSearch) {
         this.hasSearch = true;
       }
-
       this.hasServerSearch = typeof this.onServerSearch === 'function';
-
       if (this.maxValues || this.hasServerSearch || this.showOptionsOnlyOnSearch) {
         this.disableSelectAll = true;
         this.disableOptionGroupCheckbox = true;
       }
-
       if (this.keepAlwaysOpen) {
         this.dropboxWrapper = 'self';
       }
-
       this.showAsPopup = this.showDropboxAsPopup && !this.keepAlwaysOpen && window.innerWidth <= parseFloat(this.popupDropboxBreakpoint);
       this.hasSearchContainer = this.hasSearch || this.multiple && !this.disableSelectAll;
       this.optionsCount = this.getOptionsCount(options.optionsCount);
@@ -1342,10 +1184,10 @@ var VirtualSelect = /*#__PURE__*/function () {
       this.optionsHeight = this.getOptionsHeight();
       this.uniqueId = this.getUniqueId();
     }
+
     /**
      * @param {virtualSelectOptions} options
      */
-
   }, {
     key: "setDefaultProps",
     value: function setDefaultProps(options) {
@@ -1382,14 +1224,13 @@ var VirtualSelect = /*#__PURE__*/function () {
         popupPosition: 'center',
         hideValueTooltipOnSelectAll: true,
         emptyValue: '',
-        searchDelay: 300
+        searchDelay: 300,
+        focusSelectedOptionOnOpen: true
       };
-
       if (options.hasOptionDescription) {
         defaultOptions.optionsCount = 4;
         defaultOptions.optionHeight = '50px';
       }
-
       return Object.assign(defaultOptions, options);
     }
   }, {
@@ -1398,11 +1239,9 @@ var VirtualSelect = /*#__PURE__*/function () {
       var $ele = options.ele;
       Object.keys(attrPropsMapping).forEach(function (k) {
         var value = $ele.getAttribute(k);
-
         if (valueLessProps.indexOf(k) !== -1 && (value === '' || value === 'true')) {
           value = true;
         }
-
         if (value) {
           // eslint-disable-next-line no-param-reassign
           options[attrPropsMapping[k]] = value;
@@ -1441,7 +1280,6 @@ var VirtualSelect = /*#__PURE__*/function () {
       $ele.destroy = VirtualSelect.destroyMethod;
       $ele.validate = VirtualSelect.validateMethod;
       $ele.toggleRequired = VirtualSelect.toggleRequiredMethod;
-
       if (this.hasDropboxWrapper) {
         this.$dropboxWrapper.virtualSelect = this;
       }
@@ -1454,42 +1292,34 @@ var VirtualSelect = /*#__PURE__*/function () {
       var validValues = [];
       var isMultiSelect = this.multiple;
       var value = newValue;
-
       if (value) {
         if (!Array.isArray(value)) {
           value = [value];
         }
-
         if (isMultiSelect) {
           var maxValues = this.maxValues;
-
           if (maxValues && value.length > maxValues) {
             value.splice(maxValues);
           }
         } else if (value.length > 1) {
           value = [value[0]];
         }
+
         /** converting value to string */
-
-
         value = value.map(function (v) {
           return v || v === 0 ? v.toString() : '';
         });
-
         if (this.useGroupValue) {
           value = this.setGroupOptionsValue(value);
         }
-
         value.forEach(function (d, i) {
           valuesMapping[d] = true;
           valuesOrder[d] = i;
         });
-
         if (this.allowNewOption && value) {
           this.setNewOptionsFromValue(value);
         }
       }
-
       this.options.forEach(function (d) {
         if (valuesMapping[d.value] === true && !d.isDisabled && !d.isGroupTitle) {
           // eslint-disable-next-line no-param-reassign
@@ -1500,26 +1330,21 @@ var VirtualSelect = /*#__PURE__*/function () {
           d.isSelected = false;
         }
       });
-
       if (isMultiSelect) {
         if (this.hasOptionGroup) {
           this.setGroupsSelectedProp();
         }
+
         /** sorting validValues in the given values order */
-
-
         validValues.sort(function (a, b) {
           return valuesOrder[a] - valuesOrder[b];
         });
       } else {
         /** taking first value for single select */
         var _validValues = validValues;
-
         var _validValues2 = virtual_select_slicedToArray(_validValues, 1);
-
         validValues = _validValues2[0];
       }
-
       this.beforeValueSet();
       this.setValue(validValues, {
         disableEvent: silentChange
@@ -1538,7 +1363,6 @@ var VirtualSelect = /*#__PURE__*/function () {
       this.options.forEach(function (d) {
         var value = d.value;
         var isSelected = valuesMapping[value] === true;
-
         if (d.isGroupTitle) {
           if (isSelected) {
             selectedGroups[d.index] = true;
@@ -1571,12 +1395,10 @@ var VirtualSelect = /*#__PURE__*/function () {
     value: function setDisabledOptionsMethod(disabledOptions) {
       var keepValue = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
       this.setDisabledOptions(disabledOptions, true);
-
       if (!keepValue) {
         this.setValueMethod(null);
         this.toggleAllOptionsClass();
       }
-
       this.setVisibleOptions();
     }
   }, {
@@ -1584,7 +1406,6 @@ var VirtualSelect = /*#__PURE__*/function () {
     value: function setDisabledOptions(disabledOptions) {
       var setOptionsProp = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
       var disabledOptionsArr = [];
-
       if (!disabledOptions) {
         if (setOptionsProp) {
           this.options.forEach(function (d) {
@@ -1610,7 +1431,6 @@ var VirtualSelect = /*#__PURE__*/function () {
         disabledOptionsArr.forEach(function (d) {
           disabledOptionsMapping[d] = true;
         });
-
         if (setOptionsProp) {
           this.options.forEach(function (d) {
             // eslint-disable-next-line no-param-reassign
@@ -1619,7 +1439,6 @@ var VirtualSelect = /*#__PURE__*/function () {
           });
         }
       }
-
       this.disabledOptions = disabledOptionsArr;
     }
   }, {
@@ -1627,12 +1446,10 @@ var VirtualSelect = /*#__PURE__*/function () {
     value: function setEnabledOptionsMethod(disabledOptions) {
       var keepValue = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
       this.setEnabledOptions(disabledOptions);
-
       if (!keepValue) {
         this.setValueMethod(null);
         this.toggleAllOptionsClass();
       }
-
       this.setVisibleOptions();
     }
   }, {
@@ -1641,9 +1458,7 @@ var VirtualSelect = /*#__PURE__*/function () {
       if (enabledOptions === undefined) {
         return;
       }
-
       var disabledOptionsArr = [];
-
       if (enabledOptions === true) {
         this.options.forEach(function (d) {
           // eslint-disable-next-line no-param-reassign
@@ -1656,18 +1471,16 @@ var VirtualSelect = /*#__PURE__*/function () {
           enabledOptionsMapping[d] = true;
         });
         this.options.forEach(function (d) {
-          var isDisabled = enabledOptionsMapping[d.value] !== true; // eslint-disable-next-line no-param-reassign
+          var isDisabled = enabledOptionsMapping[d.value] !== true;
 
+          // eslint-disable-next-line no-param-reassign
           d.isDisabled = isDisabled;
-
           if (isDisabled) {
             disabledOptionsArr.push(d.value);
           }
-
           return d;
         });
       }
-
       this.disabledOptions = disabledOptionsArr;
     }
   }, {
@@ -1677,12 +1490,12 @@ var VirtualSelect = /*#__PURE__*/function () {
       var preparedOptions = [];
       var hasDisabledOptions = this.disabledOptions.length;
       var valueKey = this.valueKey,
-          labelKey = this.labelKey,
-          descriptionKey = this.descriptionKey,
-          aliasKey = this.aliasKey,
-          hasOptionDescription = this.hasOptionDescription;
+        labelKey = this.labelKey,
+        descriptionKey = this.descriptionKey,
+        aliasKey = this.aliasKey,
+        hasOptionDescription = this.hasOptionDescription;
       var getString = Utils.getString,
-          convertToBoolean = Utils.convertToBoolean;
+        convertToBoolean = Utils.convertToBoolean;
       var secureText = this.secureText.bind(this);
       var getAlias = this.getAlias.bind(this);
       var index = 0;
@@ -1692,15 +1505,12 @@ var VirtualSelect = /*#__PURE__*/function () {
       this.disabledOptions.forEach(function (d) {
         disabledOptionsMapping[d] = true;
       });
-
       var prepareOption = function prepareOption(d) {
         if (virtual_select_typeof(d) !== 'object') {
           var _d2;
-
           // eslint-disable-next-line no-param-reassign
           d = (_d2 = {}, _defineProperty(_d2, valueKey, d), _defineProperty(_d2, labelKey, d), _d2);
         }
-
         var value = secureText(getString(d[valueKey]));
         var childOptions = d.options;
         var isGroupTitle = !!childOptions;
@@ -1714,48 +1524,39 @@ var VirtualSelect = /*#__PURE__*/function () {
           isGroupTitle: isGroupTitle,
           classNames: d.classNames
         };
-
         if (!hasEmptyValueOption && value === '') {
           hasEmptyValueOption = true;
         }
-
         if (hasDisabledOptions) {
           option.isDisabled = disabledOptionsMapping[value] === true;
         }
-
         if (d.isGroupOption) {
           option.isGroupOption = true;
           option.groupIndex = d.groupIndex;
         }
-
         if (hasOptionDescription) {
           option.description = secureText(getString(d[descriptionKey]));
         }
-
         if (d.customData) {
           option.customData = d.customData;
         }
-
         preparedOptions.push(option);
         index += 1;
-
         if (isGroupTitle) {
           var groupIndex = option.index;
           hasOptionGroup = true;
           childOptions.forEach(function (childData) {
             // eslint-disable-next-line no-param-reassign
-            childData.isGroupOption = true; // eslint-disable-next-line no-param-reassign
-
+            childData.isGroupOption = true;
+            // eslint-disable-next-line no-param-reassign
             childData.groupIndex = groupIndex;
             prepareOption(childData);
           });
         }
       };
-
       if (Array.isArray(options)) {
         options.forEach(prepareOption);
       }
-
       var optionsLength = preparedOptions.length;
       var $ele = this.$ele;
       $ele.options = preparedOptions;
@@ -1772,14 +1573,13 @@ var VirtualSelect = /*#__PURE__*/function () {
     key: "setServerOptions",
     value: function setServerOptions() {
       var _this6 = this;
-
       var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
       this.setOptionsMethod(options, true);
       var selectedOptions = this.selectedOptions;
       var newOptions = this.options;
       var optionsUpdated = false;
-      /** merging already selected options details with new options */
 
+      /** merging already selected options details with new options */
       if (selectedOptions.length) {
         var newOptionsValueMapping = {};
         optionsUpdated = true;
@@ -1795,32 +1595,26 @@ var VirtualSelect = /*#__PURE__*/function () {
         });
         this.setOptionsMethod(newOptions, true);
       }
+
       /** merging new search option */
-
-
       if (this.allowNewOption && this.searchValue) {
         var hasExactOption = newOptions.some(function (d) {
           return d.label.toLowerCase() === _this6.searchValue;
         });
-
         if (!hasExactOption) {
           optionsUpdated = true;
           this.setNewOption();
         }
       }
-
       if (optionsUpdated) {
         this.setVisibleOptionsCount();
-
         if (this.multiple) {
           this.toggleAllOptionsClass();
         }
-
         this.setValueText();
       } else {
         this.updatePosition();
       }
-
       DomUtils.removeClass(this.$allWrappers, 'server-searching');
     }
   }, {
@@ -1834,7 +1628,6 @@ var VirtualSelect = /*#__PURE__*/function () {
     key: "setSortedOptions",
     value: function setSortedOptions() {
       var sortedOptions = virtual_select_toConsumableArray(this.options);
-
       if (this.showSelectedOptionsFirst && this.selectedValues.length) {
         if (this.hasOptionGroup) {
           sortedOptions = this.sortOptionsGroup(sortedOptions);
@@ -1842,42 +1635,34 @@ var VirtualSelect = /*#__PURE__*/function () {
           sortedOptions = this.sortOptions(sortedOptions);
         }
       }
-
       this.sortedOptions = sortedOptions;
     }
   }, {
     key: "setVisibleOptions",
     value: function setVisibleOptions() {
       var visibleOptions = virtual_select_toConsumableArray(this.sortedOptions);
-
       var maxOptionsToShow = this.optionsCount * 2;
       var startIndex = this.getVisibleStartIndex();
       var newOption = this.getNewOption();
       var endIndex = startIndex + maxOptionsToShow - 1;
       var i = 0;
-
       if (newOption) {
         newOption.visibleIndex = i;
         i += 1;
       }
-
       visibleOptions = visibleOptions.filter(function (d) {
         var inView = false;
-
         if (d.isVisible && !d.isCurrentNew) {
-          inView = i >= startIndex && i <= endIndex; // eslint-disable-next-line no-param-reassign
-
+          inView = i >= startIndex && i <= endIndex;
+          // eslint-disable-next-line no-param-reassign
           d.visibleIndex = i;
           i += 1;
         }
-
         return inView;
       });
-
       if (newOption) {
         visibleOptions = [newOption].concat(virtual_select_toConsumableArray(visibleOptions));
       }
-
       this.visibleOptions = visibleOptions;
       this.renderOptions();
     }
@@ -1892,14 +1677,11 @@ var VirtualSelect = /*#__PURE__*/function () {
     key: "setOptionsTooltip",
     value: function setOptionsTooltip() {
       var _this7 = this;
-
       var visibleOptions = this.getVisibleOptions();
       var hasOptionDescription = this.hasOptionDescription;
       visibleOptions.forEach(function (d) {
         var $optionEle = _this7.$dropboxContainer.querySelector(".vscomp-option[data-index=\"".concat(d.index, "\"]"));
-
         DomUtils.setData($optionEle.querySelector('.vscomp-option-text'), 'tooltip', d.label);
-
         if (hasOptionDescription) {
           DomUtils.setData($optionEle.querySelector('.vscomp-option-description'), 'tooltip', d.description);
         }
@@ -1909,13 +1691,11 @@ var VirtualSelect = /*#__PURE__*/function () {
     key: "setValue",
     value: function setValue(value) {
       var _ref2 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
-          _ref2$disableEvent = _ref2.disableEvent,
-          disableEvent = _ref2$disableEvent === void 0 ? false : _ref2$disableEvent,
-          _ref2$disableValidati = _ref2.disableValidation,
-          disableValidation = _ref2$disableValidati === void 0 ? false : _ref2$disableValidati;
-
+        _ref2$disableEvent = _ref2.disableEvent,
+        disableEvent = _ref2$disableEvent === void 0 ? false : _ref2$disableEvent,
+        _ref2$disableValidati = _ref2.disableValidation,
+        disableValidation = _ref2$disableValidati === void 0 ? false : _ref2$disableValidati;
       var isValidValue = this.hasEmptyValueOption && value === '' || value;
-
       if (!isValidValue) {
         this.selectedValues = [];
       } else if (Array.isArray(value)) {
@@ -1923,7 +1703,6 @@ var VirtualSelect = /*#__PURE__*/function () {
       } else {
         this.selectedValues = [value];
       }
-
       var newValue = this.getValue();
       this.$ele.value = newValue;
       this.$hiddenInput.value = this.getInputValue(newValue);
@@ -1932,11 +1711,9 @@ var VirtualSelect = /*#__PURE__*/function () {
       this.setValueText();
       DomUtils.toggleClass(this.$allWrappers, 'has-value', Utils.isNotEmpty(this.selectedValues));
       DomUtils.toggleClass(this.$allWrappers, 'max-value-selected', this.isMaxValuesSelected);
-
       if (!disableValidation) {
         this.validate();
       }
-
       if (!disableEvent) {
         DomUtils.dispatchEvent(this.$ele, 'change', true);
       }
@@ -1945,17 +1722,17 @@ var VirtualSelect = /*#__PURE__*/function () {
     key: "setValueText",
     value: function setValueText() {
       var multiple = this.multiple,
-          selectedValues = this.selectedValues,
-          noOfDisplayValues = this.noOfDisplayValues,
-          showValueAsTags = this.showValueAsTags,
-          $valueText = this.$valueText;
+        selectedValues = this.selectedValues,
+        noOfDisplayValues = this.noOfDisplayValues,
+        showValueAsTags = this.showValueAsTags,
+        $valueText = this.$valueText;
       var valueText = [];
       var valueTooltip = [];
       var selectedLength = selectedValues.length;
       var selectedValuesCount = 0;
       var showAllText = this.isAllSelected && !this.hasServerSearch && !this.disableAllOptionsSelectedText && !showValueAsTags;
-      /** show all values selected text without tooltip text */
 
+      /** show all values selected text without tooltip text */
       if (showAllText && this.hideValueTooltipOnSelectAll) {
         $valueText.innerHTML = "".concat(this.allOptionsSelectedText, " (").concat(selectedLength, ")");
       } else {
@@ -1967,50 +1744,39 @@ var VirtualSelect = /*#__PURE__*/function () {
           if (d.isCurrentNew) {
             return false;
           }
-
           if (selectedValuesCount >= noOfDisplayValues) {
             return true;
           }
-
           var label = d.label;
           valueText.push(label);
           selectedValuesCount += 1;
-
           if (showValueAsTags) {
             var valueTagHtml = "<span class=\"vscomp-value-tag\" data-index=\"".concat(d.index, "\">\n              <span class=\"vscomp-value-tag-content\">").concat(label, "</span>\n              <span class=\"vscomp-value-tag-clear-button\">\n                <i class=\"vscomp-clear-icon\"></i>\n              </span>\n            </span>");
             valueTooltip.push(valueTagHtml);
           } else {
             valueTooltip.push(label);
           }
-
           return false;
         });
         var moreSelectedOptions = selectedLength - noOfDisplayValues;
-
         if (moreSelectedOptions > 0) {
           valueTooltip.push("<span class=\"vscomp-value-tag more-value-count\">+ ".concat(moreSelectedOptions, " ").concat(this.moreText, "</span>"));
         }
-
         var aggregatedValueText = valueText.join(', ');
-
         if (aggregatedValueText === '') {
           $valueText.innerHTML = this.placeholder;
         } else {
           $valueText.innerHTML = aggregatedValueText;
-
           if (multiple) {
             var maxValues = this.maxValues;
             var showSelectedCount = this.alwaysShowSelectedOptionsCount || DomUtils.hasEllipsis($valueText);
-
             if (showSelectedCount || maxValues || showValueAsTags) {
               var countText = "<span class=\"vscomp-selected-value-count\">".concat(selectedLength, "</span>");
-
               if (maxValues) {
                 countText += " / <span class=\"vscomp-max-value-count\">".concat(maxValues, "</span>");
               }
+
               /** show all values selected text with tooltip text */
-
-
               if (showAllText) {
                 $valueText.innerHTML = "".concat(this.allOptionsSelectedText, " (").concat(selectedLength, ")");
               } else if (showValueAsTags) {
@@ -2029,20 +1795,15 @@ var VirtualSelect = /*#__PURE__*/function () {
           }
         }
       }
-
       var tooltipText = '';
-
       if (selectedLength === 0) {
         tooltipText = this.placeholder;
       } else if (!showValueAsTags) {
         tooltipText = valueTooltip.join(', ');
       }
-
       DomUtils.setData($valueText, 'tooltip', tooltipText);
-
       if (multiple) {
         DomUtils.setData($valueText, 'tooltipEllipsisOnly', selectedLength === 0);
-
         if (showValueAsTags) {
           this.updatePosition();
         }
@@ -2053,15 +1814,12 @@ var VirtualSelect = /*#__PURE__*/function () {
     value: function setSearchValue(value) {
       var skipInputSet = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
       var forceSet = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
-
       if (value === this.searchValueOriginal && !forceSet) {
         return;
       }
-
       if (!skipInputSet) {
         this.$searchInput.value = value;
       }
-
       var searchValue = value.replace(/\\/g, '').toLowerCase().trim();
       this.searchValue = searchValue;
       this.searchValueOriginal = value;
@@ -2075,22 +1833,18 @@ var VirtualSelect = /*#__PURE__*/function () {
       var hasExactOption = false;
       var visibleOptionGroupsMapping;
       var searchValue = this.searchValue,
-          searchGroup = this.searchGroup,
-          showOptionsOnlyOnSearch = this.showOptionsOnlyOnSearch,
-          searchByStartsWith = this.searchByStartsWith;
+        searchGroup = this.searchGroup,
+        showOptionsOnlyOnSearch = this.showOptionsOnlyOnSearch,
+        searchByStartsWith = this.searchByStartsWith;
       var isOptionVisible = this.isOptionVisible.bind(this);
-
       if (this.hasOptionGroup) {
         visibleOptionGroupsMapping = this.getVisibleOptionGroupsMapping(searchValue);
       }
-
       this.options.forEach(function (d) {
         if (d.isCurrentNew) {
           return;
         }
-
         var result;
-
         if (showOptionsOnlyOnSearch && !searchValue) {
           // eslint-disable-next-line no-param-reassign
           d.isVisible = false;
@@ -2108,16 +1862,13 @@ var VirtualSelect = /*#__PURE__*/function () {
             searchByStartsWith: searchByStartsWith
           });
         }
-
         if (result.isVisible) {
           visibleOptionsCount += 1;
         }
-
         if (!hasExactOption) {
           hasExactOption = result.hasExactOption;
         }
       });
-
       if (this.allowNewOption) {
         if (searchValue && !hasExactOption) {
           this.setNewOption();
@@ -2126,7 +1877,6 @@ var VirtualSelect = /*#__PURE__*/function () {
           this.removeNewOption();
         }
       }
-
       this.visibleOptionsCount = visibleOptionsCount;
       this.afterSetVisibleOptionsCount();
     }
@@ -2136,7 +1886,6 @@ var VirtualSelect = /*#__PURE__*/function () {
       if (!this.options[index]) {
         return;
       }
-
       this.options[index][key] = value;
     }
   }, {
@@ -2148,7 +1897,6 @@ var VirtualSelect = /*#__PURE__*/function () {
     key: "setOptionsContainerHeight",
     value: function setOptionsContainerHeight(reset) {
       var optionsHeight;
-
       if (reset) {
         if (this.showAsPopup) {
           this.optionsCount = this.getOptionsCount();
@@ -2158,13 +1906,11 @@ var VirtualSelect = /*#__PURE__*/function () {
         }
       } else {
         optionsHeight = this.optionsHeight;
-
         if (this.keepAlwaysOpen) {
           DomUtils.setStyle(this.$noOptions, 'height', optionsHeight);
           DomUtils.setStyle(this.$noSearchResults, 'height', optionsHeight);
         }
       }
-
       DomUtils.setStyle(this.$optionsContainer, 'max-height', optionsHeight);
       this.afterSetOptionsContainerHeight(reset);
     }
@@ -2172,13 +1918,10 @@ var VirtualSelect = /*#__PURE__*/function () {
     key: "setNewOption",
     value: function setNewOption(newValue) {
       var value = newValue || this.searchValueOriginal.trim();
-
       if (!value) {
         return;
       }
-
       var newOption = this.getNewOption();
-
       if (newOption) {
         var newIndex = newOption.index;
         this.setOptionProp(newIndex, 'value', this.secureText(value));
@@ -2188,14 +1931,12 @@ var VirtualSelect = /*#__PURE__*/function () {
           value: value,
           label: value
         };
-
         if (newValue) {
           data.isNew = true;
           this.newValues.push(value);
         } else {
           data.isCurrentNew = true;
         }
-
         this.addOption(data);
       }
     }
@@ -2219,7 +1960,6 @@ var VirtualSelect = /*#__PURE__*/function () {
       if (!values) {
         return;
       }
-
       var setNewOption = this.setNewOption.bind(this);
       var availableValuesMapping = {};
       this.options.forEach(function (d) {
@@ -2237,7 +1977,6 @@ var VirtualSelect = /*#__PURE__*/function () {
       if (this.showAsPopup) {
         return;
       }
-
       var width = this.dropboxWidth || "".concat(this.$wrapper.offsetWidth, "px");
       DomUtils.setStyle(this.$dropboxContainer, 'max-width', width);
     }
@@ -2246,11 +1985,9 @@ var VirtualSelect = /*#__PURE__*/function () {
     value: function setEleStyles() {
       var maxWidth = this.maxWidth;
       var styles = {};
-
       if (maxWidth) {
         styles['max-width'] = maxWidth;
       }
-
       DomUtils.setStyles(this.$ele, styles);
     }
   }, {
@@ -2261,7 +1998,6 @@ var VirtualSelect = /*#__PURE__*/function () {
       var containerStyles = {
         'z-index': this.zIndex
       };
-
       if (dropboxWidth) {
         if (this.showAsPopup) {
           styles['max-width'] = dropboxWidth;
@@ -2269,7 +2005,6 @@ var VirtualSelect = /*#__PURE__*/function () {
           containerStyles.width = dropboxWidth;
         }
       }
-
       DomUtils.setStyles(this.$dropboxContainer, containerStyles);
       DomUtils.setStyles(this.$dropbox, styles);
     }
@@ -2280,9 +2015,8 @@ var VirtualSelect = /*#__PURE__*/function () {
       var options = this.options;
       var optionHeight = "".concat(this.optionHeight, "px");
       var setStyle = DomUtils.setStyle,
-          getData = DomUtils.getData,
-          setData = DomUtils.setData;
-
+        getData = DomUtils.getData,
+        setData = DomUtils.setData;
       if ($visibleOptions && $visibleOptions.length) {
         $visibleOptions.forEach(function ($option) {
           var optionDetails = options[getData($option, 'index')];
@@ -2295,17 +2029,14 @@ var VirtualSelect = /*#__PURE__*/function () {
     key: "setValueTagAttr",
     value: function setValueTagAttr() {
       var $valueTags = this.$valueTags;
-
       if (!$valueTags || !$valueTags.length) {
         return;
       }
-
       var getData = DomUtils.getData,
-          setData = DomUtils.setData;
+        setData = DomUtils.setData;
       var options = this.options;
       $valueTags.forEach(function ($valueTag) {
         var index = getData($valueTag, 'index');
-
         if (typeof index !== 'undefined') {
           var optionDetails = options[index];
           setData($valueTag, 'value', optionDetails.value);
@@ -2316,11 +2047,9 @@ var VirtualSelect = /*#__PURE__*/function () {
     key: "setScrollTop",
     value: function setScrollTop() {
       var selectedValues = this.selectedValues;
-
-      if (this.showSelectedOptionsFirst || selectedValues.length === 0) {
+      if (this.showSelectedOptionsFirst || !this.focusSelectedOptionOnOpen || selectedValues.length === 0) {
         return;
       }
-
       var valuesMapping = {};
       var selectedOptionIndex;
       selectedValues.forEach(function (d) {
@@ -2331,10 +2060,8 @@ var VirtualSelect = /*#__PURE__*/function () {
           selectedOptionIndex = d.visibleIndex;
           return true;
         }
-
         return false;
       });
-
       if (selectedOptionIndex) {
         this.$optionsContainer.scrollTop = this.optionHeight * selectedOptionIndex;
       }
@@ -2342,7 +2069,6 @@ var VirtualSelect = /*#__PURE__*/function () {
     /** set methods - end */
 
     /** get methods - start */
-
   }, {
     key: "getVisibleOptions",
     value: function getVisibleOptions() {
@@ -2352,7 +2078,6 @@ var VirtualSelect = /*#__PURE__*/function () {
     key: "getValue",
     value: function getValue() {
       var value;
-
       if (this.multiple) {
         if (this.useGroupValue) {
           value = this.getGroupValue();
@@ -2362,7 +2087,6 @@ var VirtualSelect = /*#__PURE__*/function () {
       } else {
         value = this.selectedValues[0] || '';
       }
-
       return value;
     }
   }, {
@@ -2374,9 +2098,7 @@ var VirtualSelect = /*#__PURE__*/function () {
         if (!d.isSelected) {
           return;
         }
-
         var value = d.value;
-
         if (d.isGroupTitle) {
           if (value) {
             selectedGroups[d.index] = true;
@@ -2392,7 +2114,6 @@ var VirtualSelect = /*#__PURE__*/function () {
     key: "getInputValue",
     value: function getInputValue(preparedValue) {
       var value = preparedValue;
-
       if (value && value.length) {
         if (this.setValueAsArray && this.multiple) {
           value = JSON.stringify(value);
@@ -2400,7 +2121,6 @@ var VirtualSelect = /*#__PURE__*/function () {
       } else {
         value = this.emptyValue;
       }
-
       return value;
     }
   }, {
@@ -2413,11 +2133,9 @@ var VirtualSelect = /*#__PURE__*/function () {
     value: function getVisibleStartIndex() {
       var firstVisibleOptionIndex = this.getFirstVisibleOptionIndex();
       var startIndex = firstVisibleOptionIndex - this.halfOptionsCount;
-
       if (startIndex < 0) {
         startIndex = 0;
       }
-
       return startIndex;
     }
   }, {
@@ -2437,21 +2155,20 @@ var VirtualSelect = /*#__PURE__*/function () {
       };
       return DomUtils.getAttributesText(data);
     }
+
     /**
      * @param {any} data
      * @returns {any}
      */
-
   }, {
     key: "getOptionObj",
     value: function getOptionObj(data) {
       if (!data) {
         return undefined;
       }
-
       var getString = Utils.getString;
       var secureText = this.secureText.bind(this);
-      var newOption = {
+      return {
         index: data.index,
         value: secureText(getString(data.value)),
         label: secureText(getString(data.label)),
@@ -2461,17 +2178,14 @@ var VirtualSelect = /*#__PURE__*/function () {
         isNew: data.isNew || false,
         isVisible: true
       };
-      return newOption;
     }
   }, {
     key: "getNewOption",
     value: function getNewOption() {
       var lastOption = this.options[this.lastOptionIndex];
-
       if (!lastOption || !lastOption.isCurrentNew) {
         return undefined;
       }
-
       return lastOption;
     }
   }, {
@@ -2483,7 +2197,6 @@ var VirtualSelect = /*#__PURE__*/function () {
           index = d.index;
           return true;
         }
-
         return false;
       });
       return index;
@@ -2504,17 +2217,14 @@ var VirtualSelect = /*#__PURE__*/function () {
     key: "getAlias",
     value: function getAlias(alias) {
       var result = alias;
-
       if (result) {
         if (Array.isArray(result)) {
           result = result.join(',');
         } else {
           result = result.toString().trim();
         }
-
         result = result.toLowerCase();
       }
-
       return result || '';
     }
   }, {
@@ -2532,14 +2242,13 @@ var VirtualSelect = /*#__PURE__*/function () {
     key: "getSelectedOptions",
     value: function getSelectedOptions() {
       var _ref3 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
-          _ref3$fullDetails = _ref3.fullDetails,
-          fullDetails = _ref3$fullDetails === void 0 ? false : _ref3$fullDetails,
-          _ref3$keepSelectionOr = _ref3.keepSelectionOrder,
-          keepSelectionOrder = _ref3$keepSelectionOr === void 0 ? false : _ref3$keepSelectionOr;
-
+        _ref3$fullDetails = _ref3.fullDetails,
+        fullDetails = _ref3$fullDetails === void 0 ? false : _ref3$fullDetails,
+        _ref3$keepSelectionOr = _ref3.keepSelectionOrder,
+        keepSelectionOrder = _ref3$keepSelectionOr === void 0 ? false : _ref3$keepSelectionOr;
       var valueKey = this.valueKey,
-          labelKey = this.labelKey,
-          selectedValues = this.selectedValues;
+        labelKey = this.labelKey,
+        selectedValues = this.selectedValues;
       var selectedOptions = [];
       this.options.forEach(function (d) {
         if (d.isSelected && !d.isGroupTitle) {
@@ -2547,22 +2256,17 @@ var VirtualSelect = /*#__PURE__*/function () {
             selectedOptions.push(d);
           } else {
             var _data;
-
             var data = (_data = {}, _defineProperty(_data, valueKey, d.value), _defineProperty(_data, labelKey, d.label), _data);
-
             if (d.isNew) {
               data.isNew = true;
             }
-
             if (d.customData) {
               data.customData = d.customData;
             }
-
             selectedOptions.push(data);
           }
         }
       });
-
       if (keepSelectionOrder) {
         var valuesOrder = {};
         selectedValues.forEach(function (d, i) {
@@ -2572,15 +2276,14 @@ var VirtualSelect = /*#__PURE__*/function () {
           return valuesOrder[a.value] - valuesOrder[b.value];
         });
       }
-
       return this.multiple || fullDetails ? selectedOptions : selectedOptions[0];
     }
   }, {
     key: "getDisabledOptions",
     value: function getDisabledOptions() {
       var valueKey = this.valueKey,
-          labelKey = this.labelKey,
-          disabledOptions = this.disabledOptions;
+        labelKey = this.labelKey,
+        disabledOptions = this.disabledOptions;
       var disabledOptionsValueMapping = {};
       var result = [];
       disabledOptions.forEach(function (value) {
@@ -2588,11 +2291,9 @@ var VirtualSelect = /*#__PURE__*/function () {
       });
       this.options.forEach(function (_ref4) {
         var value = _ref4.value,
-            label = _ref4.label;
-
+          label = _ref4.label;
         if (disabledOptionsValueMapping[value]) {
           var _result$push;
-
           result.push((_result$push = {}, _defineProperty(_result$push, valueKey, value), _defineProperty(_result$push, labelKey, label), _result$push));
         }
       });
@@ -2619,19 +2320,15 @@ var VirtualSelect = /*#__PURE__*/function () {
     key: "getOptionsCount",
     value: function getOptionsCount(count) {
       var result;
-
       if (this.showAsPopup) {
         var availableHeight = window.innerHeight * 80 / 100 - dropboxCloseButtonFullHeight;
-
         if (this.hasSearchContainer) {
           availableHeight -= searchHeight;
         }
-
         result = Math.floor(availableHeight / this.optionHeight);
       } else {
         result = parseInt(count);
       }
-
       return result;
     }
   }, {
@@ -2639,20 +2336,18 @@ var VirtualSelect = /*#__PURE__*/function () {
     value: function getOptionsHeight() {
       return "".concat(this.optionsCount * this.optionHeight, "px");
     }
-    /** getting next/prev valid option element */
 
+    /** getting next/prev valid option element */
   }, {
     key: "getSibling",
     value: function getSibling($ele, direction) {
       var propName = direction === 'next' ? 'nextElementSibling' : 'previousElementSibling';
       var $sibling = $ele;
-
       do {
         if ($sibling) {
           $sibling = $sibling[propName];
         }
       } while (DomUtils.hasClass($sibling, 'disabled') || DomUtils.hasClass($sibling, 'group-title'));
-
       return $sibling;
     }
   }, {
@@ -2660,15 +2355,12 @@ var VirtualSelect = /*#__PURE__*/function () {
     value: function getUniqueId() {
       var uniqueId = Utils.getRandomInt(10000);
       var isAlreadyUsed = document.querySelector("#vscomp-ele-wrapper-".concat(uniqueId));
-
       if (isAlreadyUsed) {
         return this.getUniqueId();
       }
-
       return uniqueId;
     }
     /** get methods - end */
-
   }, {
     key: "initDropboxPopover",
     value: function initDropboxPopover() {
@@ -2692,17 +2384,14 @@ var VirtualSelect = /*#__PURE__*/function () {
     key: "openDropbox",
     value: function openDropbox(isSilent) {
       this.isSilentOpen = isSilent;
-
       if (isSilent) {
         DomUtils.setStyle(this.$dropboxContainer, 'display', 'inline-flex');
       } else {
         DomUtils.dispatchEvent(this.$ele, 'beforeOpen');
         DomUtils.setAria(this.$wrapper, 'expanded', true);
       }
-
       this.setDropboxWrapperWidth();
       DomUtils.removeClass(this.$allWrappers, 'closed');
-
       if (this.dropboxPopover && !isSilent) {
         this.dropboxPopover.show();
       } else {
@@ -2714,19 +2403,16 @@ var VirtualSelect = /*#__PURE__*/function () {
     value: function afterShowPopper() {
       var isSilent = this.isSilentOpen;
       this.isSilentOpen = false;
-
       if (!isSilent) {
         this.moveSelectedOptionsFirst();
         this.setScrollTop();
         DomUtils.addClass(this.$allWrappers, 'focused');
-
         if (this.showAsPopup) {
           DomUtils.addClass(this.$body, 'vscomp-popup-active');
           this.isPopupActive = true;
         } else {
           this.focusSearchInput();
         }
-
         DomUtils.dispatchEvent(this.$ele, 'afterOpen');
       }
     }
@@ -2734,12 +2420,10 @@ var VirtualSelect = /*#__PURE__*/function () {
     key: "closeDropbox",
     value: function closeDropbox(isSilent) {
       this.isSilentClose = isSilent;
-
       if (this.keepAlwaysOpen) {
         this.removeOptionFocus();
         return;
       }
-
       if (isSilent) {
         DomUtils.setStyle(this.$dropboxContainer, 'display', '');
       } else {
@@ -2747,7 +2431,6 @@ var VirtualSelect = /*#__PURE__*/function () {
         DomUtils.setAria(this.$wrapper, 'expanded', false);
         DomUtils.setAria(this.$wrapper, 'activedescendant', '');
       }
-
       if (this.dropboxPopover && !isSilent) {
         this.dropboxPopover.hide();
       } else {
@@ -2761,16 +2444,11 @@ var VirtualSelect = /*#__PURE__*/function () {
       this.isSilentClose = false;
       DomUtils.removeClass(this.$allWrappers, 'focused');
       this.removeOptionFocus();
-
-      if (!isSilent) {
-        if (this.isPopupActive) {
-          DomUtils.removeClass(this.$body, 'vscomp-popup-active');
-          this.isPopupActive = false;
-        }
+      if (!isSilent && this.isPopupActive) {
+        DomUtils.removeClass(this.$body, 'vscomp-popup-active');
+        this.isPopupActive = false;
       }
-
       DomUtils.addClass(this.$allWrappers, 'closed');
-
       if (!isSilent) {
         DomUtils.dispatchEvent(this.$ele, 'afterClose');
       }
@@ -2781,9 +2459,7 @@ var VirtualSelect = /*#__PURE__*/function () {
       if (!this.showSelectedOptionsFirst) {
         return;
       }
-
       this.setSortedOptions();
-
       if (!this.$optionsContainer.scrollTop || !this.selectedValues.length) {
         this.setVisibleOptions();
       } else {
@@ -2805,7 +2481,6 @@ var VirtualSelect = /*#__PURE__*/function () {
       if (!this.dropboxPopover || !this.isOpened()) {
         return;
       }
-
       this.$ele.updatePosition();
     }
   }, {
@@ -2817,7 +2492,6 @@ var VirtualSelect = /*#__PURE__*/function () {
     key: "focusSearchInput",
     value: function focusSearchInput() {
       var $ele = this.$searchInput;
-
       if ($ele) {
         $ele.focus();
       }
@@ -2826,32 +2500,27 @@ var VirtualSelect = /*#__PURE__*/function () {
     key: "focusOption",
     value: function focusOption() {
       var _ref5 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
-          direction = _ref5.direction,
-          $option = _ref5.$option,
-          focusFirst = _ref5.focusFirst;
-
+        direction = _ref5.direction,
+        $option = _ref5.$option,
+        focusFirst = _ref5.focusFirst;
       var $focusedEle = this.$dropboxContainer.querySelector('.vscomp-option.focused');
       var $newFocusedEle;
-
       if ($option) {
         $newFocusedEle = $option;
       } else if (!$focusedEle || focusFirst) {
         /* if no element on focus choose first visible one */
         var firstVisibleOptionIndex = this.getFirstVisibleOptionIndex();
         $newFocusedEle = this.$dropboxContainer.querySelector(".vscomp-option[data-visible-index=\"".concat(firstVisibleOptionIndex, "\"]"));
-
         if (DomUtils.hasClass($newFocusedEle, 'disabled') || DomUtils.hasClass($newFocusedEle, 'group-title')) {
           $newFocusedEle = this.getSibling($newFocusedEle, 'next');
         }
       } else {
         $newFocusedEle = this.getSibling($focusedEle, direction);
       }
-
       if ($newFocusedEle && $newFocusedEle !== $focusedEle) {
         if ($focusedEle) {
           this.toggleOptionFocusedState($focusedEle, false);
         }
-
         this.toggleOptionFocusedState($newFocusedEle, true);
         this.toggleFocusedProp(DomUtils.getData($newFocusedEle, 'index'), true);
         this.moveFocusedOptionToView($newFocusedEle);
@@ -2861,11 +2530,9 @@ var VirtualSelect = /*#__PURE__*/function () {
     key: "moveFocusedOptionToView",
     value: function moveFocusedOptionToView($ele) {
       var $focusedEle = $ele || this.$dropboxContainer.querySelector('.vscomp-option.focused');
-
       if (!$focusedEle) {
         return;
       }
-
       var newScrollTop;
       var containerRect = this.$optionsContainer.getBoundingClientRect();
       var optionRect = $focusedEle.getBoundingClientRect();
@@ -2877,15 +2544,14 @@ var VirtualSelect = /*#__PURE__*/function () {
       var optionHeight = optionRect.height;
       var optionOffsetTop = $focusedEle.offsetTop;
       var optionsTop = DomUtils.getData(this.$options, 'top', 'number');
-      /* if option hidden on top */
 
+      /* if option hidden on top */
       if (containerTop > optionTop) {
         newScrollTop = optionOffsetTop + optionsTop;
       } else if (containerBottom < optionBottom) {
         /* if option hidden on bottom */
         newScrollTop = optionOffsetTop - containerHeight + optionHeight + optionsTop;
       }
-
       if (newScrollTop !== undefined) {
         this.$optionsContainer.scrollTop = newScrollTop;
       }
@@ -2894,11 +2560,9 @@ var VirtualSelect = /*#__PURE__*/function () {
     key: "removeOptionFocus",
     value: function removeOptionFocus() {
       var $focusedEle = this.$dropboxContainer.querySelector('.vscomp-option.focused');
-
       if (!$focusedEle) {
         return;
       }
-
       this.toggleOptionFocusedState($focusedEle, false);
       this.toggleFocusedProp(null);
     }
@@ -2906,14 +2570,11 @@ var VirtualSelect = /*#__PURE__*/function () {
     key: "selectOption",
     value: function selectOption($ele) {
       var _ref6 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
-          event = _ref6.event;
-
+        event = _ref6.event;
       if (!$ele) {
         return;
       }
-
       var isAdding = !DomUtils.hasClass($ele, 'selected');
-
       if (isAdding) {
         if (this.multiple && this.isMaxValuesSelected) {
           return;
@@ -2923,7 +2584,6 @@ var VirtualSelect = /*#__PURE__*/function () {
         this.closeDropbox();
         return;
       }
-
       var selectedValues = this.selectedValues;
       var selectedValue = DomUtils.getData($ele, 'value');
       var selectedIndex = DomUtils.getData($ele, 'index', 'number');
@@ -2932,13 +2592,11 @@ var VirtualSelect = /*#__PURE__*/function () {
       var lastSelectedOptionIndex = this.lastSelectedOptionIndex;
       this.lastSelectedOptionIndex = null;
       this.toggleSelectedProp(selectedIndex, isAdding);
-
       if (isAdding) {
         if (this.multiple) {
           selectedValues.push(selectedValue);
           this.toggleAllOptionsClass();
           this.toggleGroupOptionsParent($ele);
-
           if (event && event.shiftKey) {
             shouldSelectRange = true;
           }
@@ -2946,21 +2604,16 @@ var VirtualSelect = /*#__PURE__*/function () {
           if (selectedValues.length) {
             this.toggleSelectedProp(this.getOptionIndex(selectedValues[0]), false);
           }
-
           selectedValues = [selectedValue];
           var $prevSelectedOption = this.$dropboxContainer.querySelector('.vscomp-option.selected');
-
           if ($prevSelectedOption) {
             this.toggleOptionSelectedState($prevSelectedOption, false);
           }
-
           this.closeDropbox();
-
           if (!isNewOption) {
             this.setSearchValue('');
           }
         }
-
         this.lastSelectedOptionIndex = selectedIndex;
         this.toggleOptionSelectedState($ele);
       } else if (this.multiple) {
@@ -2969,13 +2622,10 @@ var VirtualSelect = /*#__PURE__*/function () {
         this.toggleAllOptionsClass(false);
         this.toggleGroupOptionsParent($ele, false);
       }
-
       if (isNewOption) {
         this.beforeSelectNewValue();
       }
-
       this.setValue(selectedValues);
-
       if (shouldSelectRange) {
         this.selectRangeOptions(lastSelectedOptionIndex, selectedIndex);
       }
@@ -2989,17 +2639,14 @@ var VirtualSelect = /*#__PURE__*/function () {
     key: "selectRangeOptions",
     value: function selectRangeOptions(lastSelectedOptionIndex, selectedIndex) {
       var _this8 = this;
-
       if (typeof lastSelectedOptionIndex !== 'number' || this.maxValues) {
         return;
       }
-
       var selectedValues = this.selectedValues,
-          hasOptionGroup = this.hasOptionGroup;
+        hasOptionGroup = this.hasOptionGroup;
       var groupIndexes = {};
       var startIndex;
       var endIndex;
-
       if (lastSelectedOptionIndex < selectedIndex) {
         startIndex = lastSelectedOptionIndex;
         endIndex = selectedIndex;
@@ -3007,24 +2654,20 @@ var VirtualSelect = /*#__PURE__*/function () {
         startIndex = selectedIndex;
         endIndex = lastSelectedOptionIndex;
       }
-
       this.options.forEach(function (d) {
         if (d.isDisabled || d.isGroupTitle || !d.isVisible || d.isSelected) {
           return;
         }
-
         var index = d.index;
-
         if (index > startIndex && index < endIndex) {
           if (hasOptionGroup) {
             var groupIndex = d.groupIndex;
-
             if (typeof groupIndex === 'number') {
               groupIndexes[groupIndex] = true;
             }
-          } // eslint-disable-next-line no-param-reassign
+          }
 
-
+          // eslint-disable-next-line no-param-reassign
           d.isSelected = true;
           selectedValues.push(d.value);
         }
@@ -3032,16 +2675,14 @@ var VirtualSelect = /*#__PURE__*/function () {
       this.toggleAllOptionsClass();
       this.setValue(selectedValues);
       groupIndexes = Object.keys(groupIndexes);
-
       if (groupIndexes.length) {
         var toggleGroupTitleProp = this.toggleGroupTitleProp.bind(this);
         groupIndexes.forEach(function (i) {
           toggleGroupTitleProp(parseInt(i));
         });
       }
+
       /** using setTimeout to fix the issue of dropbox getting closed on select */
-
-
       setTimeout(function () {
         _this8.renderOptions();
       }, 0);
@@ -3052,30 +2693,24 @@ var VirtualSelect = /*#__PURE__*/function () {
       if (!this.multiple || this.disableSelectAll) {
         return;
       }
-
       var selectingAll = typeof isSelected === 'boolean' ? selectAll : !DomUtils.hasClass(this.$toggleAllCheckbox, 'checked');
       var selectedValues = [];
       var selectAllOnlyVisible = this.selectAllOnlyVisible;
       this.options.forEach(function (d) {
         var option = d;
-
         if (option.isDisabled || option.isCurrentNew) {
           return;
         }
-
         var isVisible = option.isVisible,
-            isSelected = option.isSelected;
-        /** unselected items are */
+          isSelected = option.isSelected;
 
-        if (
-        /** when unselecting all, selectAllOnlyVisible feature disabled or visible items or already unselected items */
-        !selectingAll && (!selectAllOnlyVisible || isVisible || !isSelected) ||
-        /** when selecting all, selectAllOnlyVisible feature enabled and hidden items those are not already selected */
+        /** unselected items are */
+        if ( /** when unselecting all, selectAllOnlyVisible feature disabled or visible items or already unselected items */
+        !selectingAll && (!selectAllOnlyVisible || isVisible || !isSelected) || /** when selecting all, selectAllOnlyVisible feature enabled and hidden items those are not already selected */
         selectingAll && selectAllOnlyVisible && !isVisible && !isSelected) {
           option.isSelected = false;
         } else {
           option.isSelected = true;
-
           if (!option.isGroupTitle) {
             selectedValues.push(option.value);
           }
@@ -3091,21 +2726,17 @@ var VirtualSelect = /*#__PURE__*/function () {
       if (!this.multiple) {
         return;
       }
-
       var valuePassed = typeof isAllSelected === 'boolean';
       var isAllVisibleSelected = false;
-
       if (!valuePassed) {
         // eslint-disable-next-line no-param-reassign
         isAllSelected = this.isAllOptionsSelected();
       }
+
       /** when all options not selected, checking if all visible options selected */
-
-
       if (!isAllSelected && this.selectAllOnlyVisible) {
         isAllVisibleSelected = this.isAllOptionsSelected(true);
       }
-
       DomUtils.toggleClass(this.$toggleAllCheckbox, 'checked', isAllSelected || isAllVisibleSelected);
       this.isAllSelected = isAllSelected;
     }
@@ -3113,7 +2744,6 @@ var VirtualSelect = /*#__PURE__*/function () {
     key: "isAllOptionsSelected",
     value: function isAllOptionsSelected(visibleOnly) {
       var isAllSelected = false;
-
       if (this.options.length && this.selectedValues.length) {
         isAllSelected = !this.options.some(
         /**
@@ -3124,20 +2754,17 @@ var VirtualSelect = /*#__PURE__*/function () {
           return !d.isSelected && !d.isDisabled && !d.isGroupTitle && (!visibleOnly || d.isVisible);
         });
       }
-
       return isAllSelected;
     }
   }, {
     key: "isAllGroupOptionsSelected",
     value: function isAllGroupOptionsSelected(groupIndex) {
       var isAllSelected = false;
-
       if (this.options.length) {
         isAllSelected = !this.options.some(function (d) {
           return !d.isSelected && !d.isDisabled && !d.isGroupTitle && d.groupIndex === groupIndex;
         });
       }
-
       return isAllSelected;
     }
   }, {
@@ -3146,16 +2773,14 @@ var VirtualSelect = /*#__PURE__*/function () {
       if (!this.hasOptionGroup || this.disableOptionGroupCheckbox || !$option) {
         return;
       }
-
       var groupIndex = DomUtils.getData($option, 'groupIndex');
-
       if (groupIndex !== undefined) {
         groupIndex = parseInt(groupIndex);
       }
-
       var $group = this.$options.querySelector(".vscomp-option[data-index=\"".concat(groupIndex, "\"]"));
       var isAllSelected = typeof isSelected === 'boolean' ? isSelected : this.isAllGroupOptionsSelected(groupIndex);
       this.toggleGroupTitleCheckbox($group, isAllSelected);
+      this.toggleGroupTitleProp(groupIndex, isAllSelected);
     }
   }, {
     key: "toggleGroupTitleProp",
@@ -3167,14 +2792,12 @@ var VirtualSelect = /*#__PURE__*/function () {
     key: "toggleGroupOptions",
     value: function toggleGroupOptions($ele, isSelected) {
       var _this9 = this;
-
       if (!this.hasOptionGroup || this.disableOptionGroupCheckbox || !$ele) {
         return;
       }
-
       var groupIndex = DomUtils.getData($ele, 'index', 'number');
       var selectedValues = this.selectedValues,
-          selectAllOnlyVisible = this.selectAllOnlyVisible;
+        selectAllOnlyVisible = this.selectAllOnlyVisible;
       var valuesMapping = {};
       var removeItemFromArray = Utils.removeItemFromArray;
       selectedValues.forEach(function (d) {
@@ -3184,20 +2807,16 @@ var VirtualSelect = /*#__PURE__*/function () {
         if (d.isDisabled || d.groupIndex !== groupIndex) {
           return;
         }
-
         var value = d.value;
-
         if (!isSelected || selectAllOnlyVisible && !d.isVisible) {
           // eslint-disable-next-line no-param-reassign
           d.isSelected = false;
-
           if (valuesMapping[value]) {
             removeItemFromArray(selectedValues, value);
           }
         } else {
           // eslint-disable-next-line no-param-reassign
           d.isSelected = true;
-
           if (!valuesMapping[value]) {
             selectedValues.push(value);
           }
@@ -3205,8 +2824,8 @@ var VirtualSelect = /*#__PURE__*/function () {
       });
       this.toggleAllOptionsClass(isSelected ? null : false);
       this.setValue(selectedValues);
-      /** using setTimeout to fix the issue of dropbox getting closed on select */
 
+      /** using setTimeout to fix the issue of dropbox getting closed on select */
       setTimeout(function () {
         _this9.renderOptions();
       }, 0);
@@ -3217,7 +2836,6 @@ var VirtualSelect = /*#__PURE__*/function () {
       if (!$ele) {
         return;
       }
-
       var selectedIndex = DomUtils.getData($ele, 'index', 'number');
       this.toggleSelectedProp(selectedIndex, isSelected);
       this.toggleOptionSelectedState($ele, isSelected);
@@ -3226,11 +2844,9 @@ var VirtualSelect = /*#__PURE__*/function () {
     key: "toggleFocusedProp",
     value: function toggleFocusedProp(index) {
       var isFocused = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
-
       if (this.focusedOptionIndex) {
         this.setOptionProp(this.focusedOptionIndex, 'isFocused', false);
       }
-
       this.setOptionProp(index, 'isFocused', isFocused);
       this.focusedOptionIndex = index;
     }
@@ -3244,17 +2860,13 @@ var VirtualSelect = /*#__PURE__*/function () {
     key: "scrollToTop",
     value: function scrollToTop() {
       var isClosed = !this.isOpened();
-
       if (isClosed) {
         this.openDropbox(true);
       }
-
       var scrollTop = this.$optionsContainer.scrollTop;
-
       if (scrollTop > 0) {
         this.$optionsContainer.scrollTop = 0;
       }
-
       if (isClosed) {
         this.closeDropbox(true);
       }
@@ -3272,11 +2884,9 @@ var VirtualSelect = /*#__PURE__*/function () {
         disableValidation: formReset
       });
       this.afterValueSet();
-
       if (formReset) {
         DomUtils.removeClass(this.$allWrappers, 'has-error');
       }
-
       DomUtils.dispatchEvent(this.$ele, 'reset');
     }
   }, {
@@ -3285,14 +2895,12 @@ var VirtualSelect = /*#__PURE__*/function () {
       if (!data) {
         return;
       }
-
       this.lastOptionIndex += 1;
       var newOption = this.getOptionObj(_objectSpread(_objectSpread({}, data), {}, {
         index: this.lastOptionIndex
       }));
       this.options.push(newOption);
       this.sortedOptions.push(newOption);
-
       if (rerender) {
         this.visibleOptionsCount += 1;
         this.afterSetOptions();
@@ -3304,7 +2912,6 @@ var VirtualSelect = /*#__PURE__*/function () {
       if (!index && index !== 0) {
         return;
       }
-
       this.options.splice(index, 1);
       this.lastOptionIndex -= 1;
     }
@@ -3312,7 +2919,6 @@ var VirtualSelect = /*#__PURE__*/function () {
     key: "removeNewOption",
     value: function removeNewOption() {
       var newOption = this.getNewOption();
-
       if (newOption) {
         this.removeOption(newOption.index);
       }
@@ -3323,15 +2929,12 @@ var VirtualSelect = /*#__PURE__*/function () {
       return options.sort(function (a, b) {
         var aIsSelected = a.isSelected || a.isAnySelected;
         var bIsSelected = b.isSelected || b.isAnySelected;
-
         if (!aIsSelected && !bIsSelected) {
           return 0;
         }
-
         if (aIsSelected && (!bIsSelected || a.index < b.index)) {
           return -1;
         }
-
         return 1;
       });
     }
@@ -3341,12 +2944,11 @@ var VirtualSelect = /*#__PURE__*/function () {
       var sortOptions = this.sortOptions.bind(this);
       var structuredOptions = this.structureOptionGroup(options);
       structuredOptions.forEach(function (d) {
-        var childOptions = d.options; // eslint-disable-next-line no-param-reassign
-
+        var childOptions = d.options;
+        // eslint-disable-next-line no-param-reassign
         d.isAnySelected = childOptions.some(function (e) {
           return e.isSelected;
         });
-
         if (d.isAnySelected) {
           sortOptions(childOptions);
         }
@@ -3358,39 +2960,32 @@ var VirtualSelect = /*#__PURE__*/function () {
     key: "isOptionVisible",
     value: function isOptionVisible(_ref7) {
       var data = _ref7.data,
-          searchValue = _ref7.searchValue,
-          hasExactOption = _ref7.hasExactOption,
-          visibleOptionGroupsMapping = _ref7.visibleOptionGroupsMapping,
-          searchGroup = _ref7.searchGroup,
-          searchByStartsWith = _ref7.searchByStartsWith;
+        searchValue = _ref7.searchValue,
+        hasExactOption = _ref7.hasExactOption,
+        visibleOptionGroupsMapping = _ref7.visibleOptionGroupsMapping,
+        searchGroup = _ref7.searchGroup,
+        searchByStartsWith = _ref7.searchByStartsWith;
       var value = data.value.toLowerCase();
       var label = data.label.toLowerCase();
       var description = data.description,
-          alias = data.alias;
+        alias = data.alias;
       var isVisible = searchByStartsWith ? label.startsWith(searchValue) : label.indexOf(searchValue) !== -1;
-
-      if (data.isGroupTitle) {
-        if (!searchGroup || !isVisible) {
-          isVisible = visibleOptionGroupsMapping[data.index];
-        }
+      if (data.isGroupTitle && (!searchGroup || !isVisible)) {
+        isVisible = visibleOptionGroupsMapping[data.index];
       }
-
       if (!searchByStartsWith && alias && !isVisible) {
         isVisible = alias.indexOf(searchValue) !== -1;
       }
-
       if (!searchByStartsWith && description && !isVisible) {
         isVisible = description.toLowerCase().indexOf(searchValue) !== -1;
-      } // eslint-disable-next-line no-param-reassign
+      }
 
-
+      // eslint-disable-next-line no-param-reassign
       data.isVisible = isVisible;
-
       if (!hasExactOption) {
         // eslint-disable-next-line no-param-reassign
         hasExactOption = label === searchValue || value === searchValue;
       }
-
       return {
         isVisible: isVisible,
         hasExactOption: hasExactOption
@@ -3401,19 +2996,19 @@ var VirtualSelect = /*#__PURE__*/function () {
     value: function structureOptionGroup(options) {
       var result = [];
       var childOptions = {};
-      /** getting all group title */
 
+      /** getting all group title */
       options.forEach(function (d) {
         if (d.isGroupTitle) {
-          var childArray = []; // eslint-disable-next-line no-param-reassign
-
+          var childArray = [];
+          // eslint-disable-next-line no-param-reassign
           d.options = childArray;
           childOptions[d.index] = childArray;
           result.push(d);
         }
       });
-      /** getting all group options */
 
+      /** getting all group options */
       options.forEach(function (d) {
         if (d.isGroupOption) {
           childOptions[d.groupIndex].push(d);
@@ -3474,17 +3069,13 @@ var VirtualSelect = /*#__PURE__*/function () {
       if (this.disableValidation) {
         return true;
       }
-
       var hasError = false;
       var selectedValues = this.selectedValues,
-          minValues = this.minValues;
-
-      if (this.required && (Utils.isEmpty(selectedValues) ||
-      /** required minium options not selected */
+        minValues = this.minValues;
+      if (this.required && (Utils.isEmpty(selectedValues) || /** required minium options not selected */
       this.multiple && minValues && selectedValues.length < minValues)) {
         hasError = true;
       }
-
       DomUtils.toggleClass(this.$allWrappers, 'has-error', hasError);
       return !hasError;
     }
@@ -3495,16 +3086,13 @@ var VirtualSelect = /*#__PURE__*/function () {
       $ele.virtualSelect = undefined;
       $ele.value = undefined;
       $ele.innerHTML = '';
-
       if (this.hasDropboxWrapper) {
         this.$dropboxWrapper.remove();
         this.mutationObserver.disconnect();
       }
-
       if (this.dropboxPopover) {
         this.dropboxPopover.destroy();
       }
-
       DomUtils.removeClass($ele, 'vscomp-ele');
     }
   }, {
@@ -3520,7 +3108,6 @@ var VirtualSelect = /*#__PURE__*/function () {
       if (!text || !this.enableSecureText) {
         return text;
       }
-
       this.$secureText.nodeValue = text;
       return this.$secureDiv.innerHTML;
     }
@@ -3534,11 +3121,9 @@ var VirtualSelect = /*#__PURE__*/function () {
     key: "toggleOptionSelectedState",
     value: function toggleOptionSelectedState($ele, value) {
       var isSelected = value;
-
       if (typeof isSelected === 'undefined') {
         isSelected = !DomUtils.hasClass($ele, 'selected');
       }
-
       DomUtils.toggleClass($ele, 'selected', isSelected);
       DomUtils.setAria($ele, 'selected', isSelected);
     }
@@ -3548,59 +3133,48 @@ var VirtualSelect = /*#__PURE__*/function () {
       if (!$ele) {
         return;
       }
-
       DomUtils.toggleClass($ele, 'focused', isFocused);
-
       if (isFocused) {
         DomUtils.setAria(this.$wrapper, 'activedescendant', $ele.id);
       }
     }
-    /** static methods - start */
 
+    /** static methods - start */
   }], [{
     key: "init",
     value: function init(options) {
       var $eleArray = options.ele;
-
       if (!$eleArray) {
         return undefined;
       }
-
       var singleEle = false;
-
       if (typeof $eleArray === 'string') {
         $eleArray = document.querySelectorAll($eleArray);
         var eleLength = $eleArray.length;
-
         if (eleLength === 0) {
           return undefined;
         }
-
         if (eleLength === 1) {
           singleEle = true;
         }
       }
-
       if ($eleArray.length === undefined || $eleArray.forEach === undefined) {
         $eleArray = [$eleArray];
         singleEle = true;
       }
-
       var instances = [];
       $eleArray.forEach(function ($ele) {
         /** skipping initialization on calling init method multiple times */
         if ($ele.virtualSelect) {
           instances.push($ele.virtualSelect);
           return;
-        } // eslint-disable-next-line no-param-reassign
+        }
 
-
+        // eslint-disable-next-line no-param-reassign
         options.ele = $ele;
-
         if ($ele.tagName === 'SELECT') {
           VirtualSelect.setPropsFromSelect(options);
         }
-
         instances.push(new VirtualSelect(options));
       });
       return singleEle ? instances[0] : instances;
@@ -3624,7 +3198,6 @@ var VirtualSelect = /*#__PURE__*/function () {
       var $ele = props.ele;
       var disabledOptions = [];
       var selectedValue = [];
-
       var getNativeOptions = function getNativeOptions($container) {
         var options = [];
         var $options = Array.from($container.children);
@@ -3633,52 +3206,46 @@ var VirtualSelect = /*#__PURE__*/function () {
           var option = {
             value: value
           };
-
           if ($option.tagName === 'OPTGROUP') {
             option.label = $option.getAttribute('label');
             option.options = getNativeOptions($option);
           } else {
             option.label = $option.innerHTML;
           }
-
           options.push(option);
-
           if ($option.disabled) {
             disabledOptions.push(value);
           }
-
           if ($option.selected) {
             selectedValue.push(value);
           }
         });
         return options;
       };
-
       var optionsList = getNativeOptions($ele);
-      /** creating div element to initiate plugin and removing native element */
 
+      /** creating div element to initiate plugin and removing native element */
       var $newEle = document.createElement('div');
       DomUtils.setAttrFromEle($ele, $newEle, Object.keys(attrPropsMapping), valueLessProps);
       $ele.parentNode.insertBefore($newEle, $ele);
-      $ele.remove(); // eslint-disable-next-line no-param-reassign
+      $ele.remove();
 
-      props.ele = $newEle; // eslint-disable-next-line no-param-reassign
-
-      props.options = optionsList; // eslint-disable-next-line no-param-reassign
-
-      props.disabledOptions = disabledOptions; // eslint-disable-next-line no-param-reassign
-
+      // eslint-disable-next-line no-param-reassign
+      props.ele = $newEle;
+      // eslint-disable-next-line no-param-reassign
+      props.options = optionsList;
+      // eslint-disable-next-line no-param-reassign
+      props.disabledOptions = disabledOptions;
+      // eslint-disable-next-line no-param-reassign
       props.selectedValue = selectedValue;
     }
   }, {
     key: "onFormReset",
     value: function onFormReset(e) {
       var $form = e.target.closest('form');
-
       if (!$form) {
         return;
       }
-
       $form.querySelectorAll('.vscomp-ele-wrapper').forEach(function ($ele) {
         $ele.parentElement.virtualSelect.reset(true);
       });
@@ -3696,11 +3263,9 @@ var VirtualSelect = /*#__PURE__*/function () {
       if (!$container) {
         return true;
       }
-
       var hasError = false;
       $container.querySelectorAll('.vscomp-ele-wrapper').forEach(function ($ele) {
         var result = $ele.parentElement.virtualSelect.validate();
-
         if (!hasError && !result) {
           hasError = true;
         }
@@ -3716,28 +3281,24 @@ var VirtualSelect = /*#__PURE__*/function () {
     key: "setValueMethod",
     value: function setValueMethod() {
       var _this$virtualSelect;
-
       (_this$virtualSelect = this.virtualSelect).setValueMethod.apply(_this$virtualSelect, arguments);
     }
   }, {
     key: "setOptionsMethod",
     value: function setOptionsMethod() {
       var _this$virtualSelect2;
-
       (_this$virtualSelect2 = this.virtualSelect).setOptionsMethod.apply(_this$virtualSelect2, arguments);
     }
   }, {
     key: "setDisabledOptionsMethod",
     value: function setDisabledOptionsMethod() {
       var _this$virtualSelect3;
-
       (_this$virtualSelect3 = this.virtualSelect).setDisabledOptionsMethod.apply(_this$virtualSelect3, arguments);
     }
   }, {
     key: "setEnabledOptionsMethod",
     value: function setEnabledOptionsMethod() {
       var _this$virtualSelect4;
-
       (_this$virtualSelect4 = this.virtualSelect).setEnabledOptionsMethod.apply(_this$virtualSelect4, arguments);
     }
   }, {
@@ -3823,9 +3384,7 @@ var VirtualSelect = /*#__PURE__*/function () {
       });
     }
     /** static methods - end */
-
   }]);
-
   return VirtualSelect;
 }();
 document.addEventListener('reset', VirtualSelect.onFormReset);
@@ -3833,8 +3392,8 @@ document.addEventListener('submit', VirtualSelect.onFormSubmit);
 window.addEventListener('resize', VirtualSelect.onResizeMethod);
 attrPropsMapping = VirtualSelect.getAttrProps();
 window.VirtualSelect = VirtualSelect;
-/** polyfill to fix an issue in ie browser */
 
+/** polyfill to fix an issue in ie browser */
 if (typeof NodeList !== 'undefined' && NodeList.prototype && !NodeList.prototype.forEach) {
   NodeList.prototype.forEach = Array.prototype.forEach;
 }
