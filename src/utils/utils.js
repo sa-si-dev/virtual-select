@@ -39,10 +39,8 @@ export class Utils {
       if (value.length === 0) {
         result = true;
       }
-    } else if (typeof value === 'object') {
-      if (Object.keys(value).length === 0) {
-        result = true;
-      }
+    } else if (typeof value === 'object' && Object.keys(value).length === 0) {
+      result = true;
     }
 
     return result;
@@ -101,15 +99,11 @@ export class Utils {
     return Math.floor(Math.random() * (maxN - minN - 1)) + minN;
   }
 
-
   /**
-   * @static
    * @param {string} text
-   * @return {string} 
-   * @memberof Utils
+   * @return {string}
    */
   static regexEscape(text) {
-    return text.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'); 
-  };
-
+    return text.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
+  }
 }

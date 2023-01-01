@@ -35,6 +35,7 @@ const dataProps = [
   'dropboxWrapper',
   'emptyValue',
   'enableSecureText',
+  'focusSelectedOptionOnOpen',
   'hasOptionDescription',
   'hideClearButton',
   'hideValueTooltipOnSelectAll',
@@ -255,10 +256,9 @@ export class VirtualSelect {
     const { labelRenderer, disableOptionGroupCheckbox, uniqueId, searchGroup } = this;
     const hasLabelRenderer = typeof labelRenderer === 'function';
     const { convertToBoolean } = Utils;
-    const { regexEscape } = Utils;
 
     if (markSearchResults) {
-      searchRegex = new RegExp(`(${regexEscape(this.searchValue)})`, 'gi');
+      searchRegex = new RegExp(`(${Utils.regexEscape(this.searchValue)})`, 'gi');
     }
 
     if (this.multiple) {
@@ -758,6 +758,7 @@ export class VirtualSelect {
     this.required = convertToBoolean(options.required);
     this.autofocus = convertToBoolean(options.autofocus);
     this.useGroupValue = convertToBoolean(options.useGroupValue);
+    this.focusSelectedOptionOnOpen = convertToBoolean(options.focusSelectedOptionOnOpen);
     this.noOptionsText = options.noOptionsText;
     this.noSearchResultsText = options.noSearchResultsText;
     this.selectAllText = options.selectAllText;
@@ -864,6 +865,7 @@ export class VirtualSelect {
       hideValueTooltipOnSelectAll: true,
       emptyValue: '',
       searchDelay: 300,
+      focusSelectedOptionOnOpen: true,
     };
 
     if (options.hasOptionDescription) {
@@ -1760,7 +1762,7 @@ export class VirtualSelect {
   setScrollTop() {
     const { selectedValues } = this;
 
-    if (this.showSelectedOptionsFirst || selectedValues.length === 0) {
+    if (this.showSelectedOptionsFirst || !this.focusSelectedOptionOnOpen || selectedValues.length === 0) {
       return;
     }
 
@@ -1887,7 +1889,7 @@ export class VirtualSelect {
     const { getString } = Utils;
     const secureText = this.secureText.bind(this);
 
-    const newOption = {
+    return {
       index: data.index,
       value: secureText(getString(data.value)),
       label: secureText(getString(data.label)),
@@ -1897,8 +1899,6 @@ export class VirtualSelect {
       isNew: data.isNew || false,
       isVisible: true,
     };
-
-    return newOption;
   }
 
   getNewOption() {
@@ -2179,11 +2179,9 @@ export class VirtualSelect {
     DomUtils.removeClass(this.$allWrappers, 'focused');
     this.removeOptionFocus();
 
-    if (!isSilent) {
-      if (this.isPopupActive) {
-        DomUtils.removeClass(this.$body, 'vscomp-popup-active');
-        this.isPopupActive = false;
-      }
+    if (!isSilent && this.isPopupActive) {
+      DomUtils.removeClass(this.$body, 'vscomp-popup-active');
+      this.isPopupActive = false;
     }
 
     DomUtils.addClass(this.$allWrappers, 'closed');
@@ -2557,6 +2555,7 @@ export class VirtualSelect {
     const isAllSelected = typeof isSelected === 'boolean' ? isSelected : this.isAllGroupOptionsSelected(groupIndex);
 
     this.toggleGroupTitleCheckbox($group, isAllSelected);
+    this.toggleGroupTitleProp(groupIndex, isAllSelected);
   }
 
   toggleGroupTitleProp(groupIndex, isSelected) {
@@ -2751,10 +2750,8 @@ export class VirtualSelect {
     const { description, alias } = data;
     let isVisible = searchByStartsWith ? label.startsWith(searchValue) : label.indexOf(searchValue) !== -1;
 
-    if (data.isGroupTitle) {
-      if (!searchGroup || !isVisible) {
-        isVisible = visibleOptionGroupsMapping[data.index];
-      }
+    if (data.isGroupTitle && (!searchGroup || !isVisible)) {
+      isVisible = visibleOptionGroupsMapping[data.index];
     }
 
     if (!searchByStartsWith && alias && !isVisible) {

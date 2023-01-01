@@ -37,6 +37,7 @@
  * @property {string} [tooltipAlignment=center] CSS Text alignment for tooltip
  * @property {string} [tooltipMaxWidth='300px'] CSS max width for tooltip
  * @property {boolean} [showSelectedOptionsFirst=false] Show selected options at the top of the dropbox
+ * @property {boolean} [focusSelectedOptionOnOpen=true] Scroll selected option to viewport on dropbox open
  * @property {string} [name] Name attribute for hidden input
  * @property {boolean} [keepAlwaysOpen] Keep dropbox always open with fixed height
  * @property {number} [maxValues=0] Maximum no.of options allowed to choose in multiple select
