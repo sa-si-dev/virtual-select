@@ -71,6 +71,7 @@ const dataProps = [
   'silentInitialValueSet',
   'textDirection',
   'tooltipAlignment',
+  'tooltipZIndex',
   'tooltipFontSize',
   'tooltipMaxWidth',
   'updatePositionThrottle',
@@ -774,6 +775,7 @@ export class VirtualSelect {
     this.dropboxWidth = options.dropboxWidth;
     this.tooltipFontSize = options.tooltipFontSize;
     this.tooltipAlignment = options.tooltipAlignment;
+	this.tooltipZIndex = options.tooltipZIndex;
     this.tooltipMaxWidth = options.tooltipMaxWidth;
     this.updatePositionThrottle = options.updatePositionThrottle;
     this.noOfDisplayValues = parseInt(options.noOfDisplayValues);
@@ -854,6 +856,7 @@ export class VirtualSelect {
       zIndex: options.keepAlwaysOpen ? 1 : 2,
       tooltipFontSize: '14px',
       tooltipAlignment: 'center',
+	  tooltipZIndex: options.keepAlwaysOpen ? 1 : 2,
       tooltipMaxWidth: '300px',
       updatePositionThrottle: 100,
       name: '',
@@ -1866,7 +1869,7 @@ export class VirtualSelect {
     const data = {
       'data-tooltip': text || '',
       'data-tooltip-enter-delay': this.tooltipEnterDelay,
-      'data-tooltip-z-index': this.zIndex,
+      'data-tooltip-z-index': this.tooltipZIndex,
       'data-tooltip-font-size': this.tooltipFontSize,
       'data-tooltip-alignment': this.tooltipAlignment,
       'data-tooltip-max-width': this.tooltipMaxWidth,

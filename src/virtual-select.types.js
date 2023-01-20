@@ -34,6 +34,7 @@
  * @property {boolean} [allowNewOption=false] Allow to add new option by searching
  * @property {boolean} [markSearchResults=false] Mark matched term in label
  * @property {string} [tooltipFontSize='14px'] Font size for tooltip
+ * @property {number} [tooltipZIndex=1] Zindex for tooltip
  * @property {string} [tooltipAlignment=center] CSS Text alignment for tooltip
  * @property {string} [tooltipMaxWidth='300px'] CSS max width for tooltip
  * @property {boolean} [showSelectedOptionsFirst=false] Show selected options at the top of the dropbox

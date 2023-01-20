@@ -139,10 +139,8 @@ var Utils = /*#__PURE__*/function () {
     }
 
     /**
-     * @static
      * @param {string} text
      * @return {string}
-     * @memberof Utils
      */
   }, {
     key: "regexEscape",
@@ -509,7 +507,7 @@ var keyDownMethodMapping = {
 var valueLessProps = ['autofocus', 'disabled', 'multiple', 'required'];
 var nativeProps = ['autofocus', 'class', 'disabled', 'id', 'multiple', 'name', 'placeholder', 'required'];
 var attrPropsMapping;
-var dataProps = ['additionalClasses', 'aliasKey', 'allOptionsSelectedText', 'allowNewOption', 'alwaysShowSelectedOptionsCount', 'alwaysShowSelectedOptionsLabel', 'ariaLabelledby', 'autoSelectFirstOption', 'clearButtonText', 'descriptionKey', 'disableAllOptionsSelectedText', 'disableOptionGroupCheckbox', 'disableSelectAll', 'disableValidation', 'dropboxWidth', 'dropboxWrapper', 'emptyValue', 'enableSecureText', 'focusSelectedOptionOnOpen', 'hasOptionDescription', 'hideClearButton', 'hideValueTooltipOnSelectAll', 'keepAlwaysOpen', 'labelKey', 'markSearchResults', 'maxValues', 'maxWidth', 'minValues', 'moreText', 'noOfDisplayValues', 'noOptionsText', 'noSearchResultsText', 'optionHeight', 'optionSelectedText', 'optionsCount', 'optionsSelectedText', 'popupDropboxBreakpoint', 'popupPosition', 'position', 'search', 'searchByStartsWith', 'searchDelay', 'searchGroup', 'searchPlaceholderText', 'selectAllOnlyVisible', 'selectAllText', 'setValueAsArray', 'showDropboxAsPopup', 'showOptionsOnlyOnSearch', 'showSelectedOptionsFirst', 'showValueAsTags', 'silentInitialValueSet', 'textDirection', 'tooltipAlignment', 'tooltipFontSize', 'tooltipMaxWidth', 'updatePositionThrottle', 'useGroupValue', 'valueKey', 'zIndex'];
+var dataProps = ['additionalClasses', 'aliasKey', 'allOptionsSelectedText', 'allowNewOption', 'alwaysShowSelectedOptionsCount', 'alwaysShowSelectedOptionsLabel', 'ariaLabelledby', 'autoSelectFirstOption', 'clearButtonText', 'descriptionKey', 'disableAllOptionsSelectedText', 'disableOptionGroupCheckbox', 'disableSelectAll', 'disableValidation', 'dropboxWidth', 'dropboxWrapper', 'emptyValue', 'enableSecureText', 'focusSelectedOptionOnOpen', 'hasOptionDescription', 'hideClearButton', 'hideValueTooltipOnSelectAll', 'keepAlwaysOpen', 'labelKey', 'markSearchResults', 'maxValues', 'maxWidth', 'minValues', 'moreText', 'noOfDisplayValues', 'noOptionsText', 'noSearchResultsText', 'optionHeight', 'optionSelectedText', 'optionsCount', 'optionsSelectedText', 'popupDropboxBreakpoint', 'popupPosition', 'position', 'search', 'searchByStartsWith', 'searchDelay', 'searchGroup', 'searchPlaceholderText', 'selectAllOnlyVisible', 'selectAllText', 'setValueAsArray', 'showDropboxAsPopup', 'showOptionsOnlyOnSearch', 'showSelectedOptionsFirst', 'showValueAsTags', 'silentInitialValueSet', 'textDirection', 'tooltipAlignment', 'tooltipZIndex', 'tooltipFontSize', 'tooltipMaxWidth', 'updatePositionThrottle', 'useGroupValue', 'valueKey', 'zIndex'];
 
 /** Class representing VirtualSelect */
 var VirtualSelect = /*#__PURE__*/function () {
@@ -1138,6 +1136,7 @@ var VirtualSelect = /*#__PURE__*/function () {
       this.dropboxWidth = options.dropboxWidth;
       this.tooltipFontSize = options.tooltipFontSize;
       this.tooltipAlignment = options.tooltipAlignment;
+      this.tooltipZIndex = options.tooltipZIndex;
       this.tooltipMaxWidth = options.tooltipMaxWidth;
       this.updatePositionThrottle = options.updatePositionThrottle;
       this.noOfDisplayValues = parseInt(options.noOfDisplayValues);
@@ -1214,6 +1213,7 @@ var VirtualSelect = /*#__PURE__*/function () {
         zIndex: options.keepAlwaysOpen ? 1 : 2,
         tooltipFontSize: '14px',
         tooltipAlignment: 'center',
+        tooltipZIndex: options.keepAlwaysOpen ? 1 : 2,
         tooltipMaxWidth: '300px',
         updatePositionThrottle: 100,
         name: '',
@@ -2146,7 +2146,7 @@ var VirtualSelect = /*#__PURE__*/function () {
       var data = {
         'data-tooltip': text || '',
         'data-tooltip-enter-delay': this.tooltipEnterDelay,
-        'data-tooltip-z-index': this.zIndex,
+        'data-tooltip-z-index': this.tooltipZIndex,
         'data-tooltip-font-size': this.tooltipFontSize,
         'data-tooltip-alignment': this.tooltipAlignment,
         'data-tooltip-max-width': this.tooltipMaxWidth,
