@@ -115,7 +115,7 @@ export class Utils {
     if (typeof text !== 'string') {
       throw new TypeError('Argument must be a string');
     }
-    return text.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    return text.normalize("NFKD").replace(/[^\w\s]/g, "");
   }
   
 }

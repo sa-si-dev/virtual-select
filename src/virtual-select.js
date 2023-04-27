@@ -2748,10 +2748,13 @@ export class VirtualSelect {
   }
 
   isOptionVisible({ data, searchValue, hasExactOption, visibleOptionGroupsMapping, searchGroup, searchByStartsWith }) {
-    const value = data.value.toLowerCase();
-    const label = data.label.toLowerCase();
-    const { description, alias } = data;
+    searchValue = !this.searchNormalize ? Utils.normalizeString(searchValue) : searchValue;
+    const value = !this.searchNormalize ? Utils.normalizeString(data.value.toLowerCase()) : data.value.toLowerCase();
+    let label = !this.searchNormalize ? Utils.normalizeString(data.label.toLowerCase()) : data.label.toLowerCase();
+    let { description, alias } = data;
+
     let isVisible = searchByStartsWith ? label.startsWith(searchValue) : label.indexOf(searchValue) !== -1;
+
 
     if (data.isGroupTitle && (!searchGroup || !isVisible)) {
       isVisible = visibleOptionGroupsMapping[data.index];
