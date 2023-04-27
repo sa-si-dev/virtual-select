@@ -106,4 +106,16 @@ export class Utils {
   static regexEscape(text) {
     return text.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
   }
+
+  /**
+   * @param {string} text
+   * @return {string}
+   */
+  static normalizeString(text) {
+    if (typeof text !== 'string') {
+      throw new TypeError('Argument must be a string');
+    }
+    return text.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  }
+  
 }

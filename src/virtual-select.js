@@ -60,6 +60,7 @@ const dataProps = [
   'searchByStartsWith',
   'searchDelay',
   'searchGroup',
+  'searchNormalize',
   'searchPlaceholderText',
   'selectAllOnlyVisible',
   'selectAllText',
@@ -762,6 +763,7 @@ export class VirtualSelect {
     this.noOptionsText = options.noOptionsText;
     this.noSearchResultsText = options.noSearchResultsText;
     this.selectAllText = options.selectAllText;
+    this.searchNormalize = options.searchNormalize;
     this.searchPlaceholderText = options.searchPlaceholderText;
     this.optionsSelectedText = options.optionsSelectedText;
     this.optionSelectedText = options.optionSelectedText;
@@ -843,6 +845,7 @@ export class VirtualSelect {
       noOptionsText: 'No options found',
       noSearchResultsText: 'No results found',
       selectAllText: 'Select All',
+      searchNormalize: false,
       searchPlaceholderText: 'Search...',
       clearButtonText: 'Clear',
       moreText: 'more...',
