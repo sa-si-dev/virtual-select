@@ -829,6 +829,7 @@ export class VirtualSelect {
     this.uniqueId = this.getUniqueId();
   }
 
+
   /**
    * @param {virtualSelectOptions} options
    */
@@ -1529,7 +1530,11 @@ export class VirtualSelect {
     let visibleOptionsCount = 0;
     let hasExactOption = false;
     let visibleOptionGroupsMapping;
-    const { searchValue, searchGroup, showOptionsOnlyOnSearch, searchByStartsWith } = this;
+    const { searchGroup, showOptionsOnlyOnSearch, searchByStartsWith } = this;
+
+    //If searchNormalize we'll normalize the searchValue
+    let { searchValue } = this;
+    searchValue = this.searchNormalize ? Utils.normalizeString(searchValue) : searchValue;
     const isOptionVisible = this.isOptionVisible.bind(this);
 
     if (this.hasOptionGroup) {
@@ -1540,9 +1545,8 @@ export class VirtualSelect {
       if (d.isCurrentNew) {
         return;
       }
-
       let result;
-
+      
       if (showOptionsOnlyOnSearch && !searchValue) {
         // eslint-disable-next-line no-param-reassign
         d.isVisible = false;
@@ -2748,24 +2752,22 @@ export class VirtualSelect {
   }
 
   isOptionVisible({ data, searchValue, hasExactOption, visibleOptionGroupsMapping, searchGroup, searchByStartsWith }) {
-    searchValue = !this.searchNormalize ? Utils.normalizeString(searchValue) : searchValue;
-    const value = !this.searchNormalize ? Utils.normalizeString(data.value.toLowerCase()) : data.value.toLowerCase();
-    let label = !this.searchNormalize ? Utils.normalizeString(data.label.toLowerCase()) : data.label.toLowerCase();
+    const value = data.value.toLowerCase();
+    let label = this.searchNormalize ? Utils.normalizeString(data.label.toLowerCase()) : data.label.toLowerCase(); 
     let { description, alias } = data;
 
-    let isVisible = searchByStartsWith ? label.startsWith(searchValue) : label.indexOf(searchValue) !== -1;
-
+    let isVisible = searchByStartsWith ? label.startsWith(searchValue) : label.includes(searchValue);
 
     if (data.isGroupTitle && (!searchGroup || !isVisible)) {
       isVisible = visibleOptionGroupsMapping[data.index];
     }
 
     if (!searchByStartsWith && alias && !isVisible) {
-      isVisible = alias.indexOf(searchValue) !== -1;
+      isVisible = alias.includes(searchValue);
     }
 
     if (!searchByStartsWith && description && !isVisible) {
-      isVisible = description.toLowerCase().indexOf(searchValue) !== -1;
+      isVisible = description.toLowerCase().includes(searchValue);
     }
 
     // eslint-disable-next-line no-param-reassign
