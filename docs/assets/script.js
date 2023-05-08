@@ -66,10 +66,10 @@ function getOptions(count = 100000, includeDesc = false) {
   const optionsData = [];
 
   for (let i = 1; i <= count; i += 1) {
-    const optionData = { value: i, label: `Option Gonçalo Häns Mátias ${i}` };
+    const optionData = { value: i, label: `Option ${i}` };
 
     if (includeDesc) {
-      optionData.description = `Description ÁÉÍÓÚáéíóúâêîôûàèìòùÇç ${i}`;
+      optionData.description = `Description ${i}`;
     }
 
     optionsData.push(optionData);
@@ -82,12 +82,12 @@ function getGroupOptions() {
   const optGroupData = [];
 
   for (let i = 1; i <= 3; i += 1) {
-    const groupLabel = `Option Gonçalo Häns Mátias group ${i}`;
+    const groupLabel = `Option group ${i}`;
     const options = [];
 
     for (let j = 1; j <= 3; j += 1) {
       const value = `${i}-${j}`;
-      const label = `Option Gonçalo Häns Mátias ${value}`;
+      const label = `Option ${value}`;
 
       options.push({ value, label });
     }
