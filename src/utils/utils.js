@@ -112,10 +112,8 @@ export class Utils {
    * @return {string}
    */
   static normalizeString(text) {
-    if (typeof text !== 'string') {
-      throw new TypeError('Argument must be a string');
-    }
-    return text.normalize("NFD").replace(/[^\w\s]/g, "");
+    const NON_WORD_REGEX = /[^\w]/g;
+    return text.normalize("NFD").replace(NON_WORD_REGEX, "");
   }
   
 }
