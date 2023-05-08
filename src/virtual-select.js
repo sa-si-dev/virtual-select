@@ -1171,10 +1171,12 @@ export class VirtualSelect {
       const value = secureText(getString(d[valueKey]));
       const childOptions = d.options;
       const isGroupTitle = !!childOptions;
+      const secureTextLabel = secureText(getString(d[labelKey]));
       const option = {
         index,
         value,
-        label: secureText(getString(d[labelKey])),
+        label: secureTextLabel,
+        labelNormalized: Utils.normalizeString(secureTextLabel).toLowerCase(),
         alias: getAlias(d[aliasKey]),
         isVisible: convertToBoolean(d.isVisible, true),
         isNew: d.isNew || false,
@@ -2753,7 +2755,7 @@ export class VirtualSelect {
 
   isOptionVisible({ data, searchValue, hasExactOption, visibleOptionGroupsMapping, searchGroup, searchByStartsWith }) {
     const value = data.value.toLowerCase();
-    let label = this.searchNormalize ? Utils.normalizeString(data.label).toLowerCase() : data.label.toLowerCase(); 
+    let label = this.searchNormalize ? data.labelNormalized: data.label.toLowerCase(); 
     let { description, alias } = data;
 
     let isVisible = searchByStartsWith ? label.startsWith(searchValue) : label.includes(searchValue);
