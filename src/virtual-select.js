@@ -1169,14 +1169,14 @@ export class VirtualSelect {
       }
 
       const value = secureText(getString(d[valueKey]));
+      const label = secureText(getString(d[labelKey]));
       const childOptions = d.options;
       const isGroupTitle = !!childOptions;
-      const secureTextLabel = secureText(getString(d[labelKey]));
       const option = {
         index,
         value,
-        label: secureTextLabel,
-        labelNormalized: this.searchNormalize ? Utils.normalizeString(secureTextLabel).toLowerCase() : secureTextLabel.toLowerCase(),
+        label,
+        labelNormalized: this.searchNormalize ? Utils.normalizeString(label).toLowerCase() : label.toLowerCase(),
         alias: getAlias(d[aliasKey]),
         isVisible: convertToBoolean(d.isVisible, true),
         isNew: d.isNew || false,
