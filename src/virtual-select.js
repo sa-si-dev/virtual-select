@@ -846,7 +846,7 @@ export class VirtualSelect {
       noOptionsText: 'No options found',
       noSearchResultsText: 'No results found',
       selectAllText: 'Select All',
-      searchNormalize: true,
+      searchNormalize: false,
       searchPlaceholderText: 'Search...',
       clearButtonText: 'Clear',
       moreText: 'more...',
