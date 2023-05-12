@@ -24,6 +24,7 @@ const dataProps = [
   'alwaysShowSelectedOptionsCount',
   'alwaysShowSelectedOptionsLabel',
   'ariaLabelledby',
+  'ariaLabelText',
   'autoSelectFirstOption',
   'clearButtonText',
   'descriptionKey',
@@ -59,6 +60,7 @@ const dataProps = [
   'search',
   'searchByStartsWith',
   'searchDelay',
+  'searchFormLabel',
   'searchGroup',
   'searchPlaceholderText',
   'selectAllOnlyVisible',
@@ -110,6 +112,7 @@ export class VirtualSelect {
     const valueTooltip = this.getTooltipAttrText(this.placeholder, true, true);
     const clearButtonTooltip = this.getTooltipAttrText(this.clearButtonText);
     const ariaLabelledbyText = this.ariaLabelledby ? `aria-labelledby="${this.ariaLabelledby}"` : '';
+    const ariaLabelText = this.ariaLabelText ? `aria-label="${this.ariaLabelText}"` : '';
     let isExpanded = false;
 
     if (this.additionalClasses) {
@@ -157,7 +160,7 @@ export class VirtualSelect {
 
     const html = `<div id="vscomp-ele-wrapper-${uniqueId}" class="vscomp-ele-wrapper ${wrapperClasses}" tabindex="0"
         role="combobox" aria-haspopup="listbox" aria-controls="vscomp-dropbox-container-${uniqueId}"
-        aria-expanded="${isExpanded}" ${ariaLabelledbyText}
+        aria-expanded="${isExpanded}" ${ariaLabelledbyText} ${ariaLabelText}
       >
         <input type="hidden" name="${this.name}" class="vscomp-hidden-input">
 
@@ -330,7 +333,7 @@ export class VirtualSelect {
       }
 
       html += `<div role="option" aria-selected="${isSelected}" id="vscomp-option-${uniqueId}-${index}"
-          class="${optionClasses}" data-value="${d.value}" data-index="${index}" data-visible-index="${d.visibleIndex}"
+          class="${optionClasses}" data-value="${d.value}" data-index="${index}" data-visible-index="${d.visibleIndex}" tabindex="0" 
           ${groupIndexText} ${ariaDisabledText}
         >
           ${leftSection}
@@ -364,7 +367,8 @@ export class VirtualSelect {
     }
 
     if (this.hasSearch) {
-      searchInput = `<input type="text" class="vscomp-search-input" placeholder="${this.searchPlaceholderText}">
+      searchInput = `<label for="vscomp-search-input-${this.uniqueId}" class="vscomp-search-label" id="vscomp-search-label-${this.uniqueId}">${this.searchFormLabel}</label>
+      <input type="text" class="vscomp-search-input" placeholder="${this.searchPlaceholderText}" id="vscomp-search-input-${this.uniqueId}">
       <span class="vscomp-search-clear">&times;</span>`;
     }
 
@@ -763,6 +767,7 @@ export class VirtualSelect {
     this.noSearchResultsText = options.noSearchResultsText;
     this.selectAllText = options.selectAllText;
     this.searchPlaceholderText = options.searchPlaceholderText;
+    this.searchFormLabel = options.searchFormLabel;
     this.optionsSelectedText = options.optionsSelectedText;
     this.optionSelectedText = options.optionSelectedText;
     this.allOptionsSelectedText = options.allOptionsSelectedText;
@@ -789,6 +794,7 @@ export class VirtualSelect {
     this.initialSelectedValue = options.selectedValue === 0 ? '0' : options.selectedValue;
     this.emptyValue = options.emptyValue;
     this.ariaLabelledby = options.ariaLabelledby;
+    this.ariaLabelText = options.ariaLabelText;
     this.maxWidth = options.maxWidth;
     this.searchDelay = options.searchDelay;
 
@@ -837,6 +843,7 @@ export class VirtualSelect {
       labelKey: 'label',
       descriptionKey: 'description',
       aliasKey: 'alias',
+      ariaLabelText: 'Options list',
       optionsCount: 5,
       noOfDisplayValues: 50,
       optionHeight: '40px',
@@ -844,6 +851,7 @@ export class VirtualSelect {
       noSearchResultsText: 'No results found',
       selectAllText: 'Select All',
       searchPlaceholderText: 'Search...',
+      searchFormLabel: 'Search',
       clearButtonText: 'Clear',
       moreText: 'more...',
       optionsSelectedText: 'options selected',
