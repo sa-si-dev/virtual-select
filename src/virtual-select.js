@@ -114,6 +114,7 @@ export class VirtualSelect {
     const ariaLabelledbyText = this.ariaLabelledby ? `aria-labelledby="${this.ariaLabelledby}"` : '';
     const ariaLabelText = this.ariaLabelText ? `aria-label="${this.ariaLabelText}"` : '';
     let isExpanded = false;
+    let tabIndexVal = -1;
 
     if (this.additionalClasses) {
       wrapperClasses += ` ${this.additionalClasses}`;
@@ -134,6 +135,7 @@ export class VirtualSelect {
     if (this.keepAlwaysOpen) {
       wrapperClasses += ' keep-always-open';
       isExpanded = true;
+      tabIndexVal = 0;
     } else {
       wrapperClasses += ' closed';
     }
@@ -158,7 +160,7 @@ export class VirtualSelect {
       wrapperClasses += ` popup-position-${this.popupPosition.toLowerCase()}`;
     }
 
-    const html = `<div id="vscomp-ele-wrapper-${uniqueId}" class="vscomp-ele-wrapper ${wrapperClasses}" 
+    const html = `<div id="vscomp-ele-wrapper-${uniqueId}" class="vscomp-ele-wrapper ${wrapperClasses}" tabindex="${tabIndexVal}"
         role="combobox" aria-haspopup="listbox" aria-controls="vscomp-dropbox-container-${uniqueId}"
         aria-expanded="${isExpanded}" ${ariaLabelledbyText} ${ariaLabelText}
       >
@@ -2129,6 +2131,7 @@ export class VirtualSelect {
     this.setDropboxWrapperWidth();
 
     DomUtils.removeClass(this.$allWrappers, 'closed');
+    DomUtils.changeTabIndex(this.$allWrappers, 0);
 
     if (this.dropboxPopover && !isSilent) {
       this.dropboxPopover.show();
@@ -2193,6 +2196,7 @@ export class VirtualSelect {
     }
 
     DomUtils.addClass(this.$allWrappers, 'closed');
+    DomUtils.changeTabIndex(this.$allWrappers, -1);
 
     if (!isSilent) {
       DomUtils.dispatchEvent(this.$ele, 'afterClose');

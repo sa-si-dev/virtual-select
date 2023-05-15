@@ -281,4 +281,29 @@ export class DomUtils {
   static convertPropToDataAttr(prop) {
     return prop ? `data-${prop}`.replace(/([A-Z])/g, '-$1').toLowerCase() : '';
   }
+
+  /**
+   * Changes the tab index of an element passed as an input 
+   * @static
+   * @param {HTMLElement | NodeListOf<HTMLElement>} $ele
+   * @param {number} newTabIndex
+   * @memberof DomUtils
+   */
+  static changeTabIndex($ele, newTabIndex) {
+    if (!$ele) {
+      console.log($ele,'Invalid element provided.');
+      return;
+    }
+    
+    DomUtils.getElements($ele).forEach(($this) => {
+      $this.tabIndex = newTabIndex
+    });
+  }
+
 }
+
+
+
+
+
+
