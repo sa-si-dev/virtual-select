@@ -104,7 +104,8 @@ export class Utils {
    * @return {string}
    */
   static regexEscape(text) {
-    return text.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
+    const ESC_REGEX = /[-/\\^$*+?.()|[\]{}]/g;
+    return text.replace(ESC_REGEX, '\\$&');
   }
 
   /**
