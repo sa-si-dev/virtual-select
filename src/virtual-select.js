@@ -62,6 +62,7 @@ const dataProps = [
   'searchDelay',
   'searchFormLabel',
   'searchGroup',
+  'searchNormalize',
   'searchPlaceholderText',
   'selectAllOnlyVisible',
   'selectAllText',
@@ -768,6 +769,7 @@ export class VirtualSelect {
     this.noOptionsText = options.noOptionsText;
     this.noSearchResultsText = options.noSearchResultsText;
     this.selectAllText = options.selectAllText;
+    this.searchNormalize = options.searchNormalize;
     this.searchPlaceholderText = options.searchPlaceholderText;
     this.searchFormLabel = options.searchFormLabel;
     this.optionsSelectedText = options.optionsSelectedText;
@@ -835,6 +837,7 @@ export class VirtualSelect {
     this.uniqueId = this.getUniqueId();
   }
 
+
   /**
    * @param {virtualSelectOptions} options
    */
@@ -852,6 +855,7 @@ export class VirtualSelect {
       noOptionsText: 'No options found',
       noSearchResultsText: 'No results found',
       selectAllText: 'Select All',
+      searchNormalize: false,
       searchPlaceholderText: 'Search...',
       searchFormLabel: 'Search',
       clearButtonText: 'Clear',
@@ -1175,12 +1179,14 @@ export class VirtualSelect {
       }
 
       const value = secureText(getString(d[valueKey]));
+      const label = secureText(getString(d[labelKey]));
       const childOptions = d.options;
       const isGroupTitle = !!childOptions;
       const option = {
         index,
         value,
-        label: secureText(getString(d[labelKey])),
+        label,
+        labelNormalized: this.searchNormalize ? Utils.normalizeString(label).toLowerCase() : label.toLowerCase(),
         alias: getAlias(d[aliasKey]),
         isVisible: convertToBoolean(d.isVisible, true),
         isNew: d.isNew || false,
@@ -1536,7 +1542,11 @@ export class VirtualSelect {
     let visibleOptionsCount = 0;
     let hasExactOption = false;
     let visibleOptionGroupsMapping;
-    const { searchValue, searchGroup, showOptionsOnlyOnSearch, searchByStartsWith } = this;
+    const { searchGroup, showOptionsOnlyOnSearch, searchByStartsWith } = this;
+
+    //If searchNormalize we'll normalize the searchValue
+    let { searchValue } = this;
+    searchValue = this.searchNormalize ? Utils.normalizeString(searchValue) : searchValue;
     const isOptionVisible = this.isOptionVisible.bind(this);
 
     if (this.hasOptionGroup) {
@@ -1547,9 +1557,8 @@ export class VirtualSelect {
       if (d.isCurrentNew) {
         return;
       }
-
       let result;
-
+      
       if (showOptionsOnlyOnSearch && !searchValue) {
         // eslint-disable-next-line no-param-reassign
         d.isVisible = false;
@@ -2758,20 +2767,21 @@ export class VirtualSelect {
 
   isOptionVisible({ data, searchValue, hasExactOption, visibleOptionGroupsMapping, searchGroup, searchByStartsWith }) {
     const value = data.value.toLowerCase();
-    const label = data.label.toLowerCase();
-    const { description, alias } = data;
-    let isVisible = searchByStartsWith ? label.startsWith(searchValue) : label.indexOf(searchValue) !== -1;
+    let label = this.searchNormalize ? data.labelNormalized: data.label.toLowerCase(); 
+    let { description, alias } = data;
+
+    let isVisible = searchByStartsWith ? label.startsWith(searchValue) : label.includes(searchValue);
 
     if (data.isGroupTitle && (!searchGroup || !isVisible)) {
       isVisible = visibleOptionGroupsMapping[data.index];
     }
 
     if (!searchByStartsWith && alias && !isVisible) {
-      isVisible = alias.indexOf(searchValue) !== -1;
+      isVisible = alias.includes(searchValue);
     }
 
     if (!searchByStartsWith && description && !isVisible) {
-      isVisible = description.toLowerCase().indexOf(searchValue) !== -1;
+      isVisible = description.toLowerCase().includes(searchValue);
     }
 
     // eslint-disable-next-line no-param-reassign
