@@ -104,6 +104,17 @@ export class Utils {
    * @return {string}
    */
   static regexEscape(text) {
-    return text.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
+    const ESC_REGEX = /[-/\\^$*+?.()|[\]{}]/g;
+    return text.replace(ESC_REGEX, '\\$&');
   }
+
+  /**
+   * @param {string} text
+   * @return {string}
+   */
+  static normalizeString(text) {
+    const NON_WORD_REGEX = /[^\w]/g;
+    return text.normalize("NFD").replace(NON_WORD_REGEX, "");
+  }
+  
 }
