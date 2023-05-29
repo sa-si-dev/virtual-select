@@ -264,7 +264,7 @@ export class VirtualSelect {
     const { convertToBoolean } = Utils;
 
     if (markSearchResults) {
-      searchRegex = new RegExp(`(${Utils.regexEscape(this.searchValue)})`, 'gi');
+      searchRegex = new RegExp(`(${Utils.regexEscape(this.searchValue)})(?!([^<]+)?>)`, 'gi');
     }
 
     if (this.multiple) {

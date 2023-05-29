@@ -673,7 +673,7 @@ var VirtualSelect = /*#__PURE__*/function () {
       var hasLabelRenderer = typeof labelRenderer === 'function';
       var convertToBoolean = Utils.convertToBoolean;
       if (markSearchResults) {
-        searchRegex = new RegExp("(".concat(Utils.regexEscape(this.searchValue), ")"), 'gi');
+        searchRegex = new RegExp("(".concat(Utils.regexEscape(this.searchValue), ")(?!([^<]+)?>)"), 'gi');
       }
       if (this.multiple) {
         checkboxHtml = '<span class="checkbox-icon"></span>';
