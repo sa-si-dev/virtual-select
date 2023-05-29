@@ -1,5 +1,5 @@
 /*!
- * Virtual Select v1.0.37
+ * Virtual Select v1.0.38
  * https://sa-si-dev.github.io/virtual-select
  * Licensed under MIT (https://github.com/sa-si-dev/virtual-select/blob/master/LICENSE)
  *//******/ (function() { // webpackBootstrap
@@ -462,6 +462,8 @@ var DomUtils = /*#__PURE__*/function () {
       if (!data) {
         return html;
       }
+
+      // @ts-ignore
       Object.entries(data).forEach(function (_ref) {
         var _ref2 = _slicedToArray(_ref, 2),
           k = _ref2[0],
@@ -673,7 +675,7 @@ var VirtualSelect = /*#__PURE__*/function () {
       var hasLabelRenderer = typeof labelRenderer === 'function';
       var convertToBoolean = Utils.convertToBoolean;
       if (markSearchResults) {
-        searchRegex = new RegExp("(".concat(Utils.regexEscape(this.searchValue), ")"), 'gi');
+        searchRegex = new RegExp("(".concat(Utils.regexEscape(this.searchValue), ")(?!([^<]+)?>)"), 'gi');
       }
       if (this.multiple) {
         checkboxHtml = '<span class="checkbox-icon"></span>';
