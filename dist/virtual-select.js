@@ -157,7 +157,7 @@ var Utils = /*#__PURE__*/function () {
     key: "normalizeString",
     value: function normalizeString(text) {
       var NON_WORD_REGEX = /[^\w]/g;
-      return text.normalize("NFD").replace(NON_WORD_REGEX, "");
+      return text.normalize('NFD').replace(NON_WORD_REGEX, '');
     }
   }]);
   return Utils;
@@ -453,7 +453,7 @@ var DomUtils = /*#__PURE__*/function () {
 
     /**
      * convert object to dom attributes
-     * @param {any} data
+     * @param {ObjectString} data
      */
   }, {
     key: "getAttributesText",
@@ -486,7 +486,7 @@ var DomUtils = /*#__PURE__*/function () {
     }
 
     /**
-     * Changes the tab index of an element passed as an input 
+     * Changes the tab index of an element passed as an input
      * @static
      * @param {HTMLElement | NodeListOf<HTMLElement>} $ele
      * @param {number} newTabIndex
@@ -496,10 +496,12 @@ var DomUtils = /*#__PURE__*/function () {
     key: "changeTabIndex",
     value: function changeTabIndex($ele, newTabIndex) {
       if (!$ele) {
+        // eslint-disable-next-line no-console
         console.log($ele, 'Invalid element provided.');
         return;
       }
       DomUtils.getElements($ele).forEach(function ($this) {
+        // eslint-disable-next-line no-param-reassign
         $this.tabIndex = newTabIndex;
       });
     }
