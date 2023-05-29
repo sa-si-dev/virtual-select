@@ -114,7 +114,6 @@ export class Utils {
    */
   static normalizeString(text) {
     const NON_WORD_REGEX = /[^\w]/g;
-    return text.normalize("NFD").replace(NON_WORD_REGEX, "");
+    return text.normalize('NFD').replace(NON_WORD_REGEX, '');
   }
-  
 }

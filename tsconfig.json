@@ -1,8 +1,8 @@
 {
   "compilerOptions": {
     "baseUrl": ".",
-    "target": "es6",
-    "module": "es6",
+    "target": "ESNext",
+    "module": "ESNext",
     "moduleResolution": "node",
     "outDir": "ts-types",
     "allowJs": true,

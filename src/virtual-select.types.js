@@ -106,3 +106,7 @@
  * with getSelectedOptions() result.
  * @property {virtualSelectOption[]} [options] List of options for option group
  */
+
+/**
+ * @typedef {{[key: string]: string}} ObjectString
+ */

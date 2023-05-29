@@ -256,7 +256,7 @@ export class DomUtils {
 
   /**
    * convert object to dom attributes
-   * @param {any} data
+   * @param {ObjectString} data
    */
   static getAttributesText(data) {
     let html = '';
@@ -283,7 +283,7 @@ export class DomUtils {
   }
 
   /**
-   * Changes the tab index of an element passed as an input 
+   * Changes the tab index of an element passed as an input
    * @static
    * @param {HTMLElement | NodeListOf<HTMLElement>} $ele
    * @param {number} newTabIndex
@@ -291,13 +291,14 @@ export class DomUtils {
    */
   static changeTabIndex($ele, newTabIndex) {
     if (!$ele) {
-      console.log($ele,'Invalid element provided.');
+      // eslint-disable-next-line no-console
+      console.log($ele, 'Invalid element provided.');
       return;
     }
-    
+
     DomUtils.getElements($ele).forEach(($this) => {
-      $this.tabIndex = newTabIndex
+      // eslint-disable-next-line no-param-reassign
+      $this.tabIndex = newTabIndex;
     });
   }
-
 }
