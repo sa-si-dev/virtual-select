@@ -265,6 +265,7 @@ export class DomUtils {
       return html;
     }
 
+    // @ts-ignore
     Object.entries(data).forEach(([k, v]) => {
       if (v !== undefined) {
         html += ` ${k}="${v}" `;
