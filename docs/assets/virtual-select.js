@@ -2498,6 +2498,7 @@ var VirtualSelect = /*#__PURE__*/function () {
       if (!isSilent) {
         DomUtils.dispatchEvent(this.$ele, 'afterClose');
       }
+      this.focus();
     }
   }, {
     key: "moveSelectedOptionsFirst",
