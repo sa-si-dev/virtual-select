@@ -102,6 +102,7 @@
   }
 
   &:hover {
+
     &::before,
     &::after {
       background: $icon-hover-color;
@@ -125,6 +126,7 @@
     background: $focus-color;
 
     .vscomp-clear-icon {
+
       &::before,
       &::after {
         background-color: $icon-hover-color;
@@ -271,7 +273,8 @@
   position: relative;
 }
 
-.vscomp-search-label {
+.vscomp-search-label,
+.vscomp-live-region {
   border: 0;
   clip: rect(0 0 0 0);
   height: 1px;
@@ -466,6 +469,7 @@
   }
 
   &.closed {
+
     .vscomp-dropbox-container,
     &.vscomp-dropbox-wrapper {
       display: none;

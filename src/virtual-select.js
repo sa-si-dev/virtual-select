@@ -115,7 +115,6 @@ export class VirtualSelect {
     const ariaLabelledbyText = this.ariaLabelledby ? `aria-labelledby="${this.ariaLabelledby}"` : '';
     const ariaLabelText = this.ariaLabelText ? `aria-label="${this.ariaLabelText}"` : '';
     let isExpanded = false;
-    let tabIndexVal = -1;
 
     if (this.additionalClasses) {
       wrapperClasses += ` ${this.additionalClasses}`;
@@ -136,7 +135,6 @@ export class VirtualSelect {
     if (this.keepAlwaysOpen) {
       wrapperClasses += ' keep-always-open';
       isExpanded = true;
-      tabIndexVal = 0;
     } else {
       wrapperClasses += ' closed';
     }
@@ -161,7 +159,7 @@ export class VirtualSelect {
       wrapperClasses += ` popup-position-${this.popupPosition.toLowerCase()}`;
     }
 
-    const html = `<div id="vscomp-ele-wrapper-${uniqueId}" class="vscomp-ele-wrapper ${wrapperClasses}" tabindex="${tabIndexVal}"
+    const html = `<div id="vscomp-ele-wrapper-${uniqueId}" class="vscomp-ele-wrapper ${wrapperClasses}" tabindex="0"
         role="combobox" aria-haspopup="listbox" aria-controls="vscomp-dropbox-container-${uniqueId}"
         aria-expanded="${isExpanded}" ${ariaLabelledbyText} ${ariaLabelText}
       >
@@ -179,12 +177,17 @@ export class VirtualSelect {
           </div>
         </div>
 
+        <section role="region" class="vscomp-live-region" aria-live="polite">
+          <p class="vscomp-live-region-title"></p>
+        </section>
+
         ${this.renderDropbox({ wrapperClasses })}
       </div>`;
 
     this.$ele.innerHTML = html;
     this.$body = document.querySelector('body');
     this.$wrapper = this.$ele.querySelector('.vscomp-wrapper');
+    this.$ariaLiveElem = this.$ele.querySelector('.vscomp-live-region-title');
 
     if (this.hasDropboxWrapper) {
       this.$allWrappers = [this.$wrapper, this.$dropboxWrapper];
@@ -233,7 +236,8 @@ export class VirtualSelect {
 
           <span class="vscomp-dropbox-close-button"><i class="vscomp-clear-icon"></i></span>
         </div>
-      </div>`;
+      </div>
+`;
 
     if ($wrapper) {
       const $dropboxWrapper = document.createElement('div');
@@ -336,8 +340,7 @@ export class VirtualSelect {
       }
 
       html += `<div role="option" aria-selected="${isSelected}" id="vscomp-option-${uniqueId}-${index}"
-          class="${optionClasses}" data-value="${d.value}" data-index="${index}" data-visible-index="${d.visibleIndex}" tabindex="0" 
-          ${groupIndexText} ${ariaDisabledText}
+          class="${optionClasses}" data-value="${d.value}" data-index="${index}" data-visible-index="${d.visibleIndex}" tabindex="0" ${groupIndexText} ${ariaDisabledText}
         >
           ${leftSection}
           <span class="vscomp-option-text" ${optionTooltip}>
@@ -438,6 +441,11 @@ export class VirtualSelect {
   onKeyDown(e) {
     const key = e.which || e.keyCode;
     const method = keyDownMethodMapping[key];
+
+    if (document.activeElement === this.$searchInput && (key === 9 || (e.shiftKey && key === 9))) {
+      this.closeDropbox();
+      return;
+    }
 
     if (method) {
       this[method](e);
@@ -836,7 +844,6 @@ export class VirtualSelect {
     this.optionsHeight = this.getOptionsHeight();
     this.uniqueId = this.getUniqueId();
   }
-
 
   /**
    * @param {virtualSelectOptions} options
@@ -1558,7 +1565,7 @@ export class VirtualSelect {
         return;
       }
       let result;
-      
+
       if (showOptionsOnlyOnSearch && !searchValue) {
         // eslint-disable-next-line no-param-reassign
         d.isVisible = false;
@@ -2205,7 +2212,6 @@ export class VirtualSelect {
     }
 
     DomUtils.addClass(this.$allWrappers, 'closed');
-    DomUtils.changeTabIndex(this.$allWrappers, -1);
 
     if (!isSilent) {
       DomUtils.dispatchEvent(this.$ele, 'afterClose');
@@ -2279,6 +2285,10 @@ export class VirtualSelect {
     if ($newFocusedEle && $newFocusedEle !== $focusedEle) {
       if ($focusedEle) {
         this.toggleOptionFocusedState($focusedEle, false);
+      }
+
+      if (this.$ariaLiveElem) {
+        this.$ariaLiveElem.textContent = $newFocusedEle.textContent;
       }
 
       this.toggleOptionFocusedState($newFocusedEle, true);
@@ -2769,7 +2779,7 @@ export class VirtualSelect {
 
   isOptionVisible({ data, searchValue, hasExactOption, visibleOptionGroupsMapping, searchGroup, searchByStartsWith }) {
     const value = data.value.toLowerCase();
-    let label = this.searchNormalize ? data.labelNormalized: data.label.toLowerCase(); 
+    let label = this.searchNormalize ? data.labelNormalized : data.label.toLowerCase();
     let { description, alias } = data;
 
     let isVisible = searchByStartsWith ? label.startsWith(searchValue) : label.includes(searchValue);

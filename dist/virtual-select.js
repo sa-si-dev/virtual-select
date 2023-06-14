@@ -579,7 +579,6 @@ var VirtualSelect = /*#__PURE__*/function () {
       var ariaLabelledbyText = this.ariaLabelledby ? "aria-labelledby=\"".concat(this.ariaLabelledby, "\"") : '';
       var ariaLabelText = this.ariaLabelText ? "aria-label=\"".concat(this.ariaLabelText, "\"") : '';
       var isExpanded = false;
-      var tabIndexVal = -1;
       if (this.additionalClasses) {
         wrapperClasses += " ".concat(this.additionalClasses);
       }
@@ -595,7 +594,6 @@ var VirtualSelect = /*#__PURE__*/function () {
       if (this.keepAlwaysOpen) {
         wrapperClasses += ' keep-always-open';
         isExpanded = true;
-        tabIndexVal = 0;
       } else {
         wrapperClasses += ' closed';
       }
@@ -614,12 +612,13 @@ var VirtualSelect = /*#__PURE__*/function () {
       if (this.popupPosition) {
         wrapperClasses += " popup-position-".concat(this.popupPosition.toLowerCase());
       }
-      var html = "<div id=\"vscomp-ele-wrapper-".concat(uniqueId, "\" class=\"vscomp-ele-wrapper ").concat(wrapperClasses, "\" tabindex=\"").concat(tabIndexVal, "\"\n        role=\"combobox\" aria-haspopup=\"listbox\" aria-controls=\"vscomp-dropbox-container-").concat(uniqueId, "\"\n        aria-expanded=\"").concat(isExpanded, "\" ").concat(ariaLabelledbyText, " ").concat(ariaLabelText, "\n      >\n        <input type=\"hidden\" name=\"").concat(this.name, "\" class=\"vscomp-hidden-input\">\n\n        <div class=\"vscomp-toggle-button\">\n          <div class=\"vscomp-value\" ").concat(valueTooltip, ">\n            ").concat(this.placeholder, "\n          </div>\n\n          <div class=\"vscomp-arrow\"></div>\n\n          <div class=\"vscomp-clear-button toggle-button-child\" ").concat(clearButtonTooltip, ">\n            <i class=\"vscomp-clear-icon\"></i>\n          </div>\n        </div>\n\n        ").concat(this.renderDropbox({
+      var html = "<div id=\"vscomp-ele-wrapper-".concat(uniqueId, "\" class=\"vscomp-ele-wrapper ").concat(wrapperClasses, "\" tabindex=\"0\"\n        role=\"combobox\" aria-haspopup=\"listbox\" aria-controls=\"vscomp-dropbox-container-").concat(uniqueId, "\"\n        aria-expanded=\"").concat(isExpanded, "\" ").concat(ariaLabelledbyText, " ").concat(ariaLabelText, "\n      >\n        <input type=\"hidden\" name=\"").concat(this.name, "\" class=\"vscomp-hidden-input\">\n\n        <div class=\"vscomp-toggle-button\">\n          <div class=\"vscomp-value\" ").concat(valueTooltip, ">\n            ").concat(this.placeholder, "\n          </div>\n\n          <div class=\"vscomp-arrow\"></div>\n\n          <div class=\"vscomp-clear-button toggle-button-child\" ").concat(clearButtonTooltip, ">\n            <i class=\"vscomp-clear-icon\"></i>\n          </div>\n        </div>\n\n        <section role=\"region\" class=\"vscomp-live-region\" aria-live=\"polite\">\n          <p class=\"vscomp-live-region-title\"></p>\n        </section>\n\n        ").concat(this.renderDropbox({
         wrapperClasses: wrapperClasses
       }), "\n      </div>");
       this.$ele.innerHTML = html;
       this.$body = document.querySelector('body');
       this.$wrapper = this.$ele.querySelector('.vscomp-wrapper');
+      this.$ariaLiveElem = this.$ele.querySelector('.vscomp-live-region-title');
       if (this.hasDropboxWrapper) {
         this.$allWrappers = [this.$wrapper, this.$dropboxWrapper];
         this.$dropboxContainer = this.$dropboxWrapper.querySelector('.vscomp-dropbox-container');
@@ -647,7 +646,7 @@ var VirtualSelect = /*#__PURE__*/function () {
     value: function renderDropbox(_ref) {
       var wrapperClasses = _ref.wrapperClasses;
       var $wrapper = this.dropboxWrapper !== 'self' ? document.querySelector(this.dropboxWrapper) : null;
-      var html = "<div id=\"vscomp-dropbox-container-".concat(this.uniqueId, "\" role=\"listbox\" class=\"vscomp-dropbox-container\">\n        <div class=\"vscomp-dropbox\">\n          <div class=\"vscomp-search-wrapper\"></div>\n\n          <div class=\"vscomp-options-container\">\n            <div class=\"vscomp-options-loader\"></div>\n\n            <div class=\"vscomp-options-list\">\n              <div class=\"vscomp-options\"></div>\n            </div>\n          </div>\n\n          <div class=\"vscomp-options-bottom-freezer\"></div>\n          <div class=\"vscomp-no-options\">").concat(this.noOptionsText, "</div>\n          <div class=\"vscomp-no-search-results\">").concat(this.noSearchResultsText, "</div>\n\n          <span class=\"vscomp-dropbox-close-button\"><i class=\"vscomp-clear-icon\"></i></span>\n        </div>\n      </div>");
+      var html = "<div id=\"vscomp-dropbox-container-".concat(this.uniqueId, "\" role=\"listbox\" class=\"vscomp-dropbox-container\">\n        <div class=\"vscomp-dropbox\">\n          <div class=\"vscomp-search-wrapper\"></div>\n\n          <div class=\"vscomp-options-container\">\n            <div class=\"vscomp-options-loader\"></div>\n\n            <div class=\"vscomp-options-list\">\n              <div class=\"vscomp-options\"></div>\n            </div>\n          </div>\n\n          <div class=\"vscomp-options-bottom-freezer\"></div>\n          <div class=\"vscomp-no-options\">").concat(this.noOptionsText, "</div>\n          <div class=\"vscomp-no-search-results\">").concat(this.noSearchResultsText, "</div>\n\n          <span class=\"vscomp-dropbox-close-button\"><i class=\"vscomp-clear-icon\"></i></span>\n        </div>\n      </div>\n");
       if ($wrapper) {
         var $dropboxWrapper = document.createElement('div');
         this.$dropboxWrapper = $dropboxWrapper;
@@ -734,7 +733,7 @@ var VirtualSelect = /*#__PURE__*/function () {
         } else if (markSearchResults && (!d.isGroupTitle || searchGroup)) {
           optionLabel = optionLabel.replace(searchRegex, '<mark>$1</mark>');
         }
-        html += "<div role=\"option\" aria-selected=\"".concat(isSelected, "\" id=\"vscomp-option-").concat(uniqueId, "-").concat(index, "\"\n          class=\"").concat(optionClasses, "\" data-value=\"").concat(d.value, "\" data-index=\"").concat(index, "\" data-visible-index=\"").concat(d.visibleIndex, "\" tabindex=\"0\" \n          ").concat(groupIndexText, " ").concat(ariaDisabledText, "\n        >\n          ").concat(leftSection, "\n          <span class=\"vscomp-option-text\" ").concat(optionTooltip, ">\n            ").concat(optionLabel, "\n          </span>\n          ").concat(description, "\n          ").concat(rightSection, "\n        </div>");
+        html += "<div role=\"option\" aria-selected=\"".concat(isSelected, "\" id=\"vscomp-option-").concat(uniqueId, "-").concat(index, "\"\n          class=\"").concat(optionClasses, "\" data-value=\"").concat(d.value, "\" data-index=\"").concat(index, "\" data-visible-index=\"").concat(d.visibleIndex, "\" tabindex=\"0\" ").concat(groupIndexText, " ").concat(ariaDisabledText, "\n        >\n          ").concat(leftSection, "\n          <span class=\"vscomp-option-text\" ").concat(optionTooltip, ">\n            ").concat(optionLabel, "\n          </span>\n          ").concat(description, "\n          ").concat(rightSection, "\n        </div>");
       });
       this.$options.innerHTML = html;
       this.$visibleOptions = this.$options.querySelectorAll('.vscomp-option');
@@ -813,6 +812,10 @@ var VirtualSelect = /*#__PURE__*/function () {
     value: function onKeyDown(e) {
       var key = e.which || e.keyCode;
       var method = keyDownMethodMapping[key];
+      if (document.activeElement === this.$searchInput && (key === 9 || e.shiftKey && key === 9)) {
+        this.closeDropbox();
+        return;
+      }
       if (method) {
         this[method](e);
       }
@@ -2498,7 +2501,6 @@ var VirtualSelect = /*#__PURE__*/function () {
         this.isPopupActive = false;
       }
       DomUtils.addClass(this.$allWrappers, 'closed');
-      DomUtils.changeTabIndex(this.$allWrappers, -1);
       if (!isSilent) {
         DomUtils.dispatchEvent(this.$ele, 'afterClose');
       }
@@ -2571,6 +2573,9 @@ var VirtualSelect = /*#__PURE__*/function () {
       if ($newFocusedEle && $newFocusedEle !== $focusedEle) {
         if ($focusedEle) {
           this.toggleOptionFocusedState($focusedEle, false);
+        }
+        if (this.$ariaLiveElem) {
+          this.$ariaLiveElem.textContent = $newFocusedEle.textContent;
         }
         this.toggleOptionFocusedState($newFocusedEle, true);
         this.toggleFocusedProp(DomUtils.getData($newFocusedEle, 'index'), true);
