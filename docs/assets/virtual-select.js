@@ -816,6 +816,11 @@ var VirtualSelect = /*#__PURE__*/function () {
         this.closeDropbox();
         return;
       }
+      // Handle the Escape key when showing the dropdown as a popup, closing it
+      if (document.activeElement === this.$wrapper && (key === 27 || e.key === 'Escape') && this.showAsPopup) {
+        this.closeDropbox();
+        return;
+      }
       if (method) {
         this[method](e);
       }
