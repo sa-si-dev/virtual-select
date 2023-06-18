@@ -340,7 +340,8 @@ export class VirtualSelect {
       }
 
       html += `<div role="option" aria-selected="${isSelected}" id="vscomp-option-${uniqueId}-${index}"
-          class="${optionClasses}" data-value="${d.value}" data-index="${index}" data-visible-index="${d.visibleIndex}" tabindex="0" ${groupIndexText} ${ariaDisabledText}
+          class="${optionClasses}" data-value="${d.value}" data-index="${index}" data-visible-index="${d.visibleIndex}"
+          tabindex="0" ${groupIndexText} ${ariaDisabledText}
         >
           ${leftSection}
           <span class="vscomp-option-text" ${optionTooltip}>
@@ -373,8 +374,13 @@ export class VirtualSelect {
     }
 
     if (this.hasSearch) {
-      searchInput = `<label for="vscomp-search-input-${this.uniqueId}" class="vscomp-search-label" id="vscomp-search-label-${this.uniqueId}">${this.searchFormLabel}</label>
-      <input type="text" class="vscomp-search-input" placeholder="${this.searchPlaceholderText}" id="vscomp-search-input-${this.uniqueId}">
+      searchInput = `<label for="vscomp-search-input-${this.uniqueId}" class="vscomp-search-label"
+        id="vscomp-search-label-${this.uniqueId}"
+      >
+        ${this.searchFormLabel}
+      </label>
+      <input type="text" class="vscomp-search-input" placeholder="${this.searchPlaceholderText}"
+        id="vscomp-search-input-${this.uniqueId}">
       <span class="vscomp-search-clear">&times;</span>`;
     }
 
@@ -1555,7 +1561,7 @@ export class VirtualSelect {
     let visibleOptionGroupsMapping;
     const { searchGroup, showOptionsOnlyOnSearch, searchByStartsWith } = this;
 
-    //If searchNormalize we'll normalize the searchValue
+    /** If searchNormalize we'll normalize the searchValue */
     let { searchValue } = this;
     searchValue = this.searchNormalize ? Utils.normalizeString(searchValue) : searchValue;
     const isOptionVisible = this.isOptionVisible.bind(this);
@@ -2783,8 +2789,8 @@ export class VirtualSelect {
 
   isOptionVisible({ data, searchValue, hasExactOption, visibleOptionGroupsMapping, searchGroup, searchByStartsWith }) {
     const value = data.value.toLowerCase();
-    let label = this.searchNormalize ? data.labelNormalized : data.label.toLowerCase();
-    let { description, alias } = data;
+    const label = this.searchNormalize ? data.labelNormalized : data.label.toLowerCase();
+    const { description, alias } = data;
 
     let isVisible = searchByStartsWith ? label.startsWith(searchValue) : label.includes(searchValue);
 
