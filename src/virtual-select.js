@@ -2225,7 +2225,6 @@ export class VirtualSelect {
 
     if (!isSilent) {
       DomUtils.dispatchEvent(this.$ele, 'afterClose');
-      this.focus();
     }
   }
 
