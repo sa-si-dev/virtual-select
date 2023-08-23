@@ -467,7 +467,7 @@ export class VirtualSelect {
 
     if (this.isOpened()) {
       this.selectFocusedOption();
-    } else {
+    } else if (this.$ele.disabled === false) {
       this.openDropbox();
     }
   }
@@ -2882,6 +2882,7 @@ export class VirtualSelect {
     this.$ele.removeAttribute('disabled');
     this.$hiddenInput.removeAttribute('disabled');
     DomUtils.setAria(this.$wrapper, 'disabled', false);
+    DomUtils.changeTabIndex(this.$wrapper, 0);
   }
 
   disable() {
@@ -2890,6 +2891,8 @@ export class VirtualSelect {
     this.$ele.setAttribute('disabled', '');
     this.$hiddenInput.setAttribute('disabled', '');
     DomUtils.setAria(this.$wrapper, 'disabled', true);
+    DomUtils.changeTabIndex(this.$wrapper, -1);
+    this.$wrapper.blur();
   }
 
   validate() {
