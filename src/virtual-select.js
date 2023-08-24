@@ -10,6 +10,8 @@ const keyDownMethodMapping = {
   13: 'onEnterPress',
   38: 'onUpArrowPress',
   40: 'onDownArrowPress',
+  46: 'onBackspaceOrDeletePress', // Delete
+  8: 'onBackspaceOrDeletePress', // Backspace
 };
 
 const valueLessProps = ['autofocus', 'disabled', 'multiple', 'required'];
@@ -175,7 +177,6 @@ export class VirtualSelect {
           <div class="vscomp-clear-button toggle-button-child" ${clearButtonTooltip}>
             <i class="vscomp-clear-icon"></i>
           </div>
-        </div>
 
         ${this.renderDropbox({ wrapperClasses })}
       </div>`;
@@ -484,6 +485,13 @@ export class VirtualSelect {
       this.focusOption({ direction: 'previous' });
     } else {
       this.openDropbox();
+    }
+  }
+
+  onBackspaceOrDeletePress(e) {
+    e.preventDefault();
+    if (this.selectedValues.length > 0) {
+      this.reset();
     }
   }
 
