@@ -261,6 +261,7 @@ export class VirtualSelect {
     const visibleOptions = this.getVisibleOptions();
     let checkboxHtml = '';
     let newOptionIconHtml = '';
+    let focusedOption = [];
     const markSearchResults = !!(this.markSearchResults && this.searchValue);
     let searchRegex;
     const { labelRenderer, disableOptionGroupCheckbox, uniqueId, searchGroup } = this;
@@ -679,6 +680,11 @@ export class VirtualSelect {
     this.setOptionAttr();
     this.setOptionsPosition();
     this.setOptionsTooltip();
+
+    const focusedOption = DomUtils.getElementsBySelector('.focused', this.$dropboxContainer)[0];
+    if (focusedOption !== undefined) {
+      focusedOption.focus();
+    }
   }
 
   afterSetOptionsContainerHeight(reset) {
@@ -2973,6 +2979,7 @@ export class VirtualSelect {
       return;
     }
 
+    $ele.focus();
     DomUtils.toggleClass($ele, 'focused', isFocused);
 
     if (isFocused) {
