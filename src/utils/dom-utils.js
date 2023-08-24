@@ -217,7 +217,7 @@ export class DomUtils {
    * @static
    * @param {string} [$selector='']
    * @param {*} [$parentEle=undefined]
-   * @return {*} 
+   * @return {*}
    * @memberof DomUtils
    */
   static getElementsBySelector($selector = '', $parentEle = undefined) {

@@ -177,17 +177,12 @@ export class VirtualSelect {
           </div>
         </div>
 
-        <section role="region" class="vscomp-live-region" aria-live="polite">
-          <p class="vscomp-live-region-title"></p>
-        </section>
-
         ${this.renderDropbox({ wrapperClasses })}
       </div>`;
 
     this.$ele.innerHTML = html;
     this.$body = document.querySelector('body');
     this.$wrapper = this.$ele.querySelector('.vscomp-wrapper');
-    this.$ariaLiveElem = this.$ele.querySelector('.vscomp-live-region-title');
 
     if (this.hasDropboxWrapper) {
       this.$allWrappers = [this.$wrapper, this.$dropboxWrapper];
@@ -261,7 +256,6 @@ export class VirtualSelect {
     const visibleOptions = this.getVisibleOptions();
     let checkboxHtml = '';
     let newOptionIconHtml = '';
-    let focusedOption = [];
     const markSearchResults = !!(this.markSearchResults && this.searchValue);
     let searchRegex;
     const { labelRenderer, disableOptionGroupCheckbox, uniqueId, searchGroup } = this;
@@ -2300,10 +2294,6 @@ export class VirtualSelect {
     if ($newFocusedEle && $newFocusedEle !== $focusedEle) {
       if ($focusedEle) {
         this.toggleOptionFocusedState($focusedEle, false);
-      }
-
-      if (this.$ariaLiveElem) {
-        this.$ariaLiveElem.textContent = $newFocusedEle.textContent;
       }
 
       this.toggleOptionFocusedState($newFocusedEle, true);
