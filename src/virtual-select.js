@@ -285,6 +285,7 @@ export class VirtualSelect {
       let rightSection = '';
       let description = '';
       let groupIndexText = '';
+      let ariaLabel = '';
       const isSelected = convertToBoolean(d.isSelected);
       let ariaDisabledText = '';
 
@@ -316,6 +317,10 @@ export class VirtualSelect {
       if (d.isGroupOption) {
         optionClasses += ' group-option';
         groupIndexText = `data-group-index="${d.groupIndex}"`;
+
+        const groupName = d.customData.group_name !== undefined ? `${d.customData.group_name}, ` : '';
+        const optionDesc = d.customData.description !== undefined ? ` ${d.customData.description},` : '';
+        ariaLabel = `aria-label="${groupName}${d.label},${optionDesc}"`;
       }
 
       if (hasLabelRenderer) {
@@ -337,7 +342,7 @@ export class VirtualSelect {
 
       html += `<div role="option" aria-selected="${isSelected}" id="vscomp-option-${uniqueId}-${index}"
           class="${optionClasses}" data-value="${d.value}" data-index="${index}" data-visible-index="${d.visibleIndex}"
-          tabindex="0" ${groupIndexText} ${ariaDisabledText}
+          tabindex="0" ${groupIndexText} ${ariaDisabledText} ${ariaLabel}
         >
           ${leftSection}
           <span class="vscomp-option-text" ${optionTooltip}>
