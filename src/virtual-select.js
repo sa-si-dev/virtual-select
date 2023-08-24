@@ -204,7 +204,7 @@ export class VirtualSelect {
     this.$search = this.$dropboxContainer.querySelector('.vscomp-search-wrapper');
     this.$optionsContainer = this.$dropboxContainer.querySelector('.vscomp-options-container');
     this.$optionsList = this.$dropboxContainer.querySelector('.vscomp-options-list');
-    this.$optionsListBottom = this.$dropboxContainer.querySelector('.vscomp-bottom-item');
+    this.$optionsListBottom = this.$dropboxContainer.querySelector('.vscomp-options-list-bottom');
     this.$options = this.$dropboxContainer.querySelector('.vscomp-options');
     this.$noOptions = this.$dropboxContainer.querySelector('.vscomp-no-options');
     this.$noSearchResults = this.$dropboxContainer.querySelector('.vscomp-no-search-results');
@@ -224,7 +224,7 @@ export class VirtualSelect {
 
             <div class="vscomp-options-list">
               <div class="vscomp-options"></div>
-              <div class="vscomp-options-bottom" tabindex=0></div>
+              <div class="vscomp-options-list-bottom" aria-hidden="true" tabindex="0">&nbsp;</div>
             </div>
           </div>
 
