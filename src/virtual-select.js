@@ -403,7 +403,7 @@ export class VirtualSelect {
     this.addEvent(this.$searchInput, 'input', 'onSearch');
     this.addEvent(this.$searchClear, 'click', 'onSearchClear');
     this.addEvent(this.$toggleAllButton, 'click', 'onToggleAllOptions');
-    this.addEvent(this.$optionsListBottom, 'focus', 'onFocusBottom');
+    this.addEvent(this.$optionsListBottom, 'focus', 'onOptionsListBottomFocus');
   }
   /** render methods - end */
 
@@ -589,7 +589,7 @@ export class VirtualSelect {
     this.toggleAllOptions();
   }
 
-  onFocusBottom() {
+  onOptionsListBottomFocus() {
     this.closeDropbox();
   }
 
