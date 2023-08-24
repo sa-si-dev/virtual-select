@@ -204,6 +204,7 @@ export class VirtualSelect {
     this.$search = this.$dropboxContainer.querySelector('.vscomp-search-wrapper');
     this.$optionsContainer = this.$dropboxContainer.querySelector('.vscomp-options-container');
     this.$optionsList = this.$dropboxContainer.querySelector('.vscomp-options-list');
+    this.$optionsListBottom = this.$dropboxContainer.querySelector('.vscomp-bottom-item');
     this.$options = this.$dropboxContainer.querySelector('.vscomp-options');
     this.$noOptions = this.$dropboxContainer.querySelector('.vscomp-no-options');
     this.$noSearchResults = this.$dropboxContainer.querySelector('.vscomp-no-search-results');
@@ -223,6 +224,7 @@ export class VirtualSelect {
 
             <div class="vscomp-options-list">
               <div class="vscomp-options"></div>
+              <div class="vscomp-options-bottom" tabindex=0></div>
             </div>
           </div>
 
@@ -286,6 +288,7 @@ export class VirtualSelect {
       let description = '';
       let groupIndexText = '';
       let ariaLabel = '';
+      let tabIndexValue = '0';
       const isSelected = convertToBoolean(d.isSelected);
       let ariaDisabledText = '';
 
@@ -303,6 +306,7 @@ export class VirtualSelect {
       }
 
       if (d.isGroupTitle) {
+        tabIndexValue = '-1';
         optionClasses += ' group-title';
 
         if (disableOptionGroupCheckbox) {
@@ -342,7 +346,7 @@ export class VirtualSelect {
 
       html += `<div role="option" aria-selected="${isSelected}" id="vscomp-option-${uniqueId}-${index}"
           class="${optionClasses}" data-value="${d.value}" data-index="${index}" data-visible-index="${d.visibleIndex}"
-          tabindex="0" ${groupIndexText} ${ariaDisabledText} ${ariaLabel}
+          tabindex=${tabIndexValue} ${groupIndexText} ${ariaDisabledText} ${ariaLabel}
         >
           ${leftSection}
           <span class="vscomp-option-text" ${optionTooltip}>
@@ -399,6 +403,7 @@ export class VirtualSelect {
     this.addEvent(this.$searchInput, 'input', 'onSearch');
     this.addEvent(this.$searchClear, 'click', 'onSearchClear');
     this.addEvent(this.$toggleAllButton, 'click', 'onToggleAllOptions');
+    this.addEvent(this.$optionsListBottom, 'focus', 'onFocusBottom');
   }
   /** render methods - end */
 
@@ -449,7 +454,8 @@ export class VirtualSelect {
     const key = e.which || e.keyCode;
     const method = keyDownMethodMapping[key];
 
-    if (document.activeElement === this.$searchInput && (key === 9 || (e.shiftKey && key === 9))) {
+    // if (document.activeElement === this.$searchInput && (key === 9 || (e.shiftKey && key === 9))) {
+    if (document.activeElement === this.$searchInput && (e.shiftKey && key === 9)) {
       this.closeDropbox();
       return;
     }
@@ -494,9 +500,11 @@ export class VirtualSelect {
   }
 
   onBackspaceOrDeletePress(e) {
-    e.preventDefault();
-    if (this.selectedValues.length > 0) {
-      this.reset();
+    if (e.target === this.$wrapper) {
+      e.preventDefault();
+      if (this.selectedValues.length > 0) {
+        this.reset();
+      }
     }
   }
 
@@ -579,6 +587,10 @@ export class VirtualSelect {
 
   onToggleAllOptions() {
     this.toggleAllOptions();
+  }
+
+  onFocusBottom() {
+    this.closeDropbox();
   }
 
   onResize() {
@@ -688,9 +700,11 @@ export class VirtualSelect {
     this.setOptionsPosition();
     this.setOptionsTooltip();
 
-    const focusedOption = DomUtils.getElementsBySelector('.focused', this.$dropboxContainer)[0];
-    if (focusedOption !== undefined) {
-      focusedOption.focus();
+    if (document.activeElement !== this.$searchInput) {
+      const focusedOption = DomUtils.getElementsBySelector('.focused', this.$dropboxContainer)[0];
+      if (focusedOption !== undefined) {
+        focusedOption.focus();
+      }
     }
   }
 
@@ -2982,7 +2996,9 @@ export class VirtualSelect {
       return;
     }
 
-    $ele.focus();
+    if (document.activeElement !== this.$searchInput) {
+      $ele.focus();
+    }
     DomUtils.toggleClass($ele, 'focused', isFocused);
 
     if (isFocused) {
