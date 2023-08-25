@@ -201,10 +201,10 @@ export class VirtualSelect {
     this.$hiddenInput = this.$ele.querySelector('.vscomp-hidden-input');
     this.$dropbox = this.$dropboxContainer.querySelector('.vscomp-dropbox');
     this.$dropboxCloseButton = this.$dropboxContainer.querySelector('.vscomp-dropbox-close-button');
+    this.$dropboxContainerBottom = this.$dropboxContainer.querySelector('.vscomp-dropbox-container-bottom');
     this.$search = this.$dropboxContainer.querySelector('.vscomp-search-wrapper');
     this.$optionsContainer = this.$dropboxContainer.querySelector('.vscomp-options-container');
     this.$optionsList = this.$dropboxContainer.querySelector('.vscomp-options-list');
-    this.$optionsListBottom = this.$dropboxContainer.querySelector('.vscomp-options-list-bottom');
     this.$options = this.$dropboxContainer.querySelector('.vscomp-options');
     this.$noOptions = this.$dropboxContainer.querySelector('.vscomp-no-options');
     this.$noSearchResults = this.$dropboxContainer.querySelector('.vscomp-no-search-results');
@@ -224,7 +224,6 @@ export class VirtualSelect {
 
             <div class="vscomp-options-list">
               <div class="vscomp-options"></div>
-              <div class="vscomp-options-list-bottom" aria-hidden="true" tabindex="0">&nbsp;</div>
             </div>
           </div>
 
@@ -234,6 +233,7 @@ export class VirtualSelect {
 
           <span class="vscomp-dropbox-close-button"><i class="vscomp-clear-icon"></i></span>
         </div>
+        <div class="vscomp-dropbox-container-bottom" aria-hidden="true" tabindex="0">&nbsp;</div>
       </div>
 `;
 
@@ -403,7 +403,7 @@ export class VirtualSelect {
     this.addEvent(this.$searchInput, 'input', 'onSearch');
     this.addEvent(this.$searchClear, 'click', 'onSearchClear');
     this.addEvent(this.$toggleAllButton, 'click', 'onToggleAllOptions');
-    this.addEvent(this.$optionsListBottom, 'focus', 'onOptionsListBottomFocus');
+    this.addEvent(this.$dropboxContainerBottom, 'focus', 'onDropboxContainerBottomFocus');
   }
   /** render methods - end */
 
@@ -589,7 +589,7 @@ export class VirtualSelect {
     this.toggleAllOptions();
   }
 
-  onOptionsListBottomFocus() {
+  onDropboxContainerBottomFocus() {
     this.closeDropbox();
   }
 
@@ -692,9 +692,23 @@ export class VirtualSelect {
 
     if (!this.allowNewOption || this.hasServerSearch || this.showOptionsOnlyOnSearch) {
       DomUtils.toggleClass(this.$allWrappers, 'has-no-search-results', hasNoSearchResults);
+      if (hasNoSearchResults) {
+        DomUtils.setAttr(this.$noSearchResults, 'tabindex', '0');
+        DomUtils.setAttr(this.$noSearchResults, 'aria-hidden', 'false');
+      } else {
+        DomUtils.setAttr(this.$noSearchResults, 'tabindex', '-1');
+        DomUtils.setAttr(this.$noSearchResults, 'aria-hidden', 'true');
+      }
     }
 
     DomUtils.toggleClass(this.$allWrappers, 'has-no-options', hasNoOptions);
+    if (hasNoOptions) {
+      DomUtils.setAttr(this.$noOptions, 'tabindex', '0');
+      DomUtils.setAttr(this.$noOptions, 'aria-hidden', 'false');
+    } else {
+      DomUtils.setAttr(this.$noOptions, 'tabindex', '-1');
+      DomUtils.setAttr(this.$noOptions, 'aria-hidden', 'true');
+    }
 
     this.setOptionAttr();
     this.setOptionsPosition();
@@ -2292,9 +2306,15 @@ export class VirtualSelect {
 
   focusSearchInput() {
     const $ele = this.$searchInput;
+    const hasNoOptions = !this.options.length && !this.hasServerSearch;
 
     if ($ele) {
-      $ele.focus();
+      if (hasNoOptions) {
+        DomUtils.setAttr($ele, 'disabled', '');
+        this.$noOptions.focus();
+      } else {
+        $ele.focus();
+      }
     }
   }
 
