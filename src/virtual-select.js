@@ -2346,14 +2346,19 @@ export class VirtualSelect {
   }
 
   focusFirstVisibleOption() {
-    const $focusableEle = this.$optionsContainer.querySelector(`[data-index='${this.getFirstVisibleOptionIndex()}']`);
-    if ($focusableEle !== undefined) {
+    let $focusableEle = this.$optionsContainer.querySelector(`[data-index='${this.getFirstVisibleOptionIndex()}']`);
+    if ($focusableEle) {
       DomUtils.setAttr($focusableEle, 'tabindex', '0');
       this.$optionsContainer.scrollTop = this.optionHeight * this.getFirstVisibleOptionIndex();
       this.focusOption({
         focusFirst: true,
       });
       $focusableEle.focus();
+    } else {
+      $focusableEle = this.$dropbox.querySelector('[tabindex="0"]');
+      if ($focusableEle) {
+        $focusableEle.focus();
+      }
     }
   }
 
