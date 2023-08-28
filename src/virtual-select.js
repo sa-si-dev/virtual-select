@@ -2349,7 +2349,7 @@ export class VirtualSelect {
     let $focusableEle = this.$optionsContainer.querySelector(`[data-index='${this.getFirstVisibleOptionIndex()}']`);
 
     if ($focusableEle) {
-      if (DomUtils.hasClass($focusableEle, '.group-title')) {
+      if (DomUtils.hasClass($focusableEle, 'group-title')) {
         $focusableEle = this.getSibling($focusableEle, 'next');
       }
 
