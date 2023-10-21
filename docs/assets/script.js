@@ -74,6 +74,9 @@ function getOptions(count = 100000, includeDesc = false) {
 
     optionsData.push(optionData);
   }
+  //Add an option with a very long text
+  const optionData6 = { value: 100001, label: 'This is a very long text to be selected in the selection!! This is a very long text to be selected in the selection!!' };
+  optionsData.push(optionData6);
 
   return optionsData;
 }
