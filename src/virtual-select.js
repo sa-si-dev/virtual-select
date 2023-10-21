@@ -1529,12 +1529,15 @@ export class VirtualSelect {
       tooltipText = valueTooltip.join(', ');
     }
 
-    DomUtils.setData($valueText, 'tooltip', tooltipText);
+    if (!showValueAsTags) {
+      DomUtils.setData($valueText, 'tooltip', tooltipText);
+    } 
 
     if (multiple) {
-      DomUtils.setData($valueText, 'tooltipEllipsisOnly', selectedLength === 0);
-
-      if (showValueAsTags) {
+      if (!showValueAsTags) {
+        DomUtils.setData($valueText, 'tooltipEllipsisOnly', selectedLength === 0);
+      } 
+      else {
         this.updatePosition();
       }
     }
