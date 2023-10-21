@@ -116,4 +116,30 @@ export class Utils {
     const NON_WORD_REGEX = /[^\w]/g;
     return text.normalize('NFD').replace(NON_WORD_REGEX, '');
   }
+
+    /**
+   * @static
+   * @param {*} container
+   * @param {string} text
+   * @return {boolean} 
+   * @memberof Utils
+   */
+    static willTextOverflow(container, text) {
+      const tempElement = document.createElement('div');
+      tempElement.style.position = 'absolute';
+      tempElement.style.visibility = 'hidden';
+      tempElement.style.whiteSpace = 'nowrap';
+      tempElement.style.fontSize = window.getComputedStyle(container).fontSize;
+      tempElement.style.fontFamily = window.getComputedStyle(container).fontFamily;
+      tempElement.textContent = text;
+    
+      document.body.appendChild(tempElement);
+      const textWidth = tempElement.clientWidth;
+    
+      document.body.removeChild(tempElement);
+    
+      return textWidth > container.clientWidth;
+  
+    }
+    
 }

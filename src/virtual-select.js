@@ -110,7 +110,7 @@ export class VirtualSelect {
 
     const { uniqueId } = this;
     let wrapperClasses = 'vscomp-wrapper';
-    const valueTooltip = this.getTooltipAttrText(this.placeholder, true, true);
+    const valueTooltip = this.showValueAsTags ? '' : this.getTooltipAttrText(this.placeholder, true, true);
     const clearButtonTooltip = this.getTooltipAttrText(this.clearButtonText);
     const ariaLabelledbyText = this.ariaLabelledby ? `aria-labelledby="${this.ariaLabelledby}"` : '';
     const ariaLabelText = this.ariaLabelText ? `aria-label="${this.ariaLabelText}"` : '';
@@ -1455,7 +1455,9 @@ export class VirtualSelect {
         selectedValuesCount += 1;
 
         if (showValueAsTags) {
-          const valueTagHtml = `<span class="vscomp-value-tag" data-index="${d.index}">
+          const valueTooltipForTags = this.getTooltipAttrText(label, !(Utils.willTextOverflow($valueText.parentElement, label)), true);  
+
+          const valueTagHtml = `<span class="vscomp-value-tag" data-index="${d.index}" ${valueTooltipForTags}>
               <span class="vscomp-value-tag-content">${label}</span>
               <span class="vscomp-value-tag-clear-button">
                 <i class="vscomp-clear-icon"></i>
@@ -1463,6 +1465,7 @@ export class VirtualSelect {
             </span>`;
 
           valueTooltip.push(valueTagHtml);
+            
         } else {
           valueTooltip.push(label);
         }
