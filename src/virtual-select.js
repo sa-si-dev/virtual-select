@@ -2544,8 +2544,10 @@ export class VirtualSelect {
       isAllSelected = this.isAllOptionsSelected();
     }
 
-    /** when all options not selected, checking if all visible options selected */
-    if (!isAllSelected && this.selectAllOnlyVisible) {
+    /** when all options not selected, checking if all visible options selected 
+     *  Also, in a search mode, validate that we still have visible items
+    */
+    if (!isAllSelected && this.selectAllOnlyVisible  && (this.searchValue !== '' && this.visibleOptionsCount > 0 || this.searchValue == '')) {
       isAllVisibleSelected = this.isAllOptionsSelected(true);
     }
 
