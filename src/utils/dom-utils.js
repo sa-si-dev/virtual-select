@@ -214,6 +214,24 @@ export class DomUtils {
   }
 
   /**
+   * @static
+   * @param {string} [$selector='']
+   * @param {*} [$parentEle=undefined]
+   * @return {*}
+   * @memberof DomUtils
+   */
+  static getElementsBySelector($selector = '', $parentEle = undefined) {
+    let elements;
+    const parent = $parentEle !== undefined ? $parentEle : document;
+
+    if ($selector !== '') {
+      elements = parent.querySelectorAll($selector);
+    }
+
+    return elements !== undefined ? Array.from(elements) : [];
+  }
+
+  /**
    * @param {HTMLElement} $ele
    * @param {string} events
    * @param {Function} callback
