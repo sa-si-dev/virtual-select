@@ -159,6 +159,29 @@ var Utils = /*#__PURE__*/function () {
       var NON_WORD_REGEX = /[^\w]/g;
       return text.normalize('NFD').replace(NON_WORD_REGEX, '');
     }
+
+    /**
+    * @static
+    * @param {*} container
+    * @param {string} text
+    * @return {boolean} 
+    * @memberof Utils
+    */
+  }, {
+    key: "willTextOverflow",
+    value: function willTextOverflow(container, text) {
+      var tempElement = document.createElement('div');
+      tempElement.style.position = 'absolute';
+      tempElement.style.visibility = 'hidden';
+      tempElement.style.whiteSpace = 'nowrap';
+      tempElement.style.fontSize = window.getComputedStyle(container).fontSize;
+      tempElement.style.fontFamily = window.getComputedStyle(container).fontFamily;
+      tempElement.textContent = text;
+      document.body.appendChild(tempElement);
+      var textWidth = tempElement.clientWidth;
+      document.body.removeChild(tempElement);
+      return textWidth > container.clientWidth;
+    }
   }]);
   return Utils;
 }();
@@ -574,7 +597,7 @@ var VirtualSelect = /*#__PURE__*/function () {
       }
       var uniqueId = this.uniqueId;
       var wrapperClasses = 'vscomp-wrapper';
-      var valueTooltip = this.getTooltipAttrText(this.placeholder, true, true);
+      var valueTooltip = this.showValueAsTags ? '' : this.getTooltipAttrText(this.placeholder, true, true);
       var clearButtonTooltip = this.getTooltipAttrText(this.clearButtonText);
       var ariaLabelledbyText = this.ariaLabelledby ? "aria-labelledby=\"".concat(this.ariaLabelledby, "\"") : '';
       var ariaLabelText = this.ariaLabelText ? "aria-label=\"".concat(this.ariaLabelText, "\"") : '';
@@ -1774,6 +1797,7 @@ var VirtualSelect = /*#__PURE__*/function () {
   }, {
     key: "setValueText",
     value: function setValueText() {
+      var _this9 = this;
       var multiple = this.multiple,
         selectedValues = this.selectedValues,
         noOfDisplayValues = this.noOfDisplayValues,
@@ -1804,7 +1828,8 @@ var VirtualSelect = /*#__PURE__*/function () {
           valueText.push(label);
           selectedValuesCount += 1;
           if (showValueAsTags) {
-            var valueTagHtml = "<span class=\"vscomp-value-tag\" data-index=\"".concat(d.index, "\">\n              <span class=\"vscomp-value-tag-content\">").concat(label, "</span>\n              <span class=\"vscomp-value-tag-clear-button\">\n                <i class=\"vscomp-clear-icon\"></i>\n              </span>\n            </span>");
+            var valueTooltipForTags = _this9.getTooltipAttrText(label, !Utils.willTextOverflow($valueText.parentElement, label), true);
+            var valueTagHtml = "<span class=\"vscomp-value-tag\" data-index=\"".concat(d.index, "\" ").concat(valueTooltipForTags, ">\n              <span class=\"vscomp-value-tag-content\">").concat(label, "</span>\n              <span class=\"vscomp-value-tag-clear-button\">\n                <i class=\"vscomp-clear-icon\"></i>\n              </span>\n            </span>");
             valueTooltip.push(valueTagHtml);
           } else {
             valueTooltip.push(label);
@@ -1854,10 +1879,13 @@ var VirtualSelect = /*#__PURE__*/function () {
       } else if (!showValueAsTags) {
         tooltipText = valueTooltip.join(', ');
       }
-      DomUtils.setData($valueText, 'tooltip', tooltipText);
+      if (!showValueAsTags) {
+        DomUtils.setData($valueText, 'tooltip', tooltipText);
+      }
       if (multiple) {
-        DomUtils.setData($valueText, 'tooltipEllipsisOnly', selectedLength === 0);
-        if (showValueAsTags) {
+        if (!showValueAsTags) {
+          DomUtils.setData($valueText, 'tooltipEllipsisOnly', selectedLength === 0);
+        } else {
           this.updatePosition();
         }
       }
@@ -2699,7 +2727,7 @@ var VirtualSelect = /*#__PURE__*/function () {
   }, {
     key: "selectRangeOptions",
     value: function selectRangeOptions(lastSelectedOptionIndex, selectedIndex) {
-      var _this9 = this;
+      var _this10 = this;
       if (typeof lastSelectedOptionIndex !== 'number' || this.maxValues) {
         return;
       }
@@ -2745,7 +2773,7 @@ var VirtualSelect = /*#__PURE__*/function () {
 
       /** using setTimeout to fix the issue of dropbox getting closed on select */
       setTimeout(function () {
-        _this9.renderOptions();
+        _this10.renderOptions();
       }, 0);
     }
   }, {
@@ -2852,7 +2880,7 @@ var VirtualSelect = /*#__PURE__*/function () {
   }, {
     key: "toggleGroupOptions",
     value: function toggleGroupOptions($ele, isSelected) {
-      var _this10 = this;
+      var _this11 = this;
       if (!this.hasOptionGroup || this.disableOptionGroupCheckbox || !$ele) {
         return;
       }
@@ -2888,7 +2916,7 @@ var VirtualSelect = /*#__PURE__*/function () {
 
       /** using setTimeout to fix the issue of dropbox getting closed on select */
       setTimeout(function () {
-        _this10.renderOptions();
+        _this11.renderOptions();
       }, 0);
     }
   }, {
