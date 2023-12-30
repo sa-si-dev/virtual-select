@@ -324,8 +324,14 @@ export class VirtualSelect {
         optionClasses += ' group-option';
         groupIndexText = `data-group-index="${d.groupIndex}"`;
 
-        const groupName = d.customData.group_name !== undefined ? `${d.customData.group_name}, ` : '';
-        const optionDesc = d.customData.description !== undefined ? ` ${d.customData.description},` : '';
+        let groupName = '';
+        let optionDesc = '';
+
+        if(d.customData)
+        {
+          groupName = d.customData.group_name !== undefined ? `${d.customData.group_name}, ` : '';
+          optionDesc = d.customData.description !== undefined ? ` ${d.customData.description},` : '';
+        }
         ariaLabel = `aria-label="${groupName}${d.label},${optionDesc}"`;
       }
 

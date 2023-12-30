@@ -769,8 +769,12 @@ var VirtualSelect = /*#__PURE__*/function () {
         if (d.isGroupOption) {
           optionClasses += ' group-option';
           groupIndexText = "data-group-index=\"".concat(d.groupIndex, "\"");
-          var groupName = d.customData.group_name !== undefined ? "".concat(d.customData.group_name, ", ") : '';
-          var optionDesc = d.customData.description !== undefined ? " ".concat(d.customData.description, ",") : '';
+          var groupName = '';
+          var optionDesc = '';
+          if (d.customData) {
+            groupName = d.customData.group_name !== undefined ? "".concat(d.customData.group_name, ", ") : '';
+            optionDesc = d.customData.description !== undefined ? " ".concat(d.customData.description, ",") : '';
+          }
           ariaLabel = "aria-label=\"".concat(groupName).concat(d.label, ",").concat(optionDesc, "\"");
         }
         if (hasLabelRenderer) {
