@@ -659,7 +659,9 @@ var VirtualSelect = /*#__PURE__*/function () {
       if (this.popupPosition) {
         wrapperClasses += " popup-position-".concat(this.popupPosition.toLowerCase());
       }
-      var html = "<div id=\"vscomp-ele-wrapper-".concat(uniqueId, "\" class=\"vscomp-ele-wrapper ").concat(wrapperClasses, "\" tabindex=\"0\"\n        role=\"combobox\" aria-haspopup=\"listbox\" aria-controls=\"vscomp-dropbox-container-").concat(uniqueId, "\"\n        aria-expanded=\"").concat(isExpanded, "\" ").concat(ariaLabelledbyText, " ").concat(ariaLabelText, "\n      >\n        <input type=\"hidden\" name=\"").concat(this.name, "\" class=\"vscomp-hidden-input\">\n\n        <div class=\"vscomp-toggle-button\">\n          <div class=\"vscomp-value\" ").concat(valueTooltip, ">\n            ").concat(this.placeholder, "\n          </div>\n\n          <div class=\"vscomp-arrow\"></div>\n\n          <div class=\"vscomp-clear-button toggle-button-child\" ").concat(clearButtonTooltip, ">\n            <i class=\"vscomp-clear-icon\"></i>\n          </div>\n\n        ").concat(this.renderDropbox({
+
+      // eslint-disable-next-line no-trailing-spaces
+      var html = "<div id=\"vscomp-ele-wrapper-".concat(uniqueId, "\" class=\"vscomp-ele-wrapper ").concat(wrapperClasses, "\" tabindex=\"0\"\n        role=\"combobox\" aria-haspopup=\"listbox\" aria-controls=\"vscomp-dropbox-container-").concat(uniqueId, "\"\n        aria-expanded=\"").concat(isExpanded, "\" ").concat(ariaLabelledbyText, " ").concat(ariaLabelText, ">\n        \n        <input type=\"hidden\" name=\"").concat(this.name, "\" class=\"vscomp-hidden-input\">\n\n        <div class=\"vscomp-toggle-button\">\n          <div class=\"vscomp-value\" ").concat(valueTooltip, ">\n            ").concat(this.placeholder, "\n          </div>\n\n          <div class=\"vscomp-arrow\"></div>\n\n          <div class=\"vscomp-clear-button toggle-button-child\" ").concat(clearButtonTooltip, ">\n            <i class=\"vscomp-clear-icon\"></i>\n          </div>\n        </div>\n\n        ").concat(this.renderDropbox({
         wrapperClasses: wrapperClasses
       }), "\n      </div>");
       this.$ele.innerHTML = html;
@@ -694,7 +696,9 @@ var VirtualSelect = /*#__PURE__*/function () {
     value: function renderDropbox(_ref) {
       var wrapperClasses = _ref.wrapperClasses;
       var $wrapper = this.dropboxWrapper !== 'self' ? document.querySelector(this.dropboxWrapper) : null;
-      var html = "<div id=\"vscomp-dropbox-container-".concat(this.uniqueId, "\" role=\"listbox\" class=\"vscomp-dropbox-container\">\n        <div class=\"vscomp-dropbox-container-top\" aria-hidden=\"true\" tabindex=\"0\">&nbsp;</div>\n        <div class=\"vscomp-dropbox\">\n          <div class=\"vscomp-search-wrapper\"></div>\n\n          <div class=\"vscomp-options-container\">\n            <div class=\"vscomp-options-loader\"></div>\n\n            <div class=\"vscomp-options-list\">\n              <div class=\"vscomp-options\"></div>\n            </div>\n          </div>\n\n          <div class=\"vscomp-options-bottom-freezer\"></div>\n          <div class=\"vscomp-no-options\">").concat(this.noOptionsText, "</div>\n          <div class=\"vscomp-no-search-results\">").concat(this.noSearchResultsText, "</div>\n\n          <span class=\"vscomp-dropbox-close-button\"><i class=\"vscomp-clear-icon\"></i></span>\n        </div>\n        <div class=\"vscomp-dropbox-container-bottom\" aria-hidden=\"true\" tabindex=\"0\">&nbsp;</div>\n      </div>\n");
+
+      // eslint-disable-next-line no-trailing-spaces
+      var html = "<div id=\"vscomp-dropbox-container-".concat(this.uniqueId, "\" role=\"listbox\" class=\"vscomp-dropbox-container\">\n        <div class=\"vscomp-dropbox-container-top\" aria-hidden=\"true\" tabindex=\"0\">&nbsp;</div>\n        <div class=\"vscomp-dropbox\">\n          <div class=\"vscomp-search-wrapper\"></div>\n\n          <div class=\"vscomp-options-container\">\n            <div class=\"vscomp-options-loader\"></div>\n\n            <div class=\"vscomp-options-list\">\n              <div class=\"vscomp-options\"></div>\n            </div>\n          </div>\n\n          <div class=\"vscomp-options-bottom-freezer\"></div>\n          <div class=\"vscomp-no-options\">").concat(this.noOptionsText, "</div>\n          <div class=\"vscomp-no-search-results\">").concat(this.noSearchResultsText, "</div>\n\n          <span class=\"vscomp-dropbox-close-button\"><i class=\"vscomp-clear-icon\"></i></span>\n        </div>\n        <div class=\"vscomp-dropbox-container-bottom\" aria-hidden=\"true\" tabindex=\"0\">&nbsp;</div>\n      </div>");
       if ($wrapper) {
         var $dropboxWrapper = document.createElement('div');
         this.$dropboxWrapper = $dropboxWrapper;
@@ -723,6 +727,7 @@ var VirtualSelect = /*#__PURE__*/function () {
         searchGroup = this.searchGroup;
       var hasLabelRenderer = typeof labelRenderer === 'function';
       var convertToBoolean = Utils.convertToBoolean;
+      var groupName = '';
       if (markSearchResults) {
         searchRegex = new RegExp("(".concat(Utils.regexEscape(this.searchValue), ")(?!([^<]+)?>)"), 'gi');
       }
@@ -758,6 +763,7 @@ var VirtualSelect = /*#__PURE__*/function () {
           ariaDisabledText = 'aria-disabled="true"';
         }
         if (d.isGroupTitle) {
+          groupName = d.label;
           optionClasses += ' group-title';
           if (disableOptionGroupCheckbox) {
             leftSection = '';
@@ -767,15 +773,16 @@ var VirtualSelect = /*#__PURE__*/function () {
           optionClasses += ' selected';
         }
         if (d.isGroupOption) {
+          var optionDesc = '';
           optionClasses += ' group-option';
           groupIndexText = "data-group-index=\"".concat(d.groupIndex, "\"");
-          var groupName = '';
-          var optionDesc = '';
           if (d.customData) {
             groupName = d.customData.group_name !== undefined ? "".concat(d.customData.group_name, ", ") : '';
             optionDesc = d.customData.description !== undefined ? " ".concat(d.customData.description, ",") : '';
+            ariaLabel = "aria-label=\"".concat(groupName, " ").concat(d.label, ", ").concat(optionDesc, "\"");
+          } else {
+            ariaLabel = "aria-label=\"".concat(groupName, ", ").concat(d.label, "\"");
           }
-          ariaLabel = "aria-label=\"".concat(groupName).concat(d.label, ",").concat(optionDesc, "\"");
         }
         if (hasLabelRenderer) {
           optionLabel = labelRenderer(d);
@@ -793,6 +800,7 @@ var VirtualSelect = /*#__PURE__*/function () {
         }
         html += "<div role=\"option\" aria-selected=\"".concat(isSelected, "\" id=\"vscomp-option-").concat(uniqueId, "-").concat(index, "\"\n          class=\"").concat(optionClasses, "\" data-value=\"").concat(d.value, "\" data-index=\"").concat(index, "\" data-visible-index=\"").concat(d.visibleIndex, "\"\n          tabindex=").concat(tabIndexValue, " ").concat(groupIndexText, " ").concat(ariaDisabledText, " ").concat(ariaLabel, "\n        >\n          ").concat(leftSection, "\n          <span class=\"vscomp-option-text\" ").concat(optionTooltip, ">\n            ").concat(optionLabel, "\n          </span>\n          ").concat(description, "\n          ").concat(rightSection, "\n        </div>");
       });
+      groupName = '';
       this.$options.innerHTML = html;
       this.$visibleOptions = this.$options.querySelectorAll('.vscomp-option');
       this.afterRenderOptions();
