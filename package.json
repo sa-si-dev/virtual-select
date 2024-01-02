@@ -5,10 +5,10 @@
   "scripts": {
     "start": "webpack --mode development --watch",
     "build": "webpack --mode production",
-    "validate": "tsc | eslint src/**/*.js | stylelint src/sass/**/*.scss",
+    "validate": "tsc && eslint src/**/*.js && stylelint src/sass/**/*.scss",
     "docs": "docsify serve docs",
-    "t": "docsify serve docs -p 3001 | cypress open --e2e -b chrome",
-    "test": "docsify serve docs -p 3001 | cypress run"
+    "t": "docsify serve docs -p 3001 && cypress open --e2e -b chrome",
+    "test": "docsify serve docs -p 3001 && cypress run"
   },
   "author": "Sa Si Dev",
   "keywords": [
