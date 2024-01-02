@@ -161,10 +161,12 @@ export class VirtualSelect {
       wrapperClasses += ` popup-position-${this.popupPosition.toLowerCase()}`;
     }
 
-    const html = `<div id="vscomp-ele-wrapper-${uniqueId}" class="vscomp-ele-wrapper ${wrapperClasses}" tabindex="0"
+    // eslint-disable-next-line no-trailing-spaces
+    const html = 
+      `<div id="vscomp-ele-wrapper-${uniqueId}" class="vscomp-ele-wrapper ${wrapperClasses}" tabindex="0"
         role="combobox" aria-haspopup="listbox" aria-controls="vscomp-dropbox-container-${uniqueId}"
-        aria-expanded="${isExpanded}" ${ariaLabelledbyText} ${ariaLabelText}
-      >
+        aria-expanded="${isExpanded}" ${ariaLabelledbyText} ${ariaLabelText}>
+        
         <input type="hidden" name="${this.name}" class="vscomp-hidden-input">
 
         <div class="vscomp-toggle-button">
@@ -177,7 +179,8 @@ export class VirtualSelect {
           <div class="vscomp-clear-button toggle-button-child" ${clearButtonTooltip}>
             <i class="vscomp-clear-icon"></i>
           </div>
-
+        </div>
+        
         ${this.renderDropbox({ wrapperClasses })}
       </div>`;
 
@@ -216,7 +219,9 @@ export class VirtualSelect {
   renderDropbox({ wrapperClasses }) {
     const $wrapper = this.dropboxWrapper !== 'self' ? document.querySelector(this.dropboxWrapper) : null;
 
-    const html = `<div id="vscomp-dropbox-container-${this.uniqueId}" role="listbox" class="vscomp-dropbox-container">
+    // eslint-disable-next-line no-trailing-spaces
+    const html = 
+      `<div id="vscomp-dropbox-container-${this.uniqueId}" role="listbox" class="vscomp-dropbox-container">
         <div class="vscomp-dropbox-container-top" aria-hidden="true" tabindex="0">&nbsp;</div>
         <div class="vscomp-dropbox">
           <div class="vscomp-search-wrapper"></div>
@@ -236,8 +241,7 @@ export class VirtualSelect {
           <span class="vscomp-dropbox-close-button"><i class="vscomp-clear-icon"></i></span>
         </div>
         <div class="vscomp-dropbox-container-bottom" aria-hidden="true" tabindex="0">&nbsp;</div>
-      </div>
-`;
+      </div>`;
 
     if ($wrapper) {
       const $dropboxWrapper = document.createElement('div');
