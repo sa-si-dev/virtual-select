@@ -161,10 +161,12 @@ export class VirtualSelect {
       wrapperClasses += ` popup-position-${this.popupPosition.toLowerCase()}`;
     }
 
-    const html = `<div id="vscomp-ele-wrapper-${uniqueId}" class="vscomp-ele-wrapper ${wrapperClasses}" tabindex="0"
+    // eslint-disable-next-line no-trailing-spaces
+    const html = 
+      `<div id="vscomp-ele-wrapper-${uniqueId}" class="vscomp-ele-wrapper ${wrapperClasses}" tabindex="0"
         role="combobox" aria-haspopup="listbox" aria-controls="vscomp-dropbox-container-${uniqueId}"
-        aria-expanded="${isExpanded}" ${ariaLabelledbyText} ${ariaLabelText}
-      >
+        aria-expanded="${isExpanded}" ${ariaLabelledbyText} ${ariaLabelText}>
+        
         <input type="hidden" name="${this.name}" class="vscomp-hidden-input">
 
         <div class="vscomp-toggle-button">
@@ -177,6 +179,7 @@ export class VirtualSelect {
           <div class="vscomp-clear-button toggle-button-child" ${clearButtonTooltip}>
             <i class="vscomp-clear-icon"></i>
           </div>
+        </div>
 
         ${this.renderDropbox({ wrapperClasses })}
       </div>`;
@@ -216,7 +219,9 @@ export class VirtualSelect {
   renderDropbox({ wrapperClasses }) {
     const $wrapper = this.dropboxWrapper !== 'self' ? document.querySelector(this.dropboxWrapper) : null;
 
-    const html = `<div id="vscomp-dropbox-container-${this.uniqueId}" role="listbox" class="vscomp-dropbox-container">
+    // eslint-disable-next-line no-trailing-spaces
+    const html = 
+      `<div id="vscomp-dropbox-container-${this.uniqueId}" role="listbox" class="vscomp-dropbox-container">
         <div class="vscomp-dropbox-container-top" aria-hidden="true" tabindex="0">&nbsp;</div>
         <div class="vscomp-dropbox">
           <div class="vscomp-search-wrapper"></div>
@@ -236,8 +241,7 @@ export class VirtualSelect {
           <span class="vscomp-dropbox-close-button"><i class="vscomp-clear-icon"></i></span>
         </div>
         <div class="vscomp-dropbox-container-bottom" aria-hidden="true" tabindex="0">&nbsp;</div>
-      </div>
-`;
+      </div>`;
 
     if ($wrapper) {
       const $dropboxWrapper = document.createElement('div');
@@ -266,6 +270,7 @@ export class VirtualSelect {
     const { labelRenderer, disableOptionGroupCheckbox, uniqueId, searchGroup } = this;
     const hasLabelRenderer = typeof labelRenderer === 'function';
     const { convertToBoolean } = Utils;
+    let groupName = '';
 
     if (markSearchResults) {
       searchRegex = new RegExp(`(${Utils.regexEscape(this.searchValue)})(?!([^<]+)?>)`, 'gi');
@@ -309,6 +314,7 @@ export class VirtualSelect {
       }
 
       if (d.isGroupTitle) {
+        groupName = d.label;
         optionClasses += ' group-title';
 
         if (disableOptionGroupCheckbox) {
@@ -321,12 +327,19 @@ export class VirtualSelect {
       }
 
       if (d.isGroupOption) {
+        let optionDesc = '';
+
         optionClasses += ' group-option';
         groupIndexText = `data-group-index="${d.groupIndex}"`;
 
-        const groupName = d.customData.group_name !== undefined ? `${d.customData.group_name}, ` : '';
-        const optionDesc = d.customData.description !== undefined ? ` ${d.customData.description},` : '';
-        ariaLabel = `aria-label="${groupName}${d.label},${optionDesc}"`;
+        if (d.customData) {
+          groupName = d.customData.group_name !== undefined ? `${d.customData.group_name}, ` : '';
+          optionDesc = d.customData.description !== undefined ? ` ${d.customData.description},` : '';
+
+          ariaLabel = `aria-label="${groupName} ${d.label}, ${optionDesc}"`;
+        } else {
+          ariaLabel = `aria-label="${groupName}, ${d.label}"`;
+        }
       }
 
       if (hasLabelRenderer) {
@@ -358,6 +371,8 @@ export class VirtualSelect {
           ${rightSection}
         </div>`;
     });
+
+    groupName = '';
 
     this.$options.innerHTML = html;
     this.$visibleOptions = this.$options.querySelectorAll('.vscomp-option');

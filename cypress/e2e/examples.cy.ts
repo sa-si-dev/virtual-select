@@ -83,11 +83,11 @@ describe('Multiple select', () => {
   });
 
   it('select/Unselect all options', () => {
-    cy.getVs(id).toggleSelectAll().hasValueText('All (100000)').toggleSelectAll().hasValueText('Select');
+    cy.getVs(id).toggleSelectAll().hasValueText('All (100001)').toggleSelectAll().hasValueText('Select');
   });
 
   it('select all except one option', () => {
-    cy.getVs(id).toggleSelectAll().selectOption(3).hasValueText('99999 options selected').close();
+    cy.getVs(id).toggleSelectAll().selectOption(3).hasValueText('100000 options selected').close();
   });
 });
 
@@ -99,7 +99,7 @@ describe('Multiple select without search', () => {
   });
 
   it('select/Unselect all options', () => {
-    cy.open(id).toggleSelectAll(true).hasValueText('All (100000)').toggleSelectAll(true).hasValueText('Select');
+    cy.open(id).toggleSelectAll(true).hasValueText('All (100001)').toggleSelectAll(true).hasValueText('Select');
   });
 });
 
