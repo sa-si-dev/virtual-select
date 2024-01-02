@@ -180,7 +180,7 @@ export class VirtualSelect {
             <i class="vscomp-clear-icon"></i>
           </div>
         </div>
-        
+
         ${this.renderDropbox({ wrapperClasses })}
       </div>`;
 
@@ -270,6 +270,7 @@ export class VirtualSelect {
     const { labelRenderer, disableOptionGroupCheckbox, uniqueId, searchGroup } = this;
     const hasLabelRenderer = typeof labelRenderer === 'function';
     const { convertToBoolean } = Utils;
+    let groupName = '';
 
     if (markSearchResults) {
       searchRegex = new RegExp(`(${Utils.regexEscape(this.searchValue)})(?!([^<]+)?>)`, 'gi');
@@ -313,6 +314,7 @@ export class VirtualSelect {
       }
 
       if (d.isGroupTitle) {
+        groupName = d.label;
         optionClasses += ' group-title';
 
         if (disableOptionGroupCheckbox) {
@@ -325,16 +327,18 @@ export class VirtualSelect {
       }
 
       if (d.isGroupOption) {
+        let optionDesc = '';
+
         optionClasses += ' group-option';
         groupIndexText = `data-group-index="${d.groupIndex}"`;
 
         if (d.customData) {
-          const groupName = d.customData.group_name !== undefined ? `${d.customData.group_name}, ` : '';
-          const optionDesc = d.customData.description !== undefined ? ` ${d.customData.description},` : '';
+          groupName = d.customData.group_name !== undefined ? `${d.customData.group_name}, ` : '';
+          optionDesc = d.customData.description !== undefined ? ` ${d.customData.description},` : '';
 
-          ariaLabel = `aria-label="${groupName}${d.label}, ${optionDesc}"`;
+          ariaLabel = `aria-label="${groupName} ${d.label}, ${optionDesc}"`;
         } else {
-          ariaLabel = `aria-label="${d.label}"`;
+          ariaLabel = `aria-label="${groupName}, ${d.label}"`;
         }
       }
 
@@ -367,6 +371,8 @@ export class VirtualSelect {
           ${rightSection}
         </div>`;
     });
+
+    groupName = '';
 
     this.$options.innerHTML = html;
     this.$visibleOptions = this.$options.querySelectorAll('.vscomp-option');
