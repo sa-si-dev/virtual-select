@@ -460,6 +460,38 @@ export class VirtualSelect {
     });
   }
 
+  /** dom event methods - start */
+  removeEvents() {
+    this.removeEvent(document, 'click', 'onDocumentClick');
+    this.removeEvent(this.$allWrappers, 'keydown', 'onKeyDown');
+    this.removeEvent(this.$toggleButton, 'click', 'onToggleButtonClick');
+    this.removeEvent(this.$clearButton, 'click', 'onClearButtonClick');
+    this.removeEvent(this.$dropboxContainer, 'click', 'onDropboxContainerClick');
+    this.removeEvent(this.$dropboxCloseButton, 'click', 'onDropboxCloseButtonClick');
+    this.removeEvent(this.$optionsContainer, 'scroll', 'onOptionsScroll');
+    this.removeEvent(this.$options, 'click', 'onOptionsClick');
+    this.removeEvent(this.$options, 'mouseover', 'onOptionsMouseOver');
+    this.removeEvent(this.$options, 'touchmove', 'onOptionsTouchMove');
+    this.removeMutationObserver();
+  }
+
+  removeEvent($ele, events, method) {
+    if (!$ele) {
+      return;
+    }
+
+    const eventsArray = Utils.removeArrayEmpty(events.split(' '));
+
+    eventsArray.forEach((event) => {
+      const eventsKey = `${method}-${event}`;
+      let callback = this.events[eventsKey];
+
+      if (callback) {
+        DomUtils.removeEvent($ele, event, callback);
+      }
+    });
+  }
+  
   onDocumentClick(e) {
     const $eleToKeepOpen = e.target.closest('.vscomp-wrapper');
 
@@ -649,6 +681,11 @@ export class VirtualSelect {
 
     this.mutationObserver.observe(document.querySelector('body'), { childList: true, subtree: true });
   }
+
+  removeMutationObserver(){
+    this.mutationObserver.disconnect();
+  }
+
   /** dom event methods - end */
 
   /** before event methods - start */
@@ -3040,7 +3077,7 @@ export class VirtualSelect {
 
     if (this.hasDropboxWrapper) {
       this.$dropboxWrapper.remove();
-      this.mutationObserver.disconnect();
+      this.removeEvents();
     }
 
     if (this.dropboxPopover) {

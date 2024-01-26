@@ -320,4 +320,21 @@ export class DomUtils {
       $this.tabIndex = newTabIndex;
     });
   }
+ 
+  /**
+ * @param {HTMLElement} $ele
+ * @param {string} event
+ * @param {Function} callback
+ */
+  static removeEvent($ele, event, callback) {
+    if (!$ele) {
+      return;
+    }
+
+    const $eleArray = DomUtils.getElements($ele);
+
+    $eleArray.forEach(($this) => {
+      $this.removeEventListener(event, callback);
+    });
+  }
 }
