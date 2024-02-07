@@ -161,12 +161,12 @@ var Utils = /*#__PURE__*/function () {
     }
 
     /**
-    * @static
-    * @param {*} container
-    * @param {string} text
-    * @return {boolean} 
-    * @memberof Utils
-    */
+     * @static
+     * @param {*} container
+     * @param {string} text
+     * @return {boolean}
+     * @memberof Utils
+     */
   }, {
     key: "willTextOverflow",
     value: function willTextOverflow(container, text) {
@@ -548,6 +548,23 @@ var DomUtils = /*#__PURE__*/function () {
         $this.tabIndex = newTabIndex;
       });
     }
+
+    /**
+    * @param {HTMLElement} $ele
+    * @param {string} event
+    * @param {Function} callback
+    */
+  }, {
+    key: "removeEvent",
+    value: function removeEvent($ele, event, callback) {
+      if (!$ele) {
+        return;
+      }
+      var $eleArray = DomUtils.getElements($ele);
+      $eleArray.forEach(function ($this) {
+        $this.removeEventListener(event, callback);
+      });
+    }
   }]);
   return DomUtils;
 }();
@@ -867,6 +884,39 @@ var VirtualSelect = /*#__PURE__*/function () {
         DomUtils.addEvent($ele, event, callback);
       });
     }
+
+    /** dom event methods - start */
+  }, {
+    key: "removeEvents",
+    value: function removeEvents() {
+      this.removeEvent(document, 'click', 'onDocumentClick');
+      this.removeEvent(this.$allWrappers, 'keydown', 'onKeyDown');
+      this.removeEvent(this.$toggleButton, 'click', 'onToggleButtonClick');
+      this.removeEvent(this.$clearButton, 'click', 'onClearButtonClick');
+      this.removeEvent(this.$dropboxContainer, 'click', 'onDropboxContainerClick');
+      this.removeEvent(this.$dropboxCloseButton, 'click', 'onDropboxCloseButtonClick');
+      this.removeEvent(this.$optionsContainer, 'scroll', 'onOptionsScroll');
+      this.removeEvent(this.$options, 'click', 'onOptionsClick');
+      this.removeEvent(this.$options, 'mouseover', 'onOptionsMouseOver');
+      this.removeEvent(this.$options, 'touchmove', 'onOptionsTouchMove');
+      this.removeMutationObserver();
+    }
+  }, {
+    key: "removeEvent",
+    value: function removeEvent($ele, events, method) {
+      var _this3 = this;
+      if (!$ele) {
+        return;
+      }
+      var eventsArray = Utils.removeArrayEmpty(events.split(' '));
+      eventsArray.forEach(function (event) {
+        var eventsKey = "".concat(method, "-").concat(event);
+        var callback = _this3.events[eventsKey];
+        if (callback) {
+          DomUtils.removeEvent($ele, event, callback);
+        }
+      });
+    }
   }, {
     key: "onDocumentClick",
     value: function onDocumentClick(e) {
@@ -1050,7 +1100,7 @@ var VirtualSelect = /*#__PURE__*/function () {
   }, {
     key: "addMutationObserver",
     value: function addMutationObserver() {
-      var _this3 = this;
+      var _this4 = this;
       if (!this.hasDropboxWrapper) {
         return;
       }
@@ -1071,7 +1121,7 @@ var VirtualSelect = /*#__PURE__*/function () {
           }
         });
         if (isRemoved && !isAdded) {
-          _this3.destroy();
+          _this4.destroy();
         }
       });
       this.mutationObserver.observe(document.querySelector('body'), {
@@ -1079,6 +1129,12 @@ var VirtualSelect = /*#__PURE__*/function () {
         subtree: true
       });
     }
+  }, {
+    key: "removeMutationObserver",
+    value: function removeMutationObserver() {
+      this.mutationObserver.disconnect();
+    }
+
     /** dom event methods - end */
 
     /** before event methods - start */
@@ -1090,7 +1146,7 @@ var VirtualSelect = /*#__PURE__*/function () {
   }, {
     key: "beforeSelectNewValue",
     value: function beforeSelectNewValue() {
-      var _this4 = this;
+      var _this5 = this;
       var newOption = this.getNewOption();
       var newIndex = newOption.index;
       this.newValues.push(newOption.value);
@@ -1099,8 +1155,8 @@ var VirtualSelect = /*#__PURE__*/function () {
 
       /** using setTimeout to fix the issue of dropbox getting closed on select */
       setTimeout(function () {
-        _this4.setSearchValue('');
-        _this4.focusSearchInput();
+        _this5.setSearchValue('');
+        _this5.focusSearchInput();
       }, 0);
     }
     /** before event methods - end */
@@ -1180,11 +1236,11 @@ var VirtualSelect = /*#__PURE__*/function () {
   }, {
     key: "afterSetSearchValue",
     value: function afterSetSearchValue() {
-      var _this5 = this;
+      var _this6 = this;
       if (this.hasServerSearch) {
         clearInterval(this.serverSearchTimeout);
         this.serverSearchTimeout = setTimeout(function () {
-          _this5.serverSearch();
+          _this6.serverSearch();
         }, this.searchDelay);
       } else {
         this.setVisibleOptionsCount();
@@ -1645,7 +1701,7 @@ var VirtualSelect = /*#__PURE__*/function () {
   }, {
     key: "setOptions",
     value: function setOptions() {
-      var _this6 = this;
+      var _this7 = this;
       var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
       var preparedOptions = [];
       var hasDisabledOptions = this.disabledOptions.length;
@@ -1679,7 +1735,7 @@ var VirtualSelect = /*#__PURE__*/function () {
           index: index,
           value: value,
           label: label,
-          labelNormalized: _this6.searchNormalize ? Utils.normalizeString(label).toLowerCase() : label.toLowerCase(),
+          labelNormalized: _this7.searchNormalize ? Utils.normalizeString(label).toLowerCase() : label.toLowerCase(),
           alias: getAlias(d[aliasKey]),
           isVisible: convertToBoolean(d.isVisible, true),
           isNew: d.isNew || false,
@@ -1734,7 +1790,7 @@ var VirtualSelect = /*#__PURE__*/function () {
   }, {
     key: "setServerOptions",
     value: function setServerOptions() {
-      var _this7 = this;
+      var _this8 = this;
       var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
       this.setOptionsMethod(options, true);
       var selectedOptions = this.selectedOptions;
@@ -1761,7 +1817,7 @@ var VirtualSelect = /*#__PURE__*/function () {
       /** merging new search option */
       if (this.allowNewOption && this.searchValue) {
         var hasExactOption = newOptions.some(function (d) {
-          return d.label.toLowerCase() === _this7.searchValue;
+          return d.label.toLowerCase() === _this8.searchValue;
         });
         if (!hasExactOption) {
           optionsUpdated = true;
@@ -1838,11 +1894,11 @@ var VirtualSelect = /*#__PURE__*/function () {
   }, {
     key: "setOptionsTooltip",
     value: function setOptionsTooltip() {
-      var _this8 = this;
+      var _this9 = this;
       var visibleOptions = this.getVisibleOptions();
       var hasOptionDescription = this.hasOptionDescription;
       visibleOptions.forEach(function (d) {
-        var $optionEle = _this8.$dropboxContainer.querySelector(".vscomp-option[data-index=\"".concat(d.index, "\"]"));
+        var $optionEle = _this9.$dropboxContainer.querySelector(".vscomp-option[data-index=\"".concat(d.index, "\"]"));
         DomUtils.setData($optionEle.querySelector('.vscomp-option-text'), 'tooltip', d.label);
         if (hasOptionDescription) {
           DomUtils.setData($optionEle.querySelector('.vscomp-option-description'), 'tooltip', d.description);
@@ -1883,7 +1939,7 @@ var VirtualSelect = /*#__PURE__*/function () {
   }, {
     key: "setValueText",
     value: function setValueText() {
-      var _this9 = this;
+      var _this10 = this;
       var multiple = this.multiple,
         selectedValues = this.selectedValues,
         noOfDisplayValues = this.noOfDisplayValues,
@@ -1914,7 +1970,7 @@ var VirtualSelect = /*#__PURE__*/function () {
           valueText.push(label);
           selectedValuesCount += 1;
           if (showValueAsTags) {
-            var valueTooltipForTags = _this9.getTooltipAttrText(label, !Utils.willTextOverflow($valueText.parentElement, label), true);
+            var valueTooltipForTags = _this10.getTooltipAttrText(label, !Utils.willTextOverflow($valueText.parentElement, label), true);
             var valueTagHtml = "<span class=\"vscomp-value-tag\" data-index=\"".concat(d.index, "\" ").concat(valueTooltipForTags, ">\n              <span class=\"vscomp-value-tag-content\">").concat(label, "</span>\n              <span class=\"vscomp-value-tag-clear-button\">\n                <i class=\"vscomp-clear-icon\"></i>\n              </span>\n            </span>");
             valueTooltip.push(valueTagHtml);
           } else {
@@ -2622,7 +2678,9 @@ var VirtualSelect = /*#__PURE__*/function () {
       DomUtils.addClass(this.$allWrappers, 'closed');
       if (!isSilent) {
         DomUtils.dispatchEvent(this.$ele, 'afterClose');
-        this.focus();
+        if (this.initialSelectedValue && this.initialSelectedValue.length === 0 || this.selectedValues.length > 0) {
+          this.focus();
+        }
       }
     }
   }, {
@@ -2857,7 +2915,7 @@ var VirtualSelect = /*#__PURE__*/function () {
   }, {
     key: "selectRangeOptions",
     value: function selectRangeOptions(lastSelectedOptionIndex, selectedIndex) {
-      var _this10 = this;
+      var _this11 = this;
       if (typeof lastSelectedOptionIndex !== 'number' || this.maxValues) {
         return;
       }
@@ -2903,7 +2961,7 @@ var VirtualSelect = /*#__PURE__*/function () {
 
       /** using setTimeout to fix the issue of dropbox getting closed on select */
       setTimeout(function () {
-        _this10.renderOptions();
+        _this11.renderOptions();
       }, 0);
     }
   }, {
@@ -3012,7 +3070,7 @@ var VirtualSelect = /*#__PURE__*/function () {
   }, {
     key: "toggleGroupOptions",
     value: function toggleGroupOptions($ele, isSelected) {
-      var _this11 = this;
+      var _this12 = this;
       if (!this.hasOptionGroup || this.disableOptionGroupCheckbox || !$ele) {
         return;
       }
@@ -3048,7 +3106,7 @@ var VirtualSelect = /*#__PURE__*/function () {
 
       /** using setTimeout to fix the issue of dropbox getting closed on select */
       setTimeout(function () {
-        _this11.renderOptions();
+        _this12.renderOptions();
       }, 0);
     }
   }, {
@@ -3312,7 +3370,7 @@ var VirtualSelect = /*#__PURE__*/function () {
       $ele.innerHTML = '';
       if (this.hasDropboxWrapper) {
         this.$dropboxWrapper.remove();
-        this.mutationObserver.disconnect();
+        this.removeEvents();
       }
       if (this.dropboxPopover) {
         this.dropboxPopover.destroy();

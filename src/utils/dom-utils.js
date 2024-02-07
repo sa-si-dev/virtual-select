@@ -320,7 +320,7 @@ export class DomUtils {
       $this.tabIndex = newTabIndex;
     });
   }
- 
+
   /**
  * @param {HTMLElement} $ele
  * @param {string} event
