@@ -36,7 +36,8 @@ $('#sample-select').val();
 **Arguments:**
 
 - value - single value or array of values
-- noEventTrigger - set true to avoid event trigger
+- disableEvent - set true to avoid event trigger
+- disableValidation - set true to disable the validation
 
 ```js
 var value = 3; /** for single select */
