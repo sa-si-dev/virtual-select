@@ -33,6 +33,7 @@ var Utils = /*#__PURE__*/function () {
     /**
      * @param {any} text
      * @returns {string}
+     * @memberof Utils
      */
     function getString(text) {
       return text || text === 0 ? text.toString() : '';
@@ -42,6 +43,7 @@ var Utils = /*#__PURE__*/function () {
      * @param {any} value
      * @param {boolean} defaultValue
      * @returns {boolean}
+     * @memberof Utils
      */
   }, {
     key: "convertToBoolean",
@@ -61,6 +63,7 @@ var Utils = /*#__PURE__*/function () {
     /**
      * @param {any} value
      * @returns {boolean}
+     * @memberof Utils
      */
   }, {
     key: "isEmpty",
@@ -81,6 +84,7 @@ var Utils = /*#__PURE__*/function () {
     /**
      * @param {any} value
      * @returns {boolean}
+     * @memberof Utils
      */
   }, {
     key: "isNotEmpty",
@@ -93,6 +97,7 @@ var Utils = /*#__PURE__*/function () {
      * @param {any} value
      * @param {boolean} cloneArray
      * @returns {any[]}
+     * @memberof Utils
      */
   }, {
     key: "removeItemFromArray",
@@ -112,6 +117,7 @@ var Utils = /*#__PURE__*/function () {
     /**
      * @param {any[]} array
      * @returns {any[]}
+     * @memberof Utils
      */
   }, {
     key: "removeArrayEmpty",
@@ -128,6 +134,7 @@ var Utils = /*#__PURE__*/function () {
      * @param {number} max
      * @param {number} max
      * @returns {number}
+     * @memberof Utils
      */
   }, {
     key: "getRandomInt",
@@ -141,6 +148,7 @@ var Utils = /*#__PURE__*/function () {
     /**
      * @param {string} text
      * @return {string}
+     * @memberof Utils
      */
   }, {
     key: "regexEscape",
@@ -152,6 +160,7 @@ var Utils = /*#__PURE__*/function () {
     /**
      * @param {string} text
      * @return {string}
+     * @memberof Utils
      */
   }, {
     key: "normalizeString",
@@ -181,6 +190,30 @@ var Utils = /*#__PURE__*/function () {
       var textWidth = tempElement.clientWidth;
       document.body.removeChild(tempElement);
       return textWidth > container.clientWidth;
+    }
+
+    /**
+     * @static
+     * @param {string} text
+     * @return {string}
+     * @memberof Utils
+     */
+  }, {
+    key: "replaceDoubleQuotesWithHTML",
+    value: function replaceDoubleQuotesWithHTML(text) {
+      return text.replace(/"/g, '&quot;');
+    }
+
+    /**
+     * @static
+     * @param {string} text
+     * @return {boolean}
+     * @memberof Utils
+     */
+  }, {
+    key: "containsHTML",
+    value: function containsHTML(text) {
+      return /<[a-z][\s\S]*>/i.test(text);
     }
   }]);
   return Utils;
@@ -1970,8 +2003,15 @@ var VirtualSelect = /*#__PURE__*/function () {
           valueText.push(label);
           selectedValuesCount += 1;
           if (showValueAsTags) {
-            var valueTooltipForTags = _this10.getTooltipAttrText(label, !Utils.willTextOverflow($valueText.parentElement, label), true);
-            var valueTagHtml = "<span class=\"vscomp-value-tag\" data-index=\"".concat(d.index, "\" ").concat(valueTooltipForTags, ">\n              <span class=\"vscomp-value-tag-content\">").concat(label, "</span>\n              <span class=\"vscomp-value-tag-clear-button\">\n                <i class=\"vscomp-clear-icon\"></i>\n              </span>\n            </span>");
+            var valueTagHtml = '';
+
+            //Will cause text overflow in runtime and if so, the tooltip information is prepared 
+            if (Utils.willTextOverflow($valueText.parentElement, label)) {
+              var valueTooltipForTags = _this10.getTooltipAttrText(label, false, true);
+              valueTagHtml = "<span class=\"vscomp-value-tag\" data-index=\"".concat(d.index, "\" ").concat(valueTooltipForTags, ">\n                  <span class=\"vscomp-value-tag-content\">").concat(label, "</span>\n                  <span class=\"vscomp-value-tag-clear-button\">\n                    <i class=\"vscomp-clear-icon\"></i>\n                  </span>\n                </span>");
+            } else {
+              valueTagHtml = "<span class=\"vscomp-value-tag\" data-index=\"".concat(d.index, "\">\n                  <span class=\"vscomp-value-tag-content\">").concat(label, "</span>\n                  <span class=\"vscomp-value-tag-clear-button\">\n                    <i class=\"vscomp-clear-icon\"></i>\n                  </span>\n                </span>");
+            }
             valueTooltip.push(valueTagHtml);
           } else {
             valueTooltip.push(label);
@@ -2369,8 +2409,9 @@ var VirtualSelect = /*#__PURE__*/function () {
     value: function getTooltipAttrText(text) {
       var ellipsisOnly = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
       var allowHtml = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
+      var tootltipText = Utils.containsHTML(text) ? Utils.replaceDoubleQuotesWithHTML(text) : text;
       var data = {
-        'data-tooltip': text || '',
+        'data-tooltip': tootltipText || '',
         'data-tooltip-enter-delay': this.tooltipEnterDelay,
         'data-tooltip-z-index': this.zIndex,
         'data-tooltip-font-size': this.tooltipFontSize,
