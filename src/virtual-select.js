@@ -176,7 +176,7 @@ export class VirtualSelect {
 
           <div class="vscomp-arrow"></div>
 
-          <div class="vscomp-clear-button toggle-button-child" ${clearButtonTooltip}>
+          <div class="vscomp-clear-button toggle-button-child" ${clearButtonTooltip} tabindex="0" aria-label="clear button">
             <i class="vscomp-clear-icon"></i>
           </div>
         </div>
@@ -430,7 +430,7 @@ export class VirtualSelect {
     this.addEvent(document, 'click', 'onDocumentClick');
     this.addEvent(this.$allWrappers, 'keydown', 'onKeyDown');
     this.addEvent(this.$toggleButton, 'click', 'onToggleButtonClick');
-    this.addEvent(this.$clearButton, 'click', 'onClearButtonClick');
+    this.addEvent(this.$clearButton, 'click keydown', 'onClearButtonClick');
     this.addEvent(this.$dropboxContainer, 'click', 'onDropboxContainerClick');
     this.addEvent(this.$dropboxCloseButton, 'click', 'onDropboxCloseButtonClick');
     this.addEvent(this.$optionsContainer, 'scroll', 'onOptionsScroll');
@@ -465,7 +465,7 @@ export class VirtualSelect {
     this.removeEvent(document, 'click', 'onDocumentClick');
     this.removeEvent(this.$allWrappers, 'keydown', 'onKeyDown');
     this.removeEvent(this.$toggleButton, 'click', 'onToggleButtonClick');
-    this.removeEvent(this.$clearButton, 'click', 'onClearButtonClick');
+    this.removeEvent(this.$clearButton, 'click keydown', 'onClearButtonClick');
     this.removeEvent(this.$dropboxContainer, 'click', 'onDropboxContainerClick');
     this.removeEvent(this.$dropboxCloseButton, 'click', 'onDropboxCloseButtonClick');
     this.removeEvent(this.$optionsContainer, 'scroll', 'onOptionsScroll');
@@ -573,8 +573,15 @@ export class VirtualSelect {
     }
   }
 
-  onClearButtonClick() {
-    this.reset();
+  onClearButtonClick(e) {
+    if (e.type === 'click') {
+      this.reset();
+    } else if (e.type === 'keydown') {
+      if (e.code === 'Enter' || e.code === 'Space') {
+        e.stopPropagation();
+        this.reset();
+      }
+    }
   }
 
   onOptionsScroll() {
