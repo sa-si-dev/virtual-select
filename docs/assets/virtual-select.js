@@ -2774,7 +2774,7 @@ var VirtualSelect = /*#__PURE__*/function () {
       var $ele = this.$searchInput;
       var hasNoOptions = !this.options.length && !this.hasServerSearch;
       if ($ele) {
-        if (hasNoOptions) {
+        if (hasNoOptions && !this.allowNewOption) {
           DomUtils.setAttr($ele, 'disabled', '');
           this.$noOptions.focus();
         } else {
