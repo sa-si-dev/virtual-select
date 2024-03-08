@@ -337,6 +337,10 @@ Show each selected values as tags with remove icon
 
 <div id="show-value-as-tags-select"></div>
 
+Show each selected values as tags with some containing HTML
+
+<div id="show-value-as-tags-select-with-html"></div>
+
 ```js
 VirtualSelect.init({
   ...

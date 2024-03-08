@@ -128,7 +128,8 @@ section.cover {
   margin-left: 12px;
 }
 
-#show-value-as-tags-select {
+#show-value-as-tags-select,
+#show-value-as-tags-select-with-html {
   max-width: 400px;
 }
 
