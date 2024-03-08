@@ -1557,29 +1557,15 @@ export class VirtualSelect {
 
         if (showValueAsTags) {
 
-            var valueTagHtml = '';
-            
-            //Will cause text overflow in runtime and if so, the tooltip information is prepared 
-            if(Utils.willTextOverflow($valueText.parentElement, label))
-            {
-              const valueTooltipForTags = this.getTooltipAttrText(label, false,  true);  
+          //Will cause text overflow in runtime and if so, the tooltip information is prepared 
+          const valueTooltipForTags = Utils.willTextOverflow($valueText.parentElement, label) ? this.getTooltipAttrText(label, false,  true) : ''; 
 
-              valueTagHtml = `<span class="vscomp-value-tag" data-index="${d.index}" ${valueTooltipForTags}>
+          const valueTagHtml = `<span class="vscomp-value-tag" data-index="${d.index}" ${valueTooltipForTags}>
                   <span class="vscomp-value-tag-content">${label}</span>
                   <span class="vscomp-value-tag-clear-button">
                     <i class="vscomp-clear-icon"></i>
                   </span>
                 </span>`;
-            }
-            else {
-              valueTagHtml = `<span class="vscomp-value-tag" data-index="${d.index}">
-                  <span class="vscomp-value-tag-content">${label}</span>
-                  <span class="vscomp-value-tag-clear-button">
-                    <i class="vscomp-clear-icon"></i>
-                  </span>
-                </span>`;
-              }
-              
 
           valueTooltip.push(valueTagHtml);
             
