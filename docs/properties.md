@@ -55,8 +55,6 @@
 | searchDelay                    | Number            | 300                                                    | Delay time in milliseconds to trigger onServerSearch callback function                                                                                                                                        |
 | labelRenderer                  | Function          |                                                        | Callback function to render label, which could be used to add image, icon, or custom content                                                                                                                  |
 | ariaLabelledby                 | String            |                                                        | ID of the label element to use as a11y attribute aria-labelledby                                                                                                                                              |
-| ariaLabelText                  | String            | Options list                                           | Option used to enhance accessibility when focusing on the dropdown wrapper making it more verbose    |
-| searchFormLabel                | String            | Search                                                 | Option used to enhance accessibility when using the search functionality on the dropdowns  |
 | hideValueTooltipOnSelectAll    | Boolean           | true                                                   | Hide value tooltip if all options selected                                                                                                                                                                    |
 | showOptionsOnlyOnSearch        | Boolean           | false                                                  | Show options to select only if search value is not empty                                                                                                                                                      |
 | selectAllOnlyVisible           | Boolean           | false                                                  | Select only visible options on clicking select all checkbox when options filtered by search                                                                                                                   |
@@ -79,10 +77,13 @@ Update below properties to change display texts.
 
 | Name                   | Type   | Default value    | Description                                                                                                    |
 | ---------------------- | ------ | ---------------- | -------------------------------------------------------------------------------------------------------------- |
+| ariaLabelText          | String | Options list     | Option used to enhance accessibility when focusing on the dropdown wrapper making it more verbose              |
+| ariaLabelClearButtonText  | String | Clear button     | Option used to enhance accessibility when focusing on the dropdown clear button making it more verbose         |
 | placeholder            | String | Select           | Text to show when no options selected                                                                          |
 | noOptionsText          | String | No options found | Text to show when no options to show                                                                           |
 | noSearchResultsText    | String | No results found | Text to show when no results on search                                                                         |
 | selectAllText          | String | Select all       | Text to show near select all checkbox when search is disabled                                                  |
+| searchFormLabel        | String | Search           | Option used to enhance accessibility when using the search functionality on the dropdowns                      |
 | searchPlaceholderText  | String | Search...        | Text to show as placeholder for search input                                                                   |
 | optionsSelectedText    | String | options selected | Text to use when displaying no.of values selected text (i.e. 3 options selected)                               |
 | optionSelectedText     | String | option selected  | Text to use when displaying no.of values selected text and only one value is selected (i.e. 1 option selected) |

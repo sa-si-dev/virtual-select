@@ -27,6 +27,7 @@ const dataProps = [
   'alwaysShowSelectedOptionsLabel',
   'ariaLabelledby',
   'ariaLabelText',
+  'ariaLabelClearButtonText',
   'autoSelectFirstOption',
   'clearButtonText',
   'descriptionKey',
@@ -116,6 +117,7 @@ export class VirtualSelect {
     const clearButtonTooltip = this.getTooltipAttrText(this.clearButtonText);
     const ariaLabelledbyText = this.ariaLabelledby ? `aria-labelledby="${this.ariaLabelledby}"` : '';
     const ariaLabelText = this.ariaLabelText ? `aria-label="${this.ariaLabelText}"` : '';
+    const ariaLabelClearButtonText = this.ariaLabelClearButtonText ? `aria-label="${this.ariaLabelClearButtonText}"` : '';
     let isExpanded = false;
 
     if (this.additionalClasses) {
@@ -166,17 +168,13 @@ export class VirtualSelect {
       `<div id="vscomp-ele-wrapper-${uniqueId}" class="vscomp-ele-wrapper ${wrapperClasses}" tabindex="0"
         role="combobox" aria-haspopup="listbox" aria-controls="vscomp-dropbox-container-${uniqueId}"
         aria-expanded="${isExpanded}" ${ariaLabelledbyText} ${ariaLabelText}>
-        
         <input type="hidden" name="${this.name}" class="vscomp-hidden-input">
-
         <div class="vscomp-toggle-button">
           <div class="vscomp-value" ${valueTooltip}>
             ${this.placeholder}
           </div>
-
           <div class="vscomp-arrow"></div>
-
-          <div class="vscomp-clear-button toggle-button-child" ${clearButtonTooltip} tabindex="0" aria-label="clear button">
+          <div class="vscomp-clear-button toggle-button-child" ${clearButtonTooltip} tabindex="0" ${ariaLabelClearButtonText}>
             <i class="vscomp-clear-icon"></i>
           </div>
         </div>
@@ -925,6 +923,8 @@ export class VirtualSelect {
     this.emptyValue = options.emptyValue;
     this.ariaLabelledby = options.ariaLabelledby;
     this.ariaLabelText = options.ariaLabelText;
+    this.ariaLabelClearButtonText = options.ariaLabelClearButtonText;
+
     this.maxWidth = options.maxWidth;
     this.searchDelay = options.searchDelay;
 
@@ -974,6 +974,7 @@ export class VirtualSelect {
       descriptionKey: 'description',
       aliasKey: 'alias',
       ariaLabelText: 'Options list',
+      ariaLabelClearButtonText: 'Clear button',
       optionsCount: 5,
       noOfDisplayValues: 50,
       optionHeight: '40px',
