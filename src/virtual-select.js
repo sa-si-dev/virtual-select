@@ -1563,14 +1563,16 @@ export class VirtualSelect {
         selectedValuesCount += 1;
 
         if (showValueAsTags) {
-          const valueTooltipForTags = this.getTooltipAttrText(label, !(Utils.willTextOverflow($valueText.parentElement, label)), true);  
+
+          //Will cause text overflow in runtime and if so, the tooltip information is prepared 
+          const valueTooltipForTags = Utils.willTextOverflow($valueText.parentElement, label) ? this.getTooltipAttrText(label, false,  true) : ''; 
 
           const valueTagHtml = `<span class="vscomp-value-tag" data-index="${d.index}" ${valueTooltipForTags}>
-              <span class="vscomp-value-tag-content">${label}</span>
-              <span class="vscomp-value-tag-clear-button">
-                <i class="vscomp-clear-icon"></i>
-              </span>
-            </span>`;
+                  <span class="vscomp-value-tag-content">${label}</span>
+                  <span class="vscomp-value-tag-clear-button">
+                    <i class="vscomp-clear-icon"></i>
+                  </span>
+                </span>`;
 
           valueTooltip.push(valueTagHtml);
             
@@ -2013,8 +2015,9 @@ export class VirtualSelect {
   }
 
   getTooltipAttrText(text, ellipsisOnly = false, allowHtml = false) {
+    const tootltipText = Utils.containsHTML(text) ? Utils.replaceDoubleQuotesWithHTML(text) : text;
     const data = {
-      'data-tooltip': text || '',
+      'data-tooltip': tootltipText || '',
       'data-tooltip-enter-delay': this.tooltipEnterDelay,
       'data-tooltip-z-index': this.zIndex,
       'data-tooltip-font-size': this.tooltipFontSize,
