@@ -2401,6 +2401,7 @@ export class VirtualSelect {
         DomUtils.setAttr($ele, 'disabled', '');
         this.$noOptions.focus();
       } else {
+        $ele.removeAttribute('disabled');
         $ele.focus();
       }
     } else {
