@@ -3200,12 +3200,14 @@ var VirtualSelect = /*#__PURE__*/function () {
     key: "reset",
     value: function reset() {
       var formReset = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
+      var disableChangeEvent = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
       this.options.forEach(function (d) {
         // eslint-disable-next-line no-param-reassign
         d.isSelected = false;
       });
       this.beforeValueSet(true);
       this.setValue(null, {
+        disableEvent: disableChangeEvent,
         disableValidation: formReset
       });
       this.afterValueSet();
@@ -3607,7 +3609,9 @@ var VirtualSelect = /*#__PURE__*/function () {
   }, {
     key: "reset",
     value: function reset() {
-      this.virtualSelect.reset();
+      var formReset = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
+      var disableChangeEvent = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+      this.virtualSelect.reset(formReset, disableChangeEvent);
     }
   }, {
     key: "setValueMethod",
