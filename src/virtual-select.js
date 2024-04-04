@@ -2861,14 +2861,14 @@ export class VirtualSelect {
     }
   }
 
-  reset(formReset = false) {
+  reset(formReset = false, disableChangeEvent = false) {
     this.options.forEach((d) => {
       // eslint-disable-next-line no-param-reassign
       d.isSelected = false;
     });
 
     this.beforeValueSet(true);
-    this.setValue(null, { disableValidation: formReset });
+    this.setValue(null, { disableEvent: disableChangeEvent, disableValidation: formReset });
     this.afterValueSet();
 
     if (formReset) {
@@ -3306,8 +3306,8 @@ export class VirtualSelect {
     return !hasError;
   }
 
-  static reset() {
-    this.virtualSelect.reset();
+  static reset(formReset = false, disableChangeEvent = false) {
+    this.virtualSelect.reset(formReset, disableChangeEvent);
   }
 
   static setValueMethod(...params) {

@@ -36,8 +36,8 @@ $('#sample-select').val();
 **Arguments:**
 
 - value - single value or array of values
-- disableEvent - set true to avoid event trigger
-- disableValidation - set true to disable the validation
+- disableEvent - set `true` to avoid event trigger
+- disableValidation - set `true` to disable the validation
 
 ```js
 var value = 3; /** for single select */
@@ -48,6 +48,11 @@ document.querySelector('#sample-select').setValue(value);
 
 ### reset()
 
+**Arguments:**
+
+- formReset - set `true` to disable validations 
+- disableChangeEvent - set `true` disable the change event
+
 ```js
 document.querySelector('#sample-select').reset();
 ```
@@ -57,7 +62,7 @@ document.querySelector('#sample-select').reset();
 **Arguments:**
 
 - options - list of options details
-- keepValue - set true to keep selected value
+- keepValue - set `true` to keep selected value
 
 ```js
 var options = [
@@ -90,7 +95,7 @@ document.querySelector('#sample-select').setDisabledOptions(true);
 **Arguments:**
 
 - enabledOptions - list of enabled option's values or `true` to enable all options
-- keepValue - set true to keep selected value
+- keepValue - set `true` to keep selected value
 
 ```js
 var enabledOptions = [2, 6, 9];
