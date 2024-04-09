@@ -1481,7 +1481,7 @@ export class VirtualSelect {
   }
 
   setOptionsPosition(startIndex) {
-    const top = (startIndex || this.getVisibleStartIndex()) * this.optionHeight;
+    const top = parseInt((startIndex || this.getVisibleStartIndex()) * this.optionHeight);
     this.$options.style.transform = `translate3d(0, ${top}px, 0)`;
     DomUtils.setData(this.$options, 'top', top);
   }
