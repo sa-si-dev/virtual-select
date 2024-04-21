@@ -166,6 +166,4 @@ export class Utils {
   static containsHTML(text) {
     return /<[a-z][\s\S]*>/i.test(text);
   }
-
-
 }
