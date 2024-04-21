@@ -635,7 +635,6 @@ var keyDownMethodMapping = {
   // Delete
   8: 'onBackspaceOrDeletePress' // Backspace
 };
-
 var valueLessProps = ['autofocus', 'disabled', 'multiple', 'required'];
 var nativeProps = ['autofocus', 'class', 'disabled', 'id', 'multiple', 'name', 'placeholder', 'required'];
 var attrPropsMapping;
@@ -3030,8 +3029,8 @@ var VirtualSelect = /*#__PURE__*/function () {
 
         /** unselected items are */
         if ( /** when unselecting all, selectAllOnlyVisible feature disabled or visible items or already unselected items */
-        !selectingAll && (!selectAllOnlyVisible || isVisible || !isSelected) || /** when selecting all, selectAllOnlyVisible feature enabled and hidden items those are not already selected */
-        selectingAll && selectAllOnlyVisible && !isVisible && !isSelected) {
+        !selectingAll && (!selectAllOnlyVisible || isVisible || !isSelected) || ( /** when selecting all, selectAllOnlyVisible feature enabled and hidden items those are not already selected */
+        selectingAll && selectAllOnlyVisible && !isVisible && !isSelected)) {
           option.isSelected = false;
         } else {
           option.isSelected = true;
@@ -3403,8 +3402,8 @@ var VirtualSelect = /*#__PURE__*/function () {
       var hasError = false;
       var selectedValues = this.selectedValues,
         minValues = this.minValues;
-      if (this.required && (Utils.isEmpty(selectedValues) || /** required minium options not selected */
-      this.multiple && minValues && selectedValues.length < minValues)) {
+      if (this.required && (Utils.isEmpty(selectedValues) || ( /** required minium options not selected */
+      this.multiple && minValues && selectedValues.length < minValues))) {
         hasError = true;
       }
       DomUtils.toggleClass(this.$allWrappers, 'has-error', hasError);
