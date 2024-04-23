@@ -1929,6 +1929,7 @@ var VirtualSelect = /*#__PURE__*/function () {
   }, {
     key: "setOptionsPosition",
     value: function setOptionsPosition(startIndex) {
+      // We use the parseInt to fix a Chrome issue when dealing with decimal pixels in translate3d
       var top = parseInt((startIndex || this.getVisibleStartIndex()) * this.optionHeight);
       this.$options.style.transform = "translate3d(0, ".concat(top, "px, 0)");
       DomUtils.setData(this.$options, 'top', top);
