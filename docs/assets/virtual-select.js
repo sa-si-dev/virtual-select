@@ -635,7 +635,6 @@ var keyDownMethodMapping = {
   // Delete
   8: 'onBackspaceOrDeletePress' // Backspace
 };
-
 var valueLessProps = ['autofocus', 'disabled', 'multiple', 'required'];
 var nativeProps = ['autofocus', 'class', 'disabled', 'id', 'multiple', 'name', 'placeholder', 'required'];
 var attrPropsMapping;
@@ -675,7 +674,7 @@ var VirtualSelect = /*#__PURE__*/function () {
       var clearButtonTooltip = this.getTooltipAttrText(this.clearButtonText);
       var ariaLabelledbyText = this.ariaLabelledby ? "aria-labelledby=\"".concat(this.ariaLabelledby, "\"") : '';
       var ariaLabelText = this.ariaLabelText ? "aria-label=\"".concat(this.ariaLabelText, "\"") : '';
-      var ariaLabelClearButtonText = this.ariaLabelClearButtonText ? "aria-label=\"".concat(this.ariaLabelClearButtonText, "\"") : '';
+      var ariaLabelClearBtnTxt = this.ariaLabelClearButtonText ? "aria-label=\"".concat(this.ariaLabelClearButtonText, "\"") : '';
       var isExpanded = false;
       if (this.additionalClasses) {
         wrapperClasses += " ".concat(this.additionalClasses);
@@ -712,7 +711,7 @@ var VirtualSelect = /*#__PURE__*/function () {
       }
 
       // eslint-disable-next-line no-trailing-spaces
-      var html = "<div id=\"vscomp-ele-wrapper-".concat(uniqueId, "\" class=\"vscomp-ele-wrapper ").concat(wrapperClasses, "\" tabindex=\"0\"\n        role=\"combobox\" aria-haspopup=\"listbox\" aria-controls=\"vscomp-dropbox-container-").concat(uniqueId, "\"\n        aria-expanded=\"").concat(isExpanded, "\" ").concat(ariaLabelledbyText, " ").concat(ariaLabelText, ">\n        <input type=\"hidden\" name=\"").concat(this.name, "\" class=\"vscomp-hidden-input\">\n        <div class=\"vscomp-toggle-button\">\n          <div class=\"vscomp-value\" ").concat(valueTooltip, ">\n            ").concat(this.placeholder, "\n          </div>\n          <div class=\"vscomp-arrow\"></div>\n          <div class=\"vscomp-clear-button toggle-button-child\" ").concat(clearButtonTooltip, " tabindex=\"0\" ").concat(ariaLabelClearButtonText, ">\n            <i class=\"vscomp-clear-icon\"></i>\n          </div>\n        </div>\n\n        ").concat(this.renderDropbox({
+      var html = "<div id=\"vscomp-ele-wrapper-".concat(uniqueId, "\" class=\"vscomp-ele-wrapper ").concat(wrapperClasses, "\" tabindex=\"0\"\n        role=\"combobox\" aria-haspopup=\"listbox\" aria-controls=\"vscomp-dropbox-container-").concat(uniqueId, "\"\n        aria-expanded=\"").concat(isExpanded, "\" ").concat(ariaLabelledbyText, " ").concat(ariaLabelText, ">\n        <input type=\"hidden\" name=\"").concat(this.name, "\" class=\"vscomp-hidden-input\">\n        <div class=\"vscomp-toggle-button\">\n          <div class=\"vscomp-value\" ").concat(valueTooltip, ">\n            ").concat(this.placeholder, "\n          </div>\n          <div class=\"vscomp-arrow\"></div>\n          <div class=\"vscomp-clear-button toggle-button-child\" ").concat(clearButtonTooltip, " \n          tabindex=\"0\" ").concat(ariaLabelClearBtnTxt, ">\n            <i class=\"vscomp-clear-icon\"></i>\n          </div>\n        </div>\n\n        ").concat(this.renderDropbox({
         wrapperClasses: wrapperClasses
       }), "\n      </div>");
       this.$ele.innerHTML = html;
@@ -1042,11 +1041,9 @@ var VirtualSelect = /*#__PURE__*/function () {
     value: function onClearButtonClick(e) {
       if (e.type === 'click') {
         this.reset();
-      } else if (e.type === 'keydown') {
-        if (e.code === 'Enter' || e.code === 'Space') {
-          e.stopPropagation();
-          this.reset();
-        }
+      } else if (e.type === 'keydown' && (e.code === 'Enter' || e.code === 'Space')) {
+        e.stopPropagation();
+        this.reset();
       }
     }
   }, {
@@ -1177,7 +1174,6 @@ var VirtualSelect = /*#__PURE__*/function () {
     }
 
     /** dom event methods - end */
-
     /** before event methods - start */
   }, {
     key: "beforeValueSet",
@@ -1876,6 +1872,7 @@ var VirtualSelect = /*#__PURE__*/function () {
       } else {
         this.updatePosition();
       }
+      this.setVisibleOptionsCount();
       DomUtils.removeClass(this.$allWrappers, 'server-searching');
     }
   }, {
@@ -1925,12 +1922,15 @@ var VirtualSelect = /*#__PURE__*/function () {
         visibleOptions = [newOption].concat(virtual_select_toConsumableArray(visibleOptions));
       }
       this.visibleOptions = visibleOptions;
+      // update number of visible options
+      this.visibleOptionsCount = visibleOptions.length;
       this.renderOptions();
     }
   }, {
     key: "setOptionsPosition",
     value: function setOptionsPosition(startIndex) {
-      var top = (startIndex || this.getVisibleStartIndex()) * this.optionHeight;
+      // We use the parseInt to fix a Chrome issue when dealing with decimal pixels in translate3d
+      var top = parseInt((startIndex || this.getVisibleStartIndex()) * this.optionHeight);
       this.$options.style.transform = "translate3d(0, ".concat(top, "px, 0)");
       DomUtils.setData(this.$options, 'top', top);
     }
@@ -2013,7 +2013,7 @@ var VirtualSelect = /*#__PURE__*/function () {
           valueText.push(label);
           selectedValuesCount += 1;
           if (showValueAsTags) {
-            //Will cause text overflow in runtime and if so, the tooltip information is prepared 
+            // Will cause text overflow in runtime and if so,the tooltip information is prepared
             var valueTooltipForTags = Utils.willTextOverflow($valueText.parentElement, label) ? _this10.getTooltipAttrText(label, false, true) : '';
             var valueTagHtml = "<span class=\"vscomp-value-tag\" data-index=\"".concat(d.index, "\" ").concat(valueTooltipForTags, ">\n                  <span class=\"vscomp-value-tag-content\">").concat(label, "</span>\n                  <span class=\"vscomp-value-tag-clear-button\">\n                    <i class=\"vscomp-clear-icon\"></i>\n                  </span>\n                </span>");
             valueTooltip.push(valueTagHtml);
@@ -2723,7 +2723,7 @@ var VirtualSelect = /*#__PURE__*/function () {
       DomUtils.addClass(this.$allWrappers, 'closed');
       if (!isSilent) {
         DomUtils.dispatchEvent(this.$ele, 'afterClose');
-        //only focus there are no pre-selected options or when selecting new options
+        // Only focus there are no pre-selected options or when selecting new options
         if (this.initialSelectedValue && this.initialSelectedValue.length === 0 || this.selectedValues.length > 0) {
           this.focus();
         }
@@ -2782,6 +2782,7 @@ var VirtualSelect = /*#__PURE__*/function () {
           DomUtils.setAttr($ele, 'disabled', '');
           this.$noOptions.focus();
         } else {
+          $ele.removeAttribute('disabled');
           $ele.focus();
         }
       } else {
@@ -3029,8 +3030,8 @@ var VirtualSelect = /*#__PURE__*/function () {
 
         /** unselected items are */
         if ( /** when unselecting all, selectAllOnlyVisible feature disabled or visible items or already unselected items */
-        !selectingAll && (!selectAllOnlyVisible || isVisible || !isSelected) || /** when selecting all, selectAllOnlyVisible feature enabled and hidden items those are not already selected */
-        selectingAll && selectAllOnlyVisible && !isVisible && !isSelected) {
+        !selectingAll && (!selectAllOnlyVisible || isVisible || !isSelected) || ( /** when selecting all, selectAllOnlyVisible feature enabled and hidden items those are not already selected */
+        selectingAll && selectAllOnlyVisible && !isVisible && !isSelected)) {
           option.isSelected = false;
         } else {
           option.isSelected = true;
@@ -3056,10 +3057,10 @@ var VirtualSelect = /*#__PURE__*/function () {
         isAllSelected = this.isAllOptionsSelected();
       }
 
-      /** when all options not selected, checking if all visible options selected 
+      /** When all options not selected, checking if all visible options selected
        *  Also, in a search mode, validate that we still have visible items
       */
-      if (!isAllSelected && this.selectAllOnlyVisible && (this.searchValue !== '' && this.visibleOptionsCount > 0 || this.searchValue == '')) {
+      if (!isAllSelected && this.selectAllOnlyVisible && this.searchValue !== '' && (this.visibleOptionsCount > 0 || this.searchValue === '')) {
         isAllVisibleSelected = this.isAllOptionsSelected(true);
       }
       DomUtils.toggleClass(this.$toggleAllCheckbox, 'checked', isAllSelected || isAllVisibleSelected);
@@ -3402,8 +3403,8 @@ var VirtualSelect = /*#__PURE__*/function () {
       var hasError = false;
       var selectedValues = this.selectedValues,
         minValues = this.minValues;
-      if (this.required && (Utils.isEmpty(selectedValues) || /** required minium options not selected */
-      this.multiple && minValues && selectedValues.length < minValues)) {
+      if (this.required && (Utils.isEmpty(selectedValues) || ( /** required minium options not selected */
+      this.multiple && minValues && selectedValues.length < minValues))) {
         hasError = true;
       }
       DomUtils.toggleClass(this.$allWrappers, 'has-error', hasError);
