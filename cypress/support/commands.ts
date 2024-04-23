@@ -3,7 +3,7 @@ const dropboxCloseDuration = 200;
 const optionsScrollDuration = 300;
 
 Cypress.Commands.add('goToSection', (title) => {
-  cy.get('a').contains(title).click();
+  cy.get('a').contains(title).click({force: true});
 });
 
 Cypress.Commands.add('getVs', (id) => {
