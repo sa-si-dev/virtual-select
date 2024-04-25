@@ -20,6 +20,8 @@ let attrPropsMapping;
 
 const dataProps = [
   'additionalClasses',
+  'additionalDropboxClasses',
+  'additionalToggleButtonClasses',
   'aliasKey',
   'allOptionsSelectedText',
   'allowNewOption',
@@ -113,6 +115,7 @@ export class VirtualSelect {
 
     const { uniqueId } = this;
     let wrapperClasses = 'vscomp-wrapper';
+    let toggleButtonClasses = 'vscomp-toggle-button';
     const valueTooltip = this.showValueAsTags ? '' : this.getTooltipAttrText(this.placeholder, true, true);
     const clearButtonTooltip = this.getTooltipAttrText(this.clearButtonText);
     const ariaLabelledbyText = this.ariaLabelledby ? `aria-labelledby="${this.ariaLabelledby}"` : '';
@@ -122,6 +125,10 @@ export class VirtualSelect {
 
     if (this.additionalClasses) {
       wrapperClasses += ` ${this.additionalClasses}`;
+    }
+
+    if (this.additionalToggleButtonClasses) {
+      toggleButtonClasses += ` ${this.additionalToggleButtonClasses}`;
     }
 
     if (this.multiple) {
@@ -169,7 +176,7 @@ export class VirtualSelect {
         role="combobox" aria-haspopup="listbox" aria-controls="vscomp-dropbox-container-${uniqueId}"
         aria-expanded="${isExpanded}" ${ariaLabelledbyText} ${ariaLabelText}>
         <input type="hidden" name="${this.name}" class="vscomp-hidden-input">
-        <div class="vscomp-toggle-button">
+        <div class="${toggleButtonClasses}">
           <div class="vscomp-value" ${valueTooltip}>
             ${this.placeholder}
           </div>
@@ -217,12 +224,17 @@ export class VirtualSelect {
 
   renderDropbox({ wrapperClasses }) {
     const $wrapper = this.dropboxWrapper !== 'self' ? document.querySelector(this.dropboxWrapper) : null;
+    let dropboxClasses = 'vscomp-dropbox';
+
+    if (this.additionalDropboxClasses) {
+      dropboxClasses += ` ${this.additionalDropboxClasses}`;
+    }
 
     // eslint-disable-next-line no-trailing-spaces
     const html = 
       `<div id="vscomp-dropbox-container-${this.uniqueId}" role="listbox" class="vscomp-dropbox-container">
         <div class="vscomp-dropbox-container-top" aria-hidden="true" tabindex="0">&nbsp;</div>
-        <div class="vscomp-dropbox">
+        <div class="${dropboxClasses}">
           <div class="vscomp-search-wrapper"></div>
 
           <div class="vscomp-options-container">
@@ -913,6 +925,8 @@ export class VirtualSelect {
     this.minValues = parseInt(options.minValues);
     this.name = this.secureText(options.name);
     this.additionalClasses = options.additionalClasses;
+    this.additionalDropboxClasses = options.additionalDropboxClasses;
+    this.additionalToggleButtonClasses = options.additionalToggleButtonClasses;
     this.popupDropboxBreakpoint = options.popupDropboxBreakpoint;
     this.popupPosition = options.popupPosition;
     this.onServerSearch = options.onServerSearch;
@@ -996,6 +1010,8 @@ export class VirtualSelect {
       updatePositionThrottle: 100,
       name: '',
       additionalClasses: '',
+      additionalDropboxClasses: '',
+      additionalToggleButtonClasses: '',
       maxValues: 0,
       showDropboxAsPopup: true,
       popupDropboxBreakpoint: '576px',
