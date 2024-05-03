@@ -44,6 +44,7 @@
  * @property {number} [minValues] Minimum no.of options should be selected to succeed required validation
  * @property {string} [additionalClasses] Additional classes for wrapper element
  * @property {string} [additionalDropboxClasses] Additional classes for dropbox element
+ *  @property {string} [additionalDropboxContainerClasses] Additional classes for dropbox container element
  * @property {string} [additionalToggleButtonClasses] Additional classes for toggle button element
  * @property {boolean} [showDropboxAsPopup=true] Show dropbox as popup on small screen like mobile
  * @property {string} [popupDropboxBreakpoint='576px'] Maximum screen width that allowed to show dropbox as popup

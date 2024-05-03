@@ -25,6 +25,7 @@
 - [Right-to-Left text](#right-to-left-text)
 - [Disable/Enable](#disable-enable)
 - [Validation](#validation)
+- [Custom styling](#custom-styling)
 
 ## Default dropdown
 
@@ -403,6 +404,21 @@ document.querySelector('#sample-form').addEventListener('submit', function() {
   if (VirtualSelect.validate(this)) {
     alert('Form submitted');
   }
+});
+```
+## Custom styling
+
+Use `additionalClasses`, `additionalDropboxClasses`, `additionalDropboxContainerClasses` and `additionalToggleButtonClasses` to customize the styling of your dropdown
+
+<div id="custom-styling-select"></div>
+
+```js
+VirtualSelect.init({
+  ...
+  additionalClasses: 'custom-wrapper',
+  additionalDropboxClasses: 'custom-dropbox',
+  additionalDropboxContainerClasses: 'custom-dropbox-container',
+  additionalToggleButtonClasses: 'custom-toggle-button',
 });
 ```
 

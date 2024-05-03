@@ -21,6 +21,7 @@ let attrPropsMapping;
 const dataProps = [
   'additionalClasses',
   'additionalDropboxClasses',
+  'additionalDropboxContainerClasses',
   'additionalToggleButtonClasses',
   'aliasKey',
   'allOptionsSelectedText',
@@ -230,9 +231,15 @@ export class VirtualSelect {
       dropboxClasses += ` ${this.additionalDropboxClasses}`;
     }
 
+    let dropboxContainerClasses = 'vscomp-dropbox-container';
+
+    if (this.additionalDropboxContainerClasses) {
+      dropboxContainerClasses += ` ${this.additionalDropboxContainerClasses}`;
+    }
+
     // eslint-disable-next-line no-trailing-spaces
     const html = 
-      `<div id="vscomp-dropbox-container-${this.uniqueId}" role="listbox" class="vscomp-dropbox-container">
+      `<div id="vscomp-dropbox-container-${this.uniqueId}" role="listbox" class="${dropboxContainerClasses}">
         <div class="vscomp-dropbox-container-top" aria-hidden="true" tabindex="0">&nbsp;</div>
         <div class="${dropboxClasses}">
           <div class="vscomp-search-wrapper"></div>
@@ -926,6 +933,7 @@ export class VirtualSelect {
     this.name = this.secureText(options.name);
     this.additionalClasses = options.additionalClasses;
     this.additionalDropboxClasses = options.additionalDropboxClasses;
+    this.additionalDropboxContainerClasses = options.additionalDropboxContainerClasses;
     this.additionalToggleButtonClasses = options.additionalToggleButtonClasses;
     this.popupDropboxBreakpoint = options.popupDropboxBreakpoint;
     this.popupPosition = options.popupPosition;
@@ -1011,6 +1019,7 @@ export class VirtualSelect {
       name: '',
       additionalClasses: '',
       additionalDropboxClasses: '',
+      additionalDropboxContainerClasses: '',
       additionalToggleButtonClasses: '',
       maxValues: 0,
       showDropboxAsPopup: true,
