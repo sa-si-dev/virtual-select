@@ -266,7 +266,7 @@ export class VirtualSelect {
     let newOptionIconHtml = '';
     const markSearchResults = !!(this.markSearchResults && this.searchValue);
     let searchRegex;
-    const { labelRenderer, disableOptionGroupCheckbox, uniqueId, searchGroup } = this;
+    const { labelRenderer, selectedLabelRenderer, disableOptionGroupCheckbox, uniqueId, searchGroup } = this;
     const hasLabelRenderer = typeof labelRenderer === 'function';
     const { convertToBoolean } = Utils;
     let groupName = '';
@@ -917,6 +917,7 @@ export class VirtualSelect {
     this.popupPosition = options.popupPosition;
     this.onServerSearch = options.onServerSearch;
     this.labelRenderer = options.labelRenderer;
+    this.selectedLabelRenderer = options.selectedLabelRenderer;
     this.initialSelectedValue = options.selectedValue === 0 ? '0' : options.selectedValue;
     this.emptyValue = options.emptyValue;
     this.ariaLabelledby = options.ariaLabelledby;
@@ -1534,7 +1535,7 @@ export class VirtualSelect {
   }
 
   setValueText() {
-    const { multiple, selectedValues, noOfDisplayValues, showValueAsTags, $valueText } = this;
+    const { multiple, selectedValues, noOfDisplayValues, showValueAsTags, $valueText, selectedLabelRenderer } = this;
     const valueText = [];
     let valueTooltip = [];
     const selectedLength = selectedValues.length;
@@ -1561,6 +1562,11 @@ export class VirtualSelect {
         }
 
         const { label } = d;
+
+        if(typeof selectedLabelRenderer === 'function' ){
+          label = selectedLabelRenderer(d);
+        }
+
         valueText.push(label);
         selectedValuesCount += 1;
 
