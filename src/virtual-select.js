@@ -1561,7 +1561,7 @@ export class VirtualSelect {
           return true;
         }
 
-        const { label } = d;
+        let { label } = d;
 
         if(typeof selectedLabelRenderer === 'function' ){
           label = selectedLabelRenderer(d);

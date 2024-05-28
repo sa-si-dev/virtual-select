@@ -602,7 +602,6 @@ var DomUtils = /*#__PURE__*/function () {
 ;// CONCATENATED MODULE: ./src/virtual-select.js
 function ownKeys(e, r) { var t = Object.keys(e); if (Object.getOwnPropertySymbols) { var o = Object.getOwnPropertySymbols(e); r && (o = o.filter(function (r) { return Object.getOwnPropertyDescriptor(e, r).enumerable; })), t.push.apply(t, o); } return t; }
 function _objectSpread(e) { for (var r = 1; r < arguments.length; r++) { var t = null != arguments[r] ? arguments[r] : {}; r % 2 ? ownKeys(Object(t), !0).forEach(function (r) { _defineProperty(e, r, t[r]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys(Object(t)).forEach(function (r) { Object.defineProperty(e, r, Object.getOwnPropertyDescriptor(t, r)); }); } return e; }
-function _readOnlyError(r) { throw new TypeError('"' + r + '" is read-only'); }
 function _defineProperty(e, r, t) { return (r = virtual_select_toPropertyKey(r)) in e ? Object.defineProperty(e, r, { value: t, enumerable: !0, configurable: !0, writable: !0 }) : e[r] = t, e; }
 function virtual_select_typeof(o) { "@babel/helpers - typeof"; return virtual_select_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, virtual_select_typeof(o); }
 function virtual_select_slicedToArray(r, e) { return virtual_select_arrayWithHoles(r) || virtual_select_iterableToArrayLimit(r, e) || virtual_select_unsupportedIterableToArray(r, e) || virtual_select_nonIterableRest(); }
@@ -2012,7 +2011,7 @@ var VirtualSelect = /*#__PURE__*/function () {
           }
           var label = d.label;
           if (typeof selectedLabelRenderer === 'function') {
-            selectedLabelRenderer(d), _readOnlyError("label");
+            label = selectedLabelRenderer(d);
           }
           valueText.push(label);
           selectedValuesCount += 1;
