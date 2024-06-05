@@ -305,7 +305,7 @@ VirtualSelect.init({
 
 ## Add image/icon
 
-Use `labelRenderer` callback function to add image, icon, or custom content to itmes
+Use `labelRenderer` callback function to add image, icon, or custom content to items
 Use `selectedLabelRenderer` callback function to add image, icon, or custom content to selected item
 
 <div id="with-image-select"></div>
