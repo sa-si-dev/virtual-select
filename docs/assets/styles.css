@@ -107,10 +107,10 @@ section.cover {
 
 .get-started-example {
   display: flex;
-  justify-content: space-between;
-  max-width: 600px;
-  margin: 30px auto 0;
   flex-wrap: wrap;
+  justify-content: space-between;
+  margin: 30px auto 0;
+  max-width: 600px;
 }
 
 .get-started-example .vscomp-ele {
@@ -124,8 +124,8 @@ section.cover {
 }
 
 .vscomp-wrapper.text-direction-rtl .vscomp-option-text .flag {
-  margin-right: 0;
   margin-left: 12px;
+  margin-right: 0;
 }
 
 #show-value-as-tags-select,
@@ -136,3 +136,28 @@ section.cover {
 #validation-select {
   margin-bottom: 20px;
 }
+
+/* utility classes - start */
+
+.custom-wrapper {
+  padding: 0 0 10px;
+}
+
+.custom-dropbox {
+  border: 1px solid var(--theme-color, #42b983);
+  border-radius: 14px;
+  color: var(--theme-color, #42b983);
+  overflow-y: auto;
+}
+
+.custom-dropbox-container {
+  border-radius: 14px;
+}
+
+.custom-toggle-button {
+  border-color: var(--theme-color, #42b983);
+  border-radius: 14px;
+  color: var(--theme-color, #42b983);
+}
+
+/* utility classes - end */
