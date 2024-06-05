@@ -602,19 +602,11 @@ var DomUtils = /*#__PURE__*/function () {
   return DomUtils;
 }();
 ;// CONCATENATED MODULE: ./src/virtual-select.js
-<<<<<<< HEAD
-function ownKeys(e, r) { var t = Object.keys(e); if (Object.getOwnPropertySymbols) { var o = Object.getOwnPropertySymbols(e); r && (o = o.filter(function (r) { return Object.getOwnPropertyDescriptor(e, r).enumerable; })), t.push.apply(t, o); } return t; }
-function _objectSpread(e) { for (var r = 1; r < arguments.length; r++) { var t = null != arguments[r] ? arguments[r] : {}; r % 2 ? ownKeys(Object(t), !0).forEach(function (r) { _defineProperty(e, r, t[r]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys(Object(t)).forEach(function (r) { Object.defineProperty(e, r, Object.getOwnPropertyDescriptor(t, r)); }); } return e; }
-function _defineProperty(e, r, t) { return (r = virtual_select_toPropertyKey(r)) in e ? Object.defineProperty(e, r, { value: t, enumerable: !0, configurable: !0, writable: !0 }) : e[r] = t, e; }
-function virtual_select_typeof(o) { "@babel/helpers - typeof"; return virtual_select_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, virtual_select_typeof(o); }
-function virtual_select_slicedToArray(r, e) { return virtual_select_arrayWithHoles(r) || virtual_select_iterableToArrayLimit(r, e) || virtual_select_unsupportedIterableToArray(r, e) || virtual_select_nonIterableRest(); }
-=======
 function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
 function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { _defineProperty(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
 function _defineProperty(obj, key, value) { key = virtual_select_toPropertyKey(key); if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 function virtual_select_typeof(obj) { "@babel/helpers - typeof"; return virtual_select_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, virtual_select_typeof(obj); }
 function virtual_select_slicedToArray(arr, i) { return virtual_select_arrayWithHoles(arr) || virtual_select_iterableToArrayLimit(arr, i) || virtual_select_unsupportedIterableToArray(arr, i) || virtual_select_nonIterableRest(); }
->>>>>>> parent of abaf05d (built the dist files with the change)
 function virtual_select_nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
 function virtual_select_iterableToArrayLimit(arr, i) { var _i = null == arr ? null : "undefined" != typeof Symbol && arr[Symbol.iterator] || arr["@@iterator"]; if (null != _i) { var _s, _e, _x, _r, _arr = [], _n = !0, _d = !1; try { if (_x = (_i = _i.call(arr)).next, 0 === i) { if (Object(_i) !== _i) return; _n = !1; } else for (; !(_n = (_s = _x.call(_i)).done) && (_arr.push(_s.value), _arr.length !== i); _n = !0) { ; } } catch (err) { _d = !0, _e = err; } finally { try { if (!_n && null != _i["return"] && (_r = _i["return"](), Object(_r) !== _r)) return; } finally { if (_d) throw _e; } } return _arr; } }
 function virtual_select_arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
@@ -2018,12 +2010,6 @@ var VirtualSelect = /*#__PURE__*/function () {
             return true;
           }
           var label = d.label;
-<<<<<<< HEAD
-          if (typeof selectedLabelRenderer === 'function') {
-            label = selectedLabelRenderer(d);
-          }
-=======
->>>>>>> parent of abaf05d (built the dist files with the change)
           valueText.push(label);
           selectedValuesCount += 1;
           if (showValueAsTags) {
