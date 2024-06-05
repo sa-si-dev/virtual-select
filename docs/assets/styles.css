@@ -117,7 +117,7 @@ section.cover {
   margin-bottom: 20px;
 }
 
-.vscomp-option-text .flag {
+.vscomp-value .flag, .vscomp-option-text .flag {
   margin-right: 12px;
   -webkit-transform: scale(1.4);
   transform: scale(1.4);

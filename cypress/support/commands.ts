@@ -118,6 +118,10 @@ Cypress.Commands.add('hasFlagIcon', { prevSubject: true }, (vsElem) => {
   cy.getDropbox(vsElem).find('.vscomp-option').first().find('i.flag');
 });
 
+Cypress.Commands.add('hasSelectedFlagIcon', { prevSubject: true }, (vsElem) => {
+  cy.get(vsElem).find('.vscomp-value').find('i.flag');
+});
+
 Cypress.Commands.add('hasValueTags', { prevSubject: true }, (vsElem, labels) => {
   labels.forEach((label) => {
     cy.get(vsElem).find('.vscomp-value-tag').contains(label);

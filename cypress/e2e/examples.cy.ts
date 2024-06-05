@@ -408,6 +408,10 @@ describe('Add image/icon', () => {
   it('has flag icon on scroll', () => {
     cy.getVs(id).scrollOptions(700).hasFlagIcon().parent().contains('Option 16');
   });
+
+  it('has flag icon on selected item', () => {
+    cy.open(id).selectOption(16).hasSelectedFlagIcon();
+  });
 });
 
 describe('Show values as tags', () => {
