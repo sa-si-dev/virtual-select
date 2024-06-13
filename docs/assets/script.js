@@ -281,6 +281,7 @@ function initPageExamples() {
   initVirtualSelect({
     ele: '#with-image-select',
     labelRenderer: sampleLabelRenderer,
+    selectedLabelRenderer: sampleLabelRenderer,
   });
 
   initVirtualSelect({

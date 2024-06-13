@@ -136,6 +136,12 @@ declare namespace Cypress {
      */
     hasFlagIcon(): Chainable<any>;
 
+     /**
+     * @example
+     * cy.hasFlagIcon()
+     */
+     hasSelectedFlagIcon(): Chainable<any>;
+
     /**
      * @example
      * cy.hasValueTags(['Option 3', 'Option 5'])
