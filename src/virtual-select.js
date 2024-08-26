@@ -285,7 +285,7 @@ export class VirtualSelect {
     let newOptionIconHtml = '';
     const markSearchResults = !!(this.markSearchResults && this.searchValue);
     let searchRegex;
-    const { labelRenderer, selectedLabelRenderer, disableOptionGroupCheckbox, uniqueId, searchGroup } = this;
+    const { labelRenderer, disableOptionGroupCheckbox, uniqueId, searchGroup } = this;
     const hasLabelRenderer = typeof labelRenderer === 'function';
     const { convertToBoolean } = Utils;
     let groupName = '';
@@ -542,7 +542,7 @@ export class VirtualSelect {
       if ((document.activeElement === wrapper || wrapper.contains(document.activeElement)) && !this.keepAlwaysOpen) {
         this.closeDropbox();
         return;
-      } 
+      }
     }
     if (method) {
       this[method](e);
@@ -1595,7 +1595,7 @@ export class VirtualSelect {
 
         let { label } = d;
 
-        if(typeof selectedLabelRenderer === 'function' ){
+        if (typeof selectedLabelRenderer === 'function') {
           label = selectedLabelRenderer(d);
         }
 
