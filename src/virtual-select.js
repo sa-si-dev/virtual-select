@@ -528,6 +528,7 @@ export class VirtualSelect {
         this.$dropboxContainerTop.focus();
       } else {
         this.closeDropbox();
+        this.$wrapper.focus();
       }
       return;
     }
@@ -541,6 +542,7 @@ export class VirtualSelect {
       const wrapper = this.showAsPopup ? this.$wrapper : this.$dropboxWrapper;
       if ((document.activeElement === wrapper || wrapper.contains(document.activeElement)) && !this.keepAlwaysOpen) {
         this.closeDropbox();
+        this.$wrapper.focus();
         return;
       }
     }
@@ -2356,7 +2358,6 @@ export class VirtualSelect {
       DomUtils.setAria(this.$wrapper, 'activedescendant', '');
     }
 
-    this.$wrapper.focus();
     if (this.dropboxPopover && !isSilent) {
       this.dropboxPopover.hide();
     } else {
