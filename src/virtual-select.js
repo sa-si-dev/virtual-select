@@ -3155,7 +3155,7 @@ export class VirtualSelect {
 
     this.$secureText.nodeValue = text;
 
-    return this.$secureDiv.innerHTML;
+    return Utils.replaceDoubleQuotesWithHTML(this.$secureDiv.innerHTML);
   }
 
   toggleRequired(isRequired) {
