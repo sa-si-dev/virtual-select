@@ -532,7 +532,6 @@ export class VirtualSelect {
       const wrapper = this.showAsPopup ? this.$wrapper : this.$dropboxWrapper;
       if ((document.activeElement === wrapper || wrapper.contains(document.activeElement)) && !this.keepAlwaysOpen) {
         this.closeDropbox();
-        this.$wrapper.focus();
         return;
       }
     }
@@ -2354,6 +2353,8 @@ export class VirtualSelect {
     } else {
       this.afterHidePopper();
     }
+
+    this.$wrapper.focus();
   }
 
   afterHidePopper() {
