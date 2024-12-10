@@ -985,7 +985,6 @@ var VirtualSelect = /*#__PURE__*/function () {
         var wrapper = this.showAsPopup ? this.$wrapper : this.$dropboxWrapper;
         if ((document.activeElement === wrapper || wrapper.contains(document.activeElement)) && !this.keepAlwaysOpen) {
           this.closeDropbox();
-          this.$wrapper.focus();
           return;
         }
       }
@@ -2730,6 +2729,7 @@ var VirtualSelect = /*#__PURE__*/function () {
       } else {
         this.afterHidePopper();
       }
+      this.$wrapper.focus();
     }
   }, {
     key: "afterHidePopper",
