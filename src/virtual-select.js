@@ -407,8 +407,8 @@ export class VirtualSelect {
     let searchInput = '';
 
     if (this.multiple && !this.disableSelectAll) {
-      checkboxHtml = `<span class="vscomp-toggle-all-button">
-          <span class="checkbox-icon vscomp-toggle-all-checkbox" tabindex="0" aria-label="${this.selectAllText}"></span>
+      checkboxHtml = `<span class="vscomp-toggle-all-button" tabindex="0" aria-label="${this.selectAllText}">
+          <span class="checkbox-icon vscomp-toggle-all-checkbox"></span>
           <span class="vscomp-toggle-all-label">${this.selectAllText}</span>
         </span>`;
     }
