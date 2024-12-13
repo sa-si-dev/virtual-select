@@ -889,7 +889,7 @@ var VirtualSelect = /*#__PURE__*/function () {
       this.$toggleAllCheckbox = this.$dropboxContainer.querySelector('.vscomp-toggle-all-checkbox');
       this.addEvent(this.$searchInput, 'input', 'onSearch');
       this.addEvent(this.$searchClear, 'click', 'onSearchClear');
-      this.addEvent(this.$toggleAllButton, 'click keydown', 'onToggleAllOptions');
+      this.addEvent(this.$toggleAllButton, 'click', 'onToggleAllOptions');
       this.addEvent(this.$dropboxContainerBottom, 'focus', 'onDropboxContainerTopOrBottomFocus');
       this.addEvent(this.$dropboxContainerTop, 'focus', 'onDropboxContainerTopOrBottomFocus');
     }
