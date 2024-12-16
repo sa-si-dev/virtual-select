@@ -876,7 +876,7 @@ var VirtualSelect = /*#__PURE__*/function () {
       var checkboxHtml = '';
       var searchInput = '';
       if (this.multiple && !this.disableSelectAll) {
-        checkboxHtml = "<span class=\"vscomp-toggle-all-button\">\n          <span class=\"checkbox-icon vscomp-toggle-all-checkbox\"></span>\n          <span class=\"vscomp-toggle-all-label\">".concat(this.selectAllText, "</span>\n        </span>");
+        checkboxHtml = "<span class=\"vscomp-toggle-all-button\" tabindex=\"0\" aria-label=\"".concat(this.selectAllText, "\">\n          <span class=\"checkbox-icon vscomp-toggle-all-checkbox\"></span>\n          <span class=\"vscomp-toggle-all-label\">").concat(this.selectAllText, "</span>\n        </span>");
       }
       if (this.hasSearch) {
         searchInput = "<label for=\"vscomp-search-input-".concat(this.uniqueId, "\" class=\"vscomp-search-label\"\n        id=\"vscomp-search-label-").concat(this.uniqueId, "\"\n      >\n        ").concat(this.searchFormLabel, "\n      </label>\n      <input type=\"text\" class=\"vscomp-search-input\" placeholder=\"").concat(this.searchPlaceholderText, "\"\n        id=\"vscomp-search-input-").concat(this.uniqueId, "\">\n      <span class=\"vscomp-search-clear\">&times;</span>");
@@ -975,20 +975,15 @@ var VirtualSelect = /*#__PURE__*/function () {
     value: function onKeyDown(e) {
       var key = e.which || e.keyCode;
       var method = keyDownMethodMapping[key];
-      if (document.activeElement === this.$searchInput && e.shiftKey && key === 9) {
-        e.preventDefault();
-        if (this.keepAlwaysOpen) {
-          this.$dropboxContainerTop.focus();
-        } else {
-          this.closeDropbox();
-        }
-        return;
-      }
-      if (document.activeElement === this.$searchInput && key === 9) {
+      if (document.activeElement === this.$searchInput && !e.shiftKey && key === 9) {
         e.preventDefault();
         this.focusFirstVisibleOption();
+      }
+      if (document.activeElement === this.$toggleAllButton && key === 13) {
+        this.toggleAllOptions();
         return;
       }
+
       // Handle the Escape key when showing the dropdown as a popup, closing it
       if (key === 27 || e.key === 'Escape') {
         var wrapper = this.showAsPopup ? this.$wrapper : this.$dropboxWrapper;

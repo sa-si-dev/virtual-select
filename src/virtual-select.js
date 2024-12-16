@@ -407,7 +407,7 @@ export class VirtualSelect {
     let searchInput = '';
 
     if (this.multiple && !this.disableSelectAll) {
-      checkboxHtml = `<span class="vscomp-toggle-all-button">
+      checkboxHtml = `<span class="vscomp-toggle-all-button" tabindex="0" aria-label="${this.selectAllText}">
           <span class="checkbox-icon vscomp-toggle-all-checkbox"></span>
           <span class="vscomp-toggle-all-label">${this.selectAllText}</span>
         </span>`;
@@ -522,21 +522,16 @@ export class VirtualSelect {
     const key = e.which || e.keyCode;
     const method = keyDownMethodMapping[key];
 
-    if (document.activeElement === this.$searchInput && (e.shiftKey && key === 9)) {
+    if (document.activeElement === this.$searchInput && (!e.shiftKey && key === 9)) {
       e.preventDefault();
-      if (this.keepAlwaysOpen) {
-        this.$dropboxContainerTop.focus();
-      } else {
-        this.closeDropbox();
-      }
+      this.focusFirstVisibleOption();
+    }
+
+    if (document.activeElement === this.$toggleAllButton && key === 13) {
+      this.toggleAllOptions();
       return;
     }
 
-    if (document.activeElement === this.$searchInput && key === 9) {
-      e.preventDefault();
-      this.focusFirstVisibleOption();
-      return;
-    }
     // Handle the Escape key when showing the dropdown as a popup, closing it
     if (key === 27 || e.key === 'Escape') {
       const wrapper = this.showAsPopup ? this.$wrapper : this.$dropboxWrapper;
@@ -545,6 +540,7 @@ export class VirtualSelect {
         return;
       }
     }
+
     if (method) {
       this[method](e);
     }
