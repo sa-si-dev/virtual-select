@@ -2340,6 +2340,10 @@ export class VirtualSelect {
   closeDropbox(isSilent) {
     this.isSilentClose = isSilent;
 
+    if (this.isOpened() === false) {
+      return;
+    }
+
     if (this.keepAlwaysOpen) {
       this.removeOptionFocus();
       return;
@@ -2353,13 +2357,14 @@ export class VirtualSelect {
       DomUtils.setAria(this.$wrapper, 'activedescendant', '');
     }
 
-    if (this.dropboxPopover && !isSilent) {
-      this.dropboxPopover.hide();
+    if (this.dropboxPopover) {
+      if (!isSilent) {
+        this.dropboxPopover.hide();
+      }
+      this.$wrapper.focus();
     } else {
       this.afterHidePopper();
     }
-
-    this.$wrapper.focus();
   }
 
   afterHidePopper() {
@@ -2378,11 +2383,9 @@ export class VirtualSelect {
 
     if (!isSilent) {
       DomUtils.dispatchEvent(this.$ele, 'afterClose');
-      // Only focus there are no pre-selected options or when selecting new options
-      if ((this.initialSelectedValue && this.initialSelectedValue.length === 0) || this.selectedValues.length > 0) {
-        this.focus();
-      }
     }
+
+    this.$wrapper.focus();
   }
 
   moveSelectedOptionsFirst() {
