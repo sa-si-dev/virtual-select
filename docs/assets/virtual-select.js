@@ -2731,11 +2731,8 @@ var VirtualSelect = /*#__PURE__*/function () {
         DomUtils.setAria(this.$wrapper, 'expanded', false);
         DomUtils.setAria(this.$wrapper, 'activedescendant', '');
       }
-      if (this.dropboxPopover) {
-        if (!isSilent) {
-          this.dropboxPopover.hide();
-        }
-        this.$wrapper.focus();
+      if (this.dropboxPopover && !isSilent) {
+        this.dropboxPopover.hide();
       } else {
         this.afterHidePopper();
       }
@@ -3213,16 +3210,9 @@ var VirtualSelect = /*#__PURE__*/function () {
   }, {
     key: "scrollToTop",
     value: function scrollToTop() {
-      var isClosed = !this.isOpened();
-      if (isClosed) {
-        this.openDropbox(true);
-      }
       var scrollTop = this.$optionsContainer.scrollTop;
       if (scrollTop > 0) {
         this.$optionsContainer.scrollTop = 0;
-      }
-      if (isClosed) {
-        this.closeDropbox(true);
       }
     }
   }, {

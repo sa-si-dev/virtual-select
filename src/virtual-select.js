@@ -2357,11 +2357,8 @@ export class VirtualSelect {
       DomUtils.setAria(this.$wrapper, 'activedescendant', '');
     }
 
-    if (this.dropboxPopover) {
-      if (!isSilent) {
-        this.dropboxPopover.hide();
-      }
-      this.$wrapper.focus();
+    if (this.dropboxPopover && !isSilent) {
+      this.dropboxPopover.hide();
     } else {
       this.afterHidePopper();
     }
@@ -2884,20 +2881,10 @@ export class VirtualSelect {
   }
 
   scrollToTop() {
-    const isClosed = !this.isOpened();
-
-    if (isClosed) {
-      this.openDropbox(true);
-    }
-
     const { scrollTop } = this.$optionsContainer;
 
     if (scrollTop > 0) {
       this.$optionsContainer.scrollTop = 0;
-    }
-
-    if (isClosed) {
-      this.closeDropbox(true);
     }
   }
 
