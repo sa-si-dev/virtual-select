@@ -2717,6 +2717,9 @@ var VirtualSelect = /*#__PURE__*/function () {
     key: "closeDropbox",
     value: function closeDropbox(isSilent) {
       this.isSilentClose = isSilent;
+      if (this.isOpened() === false) {
+        return;
+      }
       if (this.keepAlwaysOpen) {
         this.removeOptionFocus();
         return;
@@ -2733,7 +2736,6 @@ var VirtualSelect = /*#__PURE__*/function () {
       } else {
         this.afterHidePopper();
       }
-      this.$wrapper.focus();
     }
   }, {
     key: "afterHidePopper",
@@ -2749,11 +2751,8 @@ var VirtualSelect = /*#__PURE__*/function () {
       DomUtils.addClass(this.$allWrappers, 'closed');
       if (!isSilent) {
         DomUtils.dispatchEvent(this.$ele, 'afterClose');
-        // Only focus there are no pre-selected options or when selecting new options
-        if (this.initialSelectedValue && this.initialSelectedValue.length === 0 || this.selectedValues.length > 0) {
-          this.focus();
-        }
       }
+      this.$wrapper.focus();
     }
   }, {
     key: "moveSelectedOptionsFirst",
@@ -3211,16 +3210,9 @@ var VirtualSelect = /*#__PURE__*/function () {
   }, {
     key: "scrollToTop",
     value: function scrollToTop() {
-      var isClosed = !this.isOpened();
-      if (isClosed) {
-        this.openDropbox(true);
-      }
       var scrollTop = this.$optionsContainer.scrollTop;
       if (scrollTop > 0) {
         this.$optionsContainer.scrollTop = 0;
-      }
-      if (isClosed) {
-        this.closeDropbox(true);
       }
     }
   }, {
