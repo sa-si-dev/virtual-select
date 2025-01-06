@@ -3139,8 +3139,8 @@ export class VirtualSelect {
     if (!text || !this.enableSecureText) {
       return text;
     }
-
-    this.$secureText.nodeValue = text;
+    /** escape potentially harmful JavaScript so, label and value fields cannot trigger XSS */
+    this.$secureText.nodeValue = Utils.replaceDoubleQuotesWithHTML(text);
 
     return this.$secureDiv.innerHTML;
   }

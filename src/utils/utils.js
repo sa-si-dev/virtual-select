@@ -166,4 +166,14 @@ export class Utils {
   static containsHTML(text) {
     return /<[a-z][\s\S]*>/i.test(text);
   }
+
+  /**
+   * @static
+   * @param {string} text
+   * @return {boolean}
+   * @memberof Utils
+   */
+  static containsHTMLorJS(text) {
+    return /<([a-z]+)[\s\S]*?>|on\w+="[^"]*"/i.test(text);
+  }
 }
