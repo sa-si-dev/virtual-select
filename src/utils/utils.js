@@ -55,7 +55,7 @@ export class Utils {
    * @memberof Utils
    */
   static isNotEmpty(value) {
-    return !this.isEmpty(value);
+    return !Utils.isEmpty(value);
   }
 
   /**
