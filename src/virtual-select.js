@@ -3118,8 +3118,9 @@ export class VirtualSelect {
 
     if (this.hasDropboxWrapper) {
       this.$dropboxWrapper.remove();
-      this.removeEvents();
     }
+
+    this.removeEvents();
 
     if (this.dropboxPopover) {
       this.dropboxPopover.destroy();
