@@ -3123,11 +3123,12 @@ export class VirtualSelect {
     $ele.value = undefined;
     $ele.innerHTML = '';
 
+    /** Remove all event listeners to prevent memory leaks and ensure proper cleanup */
+    this.removeEvents();
+
     if (this.hasDropboxWrapper) {
       this.$dropboxWrapper.remove();
     }
-
-    this.removeEvents();
 
     if (this.dropboxPopover) {
       this.dropboxPopover.destroy();
