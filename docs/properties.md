@@ -74,6 +74,8 @@
 | useGroupValue                  | Boolean           | false                                                  | Group's value would be returned when all of its child options selected                                                                                                                                        |
 | maxWidth                       | String            | 250px                                                  | Maximum width for the select element                                                                                                                                                                          |
 | updatePositionThrottle         | Number            | 100                                                    | Throttle time for updating dropbox position on scroll event (in milliseconds)                                                                                                                                 |
+| showDuration                    | Number            | 300                                                    | Dropdown open animation time in milliseconds function                                                                                                                                        |
+| hideDuration                    | Number            | 200                                                    | Dropdown close animation time in milliseconds function                                                                                                                                        |
 
 # Text Properties
 
