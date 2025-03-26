@@ -31,6 +31,7 @@ const dataProps = [
   'ariaLabelledby',
   'ariaLabelText',
   'ariaLabelClearButtonText',
+  'ariaLabelSearchClearButtonText',
   'autoSelectFirstOption',
   'clearButtonText',
   'descriptionKey',
@@ -183,7 +184,7 @@ export class VirtualSelect {
           </div>
           <div class="vscomp-arrow"></div>
           <div class="vscomp-clear-button toggle-button-child" ${clearButtonTooltip} 
-          tabindex="0" ${ariaLabelClearBtnTxt}>
+          tabindex="-1" role="button" ${ariaLabelClearBtnTxt}>
             <i class="vscomp-clear-icon"></i>
           </div>
         </div>
@@ -240,7 +241,7 @@ export class VirtualSelect {
     // eslint-disable-next-line no-trailing-spaces
     const html = 
       `<div id="vscomp-dropbox-container-${this.uniqueId}" role="listbox" class="${dropboxContainerClasses}">
-        <div class="vscomp-dropbox-container-top" aria-hidden="true" tabindex="0">&nbsp;</div>
+        <div class="vscomp-dropbox-container-top" aria-hidden="true" tabindex="-1">&nbsp;</div>
         <div class="${dropboxClasses}">
           <div class="vscomp-search-wrapper"></div>
 
@@ -258,17 +259,23 @@ export class VirtualSelect {
 
           <span class="vscomp-dropbox-close-button"><i class="vscomp-clear-icon"></i></span>
         </div>
-        <div class="vscomp-dropbox-container-bottom" aria-hidden="true" tabindex="0">&nbsp;</div>
+        <div class="vscomp-dropbox-container-bottom" aria-hidden="true" tabindex="-1">&nbsp;</div>
       </div>`;
 
     if ($wrapper) {
       const $dropboxWrapper = document.createElement('div');
+
       this.$dropboxWrapper = $dropboxWrapper;
       this.hasDropboxWrapper = true;
       $dropboxWrapper.innerHTML = html;
 
       $wrapper.appendChild($dropboxWrapper);
       DomUtils.addClass($dropboxWrapper, `vscomp-dropbox-wrapper ${wrapperClasses}`);
+
+      if (!this.keepAlwaysOpen) {
+        DomUtils.setAttr($dropboxWrapper, 'tabindex', '-1');
+        DomUtils.setAria($dropboxWrapper, 'hidden', true);
+      }
 
       return '';
     }
@@ -414,6 +421,10 @@ export class VirtualSelect {
     }
 
     if (this.hasSearch) {
+      const ariaLabelSearchClearBtnTxt = this.ariaLabelSearchClearButtonText
+        ? `aria-label="${this.ariaLabelSearchClearButtonText}"`
+        : '';
+
       searchInput = `<label for="vscomp-search-input-${this.uniqueId}" class="vscomp-search-label"
         id="vscomp-search-label-${this.uniqueId}"
       >
@@ -421,7 +432,7 @@ export class VirtualSelect {
       </label>
       <input type="text" class="vscomp-search-input" placeholder="${this.searchPlaceholderText}"
         id="vscomp-search-input-${this.uniqueId}">
-      <span class="vscomp-search-clear">&times;</span>`;
+      <span class="vscomp-search-clear" role="button" ${ariaLabelSearchClearBtnTxt}>&times;</span>`;
     }
 
     const html = `<div class="vscomp-search-container">
@@ -436,7 +447,7 @@ export class VirtualSelect {
     this.$toggleAllCheckbox = this.$dropboxContainer.querySelector('.vscomp-toggle-all-checkbox');
 
     this.addEvent(this.$searchInput, 'input', 'onSearch');
-    this.addEvent(this.$searchClear, 'click', 'onSearchClear');
+    this.addEvent(this.$searchClear, 'click keydown', 'onSearchClear');
     this.addEvent(this.$toggleAllButton, 'click', 'onToggleAllOptions');
     this.addEvent(this.$dropboxContainerBottom, 'focus', 'onDropboxContainerTopOrBottomFocus');
     this.addEvent(this.$dropboxContainerTop, 'focus', 'onDropboxContainerTopOrBottomFocus');
@@ -447,7 +458,7 @@ export class VirtualSelect {
   addEvents() {
     this.addEvent(document, 'click', 'onDocumentClick');
     this.addEvent(this.$allWrappers, 'keydown', 'onKeyDown');
-    this.addEvent(this.$toggleButton, 'click', 'onToggleButtonClick');
+    this.addEvent(this.$toggleButton, 'click keydown', 'onToggleButtonPress');
     this.addEvent(this.$clearButton, 'click keydown', 'onClearButtonClick');
     this.addEvent(this.$dropboxContainer, 'click', 'onDropboxContainerClick');
     this.addEvent(this.$dropboxCloseButton, 'click', 'onDropboxCloseButtonClick');
@@ -482,7 +493,7 @@ export class VirtualSelect {
   removeEvents() {
     this.removeEvent(document, 'click', 'onDocumentClick');
     this.removeEvent(this.$allWrappers, 'keydown', 'onKeyDown');
-    this.removeEvent(this.$toggleButton, 'click', 'onToggleButtonClick');
+    this.removeEvent(this.$toggleButton, 'click keydown', 'onToggleButtonPress');
     this.removeEvent(this.$clearButton, 'click keydown', 'onClearButtonClick');
     this.removeEvent(this.$dropboxContainer, 'click', 'onDropboxContainerClick');
     this.removeEvent(this.$dropboxCloseButton, 'click', 'onDropboxCloseButtonClick');
@@ -522,7 +533,7 @@ export class VirtualSelect {
     const key = e.which || e.keyCode;
     const method = keyDownMethodMapping[key];
 
-    if (document.activeElement === this.$searchInput && (!e.shiftKey && key === 9)) {
+    if (document.activeElement === this.$searchInput && (!e.shiftKey && key === 9) && !this.multiple) {
       e.preventDefault();
       this.focusFirstVisibleOption();
     }
@@ -585,7 +596,14 @@ export class VirtualSelect {
     }
   }
 
-  onToggleButtonClick(e) {
+  onToggleButtonPress(e) {
+    e.stopPropagation();
+
+    const key = e.which || e.keyCode;
+    if (e.type === 'keydown' && key !== 13 && key !== 32) {
+      return;
+    }
+
     const $target = e.target;
 
     if ($target.closest('.vscomp-value-tag-clear-button')) {
@@ -662,9 +680,15 @@ export class VirtualSelect {
     this.setSearchValue(e.target.value, true);
   }
 
-  onSearchClear() {
-    this.setSearchValue('');
-    this.focusSearchInput();
+  onSearchClear(e) {
+    e.stopPropagation();
+
+    const key = e.which || e.keyCode;
+
+    if (key === 13 || key === 32) {
+      this.setSearchValue('');
+      this.focusSearchInput();
+    }
   }
 
   onToggleAllOptions() {
@@ -946,9 +970,10 @@ export class VirtualSelect {
     this.selectedLabelRenderer = options.selectedLabelRenderer;
     this.initialSelectedValue = options.selectedValue === 0 ? '0' : options.selectedValue;
     this.emptyValue = options.emptyValue;
-    this.ariaLabelledby = options.ariaLabelledby;
     this.ariaLabelText = options.ariaLabelText;
+    this.ariaLabelledby = options.ariaLabelledby;
     this.ariaLabelClearButtonText = options.ariaLabelClearButtonText;
+    this.ariaLabelSearchClearButtonText = options.ariaLabelSearchClearButtonText;
 
     this.maxWidth = options.maxWidth;
     this.searchDelay = options.searchDelay;
@@ -1000,6 +1025,7 @@ export class VirtualSelect {
       aliasKey: 'alias',
       ariaLabelText: 'Options list',
       ariaLabelClearButtonText: 'Clear button',
+      ariaLabelSearchClearButtonText: 'Clear search input',
       optionsCount: 5,
       noOfDisplayValues: 50,
       optionHeight: '40px',
@@ -1551,8 +1577,13 @@ export class VirtualSelect {
     this.toggleAllOptionsClass();
     this.setValueText();
 
-    DomUtils.toggleClass(this.$allWrappers, 'has-value', Utils.isNotEmpty(this.selectedValues));
+    const hasValue = Utils.isNotEmpty(this.selectedValues);
+
+    DomUtils.toggleClass(this.$allWrappers, 'has-value', hasValue);
     DomUtils.toggleClass(this.$allWrappers, 'max-value-selected', this.isMaxValuesSelected);
+
+    DomUtils.setAttr(this.$clearButton, 'tabindex', hasValue ? '0' : '-1');
+    DomUtils.setAria(this.$clearButton, 'hidden', hasValue === false);
 
     if (!disableValidation) {
       this.validate();
@@ -1604,10 +1635,16 @@ export class VirtualSelect {
           const valueTooltipForTags = Utils.willTextOverflow($valueText.parentElement, label)
             ? this.getTooltipAttrText(label, false, true) : '';
 
+          const clearButtonAriaText = `${label}, Remove option`;
+
           const valueTagHtml = `<span class="vscomp-value-tag" data-index="${d.index}" ${valueTooltipForTags}>
                   <span class="vscomp-value-tag-content">${label}</span>
-                  <span class="vscomp-value-tag-clear-button">
-                    <i class="vscomp-clear-icon"></i>
+                  <span 
+                    class="vscomp-value-tag-clear-button" 
+                    role="button" 
+                    aria-label="${clearButtonAriaText}" 
+                    tabindex="0">
+                      <i class="vscomp-clear-icon"></i>
                   </span>
                 </span>`;
           valueTooltip.push(valueTagHtml);
@@ -1701,6 +1738,9 @@ export class VirtualSelect {
     this.searchValueOriginal = value;
 
     DomUtils.toggleClass(this.$allWrappers, 'has-search-value', value);
+
+    DomUtils.setAttr(this.$searchClear, 'tabindex', value !== '' ? '0' : '-1');
+    DomUtils.setAria(this.$searchClear, 'hidden', value === '');
 
     this.afterSetSearchValue();
   }
@@ -2298,6 +2338,15 @@ export class VirtualSelect {
   openDropbox(isSilent) {
     this.isSilentOpen = isSilent;
 
+    DomUtils.setAttr(this.$dropboxWrapper, 'tabindex', '0');
+    DomUtils.setAria(this.$dropboxWrapper, 'hidden', false);
+
+    DomUtils.setAttr(this.$dropboxContainerTop, 'tabindex', '0');
+    DomUtils.setAria(this.$dropboxContainerTop, 'hidden', false);
+
+    DomUtils.setAttr(this.$dropboxContainerBottom, 'tabindex', '0');
+    DomUtils.setAria(this.$dropboxContainerBottom, 'hidden', false);
+
     if (isSilent) {
       DomUtils.setStyle(this.$dropboxContainer, 'display', 'inline-flex');
     } else {
@@ -2359,6 +2408,15 @@ export class VirtualSelect {
 
     if (this.dropboxPopover && !isSilent) {
       this.dropboxPopover.hide();
+
+      DomUtils.setAttr(this.$dropboxWrapper, 'tabindex', '-1');
+      DomUtils.setAria(this.$dropboxWrapper, 'hidden', true);
+
+      DomUtils.setAttr(this.$dropboxContainerTop, 'tabindex', '-1');
+      DomUtils.setAria(this.$dropboxContainerTop, 'hidden', true);
+
+      DomUtils.setAttr(this.$dropboxContainerBottom, 'tabindex', '-1');
+      DomUtils.setAria(this.$dropboxContainerBottom, 'hidden', true);
     } else {
       this.afterHidePopper();
     }
@@ -2383,6 +2441,15 @@ export class VirtualSelect {
     }
 
     this.$wrapper.focus();
+
+    DomUtils.setAttr(this.$dropboxWrapper, 'tabindex', '-1');
+    DomUtils.setAria(this.$dropboxWrapper, 'hidden', true);
+
+    DomUtils.setAttr(this.$dropboxContainerTop, 'tabindex', '-1');
+    DomUtils.setAria(this.$dropboxContainerTop, 'hidden', true);
+
+    DomUtils.setAttr(this.$dropboxContainerBottom, 'tabindex', '-1');
+    DomUtils.setAria(this.$dropboxContainerBottom, 'hidden', true);
   }
 
   moveSelectedOptionsFirst() {
