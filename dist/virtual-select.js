@@ -2067,7 +2067,9 @@ var VirtualSelect = /*#__PURE__*/function () {
           if (showValueAsTags) {
             // Will cause text overflow in runtime and if so,the tooltip information is prepared
             var valueTooltipForTags = Utils.willTextOverflow($valueText.parentElement, label) ? _this10.getTooltipAttrText(label, false, true) : '';
-            var clearButtonAriaText = "".concat(label, ", Remove option");
+
+            // replace is nedded to remove html tags from aria-label (ex: when there is an icon in the label)
+            var clearButtonAriaText = "".concat(label.replace(/<[^>]+>/ig, '').trim(), ", Remove option");
             var valueTagHtml = "<span class=\"vscomp-value-tag\" data-index=\"".concat(d.index, "\" ").concat(valueTooltipForTags, ">\n                  <span class=\"vscomp-value-tag-content\">").concat(label, "</span>\n                  <span \n                    class=\"vscomp-value-tag-clear-button\" \n                    role=\"button\" \n                    aria-label=\"").concat(clearButtonAriaText, "\" \n                    tabindex=\"0\">\n                      <i class=\"vscomp-clear-icon\"></i>\n                  </span>\n                </span>");
             valueTooltip.push(valueTagHtml);
           } else {
