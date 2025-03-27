@@ -1635,7 +1635,8 @@ export class VirtualSelect {
           const valueTooltipForTags = Utils.willTextOverflow($valueText.parentElement, label)
             ? this.getTooltipAttrText(label, false, true) : '';
 
-          const clearButtonAriaText = `${label}, Remove option`;
+          // replace is nedded to remove html tags from aria-label (ex: when there is an icon in the label)
+          const clearButtonAriaText = `${label.replace(/<[^>]+>/ig, '').trim()}, Remove option`;
 
           const valueTagHtml = `<span class="vscomp-value-tag" data-index="${d.index}" ${valueTooltipForTags}>
                   <span class="vscomp-value-tag-content">${label}</span>
