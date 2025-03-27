@@ -82,6 +82,7 @@ Update below properties to change display texts.
 | ------------------------------ | ------ | ------------------ | -------------------------------------------------------------------------------------------------------------- |
 | ariaLabelledby                 | String |                    | ID of the label element to use as a11y attribute aria-labelledby                                               |
 | ariaLabelText                  | String | Options list       | Option used to enhance accessibility when focusing on the dropdown wrapper making it more verbose              |
+| ariaLabelTagClearButtonText    | String | Clear option       | Option used to enhance accessibility when focusing on the clear tag option                                     |
 | ariaLabelSearchClearButtonText | String | Clear search input | ID of the label element to use as a11y attribute aria-labelledby                                               |
 | ariaLabelClearButtonText       | String | Clear button       | Option used to enhance accessibility when focusing on the dropdown clear button making it more verbose         |
 | placeholder                    | String | Select             | Text to show when no options selected                                                                          |

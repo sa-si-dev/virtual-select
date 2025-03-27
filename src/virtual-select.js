@@ -2454,17 +2454,16 @@ export class VirtualSelect {
   }
 
   moveSelectedOptionsFirst() {
+    if (!this.$optionsContainer.scrollTop || !this.selectedValues.length) {
+      this.setVisibleOptions();
+    }
+
     if (!this.showSelectedOptionsFirst) {
       return;
     }
 
     this.setSortedOptions();
-
-    if (!this.$optionsContainer.scrollTop || !this.selectedValues.length) {
-      this.setVisibleOptions();
-    } else {
-      this.scrollToTop();
-    }
+    this.scrollToTop();
   }
 
   toggleDropbox() {
