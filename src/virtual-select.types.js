@@ -80,6 +80,8 @@
  * @property {string} [maxWidth='250px'] Maximum width for the select element
  * @property {number} [updatePositionThrottle=100] Throttle time for updating dropbox position
  * on scroll event (in milliseconds)
+ * @property {number} [showDuration=300] Dropdown open animation time in milliseconds
+ * @property {number} [hideDuration=200] Dropdown close animation time in milliseconds
  *
  * @property {string} [placeholder=Select] Text to show when no options selected
  * @property {string} [noOptionsText='No options found'] Text to show when no options to show

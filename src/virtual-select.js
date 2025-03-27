@@ -174,7 +174,7 @@ export class VirtualSelect {
     }
 
     // eslint-disable-next-line no-trailing-spaces
-    const html = 
+    const html =
       `<div id="vscomp-ele-wrapper-${uniqueId}" class="vscomp-ele-wrapper ${wrapperClasses}" tabindex="0"
         role="combobox" aria-haspopup="listbox" aria-controls="vscomp-dropbox-container-${uniqueId}"
         aria-expanded="${isExpanded}" ${ariaLabelledbyText} ${ariaLabelText}>
@@ -240,7 +240,7 @@ export class VirtualSelect {
     }
 
     // eslint-disable-next-line no-trailing-spaces
-    const html = 
+    const html =
       `<div id="vscomp-dropbox-container-${this.uniqueId}" role="listbox" class="${dropboxContainerClasses}">
         <div class="vscomp-dropbox-container-top" aria-hidden="true" tabindex="-1">&nbsp;</div>
         <div class="${dropboxClasses}">
@@ -980,6 +980,9 @@ export class VirtualSelect {
     this.maxWidth = options.maxWidth;
     this.searchDelay = options.searchDelay;
 
+    this.showDuration = parseInt(options.showDuration);
+    this.hideDuration = parseInt(options.hideDuration);
+
     /** @type {string[]} */
     this.selectedValues = [];
     /** @type {virtualSelectOption[]} */
@@ -1063,6 +1066,8 @@ export class VirtualSelect {
       emptyValue: '',
       searchDelay: 300,
       focusSelectedOptionOnOpen: true,
+      showDuration: 300,
+      hideDuration: 200,
     };
 
     if (options.hasOptionDescription) {
@@ -2336,6 +2341,8 @@ export class VirtualSelect {
       disableManualAction: true,
       disableUpdatePosition: !this.hasDropboxWrapper,
       updatePositionThrottle: this.updatePositionThrottle,
+      showDuration: this.showDuration,
+      hideDuration: this.hideDuration,
       afterShow: this.afterShowPopper.bind(this),
       afterHide: this.afterHidePopper.bind(this),
     };
@@ -3190,9 +3197,11 @@ export class VirtualSelect {
     $ele.value = undefined;
     $ele.innerHTML = '';
 
+    /** Remove all event listeners to prevent memory leaks and ensure proper cleanup */
+    this.removeEvents();
+
     if (this.hasDropboxWrapper) {
       this.$dropboxWrapper.remove();
-      this.removeEvents();
     }
 
     if (this.dropboxPopover) {
