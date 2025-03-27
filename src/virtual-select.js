@@ -31,6 +31,7 @@ const dataProps = [
   'ariaLabelledby',
   'ariaLabelText',
   'ariaLabelClearButtonText',
+  'ariaLabelTagClearButtonText',
   'ariaLabelSearchClearButtonText',
   'autoSelectFirstOption',
   'clearButtonText',
@@ -973,6 +974,7 @@ export class VirtualSelect {
     this.ariaLabelText = options.ariaLabelText;
     this.ariaLabelledby = options.ariaLabelledby;
     this.ariaLabelClearButtonText = options.ariaLabelClearButtonText;
+    this.ariaLabelTagClearButtonText = options.ariaLabelTagClearButtonText;
     this.ariaLabelSearchClearButtonText = options.ariaLabelSearchClearButtonText;
 
     this.maxWidth = options.maxWidth;
@@ -1025,6 +1027,7 @@ export class VirtualSelect {
       aliasKey: 'alias',
       ariaLabelText: 'Options list',
       ariaLabelClearButtonText: 'Clear button',
+      ariaLabelTagClearButtonText: 'Remove option',
       ariaLabelSearchClearButtonText: 'Clear search input',
       optionsCount: 5,
       noOfDisplayValues: 50,
@@ -1636,14 +1639,18 @@ export class VirtualSelect {
             ? this.getTooltipAttrText(label, false, true) : '';
 
           // replace is nedded to remove html tags from aria-label (ex: when there is an icon in the label)
-          const clearButtonAriaText = `${label.replace(/<[^>]+>/ig, '').trim()}, Remove option`;
+          let ariaLabelClearBtnTxt = '';
+          if (this.ariaLabelTagClearButtonText) {
+            const stripHtmlLabel = label.replace(/<[^>]+>/ig, '').trim();
+            ariaLabelClearBtnTxt = `aria-label="${stripHtmlLabel}, ${this.ariaLabelTagClearButtonText}"`;
+          }
 
           const valueTagHtml = `<span class="vscomp-value-tag" data-index="${d.index}" ${valueTooltipForTags}>
                   <span class="vscomp-value-tag-content">${label}</span>
                   <span 
                     class="vscomp-value-tag-clear-button" 
                     role="button" 
-                    aria-label="${clearButtonAriaText}" 
+                    ${ariaLabelClearBtnTxt}
                     tabindex="0">
                       <i class="vscomp-clear-icon"></i>
                   </span>
