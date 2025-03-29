@@ -3,254 +3,42 @@
  * https://sa-si-dev.github.io/virtual-select
  * Licensed under MIT (https://github.com/sa-si-dev/virtual-select/blob/master/LICENSE)
  *//******/ (function() { // webpackBootstrap
-// This entry needs to be wrapped in an IIFE because it needs to be in strict mode.
-!function() {
+/******/ 	var __webpack_modules__ = ({
+
+/***/ "./src/utils/dom-utils.js":
+/*!********************************!*\
+  !*** ./src/utils/dom-utils.js ***!
+  \********************************/
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
+
 "use strict";
-
-// UNUSED EXPORTS: VirtualSelect
-
-;// ./src/utils/utils.js
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   DomUtils: function() { return /* binding */ DomUtils; }
+/* harmony export */ });
+/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./utils */ "./src/utils/utils.js");
+function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, _typeof(o); }
+function _slicedToArray(r, e) { return _arrayWithHoles(r) || _iterableToArrayLimit(r, e) || _unsupportedIterableToArray(r, e) || _nonIterableRest(); }
+function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+function _iterableToArrayLimit(r, l) { var t = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (null != t) { var e, n, i, u, a = [], f = !0, o = !1; try { if (i = (t = t.call(r)).next, 0 === l) { if (Object(t) !== t) return; f = !1; } else for (; !(f = (e = i.call(t)).done) && (a.push(e.value), a.length !== l); f = !0); } catch (r) { o = !0, n = r; } finally { try { if (!f && null != t["return"] && (u = t["return"](), Object(u) !== u)) return; } finally { if (o) throw n; } } return a; } }
+function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
 function _toConsumableArray(r) { return _arrayWithoutHoles(r) || _iterableToArray(r) || _unsupportedIterableToArray(r) || _nonIterableSpread(); }
 function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
 function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
 function _iterableToArray(r) { if ("undefined" != typeof Symbol && null != r[Symbol.iterator] || null != r["@@iterator"]) return Array.from(r); }
 function _arrayWithoutHoles(r) { if (Array.isArray(r)) return _arrayLikeToArray(r); }
 function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
-function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, _typeof(o); }
 function _classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
 function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o); } }
 function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
 function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == _typeof(i) ? i : i + ""; }
 function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != _typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
-var Utils = /*#__PURE__*/function () {
-  function Utils() {
-    _classCallCheck(this, Utils);
-  }
-  return _createClass(Utils, null, [{
-    key: "getString",
-    value:
-    /**
-     * @param {any} text
-     * @returns {string}
-     * @memberof Utils
-     */
-    function getString(text) {
-      return text || text === 0 ? text.toString() : '';
-    }
-
-    /**
-     * @param {any} value
-     * @param {boolean} defaultValue
-     * @returns {boolean}
-     * @memberof Utils
-     */
-  }, {
-    key: "convertToBoolean",
-    value: function convertToBoolean(value) {
-      var defaultValue = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
-      var result;
-      if (value === true || value === 'true') {
-        result = true;
-      } else if (value === false || value === 'false') {
-        result = false;
-      } else {
-        result = defaultValue;
-      }
-      return result;
-    }
-
-    /**
-     * @param {any} value
-     * @returns {boolean}
-     * @memberof Utils
-     */
-  }, {
-    key: "isEmpty",
-    value: function isEmpty(value) {
-      var result = false;
-      if (!value) {
-        result = true;
-      } else if (Array.isArray(value)) {
-        if (value.length === 0) {
-          result = true;
-        }
-      } else if (_typeof(value) === 'object' && Object.keys(value).length === 0) {
-        result = true;
-      }
-      return result;
-    }
-
-    /**
-     * @param {any} value
-     * @returns {boolean}
-     * @memberof Utils
-     */
-  }, {
-    key: "isNotEmpty",
-    value: function isNotEmpty(value) {
-      return !Utils.isEmpty(value);
-    }
-
-    /**
-     * @param {any[]} array
-     * @param {any} value
-     * @param {boolean} cloneArray
-     * @returns {any[]}
-     * @memberof Utils
-     */
-  }, {
-    key: "removeItemFromArray",
-    value: function removeItemFromArray(array, value) {
-      var cloneArray = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
-      if (!Array.isArray(array) || !array.length) {
-        return array;
-      }
-      var inputArr = cloneArray ? _toConsumableArray(array) : array;
-      var index = inputArr.indexOf(value);
-      if (index !== -1) {
-        inputArr.splice(index, 1);
-      }
-      return inputArr;
-    }
-
-    /**
-     * @param {any[]} array
-     * @returns {any[]}
-     * @memberof Utils
-     */
-  }, {
-    key: "removeArrayEmpty",
-    value: function removeArrayEmpty(array) {
-      if (!Array.isArray(array) || !array.length) {
-        return [];
-      }
-      return array.filter(function (d) {
-        return !!d;
-      });
-    }
-
-    /**
-     * @param {number} max
-     * @param {number} max
-     * @returns {number}
-     * @memberof Utils
-     */
-  }, {
-    key: "getRandomInt",
-    value: function getRandomInt(max) {
-      var min = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
-      var minN = Math.ceil(min);
-      var maxN = Math.floor(max);
-      return Math.floor(Math.random() * (maxN - minN - 1)) + minN;
-    }
-
-    /**
-     * @param {string} text
-     * @return {string}
-     * @memberof Utils
-     */
-  }, {
-    key: "regexEscape",
-    value: function regexEscape(text) {
-      var ESC_REGEX = /[-/\\^$*+?.()|[\]{}]/g;
-      return text.replace(ESC_REGEX, '\\$&');
-    }
-
-    /**
-     * @param {string} text
-     * @return {string}
-     * @memberof Utils
-     */
-  }, {
-    key: "normalizeString",
-    value: function normalizeString(text) {
-      var NON_WORD_REGEX = /[^\w]/g;
-      return text.normalize('NFD').replace(NON_WORD_REGEX, '');
-    }
-
-    /**
-     * @static
-     * @param {*} container
-     * @param {string} text
-     * @return {boolean}
-     * @memberof Utils
-     */
-  }, {
-    key: "willTextOverflow",
-    value: function willTextOverflow(container, text) {
-      var tempElement = document.createElement('div');
-      tempElement.style.position = 'absolute';
-      tempElement.style.visibility = 'hidden';
-      tempElement.style.whiteSpace = 'nowrap';
-      tempElement.style.fontSize = window.getComputedStyle(container).fontSize;
-      tempElement.style.fontFamily = window.getComputedStyle(container).fontFamily;
-      tempElement.textContent = text;
-      document.body.appendChild(tempElement);
-      var textWidth = tempElement.clientWidth;
-      document.body.removeChild(tempElement);
-      return textWidth > container.clientWidth;
-    }
-
-    /**
-     * @static
-     * @param {string} text
-     * @return {string}
-     * @memberof Utils
-     */
-  }, {
-    key: "replaceDoubleQuotesWithHTML",
-    value: function replaceDoubleQuotesWithHTML(text) {
-      return text.replace(/"/g, '&quot;');
-    }
-
-    /**
-     * @static
-     * @param {string} text
-     * @return {boolean}
-     * @memberof Utils
-     */
-  }, {
-    key: "containsHTML",
-    value: function containsHTML(text) {
-      return /<[a-z][\s\S]*>/i.test(text);
-    }
-
-    /**
-     * @static
-     * @param {string} text
-     * @return {boolean}
-     * @memberof Utils
-     */
-  }, {
-    key: "containsHTMLorJS",
-    value: function containsHTMLorJS(text) {
-      return /<([a-z]+)[\s\S]*?>|on\w+="[^"]*"/i.test(text);
-    }
-  }]);
-}();
-;// ./src/utils/dom-utils.js
-function dom_utils_typeof(o) { "@babel/helpers - typeof"; return dom_utils_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, dom_utils_typeof(o); }
-function _slicedToArray(r, e) { return _arrayWithHoles(r) || _iterableToArrayLimit(r, e) || dom_utils_unsupportedIterableToArray(r, e) || _nonIterableRest(); }
-function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
-function _iterableToArrayLimit(r, l) { var t = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (null != t) { var e, n, i, u, a = [], f = !0, o = !1; try { if (i = (t = t.call(r)).next, 0 === l) { if (Object(t) !== t) return; f = !1; } else for (; !(f = (e = i.call(t)).done) && (a.push(e.value), a.length !== l); f = !0); } catch (r) { o = !0, n = r; } finally { try { if (!f && null != t["return"] && (u = t["return"](), Object(u) !== u)) return; } finally { if (o) throw n; } } return a; } }
-function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
-function dom_utils_toConsumableArray(r) { return dom_utils_arrayWithoutHoles(r) || dom_utils_iterableToArray(r) || dom_utils_unsupportedIterableToArray(r) || dom_utils_nonIterableSpread(); }
-function dom_utils_nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
-function dom_utils_unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return dom_utils_arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? dom_utils_arrayLikeToArray(r, a) : void 0; } }
-function dom_utils_iterableToArray(r) { if ("undefined" != typeof Symbol && null != r[Symbol.iterator] || null != r["@@iterator"]) return Array.from(r); }
-function dom_utils_arrayWithoutHoles(r) { if (Array.isArray(r)) return dom_utils_arrayLikeToArray(r); }
-function dom_utils_arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
-function dom_utils_classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
-function dom_utils_defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, dom_utils_toPropertyKey(o.key), o); } }
-function dom_utils_createClass(e, r, t) { return r && dom_utils_defineProperties(e.prototype, r), t && dom_utils_defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
-function dom_utils_toPropertyKey(t) { var i = dom_utils_toPrimitive(t, "string"); return "symbol" == dom_utils_typeof(i) ? i : i + ""; }
-function dom_utils_toPrimitive(t, r) { if ("object" != dom_utils_typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != dom_utils_typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
 
 var DomUtils = /*#__PURE__*/function () {
   function DomUtils() {
-    dom_utils_classCallCheck(this, DomUtils);
+    _classCallCheck(this, DomUtils);
   }
-  return dom_utils_createClass(DomUtils, null, [{
+  return _createClass(DomUtils, null, [{
     key: "addClass",
     value:
     /**
@@ -264,7 +52,7 @@ var DomUtils = /*#__PURE__*/function () {
       var classNamesArr = classNames.split(' ');
       DomUtils.getElements($ele).forEach(function ($this) {
         var _$this$classList;
-        (_$this$classList = $this.classList).add.apply(_$this$classList, dom_utils_toConsumableArray(classNamesArr));
+        (_$this$classList = $this.classList).add.apply(_$this$classList, _toConsumableArray(classNamesArr));
       });
     }
 
@@ -281,7 +69,7 @@ var DomUtils = /*#__PURE__*/function () {
       var classNamesArr = classNames.split(' ');
       DomUtils.getElements($ele).forEach(function ($this) {
         var _$this$classList2;
-        (_$this$classList2 = $this.classList).remove.apply(_$this$classList2, dom_utils_toConsumableArray(classNamesArr));
+        (_$this$classList2 = $this.classList).remove.apply(_$this$classList2, _toConsumableArray(classNamesArr));
       });
     }
 
@@ -504,7 +292,7 @@ var DomUtils = /*#__PURE__*/function () {
       if (!$ele) {
         return;
       }
-      var eventsArray = Utils.removeArrayEmpty(events.split(' '));
+      var eventsArray = _utils__WEBPACK_IMPORTED_MODULE_0__.Utils.removeArrayEmpty(events.split(' '));
       eventsArray.forEach(function (event) {
         var $eleArray = DomUtils.getElements($ele);
         $eleArray.forEach(function ($this) {
@@ -610,26 +398,348 @@ var DomUtils = /*#__PURE__*/function () {
     }
   }]);
 }();
-;// ./src/virtual-select.js
+
+/***/ }),
+
+/***/ "./src/utils/index.js":
+/*!****************************!*\
+  !*** ./src/utils/index.js ***!
+  \****************************/
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   DomUtils: function() { return /* reexport safe */ _dom_utils__WEBPACK_IMPORTED_MODULE_1__.DomUtils; },
+/* harmony export */   Utils: function() { return /* reexport safe */ _utils__WEBPACK_IMPORTED_MODULE_0__.Utils; }
+/* harmony export */ });
+/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./utils */ "./src/utils/utils.js");
+/* harmony import */ var _dom_utils__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./dom-utils */ "./src/utils/dom-utils.js");
+
+
+
+/***/ }),
+
+/***/ "./src/utils/utils.js":
+/*!****************************!*\
+  !*** ./src/utils/utils.js ***!
+  \****************************/
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   Utils: function() { return /* binding */ Utils; }
+/* harmony export */ });
+function _toConsumableArray(r) { return _arrayWithoutHoles(r) || _iterableToArray(r) || _unsupportedIterableToArray(r) || _nonIterableSpread(); }
+function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
+function _iterableToArray(r) { if ("undefined" != typeof Symbol && null != r[Symbol.iterator] || null != r["@@iterator"]) return Array.from(r); }
+function _arrayWithoutHoles(r) { if (Array.isArray(r)) return _arrayLikeToArray(r); }
+function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
+function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, _typeof(o); }
+function _classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o); } }
+function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == _typeof(i) ? i : i + ""; }
+function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != _typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+var Utils = /*#__PURE__*/function () {
+  function Utils() {
+    _classCallCheck(this, Utils);
+  }
+  return _createClass(Utils, null, [{
+    key: "getString",
+    value:
+    /**
+     * @param {any} text
+     * @returns {string}
+     * @memberof Utils
+     */
+    function getString(text) {
+      return text || text === 0 ? text.toString() : '';
+    }
+
+    /**
+     * @param {any} value
+     * @param {boolean} defaultValue
+     * @returns {boolean}
+     * @memberof Utils
+     */
+  }, {
+    key: "convertToBoolean",
+    value: function convertToBoolean(value) {
+      var defaultValue = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+      var result;
+      if (value === true || value === 'true') {
+        result = true;
+      } else if (value === false || value === 'false') {
+        result = false;
+      } else {
+        result = defaultValue;
+      }
+      return result;
+    }
+
+    /**
+     * @param {any} value
+     * @returns {boolean}
+     * @memberof Utils
+     */
+  }, {
+    key: "isEmpty",
+    value: function isEmpty(value) {
+      var result = false;
+      if (!value) {
+        result = true;
+      } else if (Array.isArray(value)) {
+        if (value.length === 0) {
+          result = true;
+        }
+      } else if (_typeof(value) === 'object' && Object.keys(value).length === 0) {
+        result = true;
+      }
+      return result;
+    }
+
+    /**
+     * @param {any} value
+     * @returns {boolean}
+     * @memberof Utils
+     */
+  }, {
+    key: "isNotEmpty",
+    value: function isNotEmpty(value) {
+      return !Utils.isEmpty(value);
+    }
+
+    /**
+     * @param {any[]} array
+     * @param {any} value
+     * @param {boolean} cloneArray
+     * @returns {any[]}
+     * @memberof Utils
+     */
+  }, {
+    key: "removeItemFromArray",
+    value: function removeItemFromArray(array, value) {
+      var cloneArray = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
+      if (!Array.isArray(array) || !array.length) {
+        return array;
+      }
+      var inputArr = cloneArray ? _toConsumableArray(array) : array;
+      var index = inputArr.indexOf(value);
+      if (index !== -1) {
+        inputArr.splice(index, 1);
+      }
+      return inputArr;
+    }
+
+    /**
+     * @param {any[]} array
+     * @returns {any[]}
+     * @memberof Utils
+     */
+  }, {
+    key: "removeArrayEmpty",
+    value: function removeArrayEmpty(array) {
+      if (!Array.isArray(array) || !array.length) {
+        return [];
+      }
+      return array.filter(function (d) {
+        return !!d;
+      });
+    }
+
+    /**
+     * @param {number} max
+     * @param {number} max
+     * @returns {number}
+     * @memberof Utils
+     */
+  }, {
+    key: "getRandomInt",
+    value: function getRandomInt(max) {
+      var min = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
+      var minN = Math.ceil(min);
+      var maxN = Math.floor(max);
+      return Math.floor(Math.random() * (maxN - minN - 1)) + minN;
+    }
+
+    /**
+     * @param {string} text
+     * @return {string}
+     * @memberof Utils
+     */
+  }, {
+    key: "regexEscape",
+    value: function regexEscape(text) {
+      var ESC_REGEX = /[-/\\^$*+?.()|[\]{}]/g;
+      return text.replace(ESC_REGEX, '\\$&');
+    }
+
+    /**
+     * @param {string} text
+     * @return {string}
+     * @memberof Utils
+     */
+  }, {
+    key: "normalizeString",
+    value: function normalizeString(text) {
+      var NON_WORD_REGEX = /[^\w]/g;
+      return text.normalize('NFD').replace(NON_WORD_REGEX, '');
+    }
+
+    /**
+     * @static
+     * @param {*} container
+     * @param {string} text
+     * @return {boolean}
+     * @memberof Utils
+     */
+  }, {
+    key: "willTextOverflow",
+    value: function willTextOverflow(container, text) {
+      var tempElement = document.createElement('div');
+      tempElement.style.position = 'absolute';
+      tempElement.style.visibility = 'hidden';
+      tempElement.style.whiteSpace = 'nowrap';
+      tempElement.style.fontSize = window.getComputedStyle(container).fontSize;
+      tempElement.style.fontFamily = window.getComputedStyle(container).fontFamily;
+      tempElement.textContent = text;
+      document.body.appendChild(tempElement);
+      var textWidth = tempElement.clientWidth;
+      document.body.removeChild(tempElement);
+      return textWidth > container.clientWidth;
+    }
+
+    /**
+     * @static
+     * @param {string} text
+     * @return {string}
+     * @memberof Utils
+     */
+  }, {
+    key: "replaceDoubleQuotesWithHTML",
+    value: function replaceDoubleQuotesWithHTML(text) {
+      return text.replace(/"/g, '&quot;');
+    }
+
+    /**
+     * @static
+     * @param {string} text
+     * @return {boolean}
+     * @memberof Utils
+     */
+  }, {
+    key: "containsHTML",
+    value: function containsHTML(text) {
+      return /<[a-z][\s\S]*>/i.test(text);
+    }
+
+    /**
+     * @static
+     * @param {string} text
+     * @return {boolean}
+     * @memberof Utils
+     */
+  }, {
+    key: "containsHTMLorJS",
+    value: function containsHTMLorJS(text) {
+      return /<([a-z]+)[\s\S]*?>|on\w+="[^"]*"/i.test(text);
+    }
+  }]);
+}();
+
+/***/ })
+
+/******/ 	});
+/************************************************************************/
+/******/ 	// The module cache
+/******/ 	var __webpack_module_cache__ = {};
+/******/ 	
+/******/ 	// The require function
+/******/ 	function __webpack_require__(moduleId) {
+/******/ 		// Check if module is in cache
+/******/ 		var cachedModule = __webpack_module_cache__[moduleId];
+/******/ 		if (cachedModule !== undefined) {
+/******/ 			return cachedModule.exports;
+/******/ 		}
+/******/ 		// Create a new module (and put it into the cache)
+/******/ 		var module = __webpack_module_cache__[moduleId] = {
+/******/ 			// no module.id needed
+/******/ 			// no module.loaded needed
+/******/ 			exports: {}
+/******/ 		};
+/******/ 	
+/******/ 		// Execute the module function
+/******/ 		__webpack_modules__[moduleId](module, module.exports, __webpack_require__);
+/******/ 	
+/******/ 		// Return the exports of the module
+/******/ 		return module.exports;
+/******/ 	}
+/******/ 	
+/************************************************************************/
+/******/ 	/* webpack/runtime/define property getters */
+/******/ 	!function() {
+/******/ 		// define getter functions for harmony exports
+/******/ 		__webpack_require__.d = function(exports, definition) {
+/******/ 			for(var key in definition) {
+/******/ 				if(__webpack_require__.o(definition, key) && !__webpack_require__.o(exports, key)) {
+/******/ 					Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
+/******/ 				}
+/******/ 			}
+/******/ 		};
+/******/ 	}();
+/******/ 	
+/******/ 	/* webpack/runtime/hasOwnProperty shorthand */
+/******/ 	!function() {
+/******/ 		__webpack_require__.o = function(obj, prop) { return Object.prototype.hasOwnProperty.call(obj, prop); }
+/******/ 	}();
+/******/ 	
+/******/ 	/* webpack/runtime/make namespace object */
+/******/ 	!function() {
+/******/ 		// define __esModule on exports
+/******/ 		__webpack_require__.r = function(exports) {
+/******/ 			if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
+/******/ 				Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
+/******/ 			}
+/******/ 			Object.defineProperty(exports, '__esModule', { value: true });
+/******/ 		};
+/******/ 	}();
+/******/ 	
+/************************************************************************/
+var __webpack_exports__ = {};
+// This entry needs to be wrapped in an IIFE because it needs to be in strict mode.
+!function() {
+"use strict";
+var __webpack_exports__ = {};
+/*!*******************************!*\
+  !*** ./src/virtual-select.js ***!
+  \*******************************/
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   VirtualSelect: function() { return /* binding */ VirtualSelect; }
+/* harmony export */ });
+/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./utils */ "./src/utils/index.js");
 function ownKeys(e, r) { var t = Object.keys(e); if (Object.getOwnPropertySymbols) { var o = Object.getOwnPropertySymbols(e); r && (o = o.filter(function (r) { return Object.getOwnPropertyDescriptor(e, r).enumerable; })), t.push.apply(t, o); } return t; }
 function _objectSpread(e) { for (var r = 1; r < arguments.length; r++) { var t = null != arguments[r] ? arguments[r] : {}; r % 2 ? ownKeys(Object(t), !0).forEach(function (r) { _defineProperty(e, r, t[r]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys(Object(t)).forEach(function (r) { Object.defineProperty(e, r, Object.getOwnPropertyDescriptor(t, r)); }); } return e; }
-function _defineProperty(e, r, t) { return (r = virtual_select_toPropertyKey(r)) in e ? Object.defineProperty(e, r, { value: t, enumerable: !0, configurable: !0, writable: !0 }) : e[r] = t, e; }
-function virtual_select_typeof(o) { "@babel/helpers - typeof"; return virtual_select_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, virtual_select_typeof(o); }
-function virtual_select_slicedToArray(r, e) { return virtual_select_arrayWithHoles(r) || virtual_select_iterableToArrayLimit(r, e) || virtual_select_unsupportedIterableToArray(r, e) || virtual_select_nonIterableRest(); }
-function virtual_select_nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
-function virtual_select_iterableToArrayLimit(r, l) { var t = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (null != t) { var e, n, i, u, a = [], f = !0, o = !1; try { if (i = (t = t.call(r)).next, 0 === l) { if (Object(t) !== t) return; f = !1; } else for (; !(f = (e = i.call(t)).done) && (a.push(e.value), a.length !== l); f = !0); } catch (r) { o = !0, n = r; } finally { try { if (!f && null != t["return"] && (u = t["return"](), Object(u) !== u)) return; } finally { if (o) throw n; } } return a; } }
-function virtual_select_arrayWithHoles(r) { if (Array.isArray(r)) return r; }
-function virtual_select_toConsumableArray(r) { return virtual_select_arrayWithoutHoles(r) || virtual_select_iterableToArray(r) || virtual_select_unsupportedIterableToArray(r) || virtual_select_nonIterableSpread(); }
-function virtual_select_nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
-function virtual_select_unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return virtual_select_arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? virtual_select_arrayLikeToArray(r, a) : void 0; } }
-function virtual_select_iterableToArray(r) { if ("undefined" != typeof Symbol && null != r[Symbol.iterator] || null != r["@@iterator"]) return Array.from(r); }
-function virtual_select_arrayWithoutHoles(r) { if (Array.isArray(r)) return virtual_select_arrayLikeToArray(r); }
-function virtual_select_arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
-function virtual_select_classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
-function virtual_select_defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, virtual_select_toPropertyKey(o.key), o); } }
-function virtual_select_createClass(e, r, t) { return r && virtual_select_defineProperties(e.prototype, r), t && virtual_select_defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
-function virtual_select_toPropertyKey(t) { var i = virtual_select_toPrimitive(t, "string"); return "symbol" == virtual_select_typeof(i) ? i : i + ""; }
-function virtual_select_toPrimitive(t, r) { if ("object" != virtual_select_typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != virtual_select_typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+function _defineProperty(e, r, t) { return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, { value: t, enumerable: !0, configurable: !0, writable: !0 }) : e[r] = t, e; }
+function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, _typeof(o); }
+function _slicedToArray(r, e) { return _arrayWithHoles(r) || _iterableToArrayLimit(r, e) || _unsupportedIterableToArray(r, e) || _nonIterableRest(); }
+function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+function _iterableToArrayLimit(r, l) { var t = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (null != t) { var e, n, i, u, a = [], f = !0, o = !1; try { if (i = (t = t.call(r)).next, 0 === l) { if (Object(t) !== t) return; f = !1; } else for (; !(f = (e = i.call(t)).done) && (a.push(e.value), a.length !== l); f = !0); } catch (r) { o = !0, n = r; } finally { try { if (!f && null != t["return"] && (u = t["return"](), Object(u) !== u)) return; } finally { if (o) throw n; } } return a; } }
+function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
+function _toConsumableArray(r) { return _arrayWithoutHoles(r) || _iterableToArray(r) || _unsupportedIterableToArray(r) || _nonIterableSpread(); }
+function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
+function _iterableToArray(r) { if ("undefined" != typeof Symbol && null != r[Symbol.iterator] || null != r["@@iterator"]) return Array.from(r); }
+function _arrayWithoutHoles(r) { if (Array.isArray(r)) return _arrayLikeToArray(r); }
+function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
+function _classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o); } }
+function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == _typeof(i) ? i : i + ""; }
+function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != _typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
 /** cSpell:ignore nocheck, Labelledby, vscomp, tabindex, combobox, haspopup, listbox, activedescendant */
 /* eslint-disable class-methods-use-this */
 // @ts-nocheck
@@ -655,7 +765,7 @@ var VirtualSelect = /*#__PURE__*/function () {
    * @param {virtualSelectOptions} options
    */
   function VirtualSelect(options) {
-    virtual_select_classCallCheck(this, VirtualSelect);
+    _classCallCheck(this, VirtualSelect);
     try {
       this.createSecureTextElements();
       this.setProps(options);
@@ -671,7 +781,7 @@ var VirtualSelect = /*#__PURE__*/function () {
   }
 
   /** render methods - start */
-  return virtual_select_createClass(VirtualSelect, [{
+  return _createClass(VirtualSelect, [{
     key: "render",
     value: function render() {
       if (!this.$ele) {
@@ -733,7 +843,7 @@ var VirtualSelect = /*#__PURE__*/function () {
       if (this.hasDropboxWrapper) {
         this.$allWrappers = [this.$wrapper, this.$dropboxWrapper];
         this.$dropboxContainer = this.$dropboxWrapper.querySelector('.vscomp-dropbox-container');
-        DomUtils.addClass(this.$dropboxContainer, 'pop-comp-wrapper');
+        _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.addClass(this.$dropboxContainer, 'pop-comp-wrapper');
       } else {
         this.$allWrappers = [this.$wrapper];
         this.$dropboxContainer = this.$wrapper.querySelector('.vscomp-dropbox-container');
@@ -776,10 +886,10 @@ var VirtualSelect = /*#__PURE__*/function () {
         this.hasDropboxWrapper = true;
         $dropboxWrapper.innerHTML = html;
         $wrapper.appendChild($dropboxWrapper);
-        DomUtils.addClass($dropboxWrapper, "vscomp-dropbox-wrapper ".concat(wrapperClasses));
+        _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.addClass($dropboxWrapper, "vscomp-dropbox-wrapper ".concat(wrapperClasses));
         if (!this.keepAlwaysOpen) {
-          DomUtils.setAttr($dropboxWrapper, 'tabindex', '-1');
-          DomUtils.setAria($dropboxWrapper, 'hidden', true);
+          _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.setAttr($dropboxWrapper, 'tabindex', '-1');
+          _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.setAria($dropboxWrapper, 'hidden', true);
         }
         return '';
       }
@@ -801,10 +911,10 @@ var VirtualSelect = /*#__PURE__*/function () {
         uniqueId = this.uniqueId,
         searchGroup = this.searchGroup;
       var hasLabelRenderer = typeof labelRenderer === 'function';
-      var convertToBoolean = Utils.convertToBoolean;
+      var convertToBoolean = _utils__WEBPACK_IMPORTED_MODULE_0__.Utils.convertToBoolean;
       var groupName = '';
       if (markSearchResults) {
-        searchRegex = new RegExp("(".concat(Utils.regexEscape(this.searchValue), ")(?!([^<]+)?>)"), 'gi');
+        searchRegex = new RegExp("(".concat(_utils__WEBPACK_IMPORTED_MODULE_0__.Utils.regexEscape(this.searchValue), ")(?!([^<]+)?>)"), 'gi');
       }
       if (this.multiple) {
         checkboxHtml = '<span class="checkbox-icon"></span>';
@@ -932,7 +1042,7 @@ var VirtualSelect = /*#__PURE__*/function () {
       if (!$ele) {
         return;
       }
-      var eventsArray = Utils.removeArrayEmpty(events.split(' '));
+      var eventsArray = _utils__WEBPACK_IMPORTED_MODULE_0__.Utils.removeArrayEmpty(events.split(' '));
       eventsArray.forEach(function (event) {
         var eventsKey = "".concat(method, "-").concat(event);
         var callback = _this2.events[eventsKey];
@@ -940,7 +1050,7 @@ var VirtualSelect = /*#__PURE__*/function () {
           callback = _this2[method].bind(_this2);
           _this2.events[eventsKey] = callback;
         }
-        DomUtils.addEvent($ele, event, callback);
+        _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.addEvent($ele, event, callback);
       });
     }
 
@@ -967,12 +1077,12 @@ var VirtualSelect = /*#__PURE__*/function () {
       if (!$ele) {
         return;
       }
-      var eventsArray = Utils.removeArrayEmpty(events.split(' '));
+      var eventsArray = _utils__WEBPACK_IMPORTED_MODULE_0__.Utils.removeArrayEmpty(events.split(' '));
       eventsArray.forEach(function (event) {
         var eventsKey = "".concat(method, "-").concat(event);
         var callback = _this3.events[eventsKey];
         if (callback) {
-          DomUtils.removeEvent($ele, event, callback);
+          _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.removeEvent($ele, event, callback);
         }
       });
     }
@@ -1088,8 +1198,8 @@ var VirtualSelect = /*#__PURE__*/function () {
     key: "onOptionsClick",
     value: function onOptionsClick(e) {
       var $option = e.target.closest('.vscomp-option');
-      if ($option && !DomUtils.hasClass($option, 'disabled')) {
-        if (DomUtils.hasClass($option, 'group-title')) {
+      if ($option && !_utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.hasClass($option, 'disabled')) {
+        if (_utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.hasClass($option, 'group-title')) {
           this.onGroupTitleClick($option);
         } else {
           this.selectOption($option, {
@@ -1104,7 +1214,7 @@ var VirtualSelect = /*#__PURE__*/function () {
       if (!$ele || !this.multiple || this.disableOptionGroupCheckbox) {
         return;
       }
-      var isAdding = !DomUtils.hasClass($ele, 'selected');
+      var isAdding = !_utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.hasClass($ele, 'selected');
       this.toggleGroupTitleCheckbox($ele, isAdding);
       this.toggleGroupOptions($ele, isAdding);
     }
@@ -1125,7 +1235,7 @@ var VirtualSelect = /*#__PURE__*/function () {
     value: function onOptionsMouseOver(e) {
       var $ele = e.target.closest('.vscomp-option');
       if ($ele && this.isOpened()) {
-        if (DomUtils.hasClass($ele, 'disabled') || DomUtils.hasClass($ele, 'group-title')) {
+        if (_utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.hasClass($ele, 'disabled') || _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.hasClass($ele, 'group-title')) {
           this.removeOptionFocus();
         } else {
           this.focusOption({
@@ -1185,12 +1295,12 @@ var VirtualSelect = /*#__PURE__*/function () {
         var isRemoved = false;
         mutations.forEach(function (mutation) {
           if (!isAdded) {
-            isAdded = virtual_select_toConsumableArray(mutation.addedNodes).some(function ($ele) {
+            isAdded = _toConsumableArray(mutation.addedNodes).some(function ($ele) {
               return !!($ele === $vscompEle || $ele.contains($vscompEle));
             });
           }
           if (!isRemoved) {
-            isRemoved = virtual_select_toConsumableArray(mutation.removedNodes).some(function ($ele) {
+            isRemoved = _toConsumableArray(mutation.removedNodes).some(function ($ele) {
               return !!($ele === $vscompEle || $ele.contains($vscompEle));
             });
           }
@@ -1239,7 +1349,7 @@ var VirtualSelect = /*#__PURE__*/function () {
   }, {
     key: "afterRenderWrapper",
     value: function afterRenderWrapper() {
-      DomUtils.addClass(this.$ele, 'vscomp-ele');
+      _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.addClass(this.$ele, 'vscomp-ele');
       this.renderSearch();
       this.setEleStyles();
       this.setDropboxStyles();
@@ -1273,28 +1383,28 @@ var VirtualSelect = /*#__PURE__*/function () {
       var hasNoOptions = !this.options.length && !this.hasServerSearch;
       var hasNoSearchResults = !hasNoOptions && !visibleOptions.length;
       if (!this.allowNewOption || this.hasServerSearch || this.showOptionsOnlyOnSearch) {
-        DomUtils.toggleClass(this.$allWrappers, 'has-no-search-results', hasNoSearchResults);
+        _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.toggleClass(this.$allWrappers, 'has-no-search-results', hasNoSearchResults);
         if (hasNoSearchResults) {
-          DomUtils.setAttr(this.$noSearchResults, 'tabindex', '0');
-          DomUtils.setAttr(this.$noSearchResults, 'aria-hidden', 'false');
+          _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.setAttr(this.$noSearchResults, 'tabindex', '0');
+          _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.setAttr(this.$noSearchResults, 'aria-hidden', 'false');
         } else {
-          DomUtils.setAttr(this.$noSearchResults, 'tabindex', '-1');
-          DomUtils.setAttr(this.$noSearchResults, 'aria-hidden', 'true');
+          _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.setAttr(this.$noSearchResults, 'tabindex', '-1');
+          _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.setAttr(this.$noSearchResults, 'aria-hidden', 'true');
         }
       }
-      DomUtils.toggleClass(this.$allWrappers, 'has-no-options', hasNoOptions);
+      _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.toggleClass(this.$allWrappers, 'has-no-options', hasNoOptions);
       if (hasNoOptions) {
-        DomUtils.setAttr(this.$noOptions, 'tabindex', '0');
-        DomUtils.setAttr(this.$noOptions, 'aria-hidden', 'false');
+        _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.setAttr(this.$noOptions, 'tabindex', '0');
+        _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.setAttr(this.$noOptions, 'aria-hidden', 'false');
       } else {
-        DomUtils.setAttr(this.$noOptions, 'tabindex', '-1');
-        DomUtils.setAttr(this.$noOptions, 'aria-hidden', 'true');
+        _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.setAttr(this.$noOptions, 'tabindex', '-1');
+        _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.setAttr(this.$noOptions, 'aria-hidden', 'true');
       }
       this.setOptionAttr();
       this.setOptionsPosition();
       this.setOptionsTooltip();
       if (document.activeElement !== this.$searchInput) {
-        var focusedOption = DomUtils.getElementsBySelector('.focused', this.$dropboxContainer)[0];
+        var focusedOption = _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.getElementsBySelector('.focused', this.$dropboxContainer)[0];
         if (focusedOption !== undefined) {
           focusedOption.focus();
         }
@@ -1367,7 +1477,7 @@ var VirtualSelect = /*#__PURE__*/function () {
     value: function setProps(params) {
       var options = this.setDefaultProps(params);
       this.setPropsFromElementAttr(options);
-      var convertToBoolean = Utils.convertToBoolean;
+      var convertToBoolean = _utils__WEBPACK_IMPORTED_MODULE_0__.Utils.convertToBoolean;
       this.$ele = options.ele;
       this.dropboxWrapper = options.dropboxWrapper;
       this.valueKey = options.valueKey;
@@ -1648,7 +1758,7 @@ var VirtualSelect = /*#__PURE__*/function () {
       } else {
         /** taking first value for single select */
         var _validValues = validValues;
-        var _validValues2 = virtual_select_slicedToArray(_validValues, 1);
+        var _validValues2 = _slicedToArray(_validValues, 1);
         validValues = _validValues2[0];
       }
       this.beforeValueSet();
@@ -1801,8 +1911,8 @@ var VirtualSelect = /*#__PURE__*/function () {
         descriptionKey = this.descriptionKey,
         aliasKey = this.aliasKey,
         hasOptionDescription = this.hasOptionDescription;
-      var getString = Utils.getString,
-        convertToBoolean = Utils.convertToBoolean;
+      var getString = _utils__WEBPACK_IMPORTED_MODULE_0__.Utils.getString,
+        convertToBoolean = _utils__WEBPACK_IMPORTED_MODULE_0__.Utils.convertToBoolean;
       var secureText = this.secureText.bind(this);
       var getAlias = this.getAlias.bind(this);
       var index = 0;
@@ -1813,7 +1923,7 @@ var VirtualSelect = /*#__PURE__*/function () {
         disabledOptionsMapping[d] = true;
       });
       var _prepareOption = function prepareOption(d) {
-        if (virtual_select_typeof(d) !== 'object') {
+        if (_typeof(d) !== 'object') {
           // eslint-disable-next-line no-param-reassign
           d = _defineProperty(_defineProperty({}, valueKey, d), labelKey, d);
         }
@@ -1825,7 +1935,7 @@ var VirtualSelect = /*#__PURE__*/function () {
           index: index,
           value: value,
           label: label,
-          labelNormalized: _this7.searchNormalize ? Utils.normalizeString(label).toLowerCase() : label.toLowerCase(),
+          labelNormalized: _this7.searchNormalize ? _utils__WEBPACK_IMPORTED_MODULE_0__.Utils.normalizeString(label).toLowerCase() : label.toLowerCase(),
           alias: getAlias(d[aliasKey]),
           isVisible: convertToBoolean(d.isVisible, true),
           isNew: d.isNew || false,
@@ -1924,7 +2034,7 @@ var VirtualSelect = /*#__PURE__*/function () {
         this.updatePosition();
       }
       this.setVisibleOptionsCount();
-      DomUtils.removeClass(this.$allWrappers, 'server-searching');
+      _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.removeClass(this.$allWrappers, 'server-searching');
     }
   }, {
     key: "setSelectedOptions",
@@ -1936,7 +2046,7 @@ var VirtualSelect = /*#__PURE__*/function () {
   }, {
     key: "setSortedOptions",
     value: function setSortedOptions() {
-      var sortedOptions = virtual_select_toConsumableArray(this.options);
+      var sortedOptions = _toConsumableArray(this.options);
       if (this.showSelectedOptionsFirst && this.selectedValues.length) {
         if (this.hasOptionGroup) {
           sortedOptions = this.sortOptionsGroup(sortedOptions);
@@ -1949,7 +2059,7 @@ var VirtualSelect = /*#__PURE__*/function () {
   }, {
     key: "setVisibleOptions",
     value: function setVisibleOptions() {
-      var visibleOptions = virtual_select_toConsumableArray(this.sortedOptions);
+      var visibleOptions = _toConsumableArray(this.sortedOptions);
       var maxOptionsToShow = this.optionsCount * 2;
       var startIndex = this.getVisibleStartIndex();
       var newOption = this.getNewOption();
@@ -1970,7 +2080,7 @@ var VirtualSelect = /*#__PURE__*/function () {
         return inView;
       });
       if (newOption) {
-        visibleOptions = [newOption].concat(virtual_select_toConsumableArray(visibleOptions));
+        visibleOptions = [newOption].concat(_toConsumableArray(visibleOptions));
       }
       this.visibleOptions = visibleOptions;
       // update number of visible options
@@ -1983,7 +2093,7 @@ var VirtualSelect = /*#__PURE__*/function () {
       // We use the parseInt to fix a Chrome issue when dealing with decimal pixels in translate3d
       var top = parseInt((startIndex || this.getVisibleStartIndex()) * this.optionHeight);
       this.$options.style.transform = "translate3d(0, ".concat(top, "px, 0)");
-      DomUtils.setData(this.$options, 'top', top);
+      _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.setData(this.$options, 'top', top);
     }
   }, {
     key: "setOptionsTooltip",
@@ -1993,9 +2103,9 @@ var VirtualSelect = /*#__PURE__*/function () {
       var hasOptionDescription = this.hasOptionDescription;
       visibleOptions.forEach(function (d) {
         var $optionEle = _this9.$dropboxContainer.querySelector(".vscomp-option[data-index=\"".concat(d.index, "\"]"));
-        DomUtils.setData($optionEle.querySelector('.vscomp-option-text'), 'tooltip', d.label);
+        _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.setData($optionEle.querySelector('.vscomp-option-text'), 'tooltip', d.label);
         if (hasOptionDescription) {
-          DomUtils.setData($optionEle.querySelector('.vscomp-option-description'), 'tooltip', d.description);
+          _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.setData($optionEle.querySelector('.vscomp-option-description'), 'tooltip', d.description);
         }
       });
     }
@@ -2011,7 +2121,7 @@ var VirtualSelect = /*#__PURE__*/function () {
       if (!isValidValue) {
         this.selectedValues = [];
       } else if (Array.isArray(value)) {
-        this.selectedValues = virtual_select_toConsumableArray(value);
+        this.selectedValues = _toConsumableArray(value);
       } else {
         this.selectedValues = [value];
       }
@@ -2021,16 +2131,16 @@ var VirtualSelect = /*#__PURE__*/function () {
       this.isMaxValuesSelected = !!(this.maxValues && this.maxValues <= this.selectedValues.length);
       this.toggleAllOptionsClass();
       this.setValueText();
-      var hasValue = Utils.isNotEmpty(this.selectedValues);
-      DomUtils.toggleClass(this.$allWrappers, 'has-value', hasValue);
-      DomUtils.toggleClass(this.$allWrappers, 'max-value-selected', this.isMaxValuesSelected);
-      DomUtils.setAttr(this.$clearButton, 'tabindex', hasValue ? '0' : '-1');
-      DomUtils.setAria(this.$clearButton, 'hidden', hasValue === false);
+      var hasValue = _utils__WEBPACK_IMPORTED_MODULE_0__.Utils.isNotEmpty(this.selectedValues);
+      _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.toggleClass(this.$allWrappers, 'has-value', hasValue);
+      _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.toggleClass(this.$allWrappers, 'max-value-selected', this.isMaxValuesSelected);
+      _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.setAttr(this.$clearButton, 'tabindex', hasValue ? '0' : '-1');
+      _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.setAria(this.$clearButton, 'hidden', hasValue === false);
       if (!disableValidation) {
         this.validate();
       }
       if (!disableEvent) {
-        DomUtils.dispatchEvent(this.$ele, 'change', true);
+        _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.dispatchEvent(this.$ele, 'change', true);
       }
     }
   }, {
@@ -2072,7 +2182,7 @@ var VirtualSelect = /*#__PURE__*/function () {
           selectedValuesCount += 1;
           if (showValueAsTags) {
             // Will cause text overflow in runtime and if so,the tooltip information is prepared
-            var valueTooltipForTags = Utils.willTextOverflow($valueText.parentElement, label) ? _this10.getTooltipAttrText(label, false, true) : '';
+            var valueTooltipForTags = _utils__WEBPACK_IMPORTED_MODULE_0__.Utils.willTextOverflow($valueText.parentElement, label) ? _this10.getTooltipAttrText(label, false, true) : '';
 
             // replace is nedded to remove html tags from aria-label (ex: when there is an icon in the label)
             var ariaLabelClearBtnTxt = '';
@@ -2098,7 +2208,7 @@ var VirtualSelect = /*#__PURE__*/function () {
           $valueText.innerHTML = aggregatedValueText;
           if (multiple) {
             var maxValues = this.maxValues;
-            var showSelectedCount = this.alwaysShowSelectedOptionsCount || DomUtils.hasEllipsis($valueText);
+            var showSelectedCount = this.alwaysShowSelectedOptionsCount || _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.hasEllipsis($valueText);
             if (showSelectedCount || maxValues || showValueAsTags) {
               var countText = "<span class=\"vscomp-selected-value-count\">".concat(selectedLength, "</span>");
               if (maxValues) {
@@ -2131,11 +2241,11 @@ var VirtualSelect = /*#__PURE__*/function () {
         tooltipText = valueTooltip.join(', ');
       }
       if (!showValueAsTags) {
-        DomUtils.setData($valueText, 'tooltip', tooltipText);
+        _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.setData($valueText, 'tooltip', tooltipText);
       }
       if (multiple) {
         if (!showValueAsTags) {
-          DomUtils.setData($valueText, 'tooltipEllipsisOnly', selectedLength === 0);
+          _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.setData($valueText, 'tooltipEllipsisOnly', selectedLength === 0);
         } else {
           this.updatePosition();
         }
@@ -2155,9 +2265,9 @@ var VirtualSelect = /*#__PURE__*/function () {
       var searchValue = value.replace(/\\/g, '').toLowerCase().trim();
       this.searchValue = searchValue;
       this.searchValueOriginal = value;
-      DomUtils.toggleClass(this.$allWrappers, 'has-search-value', value);
-      DomUtils.setAttr(this.$searchClear, 'tabindex', value !== '' ? '0' : '-1');
-      DomUtils.setAria(this.$searchClear, 'hidden', value === '');
+      _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.toggleClass(this.$allWrappers, 'has-search-value', value);
+      _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.setAttr(this.$searchClear, 'tabindex', value !== '' ? '0' : '-1');
+      _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.setAria(this.$searchClear, 'hidden', value === '');
       this.afterSetSearchValue();
     }
   }, {
@@ -2172,7 +2282,7 @@ var VirtualSelect = /*#__PURE__*/function () {
 
       /** If searchNormalize we'll normalize the searchValue */
       var searchValue = this.searchValue;
-      searchValue = this.searchNormalize ? Utils.normalizeString(searchValue) : searchValue;
+      searchValue = this.searchNormalize ? _utils__WEBPACK_IMPORTED_MODULE_0__.Utils.normalizeString(searchValue) : searchValue;
       var isOptionVisible = this.isOptionVisible.bind(this);
       if (this.hasOptionGroup) {
         visibleOptionGroupsMapping = this.getVisibleOptionGroupsMapping(searchValue);
@@ -2244,11 +2354,11 @@ var VirtualSelect = /*#__PURE__*/function () {
       } else {
         optionsHeight = this.optionsHeight;
         if (this.keepAlwaysOpen) {
-          DomUtils.setStyle(this.$noOptions, 'height', optionsHeight);
-          DomUtils.setStyle(this.$noSearchResults, 'height', optionsHeight);
+          _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.setStyle(this.$noOptions, 'height', optionsHeight);
+          _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.setStyle(this.$noSearchResults, 'height', optionsHeight);
         }
       }
-      DomUtils.setStyle(this.$optionsContainer, 'max-height', optionsHeight);
+      _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.setStyle(this.$optionsContainer, 'max-height', optionsHeight);
       this.afterSetOptionsContainerHeight(reset);
     }
   }, {
@@ -2315,7 +2425,7 @@ var VirtualSelect = /*#__PURE__*/function () {
         return;
       }
       var width = this.dropboxWidth || "".concat(this.$wrapper.offsetWidth, "px");
-      DomUtils.setStyle(this.$dropboxContainer, 'max-width', width);
+      _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.setStyle(this.$dropboxContainer, 'max-width', width);
     }
   }, {
     key: "setEleStyles",
@@ -2325,7 +2435,7 @@ var VirtualSelect = /*#__PURE__*/function () {
       if (maxWidth) {
         styles['max-width'] = maxWidth;
       }
-      DomUtils.setStyles(this.$ele, styles);
+      _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.setStyles(this.$ele, styles);
     }
   }, {
     key: "setDropboxStyles",
@@ -2342,8 +2452,8 @@ var VirtualSelect = /*#__PURE__*/function () {
           containerStyles.width = dropboxWidth;
         }
       }
-      DomUtils.setStyles(this.$dropboxContainer, containerStyles);
-      DomUtils.setStyles(this.$dropbox, styles);
+      _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.setStyles(this.$dropboxContainer, containerStyles);
+      _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.setStyles(this.$dropbox, styles);
     }
   }, {
     key: "setOptionAttr",
@@ -2351,9 +2461,9 @@ var VirtualSelect = /*#__PURE__*/function () {
       var $visibleOptions = this.$visibleOptions;
       var options = this.options;
       var optionHeight = "".concat(this.optionHeight, "px");
-      var setStyle = DomUtils.setStyle,
-        getData = DomUtils.getData,
-        setData = DomUtils.setData;
+      var setStyle = _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.setStyle,
+        getData = _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.getData,
+        setData = _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.setData;
       if ($visibleOptions && $visibleOptions.length) {
         $visibleOptions.forEach(function ($option) {
           var optionDetails = options[getData($option, 'index')];
@@ -2369,8 +2479,8 @@ var VirtualSelect = /*#__PURE__*/function () {
       if (!$valueTags || !$valueTags.length) {
         return;
       }
-      var getData = DomUtils.getData,
-        setData = DomUtils.setData;
+      var getData = _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.getData,
+        setData = _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.setData;
       var options = this.options;
       $valueTags.forEach(function ($valueTag) {
         var index = getData($valueTag, 'index');
@@ -2480,7 +2590,7 @@ var VirtualSelect = /*#__PURE__*/function () {
     value: function getTooltipAttrText(text) {
       var ellipsisOnly = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
       var allowHtml = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
-      var tootltipText = Utils.containsHTML(text) ? Utils.replaceDoubleQuotesWithHTML(text) : text;
+      var tootltipText = _utils__WEBPACK_IMPORTED_MODULE_0__.Utils.containsHTML(text) ? _utils__WEBPACK_IMPORTED_MODULE_0__.Utils.replaceDoubleQuotesWithHTML(text) : text;
       var data = {
         'data-tooltip': tootltipText || '',
         'data-tooltip-enter-delay': this.tooltipEnterDelay,
@@ -2491,7 +2601,7 @@ var VirtualSelect = /*#__PURE__*/function () {
         'data-tooltip-ellipsis-only': ellipsisOnly,
         'data-tooltip-allow-html': allowHtml
       };
-      return DomUtils.getAttributesText(data);
+      return _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.getAttributesText(data);
     }
 
     /**
@@ -2504,7 +2614,7 @@ var VirtualSelect = /*#__PURE__*/function () {
       if (!data) {
         return undefined;
       }
-      var getString = Utils.getString;
+      var getString = _utils__WEBPACK_IMPORTED_MODULE_0__.Utils.getString;
       var secureText = this.secureText.bind(this);
       return {
         index: data.index,
@@ -2683,13 +2793,13 @@ var VirtualSelect = /*#__PURE__*/function () {
         if ($sibling) {
           $sibling = $sibling[propName];
         }
-      } while (DomUtils.hasClass($sibling, 'disabled') || DomUtils.hasClass($sibling, 'group-title'));
+      } while (_utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.hasClass($sibling, 'disabled') || _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.hasClass($sibling, 'group-title'));
       return $sibling;
     }
   }, {
     key: "getUniqueId",
     value: function getUniqueId() {
-      var uniqueId = Utils.getRandomInt(10000);
+      var uniqueId = _utils__WEBPACK_IMPORTED_MODULE_0__.Utils.getRandomInt(10000);
       var isAlreadyUsed = document.querySelector("#vscomp-ele-wrapper-".concat(uniqueId));
       if (isAlreadyUsed) {
         return this.getUniqueId();
@@ -2722,21 +2832,21 @@ var VirtualSelect = /*#__PURE__*/function () {
     key: "openDropbox",
     value: function openDropbox(isSilent) {
       this.isSilentOpen = isSilent;
-      DomUtils.setAttr(this.$dropboxWrapper, 'tabindex', '0');
-      DomUtils.setAria(this.$dropboxWrapper, 'hidden', false);
-      DomUtils.setAttr(this.$dropboxContainerTop, 'tabindex', '0');
-      DomUtils.setAria(this.$dropboxContainerTop, 'hidden', false);
-      DomUtils.setAttr(this.$dropboxContainerBottom, 'tabindex', '0');
-      DomUtils.setAria(this.$dropboxContainerBottom, 'hidden', false);
+      _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.setAttr(this.$dropboxWrapper, 'tabindex', '0');
+      _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.setAria(this.$dropboxWrapper, 'hidden', false);
+      _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.setAttr(this.$dropboxContainerTop, 'tabindex', '0');
+      _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.setAria(this.$dropboxContainerTop, 'hidden', false);
+      _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.setAttr(this.$dropboxContainerBottom, 'tabindex', '0');
+      _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.setAria(this.$dropboxContainerBottom, 'hidden', false);
       if (isSilent) {
-        DomUtils.setStyle(this.$dropboxContainer, 'display', 'inline-flex');
+        _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.setStyle(this.$dropboxContainer, 'display', 'inline-flex');
       } else {
-        DomUtils.dispatchEvent(this.$ele, 'beforeOpen');
-        DomUtils.setAria(this.$wrapper, 'expanded', true);
+        _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.dispatchEvent(this.$ele, 'beforeOpen');
+        _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.setAria(this.$wrapper, 'expanded', true);
       }
       this.setDropboxWrapperWidth();
-      DomUtils.removeClass(this.$allWrappers, 'closed');
-      DomUtils.changeTabIndex(this.$allWrappers, 0);
+      _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.removeClass(this.$allWrappers, 'closed');
+      _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.changeTabIndex(this.$allWrappers, 0);
       if (this.dropboxPopover && !isSilent) {
         this.dropboxPopover.show();
       } else {
@@ -2751,14 +2861,14 @@ var VirtualSelect = /*#__PURE__*/function () {
       if (!isSilent) {
         this.moveSelectedOptionsFirst();
         this.setScrollTop();
-        DomUtils.addClass(this.$allWrappers, 'focused');
+        _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.addClass(this.$allWrappers, 'focused');
         if (this.showAsPopup) {
-          DomUtils.addClass(this.$body, 'vscomp-popup-active');
+          _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.addClass(this.$body, 'vscomp-popup-active');
           this.isPopupActive = true;
         } else {
           this.focusElementOnOpen();
         }
-        DomUtils.dispatchEvent(this.$ele, 'afterOpen');
+        _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.dispatchEvent(this.$ele, 'afterOpen');
       }
     }
   }, {
@@ -2773,20 +2883,20 @@ var VirtualSelect = /*#__PURE__*/function () {
         return;
       }
       if (isSilent) {
-        DomUtils.setStyle(this.$dropboxContainer, 'display', '');
+        _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.setStyle(this.$dropboxContainer, 'display', '');
       } else {
-        DomUtils.dispatchEvent(this.$ele, 'beforeClose');
-        DomUtils.setAria(this.$wrapper, 'expanded', false);
-        DomUtils.setAria(this.$wrapper, 'activedescendant', '');
+        _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.dispatchEvent(this.$ele, 'beforeClose');
+        _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.setAria(this.$wrapper, 'expanded', false);
+        _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.setAria(this.$wrapper, 'activedescendant', '');
       }
       if (this.dropboxPopover && !isSilent) {
         this.dropboxPopover.hide();
-        DomUtils.setAttr(this.$dropboxWrapper, 'tabindex', '-1');
-        DomUtils.setAria(this.$dropboxWrapper, 'hidden', true);
-        DomUtils.setAttr(this.$dropboxContainerTop, 'tabindex', '-1');
-        DomUtils.setAria(this.$dropboxContainerTop, 'hidden', true);
-        DomUtils.setAttr(this.$dropboxContainerBottom, 'tabindex', '-1');
-        DomUtils.setAria(this.$dropboxContainerBottom, 'hidden', true);
+        _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.setAttr(this.$dropboxWrapper, 'tabindex', '-1');
+        _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.setAria(this.$dropboxWrapper, 'hidden', true);
+        _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.setAttr(this.$dropboxContainerTop, 'tabindex', '-1');
+        _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.setAria(this.$dropboxContainerTop, 'hidden', true);
+        _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.setAttr(this.$dropboxContainerBottom, 'tabindex', '-1');
+        _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.setAria(this.$dropboxContainerBottom, 'hidden', true);
       } else {
         this.afterHidePopper();
       }
@@ -2796,23 +2906,23 @@ var VirtualSelect = /*#__PURE__*/function () {
     value: function afterHidePopper() {
       var isSilent = this.isSilentClose;
       this.isSilentClose = false;
-      DomUtils.removeClass(this.$allWrappers, 'focused');
+      _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.removeClass(this.$allWrappers, 'focused');
       this.removeOptionFocus();
       if (!isSilent && this.isPopupActive) {
-        DomUtils.removeClass(this.$body, 'vscomp-popup-active');
+        _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.removeClass(this.$body, 'vscomp-popup-active');
         this.isPopupActive = false;
       }
-      DomUtils.addClass(this.$allWrappers, 'closed');
+      _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.addClass(this.$allWrappers, 'closed');
       if (!isSilent) {
-        DomUtils.dispatchEvent(this.$ele, 'afterClose');
+        _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.dispatchEvent(this.$ele, 'afterClose');
       }
       this.$wrapper.focus();
-      DomUtils.setAttr(this.$dropboxWrapper, 'tabindex', '-1');
-      DomUtils.setAria(this.$dropboxWrapper, 'hidden', true);
-      DomUtils.setAttr(this.$dropboxContainerTop, 'tabindex', '-1');
-      DomUtils.setAria(this.$dropboxContainerTop, 'hidden', true);
-      DomUtils.setAttr(this.$dropboxContainerBottom, 'tabindex', '-1');
-      DomUtils.setAria(this.$dropboxContainerBottom, 'hidden', true);
+      _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.setAttr(this.$dropboxWrapper, 'tabindex', '-1');
+      _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.setAria(this.$dropboxWrapper, 'hidden', true);
+      _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.setAttr(this.$dropboxContainerTop, 'tabindex', '-1');
+      _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.setAria(this.$dropboxContainerTop, 'hidden', true);
+      _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.setAttr(this.$dropboxContainerBottom, 'tabindex', '-1');
+      _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.setAria(this.$dropboxContainerBottom, 'hidden', true);
     }
   }, {
     key: "moveSelectedOptionsFirst",
@@ -2846,7 +2956,7 @@ var VirtualSelect = /*#__PURE__*/function () {
   }, {
     key: "isOpened",
     value: function isOpened() {
-      return !DomUtils.hasClass(this.$wrapper, 'closed');
+      return !_utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.hasClass(this.$wrapper, 'closed');
     }
   }, {
     key: "focusSearchInput",
@@ -2863,7 +2973,7 @@ var VirtualSelect = /*#__PURE__*/function () {
       var hasNoOptions = !this.options.length && !this.hasServerSearch;
       if ($ele) {
         if (hasNoOptions && !this.allowNewOption) {
-          DomUtils.setAttr($ele, 'disabled', '');
+          _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.setAttr($ele, 'disabled', '');
           this.$noOptions.focus();
         } else {
           $ele.removeAttribute('disabled');
@@ -2871,7 +2981,7 @@ var VirtualSelect = /*#__PURE__*/function () {
         }
       } else {
         var $focusableEle = this.$dropbox.querySelector('[tabindex="0"]');
-        var optIndex = DomUtils.getData($focusableEle, 'index');
+        var optIndex = _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.getData($focusableEle, 'index');
         if (optIndex !== undefined) {
           this.focusOption({
             direction: 'next'
@@ -2888,10 +2998,10 @@ var VirtualSelect = /*#__PURE__*/function () {
     value: function focusFirstVisibleOption() {
       var $focusableEle = this.$optionsContainer.querySelector("[data-index='".concat(this.getFirstVisibleOptionIndex(), "']"));
       if ($focusableEle) {
-        if (DomUtils.hasClass($focusableEle, 'group-title')) {
+        if (_utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.hasClass($focusableEle, 'group-title')) {
           $focusableEle = this.getSibling($focusableEle, 'next');
         }
-        DomUtils.setAttr($focusableEle, 'tabindex', '0');
+        _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.setAttr($focusableEle, 'tabindex', '0');
         this.$optionsContainer.scrollTop = this.optionHeight * this.getFirstVisibleOptionIndex();
         this.focusOption({
           focusFirst: true
@@ -2919,7 +3029,7 @@ var VirtualSelect = /*#__PURE__*/function () {
         /* if no element on focus choose first visible one */
         var firstVisibleOptionIndex = this.getFirstVisibleOptionIndex();
         $newFocusedEle = this.$dropboxContainer.querySelector(".vscomp-option[data-visible-index=\"".concat(firstVisibleOptionIndex, "\"]"));
-        if (DomUtils.hasClass($newFocusedEle, 'disabled') || DomUtils.hasClass($newFocusedEle, 'group-title')) {
+        if (_utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.hasClass($newFocusedEle, 'disabled') || _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.hasClass($newFocusedEle, 'group-title')) {
           $newFocusedEle = this.getSibling($newFocusedEle, 'next');
         }
       } else {
@@ -2930,7 +3040,7 @@ var VirtualSelect = /*#__PURE__*/function () {
           this.toggleOptionFocusedState($focusedEle, false);
         }
         this.toggleOptionFocusedState($newFocusedEle, true);
-        this.toggleFocusedProp(DomUtils.getData($newFocusedEle, 'index'), true);
+        this.toggleFocusedProp(_utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.getData($newFocusedEle, 'index'), true);
         this.moveFocusedOptionToView($newFocusedEle);
       }
     }
@@ -2951,7 +3061,7 @@ var VirtualSelect = /*#__PURE__*/function () {
       var optionBottom = optionRect.bottom;
       var optionHeight = optionRect.height;
       var optionOffsetTop = $focusedEle.offsetTop;
-      var optionsTop = DomUtils.getData(this.$options, 'top', 'number');
+      var optionsTop = _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.getData(this.$options, 'top', 'number');
 
       /* if option hidden on top */
       if (containerTop > optionTop) {
@@ -2982,7 +3092,7 @@ var VirtualSelect = /*#__PURE__*/function () {
       if (!$ele) {
         return;
       }
-      var isAdding = !DomUtils.hasClass($ele, 'selected');
+      var isAdding = !_utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.hasClass($ele, 'selected');
       if (isAdding) {
         if (this.multiple && this.isMaxValuesSelected) {
           return;
@@ -2993,9 +3103,9 @@ var VirtualSelect = /*#__PURE__*/function () {
         return;
       }
       var selectedValues = this.selectedValues;
-      var selectedValue = DomUtils.getData($ele, 'value');
-      var selectedIndex = DomUtils.getData($ele, 'index', 'number');
-      var isNewOption = DomUtils.hasClass($ele, 'current-new');
+      var selectedValue = _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.getData($ele, 'value');
+      var selectedIndex = _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.getData($ele, 'index', 'number');
+      var isNewOption = _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.hasClass($ele, 'current-new');
       var shouldSelectRange = false;
       var lastSelectedOptionIndex = this.lastSelectedOptionIndex;
       this.lastSelectedOptionIndex = null;
@@ -3026,7 +3136,7 @@ var VirtualSelect = /*#__PURE__*/function () {
         this.toggleOptionSelectedState($ele);
       } else if (this.multiple) {
         this.toggleOptionSelectedState($ele);
-        Utils.removeItemFromArray(selectedValues, selectedValue);
+        _utils__WEBPACK_IMPORTED_MODULE_0__.Utils.removeItemFromArray(selectedValues, selectedValue);
         this.toggleAllOptionsClass(false);
         this.toggleGroupOptionsParent($ele, false);
       }
@@ -3101,7 +3211,7 @@ var VirtualSelect = /*#__PURE__*/function () {
       if (!this.multiple || this.disableSelectAll) {
         return;
       }
-      var selectingAll = typeof isSelected === 'boolean' ? selectAll : !DomUtils.hasClass(this.$toggleAllCheckbox, 'checked');
+      var selectingAll = typeof isSelected === 'boolean' ? selectAll : !_utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.hasClass(this.$toggleAllCheckbox, 'checked');
       var selectedValues = [];
       var selectAllOnlyVisible = this.selectAllOnlyVisible;
       this.options.forEach(function (d) {
@@ -3147,7 +3257,7 @@ var VirtualSelect = /*#__PURE__*/function () {
       if (!isAllSelected && this.selectAllOnlyVisible && this.searchValue !== '' && (this.visibleOptionsCount > 0 || this.searchValue === '')) {
         isAllVisibleSelected = this.isAllOptionsSelected(true);
       }
-      DomUtils.toggleClass(this.$toggleAllCheckbox, 'checked', isAllSelected || isAllVisibleSelected);
+      _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.toggleClass(this.$toggleAllCheckbox, 'checked', isAllSelected || isAllVisibleSelected);
       this.isAllSelected = isAllSelected;
     }
   }, {
@@ -3183,7 +3293,7 @@ var VirtualSelect = /*#__PURE__*/function () {
       if (!this.hasOptionGroup || this.disableOptionGroupCheckbox || !$option) {
         return;
       }
-      var groupIndex = DomUtils.getData($option, 'groupIndex');
+      var groupIndex = _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.getData($option, 'groupIndex');
       if (groupIndex !== undefined) {
         groupIndex = parseInt(groupIndex);
       }
@@ -3205,11 +3315,11 @@ var VirtualSelect = /*#__PURE__*/function () {
       if (!this.hasOptionGroup || this.disableOptionGroupCheckbox || !$ele) {
         return;
       }
-      var groupIndex = DomUtils.getData($ele, 'index', 'number');
+      var groupIndex = _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.getData($ele, 'index', 'number');
       var selectedValues = this.selectedValues,
         selectAllOnlyVisible = this.selectAllOnlyVisible;
       var valuesMapping = {};
-      var removeItemFromArray = Utils.removeItemFromArray;
+      var removeItemFromArray = _utils__WEBPACK_IMPORTED_MODULE_0__.Utils.removeItemFromArray;
       selectedValues.forEach(function (d) {
         valuesMapping[d] = true;
       });
@@ -3246,7 +3356,7 @@ var VirtualSelect = /*#__PURE__*/function () {
       if (!$ele) {
         return;
       }
-      var selectedIndex = DomUtils.getData($ele, 'index', 'number');
+      var selectedIndex = _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.getData($ele, 'index', 'number');
       this.toggleSelectedProp(selectedIndex, isSelected);
       this.toggleOptionSelectedState($ele, isSelected);
     }
@@ -3290,9 +3400,9 @@ var VirtualSelect = /*#__PURE__*/function () {
       });
       this.afterValueSet();
       if (formReset) {
-        DomUtils.removeClass(this.$allWrappers, 'has-error');
+        _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.removeClass(this.$allWrappers, 'has-error');
       }
-      DomUtils.dispatchEvent(this.$ele, 'reset');
+      _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.dispatchEvent(this.$ele, 'reset');
     }
   }, {
     key: "addOption",
@@ -3434,8 +3544,8 @@ var VirtualSelect = /*#__PURE__*/function () {
   }, {
     key: "serverSearch",
     value: function serverSearch() {
-      DomUtils.removeClass(this.$allWrappers, 'has-no-search-results');
-      DomUtils.addClass(this.$allWrappers, 'server-searching');
+      _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.removeClass(this.$allWrappers, 'has-no-search-results');
+      _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.addClass(this.$allWrappers, 'server-searching');
       this.setSelectedOptions();
       this.onServerSearch(this.searchValue, this);
     }
@@ -3443,8 +3553,8 @@ var VirtualSelect = /*#__PURE__*/function () {
     key: "removeValue",
     value: function removeValue($ele) {
       var selectedValues = this.selectedValues;
-      var selectedValue = DomUtils.getData($ele, 'value');
-      Utils.removeItemFromArray(selectedValues, selectedValue);
+      var selectedValue = _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.getData($ele, 'value');
+      _utils__WEBPACK_IMPORTED_MODULE_0__.Utils.removeItemFromArray(selectedValues, selectedValue);
       this.setValueMethod(selectedValues);
     }
   }, {
@@ -3458,8 +3568,8 @@ var VirtualSelect = /*#__PURE__*/function () {
       this.$ele.disabled = false;
       this.$ele.removeAttribute('disabled');
       this.$hiddenInput.removeAttribute('disabled');
-      DomUtils.setAria(this.$wrapper, 'disabled', false);
-      DomUtils.changeTabIndex(this.$wrapper, 0);
+      _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.setAria(this.$wrapper, 'disabled', false);
+      _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.changeTabIndex(this.$wrapper, 0);
     }
   }, {
     key: "disable",
@@ -3467,8 +3577,8 @@ var VirtualSelect = /*#__PURE__*/function () {
       this.$ele.disabled = true;
       this.$ele.setAttribute('disabled', '');
       this.$hiddenInput.setAttribute('disabled', '');
-      DomUtils.setAria(this.$wrapper, 'disabled', true);
-      DomUtils.changeTabIndex(this.$wrapper, -1);
+      _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.setAria(this.$wrapper, 'disabled', true);
+      _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.changeTabIndex(this.$wrapper, -1);
       this.$wrapper.blur();
     }
   }, {
@@ -3480,11 +3590,11 @@ var VirtualSelect = /*#__PURE__*/function () {
       var hasError = false;
       var selectedValues = this.selectedValues,
         minValues = this.minValues;
-      if (this.required && (Utils.isEmpty(selectedValues) || (/** required minium options not selected */
+      if (this.required && (_utils__WEBPACK_IMPORTED_MODULE_0__.Utils.isEmpty(selectedValues) || (/** required minium options not selected */
       this.multiple && minValues && selectedValues.length < minValues))) {
         hasError = true;
       }
-      DomUtils.toggleClass(this.$allWrappers, 'has-error', hasError);
+      _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.toggleClass(this.$allWrappers, 'has-error', hasError);
       return !hasError;
     }
   }, {
@@ -3503,7 +3613,7 @@ var VirtualSelect = /*#__PURE__*/function () {
       if (this.dropboxPopover) {
         this.dropboxPopover.destroy();
       }
-      DomUtils.removeClass($ele, 'vscomp-ele');
+      _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.removeClass($ele, 'vscomp-ele');
     }
   }, {
     key: "createSecureTextElements",
@@ -3519,13 +3629,13 @@ var VirtualSelect = /*#__PURE__*/function () {
         return text;
       }
       /** escape potentially harmful JavaScript so, label and value fields cannot trigger XSS */
-      this.$secureText.nodeValue = Utils.replaceDoubleQuotesWithHTML(text);
+      this.$secureText.nodeValue = _utils__WEBPACK_IMPORTED_MODULE_0__.Utils.replaceDoubleQuotesWithHTML(text);
       return this.$secureDiv.innerHTML;
     }
   }, {
     key: "toggleRequired",
     value: function toggleRequired(isRequired) {
-      this.required = Utils.convertToBoolean(isRequired);
+      this.required = _utils__WEBPACK_IMPORTED_MODULE_0__.Utils.convertToBoolean(isRequired);
       this.$ele.required = this.required;
     }
   }, {
@@ -3533,10 +3643,10 @@ var VirtualSelect = /*#__PURE__*/function () {
     value: function toggleOptionSelectedState($ele, value) {
       var isSelected = value;
       if (typeof isSelected === 'undefined') {
-        isSelected = !DomUtils.hasClass($ele, 'selected');
+        isSelected = !_utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.hasClass($ele, 'selected');
       }
-      DomUtils.toggleClass($ele, 'selected', isSelected);
-      DomUtils.setAria($ele, 'selected', isSelected);
+      _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.toggleClass($ele, 'selected', isSelected);
+      _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.setAria($ele, 'selected', isSelected);
     }
   }, {
     key: "toggleOptionFocusedState",
@@ -3544,13 +3654,13 @@ var VirtualSelect = /*#__PURE__*/function () {
       if (!$ele) {
         return;
       }
-      DomUtils.toggleClass($ele, 'focused', isFocused);
-      DomUtils.setAttr($ele, 'tabindex', isFocused ? '0' : '-1');
+      _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.toggleClass($ele, 'focused', isFocused);
+      _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.setAttr($ele, 'tabindex', isFocused ? '0' : '-1');
       if (document.activeElement !== this.$searchInput) {
         $ele.focus();
       }
       if (isFocused) {
-        DomUtils.setAria(this.$wrapper, 'activedescendant', $ele.id);
+        _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.setAria(this.$wrapper, 'activedescendant', $ele.id);
       }
     }
 
@@ -3597,7 +3707,7 @@ var VirtualSelect = /*#__PURE__*/function () {
   }, {
     key: "getAttrProps",
     value: function getAttrProps() {
-      var convertPropToDataAttr = DomUtils.convertPropToDataAttr;
+      var convertPropToDataAttr = _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.convertPropToDataAttr;
       var result = {};
       nativeProps.forEach(function (d) {
         result[d] = d;
@@ -3641,7 +3751,7 @@ var VirtualSelect = /*#__PURE__*/function () {
 
       /** creating div element to initiate plugin and removing native element */
       var $newEle = document.createElement('div');
-      DomUtils.setAttrFromEle($ele, $newEle, Object.keys(attrPropsMapping), valueLessProps);
+      _utils__WEBPACK_IMPORTED_MODULE_0__.DomUtils.setAttrFromEle($ele, $newEle, Object.keys(attrPropsMapping), valueLessProps);
       $ele.parentNode.insertBefore($newEle, $ele);
       $ele.remove();
 
@@ -3816,6 +3926,9 @@ if (typeof NodeList !== 'undefined' && NodeList.prototype && !NodeList.prototype
 }();
 // This entry needs to be wrapped in an IIFE because it needs to be isolated against other entry modules.
 !function() {
+/*!*********************************************************!*\
+  !*** ./node_modules/popover-plugin/dist/popover.min.js ***!
+  \*********************************************************/
 /*!
  * Popover v1.0.13
  * https://sa-si-dev.github.io/popover
