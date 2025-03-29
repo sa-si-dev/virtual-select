@@ -426,7 +426,7 @@ describe('Show values as tags', () => {
       .selectOption([3, 7])
       .scrollOptions(600)
       .selectOption([18, 20])
-      .hasValueTags(['Option 3', 'Option 7', 'Option 18', 'Option 20']);
+      .hasValueTags(['Option 3', 'Option 7', 'Option 18', 'Option 20'])
   });
 
   it('remove selected options', () => {
@@ -440,7 +440,8 @@ describe('Show values as tags', () => {
       .checkValueTagsCount(1)
       .removeValueTag('Option 3')
       .checkValueTagsCount(0)
-      .hasValueText('Select');
+      .hasValueText('Select')
+      .close()
   });
 
   it('reset value', () => {
