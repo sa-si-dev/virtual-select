@@ -22,6 +22,7 @@
   "plugins": ["sonarjs"],
 
   "rules": {
+    "linebreak-style": ["error", "unix"], // Enforces LF (Unix-style) linebreaks 
     "sonarjs/no-all-duplicated-branches": "error",
     "sonarjs/no-element-overwrite": "error",
     "sonarjs/no-empty-collection": "error",
