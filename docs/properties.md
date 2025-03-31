@@ -73,8 +73,8 @@
 | useGroupValue                     | Boolean           | false                                                  | Group's value would be returned when all of its child options selected                                                                                                                                        |
 | maxWidth                          | String            | 250px                                                  | Maximum width for the select element                                                                                                                                                                          |
 | updatePositionThrottle            | Number            | 100                                                    | Throttle time for updating dropbox position on scroll event (in milliseconds)                                                                                                                                 |
-| showDuration                      | Number            | 300                                                    | Dropdown opening animation time in milliseconds                                                                                                                                                                  |
-| hideDuration                      | Number            | 200                                                    | Dropdown closing animation time in milliseconds                                                                                                                                                                 |
+| showDuration                      | Number            | 300                                                    | Dropdown opening animation time in milliseconds                                                                                                                                                               |
+| hideDuration                      | Number            | 200                                                    | Dropdown closing animation time in milliseconds                                                                                                                                                               |
 
 # Text Properties
 
@@ -84,8 +84,8 @@ Update below properties to change display texts.
 | ------------------------------ | ------ | ------------------ | -------------------------------------------------------------------------------------------------------------- |
 | ariaLabelledby                 | String |                    | ID of the label element to use as a11y attribute aria-labelledby                                               |
 | ariaLabelText                  | String | Options list       | Option used to enhance accessibility when focusing on the dropdown wrapper making it more verbose              |
-| ariaLabelTagClearButtonText    | String | Clear option       | Option used to enhance accessibility when focusing on the clear tag option                                     |
-| ariaLabelSearchClearButtonText | String | Clear search input | ID of the label element to use as a11y attribute aria-labelledby                                               |
+| ariaLabelTagClearButtonText    | String | Clear option       | Option used to enhance accessibility when focusing on the clear tag option making it more verbose              |
+| ariaLabelSearchClearButtonText | String | Clear search input | Option used to enhance accessibility when focusing on the dropdown search clear button making it more verbose  |
 | ariaLabelClearButtonText       | String | Clear button       | Option used to enhance accessibility when focusing on the dropdown clear button making it more verbose         |
 | placeholder                    | String | Select             | Text to show when no options selected                                                                          |
 | noOptionsText                  | String | No options found   | Text to show when no options to show                                                                           |
