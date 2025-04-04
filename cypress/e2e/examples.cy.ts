@@ -74,7 +74,7 @@ describe('With search box - Clear search text', () => {
   });
 
   it('reset value', () => {
-    cy.resetValue(id);
+    cy.getVs(id).resetSearchValue();
   });
 
   it('check that clear button in search exists', () => {

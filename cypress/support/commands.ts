@@ -29,6 +29,16 @@ Cypress.Commands.add('resetValue', (id) => {
   cy.getVs(id).hasValueText('Select');
 });
 
+Cypress.Commands.add('resetSearchValue', { prevSubject: true }, (vsElem) => {
+  cy.getDropbox(vsElem)
+    .find('.vscomp-search-container')
+    .find('.vscomp-search-clear').click();
+  cy.getDropbox(vsElem)
+    .find('.vscomp-search-container')
+    .find('.vscomp-search-input')
+    .should('have.attr', 'placeholder', 'Search...');
+})
+
 Cypress.Commands.add('resetValuePopup', { prevSubject: true }, (vsElem) => {
   cy.getDropbox(vsElem).find('.vscomp-search-clear').click();
 });

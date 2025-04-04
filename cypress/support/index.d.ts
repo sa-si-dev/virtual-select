@@ -43,6 +43,12 @@ declare namespace Cypress {
 
     /**
      * @example
+     * cy.resetSearchValue(vsElem)
+     */
+    resetSearchValue(): Chainable<any>;
+
+    /**
+     * @example
      * cy.resetValuePopup(vsElem)
      */
     resetValuePopup(): Chainable<any>;
