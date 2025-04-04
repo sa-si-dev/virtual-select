@@ -453,6 +453,9 @@ var DomUtils = /*#__PURE__*/function () {
   }, {
     key: "setAria",
     value: function setAria($ele, name, value) {
+      if (!$ele) {
+        return;
+      }
       var attrName = name;
       if (attrName !== 'role') {
         attrName = "aria-".concat(attrName);
