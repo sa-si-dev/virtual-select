@@ -1061,8 +1061,7 @@ var VirtualSelect = /*#__PURE__*/function () {
     key: "onToggleButtonPress",
     value: function onToggleButtonPress(e) {
       e.stopPropagation();
-      var key = e.which || e.keyCode;
-      if (e.type === 'keydown' && key !== 13 && key !== 32) {
+      if (e.type === 'keydown' && e.code !== 'Enter' && e.code !== 'Space') {
         return;
       }
       var $target = e.target;
@@ -1152,8 +1151,7 @@ var VirtualSelect = /*#__PURE__*/function () {
     key: "onSearchClear",
     value: function onSearchClear(e) {
       e.stopPropagation();
-      var key = e.which || e.keyCode;
-      if (key === 13 || key === 32 || key === 1) {
+      if (e.code === 'Enter' || e.code === 'Space' || e.type === 'click') {
         this.setSearchValue('');
         this.focusSearchInput();
       }
