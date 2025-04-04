@@ -1153,7 +1153,7 @@ var VirtualSelect = /*#__PURE__*/function () {
     value: function onSearchClear(e) {
       e.stopPropagation();
       var key = e.which || e.keyCode;
-      if (key === 13 || key === 32) {
+      if (key === 13 || key === 32 || key === 1) {
         this.setSearchValue('');
         this.focusSearchInput();
       }

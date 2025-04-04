@@ -685,8 +685,8 @@ export class VirtualSelect {
     e.stopPropagation();
 
     const key = e.which || e.keyCode;
-
-    if (key === 13 || key === 32) {
+    // If click, enter or space key is pressed
+    if (key === 13 || key === 32 || key === 1) {
       this.setSearchValue('');
       this.focusSearchInput();
     }
