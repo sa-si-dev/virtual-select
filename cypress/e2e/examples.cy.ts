@@ -69,16 +69,16 @@ describe('With search box - Clear search text', () => {
     cy.open(id).search('Option');
   });
 
-  it('check clear button exist', () => {
-    cy.getVs(id).checkClearButton(true);
+  it('check that clear button in search does not exists', () => {
+    cy.getVs(id).checkSearchClearButton(true);
   });
 
   it('reset value', () => {
     cy.resetValue(id);
   });
 
-  it('check clear button not exist', () => {
-    cy.getVs(id).checkClearButton(false);
+  it('check that clear button in search exists', () => {
+    cy.getVs(id).checkSearchClearButton(false);
   });
 });
 

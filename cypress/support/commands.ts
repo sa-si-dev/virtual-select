@@ -86,7 +86,15 @@ Cypress.Commands.add('checkClearButton', { prevSubject: true }, (vsElem, isExist
 Cypress.Commands.add('checkClearButtonPopup', { prevSubject: true }, (vsElem, isExist) => {
   cy.getDropbox(vsElem)
     .find('.vscomp-search-clear')
-    .should('have.attr', 'aria-hidden', isExist ? 'false' : 'true');
+    .should('have.attr', 'aria-hidden')
+    .and('equal', (!isExist).toString()); // Flip the boolean and convert to string
+});
+
+Cypress.Commands.add('checkSearchClearButton', { prevSubject: true }, (vsElem, isExist) => {
+  cy.getDropbox(vsElem).find('.vscomp-search-container')
+    .find('.vscomp-search-clear')
+    .should('have.attr', 'aria-hidden')
+    .and('equal', (!isExist).toString()); // Flip the boolean and convert to string
 });
 
 Cypress.Commands.add('checkDropboxWidth', { prevSubject: true }, (vsElem, width) => {

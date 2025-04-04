@@ -92,6 +92,13 @@ declare namespace Cypress {
      * cy.checkClearButton(false)
      */
     checkClearButton(isExist: boolean): Chainable<any>;
+
+    /**
+     * @example
+     * cy.checkSearchClearButton(true)
+     * cy.checkSearchClearButton(false)
+     */
+    checkSearchClearButton(isExist: boolean): Chainable<any>;
     
     /**
      * @example
