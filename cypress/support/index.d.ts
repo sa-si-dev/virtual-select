@@ -43,6 +43,18 @@ declare namespace Cypress {
 
     /**
      * @example
+     * cy.resetSearchValue(vsElem)
+     */
+    resetSearchValue(): Chainable<any>;
+
+    /**
+     * @example
+     * cy.resetValuePopup(vsElem)
+     */
+    resetValuePopup(): Chainable<any>;
+
+    /**
+     * @example
      * cy.scrollOptions(600)
      */
     scrollOptions(distance: number): Chainable<any>;
@@ -89,6 +101,21 @@ declare namespace Cypress {
 
     /**
      * @example
+     * cy.checkSearchClearButton(true)
+     * cy.checkSearchClearButton(false)
+     */
+    checkSearchClearButton(isExist: boolean): Chainable<any>;
+    
+    /**
+     * @example
+     * cy.checkClearButtonPopup(true)
+     * cy.checkClearButtonPopup(false)
+     */
+    checkClearButtonPopup(isExist: boolean): Chainable<any>;
+    
+
+    /**
+     * @example
      * cy.checkDropboxWidth(200)
      */
     checkDropboxWidth(width: number): Chainable<any>;
@@ -126,7 +153,7 @@ declare namespace Cypress {
 
     /**
      * @example
-     * cy.dropboxIsFixed('single-select')
+     * cy.closePopup('single-select')
      */
     closePopup(id: string): Chainable<any>;
 

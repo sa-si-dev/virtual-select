@@ -58,6 +58,30 @@ describe('With search box', () => {
   });
 });
 
+describe('With search box - Clear search text', () => {
+  const id = 'single-search-select';
+
+  it('go to section', () => {
+    cy.goToSection('With search box');
+  });
+
+  it('search for a keyword', () => {
+    cy.open(id).search('Option');
+  });
+
+  it('check that clear button in search does not exists', () => {
+    cy.getVs(id).checkSearchClearButton(true);
+  });
+
+  it('reset value', () => {
+    cy.getVs(id).resetSearchValue();
+  });
+
+  it('check that clear button in search exists', () => {
+    cy.getVs(id).checkSearchClearButton(false);
+  });
+});
+
 describe('Multiple select', () => {
   const id = 'sample-multi-select';
 
@@ -324,6 +348,31 @@ describe('Label with description', () => {
   it('has description on scroll', () => {
     cy.getVs(id).scrollOptions(5000).checkFirstOption('Option 99 Description 99');
   });
+});
+
+describe('Show dropbox as popup - Clear search text', () => {
+  const id = 'multiple-show-as-popup-select';
+
+  it('go to section', () => {
+    cy.goToSection('Show dropbox as popup');
+  });
+
+  it('search for a keyword', () => {
+    cy.open(id).search('Option');
+  });
+
+  it('check clear button exist', () => {
+    cy.getVs(id).checkClearButtonPopup(true);
+  });
+
+  it('reset value', () => {
+    cy.getVs(id).resetValuePopup();
+  });
+
+  it('check clear button not exist', () => {
+    cy.getVs(id).checkClearButton(false);
+  });
+
 });
 
 describe('Show dropbox as popup - Multiple', () => {

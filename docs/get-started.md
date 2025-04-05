@@ -84,6 +84,7 @@ VirtualSelect.init({
 ## Initialize from native select element (not recommended)
 
 Not recommended to use native element to initiate the plugin when no.of options is more, since it might affect the performance.
+When using a `<select>` element, the options provided via the `options` attribute will be overridden, as the component will always prioritize the `<select>` internal options. 
 
 ```html
 <select multiple

@@ -599,9 +599,7 @@ export class VirtualSelect {
 
   onToggleButtonPress(e) {
     e.stopPropagation();
-
-    const key = e.which || e.keyCode;
-    if (e.type === 'keydown' && key !== 13 && key !== 32) {
+    if (e.type === 'keydown' && e.code !== 'Enter' && e.code !== 'Space') {
       return;
     }
 
@@ -683,10 +681,7 @@ export class VirtualSelect {
 
   onSearchClear(e) {
     e.stopPropagation();
-
-    const key = e.which || e.keyCode;
-
-    if (key === 13 || key === 32) {
+    if (e.code === 'Enter' || e.code === 'Space' || e.type === 'click') {
       this.setSearchValue('');
       this.focusSearchInput();
     }

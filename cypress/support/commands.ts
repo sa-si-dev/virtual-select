@@ -29,6 +29,20 @@ Cypress.Commands.add('resetValue', (id) => {
   cy.getVs(id).hasValueText('Select');
 });
 
+Cypress.Commands.add('resetSearchValue', { prevSubject: true }, (vsElem) => {
+  cy.getDropbox(vsElem)
+    .find('.vscomp-search-container')
+    .find('.vscomp-search-clear').click();
+  cy.getDropbox(vsElem)
+    .find('.vscomp-search-container')
+    .find('.vscomp-search-input')
+    .should('have.attr', 'placeholder', 'Search...');
+})
+
+Cypress.Commands.add('resetValuePopup', { prevSubject: true }, (vsElem) => {
+  cy.getDropbox(vsElem).find('.vscomp-search-clear').click();
+});
+
 Cypress.Commands.add('scrollOptions', { prevSubject: true }, (vsElem, distance) => {
   /**
    * using optionsScrollDuration here because when we open the dropdown with some values,
@@ -77,6 +91,20 @@ Cypress.Commands.add('checkClearButton', { prevSubject: true }, (vsElem, isExist
   cy.get(vsElem)
     .find('.vscomp-clear-button')
     .should(isExist ? 'be.visible' : 'be.hidden');
+});
+
+Cypress.Commands.add('checkClearButtonPopup', { prevSubject: true }, (vsElem, isExist) => {
+  cy.getDropbox(vsElem)
+    .find('.vscomp-search-clear')
+    .should('have.attr', 'aria-hidden')
+    .and('equal', (!isExist).toString()); // Flip the boolean and convert to string
+});
+
+Cypress.Commands.add('checkSearchClearButton', { prevSubject: true }, (vsElem, isExist) => {
+  cy.getDropbox(vsElem).find('.vscomp-search-container')
+    .find('.vscomp-search-clear')
+    .should('have.attr', 'aria-hidden')
+    .and('equal', (!isExist).toString()); // Flip the boolean and convert to string
 });
 
 Cypress.Commands.add('checkDropboxWidth', { prevSubject: true }, (vsElem, width) => {
