@@ -2346,6 +2346,13 @@ export class VirtualSelect {
   }
 
   openDropbox(isSilent) {
+    // Store original transition
+    const originalTransition = this.$dropboxContainer.style.transition;
+    // Disable transitions for programmatic opening
+    if (!isSilent) {
+      this.$dropboxContainer.style.transition = 'none';
+    }
+    // Perform the open operation
     this.isSilentOpen = isSilent;
 
     DomUtils.setAttr(this.$dropboxWrapper, 'tabindex', '0');
@@ -2365,9 +2372,16 @@ export class VirtualSelect {
     }
 
     this.setDropboxWrapperWidth();
-
     DomUtils.removeClass(this.$allWrappers, 'closed');
     DomUtils.changeTabIndex(this.$allWrappers, 0);
+
+    if (!isSilent) {
+      // Force synchronous layout and style calculation
+      // Trigger reflow
+      this.$dropboxContainer.offsetHeight; // eslint-disable-line no-unused-expressions
+      // Restore transitions immediately after reflow
+      this.$dropboxContainer.style.transition = originalTransition;
+    }
 
     if (this.dropboxPopover && !isSilent) {
       this.dropboxPopover.show();
