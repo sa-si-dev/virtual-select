@@ -2350,6 +2350,7 @@ export class VirtualSelect {
     const originalTransition = "";
     // Disable transitions for programmatic opening
     if (!isSilent) {
+      originalTransition = this.$dropboxContainer.style.transition;
       this.$dropboxContainer.style.transition = 'none';
     }
     // Perform the open operation
