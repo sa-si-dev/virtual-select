@@ -2346,10 +2346,10 @@ export class VirtualSelect {
   }
 
   openDropbox(isSilent) {
-    // Store original transition
-    const originalTransition = "";
+    let originalTransition = '';
     // Disable transitions for programmatic opening
     if (!isSilent) {
+      // Store original transition
       originalTransition = this.$dropboxContainer.style.transition;
       this.$dropboxContainer.style.transition = 'none';
     }
