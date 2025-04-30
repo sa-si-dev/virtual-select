@@ -730,7 +730,9 @@ export class VirtualSelect {
   }
 
   removeMutationObserver() {
-    this.mutationObserver.disconnect();
+    if (this.hasDropboxWrapper) {
+      this.mutationObserver.disconnect();
+    }
   }
 
   /** dom event methods - end */
