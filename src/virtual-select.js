@@ -2347,7 +2347,7 @@ export class VirtualSelect {
 
   openDropbox(isSilent) {
     // Store original transition
-    const originalTransition = this.$dropboxContainer.style.transition;
+    const originalTransition = "";
     // Disable transitions for programmatic opening
     if (!isSilent) {
       this.$dropboxContainer.style.transition = 'none';
