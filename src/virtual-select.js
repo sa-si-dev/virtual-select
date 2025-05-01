@@ -547,7 +547,11 @@ export class VirtualSelect {
     // Handle the Escape key when showing the dropdown as a popup, closing it
     if (key === 27 || e.key === 'Escape') {
       const wrapper = this.showAsPopup ? this.$wrapper : this.$dropboxWrapper;
-      if ((document.activeElement === wrapper || wrapper.contains(document.activeElement)) && !this.keepAlwaysOpen) {
+      if (
+        wrapper &&
+        (document.activeElement === wrapper || wrapper.contains(document.activeElement)) &&
+        !this.keepAlwaysOpen
+      ) {
         this.closeDropbox();
         return;
       }
