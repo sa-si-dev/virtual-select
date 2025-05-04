@@ -59,6 +59,40 @@ export class Utils {
   }
 
   /**
+   * Normalizes values by converting booleans to strings while preserving other types
+   * Handles both single values and arrays efficiently
+   * @param {*} value - The value to normalize
+   * @return {*} - Normalized value(s)
+   * @memberof Utils
+   */
+  static normalizeValues(value) {
+    // Fast path for arrays
+    if (Array.isArray(value)) {
+      const result = new Array(value.length);
+      for (let i = 0; i < value.length; i += 1) {
+        const v = value[i];
+        if (v === true) {
+          result[i] = 'true';
+        } else if (v === false) {
+          result[i] = 'false';
+        } else {
+          result[i] = v;
+        }
+      }
+      return result;
+    }
+
+    // Handle single values
+    if (value === true) {
+      return 'true';
+    }
+    if (value === false) {
+      return 'false';
+    }
+    return value;
+  }
+
+  /**
    * @param {any[]} array
    * @param {any} value
    * @param {boolean} cloneArray
