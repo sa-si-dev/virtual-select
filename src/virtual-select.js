@@ -1751,12 +1751,6 @@ export class VirtualSelect {
     }
 
     const searchValue = value.replace(/\\/g, '').toLowerCase().trim();
-
-    // Only proceed if the search value actually changed
-    if (searchValue === this.searchValue && !forceSet) {
-      return;
-    }
-
     this.searchValue = searchValue;
     this.searchValueOriginal = value;
 
