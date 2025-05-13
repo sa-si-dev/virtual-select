@@ -1376,7 +1376,9 @@ export class VirtualSelect {
         index,
         value,
         label,
-        labelNormalized: this.searchNormalize ? Utils.normalizeString(label).toLowerCase() : label.toLowerCase(),
+        labelNormalized: this.searchNormalize && label.trim() !== ''
+          ? Utils.normalizeString(label).toLowerCase()
+          : label.toLowerCase(),
         alias: getAlias(d[aliasKey]),
         isVisible: convertToBoolean(d.isVisible, true),
         isNew: d.isNew || false,
@@ -1770,7 +1772,9 @@ export class VirtualSelect {
 
     /** If searchNormalize we'll normalize the searchValue */
     let { searchValue } = this;
-    searchValue = this.searchNormalize ? Utils.normalizeString(searchValue) : searchValue;
+    searchValue = this.searchNormalize && searchValue.trim() !== ''
+      ? Utils.normalizeString(searchValue)
+      : searchValue;
     const isOptionVisible = this.isOptionVisible.bind(this);
 
     if (this.hasOptionGroup) {
@@ -3077,7 +3081,9 @@ export class VirtualSelect {
 
   isOptionVisible({ data, searchValue, hasExactOption, visibleOptionGroupsMapping, searchGroup, searchByStartsWith }) {
     const value = data.value.toLowerCase();
-    const label = this.searchNormalize ? data.labelNormalized : data.label.toLowerCase();
+    const label = this.searchNormalize && data.labelNormalized !== undefined
+      ? data.labelNormalized
+      : data.label.trim().toLowerCase();
     const { description, alias } = data;
 
     let isVisible = searchByStartsWith ? label.startsWith(searchValue) : label.includes(searchValue);
