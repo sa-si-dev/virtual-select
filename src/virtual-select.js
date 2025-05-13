@@ -3082,7 +3082,7 @@ export class VirtualSelect {
   isOptionVisible({ data, searchValue, hasExactOption, visibleOptionGroupsMapping, searchGroup, searchByStartsWith }) {
     const value = data.value.toLowerCase();
     const label = this.searchNormalize && data.labelNormalized !== undefined
-      ? data.labelNormalized 
+      ? data.labelNormalized
       : data.label.trim().toLowerCase();
     const { description, alias } = data;
 
