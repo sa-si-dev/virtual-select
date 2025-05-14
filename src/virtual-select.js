@@ -2497,6 +2497,7 @@ export class VirtualSelect {
 
     this.setSortedOptions();
     this.scrollToTop();
+    this.setVisibleOptions();
   }
 
   toggleDropbox() {
