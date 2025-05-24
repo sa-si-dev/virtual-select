@@ -1,5 +1,59 @@
 /** cSpell:ignore vscomp */
 
+describe('Open Get Started page for Dropdowns interaction test', () => {
+  const idSingle = 'single-select'
+  const idMultiple = 'multiple-select'
+
+  it('opened', () => {
+    cy.visit('get-started');
+  });
+
+  it('open the single-select dropdown', () => {
+    cy.open(idSingle);
+    cy.getVs(idSingle).find('.vscomp-ele-wrapper').should('not.have.class', 'closed');
+  });
+
+  it('open the multiple-select dropdown clicking directly in the DOM element', () => {
+    cy.getVs(idMultiple).find('.vscomp-toggle-button').click();
+    cy.getVs(idMultiple).find('.vscomp-ele-wrapper').should('not.have.class', 'closed');
+  });
+
+  it('should close single-select when opening single-select and multiple-select keep opened', () => {
+    cy.getVs(idSingle).find('.vscomp-ele-wrapper').should('have.class', 'closed');
+    cy.getVs(idMultiple).find('.vscomp-ele-wrapper').should('not.have.class', 'closed');
+  });
+});
+
+describe('Open Get Started page for Dropdowns interaction test clicking outside', () => {
+  const idSingle = 'single-select'
+  const idMultiple = 'multiple-select'
+
+  it('opened', () => {
+    cy.visit('get-started');
+  });
+
+  it('open the single-select dropdown', () => {
+    cy.open(idSingle);
+    cy.getVs(idSingle).find('.vscomp-ele-wrapper').should('not.have.class', 'closed');
+  });
+
+  it('click outside to close the single-select dropdown', () => {
+    cy.get('body').click(10, 10); // Click at coordinates 10,10
+    cy.getVs(idSingle).find('.vscomp-ele-wrapper').should('have.class', 'closed');
+  });
+
+  it('open the multiple-select dropdown', () => {
+    cy.open(idMultiple);
+    cy.getVs(idMultiple).find('.vscomp-ele-wrapper').should('not.have.class', 'closed');
+  });
+
+  it('click outside to close the multiple-select dropdown', () => {
+    cy.get('body').click(10, 10); // Click at coordinates 10,10
+    cy.getVs(idMultiple).find('.vscomp-ele-wrapper').should('have.class', 'closed');
+  });
+
+});
+
 describe('Open examples page', () => {
   it('opened', () => {
     cy.visit('examples');

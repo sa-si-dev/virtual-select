@@ -523,9 +523,17 @@ export class VirtualSelect {
   }
 
   onDocumentClick(e) {
-    const $eleToKeepOpen = e.target.closest('.vscomp-wrapper');
+    const $clickedEle = e.target.closest('.vscomp-wrapper');
 
-    if ($eleToKeepOpen !== this.$wrapper && $eleToKeepOpen !== this.$dropboxWrapper && this.isOpened()) {
+    // Close all if clicking outside any dropdown
+    if (!$clickedEle) {
+      VirtualSelect.openInstances.forEach((instance) => instance.closeDropbox());
+      return;
+    }
+
+    // If clicking a different dropdown, close current one
+    const clickedInstance = $clickedEle.parentElement.virtualSelect;
+    if (clickedInstance && clickedInstance !== this && this.isOpened()) {
       this.closeDropbox();
     }
   }
@@ -602,16 +610,21 @@ export class VirtualSelect {
   }
 
   onToggleButtonPress(e) {
-    e.stopPropagation();
-    if (e.type === 'keydown' && e.code !== 'Enter' && e.code !== 'Space') {
-      return;
+    if (e.type === 'keydown') {
+      e.preventDefault();
+      if (e.code !== 'Enter' && e.code !== 'Space') return;
     }
 
     const $target = e.target;
 
     if ($target.closest('.vscomp-value-tag-clear-button')) {
+      e.stopPropagation();
       this.removeValue($target.closest('.vscomp-value-tag'));
-    } else if (!$target.closest('.toggle-button-child')) {
+      return;
+    }
+
+    if (!$target.closest('.toggle-button-child')) {
+      // Let the event bubble normally
       this.toggleDropbox();
     }
   }
@@ -2365,6 +2378,14 @@ export class VirtualSelect {
     // Perform the open operation
     this.isSilentOpen = isSilent;
 
+    // Close all other open instances first
+    VirtualSelect.openInstances.forEach((instance) => {
+      if (instance !== this) instance.closeDropbox(true); // silent close
+    });
+
+    // Add to open instances
+    VirtualSelect.openInstances.add(this);
+
     DomUtils.setAttr(this.$dropboxWrapper, 'tabindex', '0');
     DomUtils.setAria(this.$dropboxWrapper, 'hidden', false);
 
@@ -2422,6 +2443,9 @@ export class VirtualSelect {
 
   closeDropbox(isSilent) {
     this.isSilentClose = isSilent;
+
+    // Remove from open instances
+    VirtualSelect.openInstances.delete(this);
 
     if (this.isOpened() === false) {
       return;
@@ -3219,6 +3243,9 @@ export class VirtualSelect {
     $ele.value = undefined;
     $ele.innerHTML = '';
 
+    // Remove from open instances
+    VirtualSelect.openInstances.delete(this);
+
     /** Remove all event listeners to prevent memory leaks and ensure proper cleanup */
     this.removeEvents();
 
@@ -3532,6 +3559,9 @@ window.addEventListener('resize', VirtualSelect.onResizeMethod);
 
 attrPropsMapping = VirtualSelect.getAttrProps();
 window.VirtualSelect = VirtualSelect;
+
+// Static property for tracking open dropdowns
+VirtualSelect.openInstances = new Set();
 
 /** polyfill to fix an issue in ie browser */
 if (typeof NodeList !== 'undefined' && NodeList.prototype && !NodeList.prototype.forEach) {
