@@ -3266,9 +3266,10 @@ export class VirtualSelect {
     // Remove from open instances
     VirtualSelect.openInstances.delete(this);
 
-    // Reset the last interacted instance
-    VirtualSelect.lastInteractedInstance = null;
-
+    // Reset the last interacted instance only if this is the last interacted instance
+    if (this === VirtualSelect.lastInteractedInstance) {
+      VirtualSelect.lastInteractedInstance = null;
+    }
     /** Remove all event listeners to prevent memory leaks and ensure proper cleanup */
     this.removeEvents();
 
