@@ -538,7 +538,7 @@ export class VirtualSelect {
 
     // If clicking a different dropdown, close current one
     const clickedInstance = $clickedEle.parentElement.virtualSelect;
-    if (clickedInstance && clickedInstance !== this && this.isOpened()) {
+    if (clickedInstance && clickedInstance !== this && this.isOpened() && !this.keepAlwaysOpen) {
       // Don't focus when closing due to another dropdown being opened
       this.shouldFocusWrapperOnClose = false;
       this.closeDropbox();
