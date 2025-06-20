@@ -628,7 +628,7 @@ describe('Validation', () => {
 });
 
 
-describe('To verify that the change event is no fired twice when selecting items via the search input', () => {
+describe('To verify that the change event is not fired twice when selecting items via the search input', () => {
 
   const selid = 'select-onchange';
   const resid = 'select-onchange-results';
