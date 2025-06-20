@@ -361,4 +361,16 @@ function initPageExamples() {
     additionalDropboxContainerClasses: 'custom-dropbox-container',
     additionalToggleButtonClasses: 'custom-toggle-button',
   });
+
+  initVirtualSelect({
+    ele: '#select-onchange',
+    search: true,
+    dropboxWrapper: 'self', // needed for onchange unit tests
+  });
+  window.onchangeCount=0;
+  document.querySelector('#select-onchange').addEventListener('change', function() {
+    window.onchangeCount++;
+    document.querySelector('#select-onchange-results').innerText = `value = ${this.value}; count of changes = ${window.onchangeCount}`;
+  });
+
 }

@@ -626,3 +626,22 @@ describe('Validation', () => {
     cy.getVs(id).find('.vscomp-ele-wrapper').should('not.have.class', 'has-error');
   });
 });
+
+
+describe('To verify that the change event is no fired twice when selecting items via the search input', () => {
+
+  const selid = 'select-onchange';
+  const resid = 'select-onchange-results';
+
+  it('go to section', () => {
+    cy.goToSection('Add Events');
+  });
+
+  it('select 2 in row', () => {
+    cy.open(selid).find('.vscomp-option').first().click();
+    cy.get(`#${resid}`).should('have.text', 'value = 1; count of changes = 1');
+    cy.open(selid).search(123).find('.vscomp-option').first().click();
+    cy.get(`#${resid}`).should('have.text', 'value = 123; count of changes = 2');
+  });
+
+});
