@@ -527,13 +527,20 @@ export class VirtualSelect {
 
     // Close all if clicking outside any dropdown
     if (!$clickedEle) {
-      VirtualSelect.openInstances.forEach((instance) => instance.closeDropbox());
+      VirtualSelect.openInstances.forEach((instance) => {
+        // Don't focus when closing due to clicking outside
+        const instanceObj = instance;
+        instanceObj.shouldFocusWrapperOnClose = false;
+        instanceObj.closeDropbox();
+      });
       return;
     }
 
     // If clicking a different dropdown, close current one
     const clickedInstance = $clickedEle.parentElement.virtualSelect;
-    if (clickedInstance && clickedInstance !== this && this.isOpened()) {
+    if (clickedInstance && clickedInstance !== this && this.isOpened() && !this.keepAlwaysOpen) {
+      // Don't focus when closing due to another dropdown being opened
+      this.shouldFocusWrapperOnClose = false;
       this.closeDropbox();
     }
   }
@@ -1030,6 +1037,7 @@ export class VirtualSelect {
     this.halfOptionsCount = Math.ceil(this.optionsCount / 2);
     this.optionsHeight = this.getOptionsHeight();
     this.uniqueId = this.getUniqueId();
+    this.shouldFocusWrapperOnClose = true; // Initialize focus management property
   }
 
   /**
@@ -2368,6 +2376,8 @@ export class VirtualSelect {
   }
 
   openDropbox(isSilent) {
+    // Set this instance as the last interacted one immediately
+    VirtualSelect.lastInteractedInstance = this;
     let originalTransition = '';
     // Disable transitions for programmatic opening
     if (!isSilent) {
@@ -2380,7 +2390,12 @@ export class VirtualSelect {
 
     // Close all other open instances first
     VirtualSelect.openInstances.forEach((instance) => {
-      if (instance !== this) instance.closeDropbox(true); // silent close
+      if (instance !== this) {
+        // Don't focus when closing due to another dropdown being opened
+        const instanceObj = instance;
+        instanceObj.shouldFocusWrapperOnClose = false;
+        instanceObj.closeDropbox(true); // silent close
+      }
     });
 
     // Add to open instances
@@ -2498,7 +2513,11 @@ export class VirtualSelect {
       DomUtils.dispatchEvent(this.$ele, 'afterClose');
     }
 
-    this.$wrapper.focus();
+    // Only focus if this is the last interacted instance AND shouldFocusWrapperOnClose is true
+    if (this.shouldFocusWrapperOnClose && VirtualSelect.lastInteractedInstance === this && !isSilent) {
+      this.$wrapper.focus();
+    }
+    this.shouldFocusWrapperOnClose = true; // Reset for next close
 
     DomUtils.setAttr(this.$dropboxWrapper, 'tabindex', '-1');
     DomUtils.setAria(this.$dropboxWrapper, 'hidden', true);
@@ -2525,6 +2544,7 @@ export class VirtualSelect {
   }
 
   toggleDropbox() {
+    VirtualSelect.lastInteractedInstance = this;
     if (this.isOpened()) {
       this.closeDropbox();
     } else {
@@ -3246,6 +3266,10 @@ export class VirtualSelect {
     // Remove from open instances
     VirtualSelect.openInstances.delete(this);
 
+    // Reset the last interacted instance only if this is the last interacted instance
+    if (this === VirtualSelect.lastInteractedInstance) {
+      VirtualSelect.lastInteractedInstance = null;
+    }
     /** Remove all event listeners to prevent memory leaks and ensure proper cleanup */
     this.removeEvents();
 
@@ -3562,6 +3586,9 @@ window.VirtualSelect = VirtualSelect;
 
 // Static property for tracking open dropdowns
 VirtualSelect.openInstances = new Set();
+
+// Static property for tracking the last interacted instance
+VirtualSelect.lastInteractedInstance = null;
 
 /** polyfill to fix an issue in ie browser */
 if (typeof NodeList !== 'undefined' && NodeList.prototype && !NodeList.prototype.forEach) {
