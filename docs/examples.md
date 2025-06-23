@@ -429,7 +429,7 @@ VirtualSelect.init({
 ## Add Events
 
 <div id="select-onchange"></div>
-<div id="select-onchange-results" style="color:green;padding:10px;"></div>
+<div id="select-onchange-results"></div>
 
 ```js
   initVirtualSelect({
