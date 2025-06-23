@@ -640,7 +640,7 @@ describe('To verify that the change event is not fired twice when selecting item
   it('select 2 in row', () => {
     cy.open(selid).find('.vscomp-option').first().click();
     cy.get(`#${resid}`).should('have.text', 'value = 1; count of changes = 1');
-    cy.open(selid).search(123).find('.vscomp-option').first().click();
+    cy.open(selid).search('123').find('.vscomp-option').first().click();
     cy.get(`#${resid}`).should('have.text', 'value = 123; count of changes = 2');
   });
 
