@@ -92,6 +92,42 @@ var Utils = /*#__PURE__*/function () {
     }
 
     /**
+     * Normalizes values by converting booleans to strings while preserving other types
+     * Handles both single values and arrays efficiently
+     * @param {*} value - The value to normalize
+     * @return {*} - Normalized value(s)
+     * @memberof Utils
+     */
+  }, {
+    key: "normalizeValues",
+    value: function normalizeValues(value) {
+      // Fast path for arrays
+      if (Array.isArray(value)) {
+        var result = new Array(value.length);
+        for (var i = 0; i < value.length; i += 1) {
+          var v = value[i];
+          if (v === true) {
+            result[i] = 'true';
+          } else if (v === false) {
+            result[i] = 'false';
+          } else {
+            result[i] = v;
+          }
+        }
+        return result;
+      }
+
+      // Handle single values
+      if (value === true) {
+        return 'true';
+      }
+      if (value === false) {
+        return 'false';
+      }
+      return value;
+    }
+
+    /**
      * @param {any[]} array
      * @param {any} value
      * @param {boolean} cloneArray
@@ -905,6 +941,8 @@ var VirtualSelect = /*#__PURE__*/function () {
       this.$toggleAllButton = this.$dropboxContainer.querySelector('.vscomp-toggle-all-button');
       this.$toggleAllCheckbox = this.$dropboxContainer.querySelector('.vscomp-toggle-all-checkbox');
       this.addEvent(this.$searchInput, 'input', 'onSearch');
+      // Prevents the change event from bubbling and triggering the main onChange handler twice.
+      this.addEvent(this.$searchInput, 'change', 'preventPropagation');
       this.addEvent(this.$searchClear, 'click keydown', 'onSearchClear');
       this.addEvent(this.$toggleAllButton, 'click', 'onToggleAllOptions');
       this.addEvent(this.$dropboxContainerBottom, 'focus', 'onDropboxContainerTopOrBottomFocus');
@@ -982,8 +1020,24 @@ var VirtualSelect = /*#__PURE__*/function () {
   }, {
     key: "onDocumentClick",
     value: function onDocumentClick(e) {
-      var $eleToKeepOpen = e.target.closest('.vscomp-wrapper');
-      if ($eleToKeepOpen !== this.$wrapper && $eleToKeepOpen !== this.$dropboxWrapper && this.isOpened()) {
+      var $clickedEle = e.target.closest('.vscomp-wrapper');
+
+      // Close all if clicking outside any dropdown
+      if (!$clickedEle) {
+        VirtualSelect.openInstances.forEach(function (instance) {
+          // Don't focus when closing due to clicking outside
+          var instanceObj = instance;
+          instanceObj.shouldFocusWrapperOnClose = false;
+          instanceObj.closeDropbox();
+        });
+        return;
+      }
+
+      // If clicking a different dropdown, close current one
+      var clickedInstance = $clickedEle.parentElement.virtualSelect;
+      if (clickedInstance && clickedInstance !== this && this.isOpened() && !this.keepAlwaysOpen) {
+        // Don't focus when closing due to another dropdown being opened
+        this.shouldFocusWrapperOnClose = false;
         this.closeDropbox();
       }
     }
@@ -1004,7 +1058,7 @@ var VirtualSelect = /*#__PURE__*/function () {
       // Handle the Escape key when showing the dropdown as a popup, closing it
       if (key === 27 || e.key === 'Escape') {
         var wrapper = this.showAsPopup ? this.$wrapper : this.$dropboxWrapper;
-        if ((document.activeElement === wrapper || wrapper.contains(document.activeElement)) && !this.keepAlwaysOpen) {
+        if (wrapper && (document.activeElement === wrapper || wrapper.contains(document.activeElement)) && !this.keepAlwaysOpen) {
           this.closeDropbox();
           return;
         }
@@ -1060,14 +1114,18 @@ var VirtualSelect = /*#__PURE__*/function () {
   }, {
     key: "onToggleButtonPress",
     value: function onToggleButtonPress(e) {
-      e.stopPropagation();
-      if (e.type === 'keydown' && e.code !== 'Enter' && e.code !== 'Space') {
-        return;
+      if (e.type === 'keydown') {
+        e.preventDefault();
+        if (e.code !== 'Enter' && e.code !== 'Space') return;
       }
       var $target = e.target;
       if ($target.closest('.vscomp-value-tag-clear-button')) {
+        e.stopPropagation();
         this.removeValue($target.closest('.vscomp-value-tag'));
-      } else if (!$target.closest('.toggle-button-child')) {
+        return;
+      }
+      if (!$target.closest('.toggle-button-child')) {
+        // Let the event bubble normally
         this.toggleDropbox();
       }
     }
@@ -1148,6 +1206,11 @@ var VirtualSelect = /*#__PURE__*/function () {
       this.setSearchValue(e.target.value, true);
     }
   }, {
+    key: "preventPropagation",
+    value: function preventPropagation(e) {
+      e.stopPropagation();
+    }
+  }, {
     key: "onSearchClear",
     value: function onSearchClear(e) {
       e.stopPropagation();
@@ -1208,7 +1271,9 @@ var VirtualSelect = /*#__PURE__*/function () {
   }, {
     key: "removeMutationObserver",
     value: function removeMutationObserver() {
-      this.mutationObserver.disconnect();
+      if (this.hasDropboxWrapper) {
+        this.mutationObserver.disconnect();
+      }
     }
 
     /** dom event methods - end */
@@ -1479,6 +1544,7 @@ var VirtualSelect = /*#__PURE__*/function () {
       this.halfOptionsCount = Math.ceil(this.optionsCount / 2);
       this.optionsHeight = this.getOptionsHeight();
       this.uniqueId = this.getUniqueId();
+      this.shouldFocusWrapperOnClose = true; // Initialize focus management property
     }
 
     /**
@@ -1598,7 +1664,8 @@ var VirtualSelect = /*#__PURE__*/function () {
       var valuesOrder = {};
       var validValues = [];
       var isMultiSelect = this.multiple;
-      var value = newValue;
+      // Normalize input value first
+      var value = Utils.normalizeValues(newValue);
       if (value) {
         if (!Array.isArray(value)) {
           value = [value];
@@ -1611,11 +1678,6 @@ var VirtualSelect = /*#__PURE__*/function () {
         } else if (value.length > 1) {
           value = [value[0]];
         }
-
-        /** converting value to string */
-        value = value.map(function (v) {
-          return v || v === 0 ? v.toString() : '';
-        });
         if (this.useGroupValue) {
           value = this.setGroupOptionsValue(value);
         }
@@ -1628,9 +1690,12 @@ var VirtualSelect = /*#__PURE__*/function () {
         }
       }
       this.options.forEach(function (d) {
-        if (valuesMapping[d.value] === true && !d.isDisabled && !d.isGroupTitle) {
+        // Compare with normalized option values
+        var normalizedOptionValue = Utils.normalizeValues(d.value);
+        if (valuesMapping[normalizedOptionValue] === true && !d.isDisabled && !d.isGroupTitle) {
           // eslint-disable-next-line no-param-reassign
           d.isSelected = true;
+          // Store original value but compare with normalized value
           validValues.push(d.value);
         } else {
           // eslint-disable-next-line no-param-reassign
@@ -1644,7 +1709,7 @@ var VirtualSelect = /*#__PURE__*/function () {
 
         /** sorting validValues in the given values order */
         validValues.sort(function (a, b) {
-          return valuesOrder[a] - valuesOrder[b];
+          return valuesOrder[Utils.normalizeValues(a)] - valuesOrder[Utils.normalizeValues(b)];
         });
       } else {
         /** taking first value for single select */
@@ -1826,7 +1891,7 @@ var VirtualSelect = /*#__PURE__*/function () {
           index: index,
           value: value,
           label: label,
-          labelNormalized: _this7.searchNormalize ? Utils.normalizeString(label).toLowerCase() : label.toLowerCase(),
+          labelNormalized: _this7.searchNormalize && label.trim() !== '' ? Utils.normalizeString(label).toLowerCase() : label.toLowerCase(),
           alias: getAlias(d[aliasKey]),
           isVisible: convertToBoolean(d.isVisible, true),
           isNew: d.isNew || false,
@@ -2008,13 +2073,15 @@ var VirtualSelect = /*#__PURE__*/function () {
         disableEvent = _ref2$disableEvent === void 0 ? false : _ref2$disableEvent,
         _ref2$disableValidati = _ref2.disableValidation,
         disableValidation = _ref2$disableValidati === void 0 ? false : _ref2$disableValidati;
-      var isValidValue = this.hasEmptyValueOption && value === '' || value;
+      // Normalize input value first
+      var normalizedValue = Utils.normalizeValues(value);
+      var isValidValue = this.hasEmptyValueOption && normalizedValue === '' || normalizedValue;
       if (!isValidValue) {
         this.selectedValues = [];
-      } else if (Array.isArray(value)) {
-        this.selectedValues = virtual_select_toConsumableArray(value);
+      } else if (Array.isArray(normalizedValue)) {
+        this.selectedValues = virtual_select_toConsumableArray(normalizedValue);
       } else {
-        this.selectedValues = [value];
+        this.selectedValues = [normalizedValue];
       }
       var newValue = this.getValue();
       this.$ele.value = newValue;
@@ -2173,7 +2240,7 @@ var VirtualSelect = /*#__PURE__*/function () {
 
       /** If searchNormalize we'll normalize the searchValue */
       var searchValue = this.searchValue;
-      searchValue = this.searchNormalize ? Utils.normalizeString(searchValue) : searchValue;
+      searchValue = this.searchNormalize && searchValue.trim() !== '' ? Utils.normalizeString(searchValue) : searchValue;
       var isOptionVisible = this.isOptionVisible.bind(this);
       if (this.hasOptionGroup) {
         visibleOptionGroupsMapping = this.getVisibleOptionGroupsMapping(searchValue);
@@ -2417,15 +2484,11 @@ var VirtualSelect = /*#__PURE__*/function () {
     value: function getValue() {
       var value;
       if (this.multiple) {
-        if (this.useGroupValue) {
-          value = this.getGroupValue();
-        } else {
-          value = this.selectedValues;
-        }
+        value = this.useGroupValue ? this.getGroupValue() : this.selectedValues;
       } else {
         value = this.selectedValues[0] || '';
       }
-      return value;
+      return Utils.normalizeValues(value);
     }
   }, {
     key: "getGroupValue",
@@ -2722,7 +2785,31 @@ var VirtualSelect = /*#__PURE__*/function () {
   }, {
     key: "openDropbox",
     value: function openDropbox(isSilent) {
+      var _this11 = this;
+      // Set this instance as the last interacted one immediately
+      VirtualSelect.lastInteractedInstance = this;
+      var originalTransition = '';
+      // Disable transitions for programmatic opening
+      if (!isSilent) {
+        // Store original transition
+        originalTransition = this.$dropboxContainer.style.transition;
+        this.$dropboxContainer.style.transition = 'none';
+      }
+      // Perform the open operation
       this.isSilentOpen = isSilent;
+
+      // Close all other open instances first
+      VirtualSelect.openInstances.forEach(function (instance) {
+        if (instance !== _this11) {
+          // Don't focus when closing due to another dropdown being opened
+          var instanceObj = instance;
+          instanceObj.shouldFocusWrapperOnClose = false;
+          instanceObj.closeDropbox(true); // silent close
+        }
+      });
+
+      // Add to open instances
+      VirtualSelect.openInstances.add(this);
       DomUtils.setAttr(this.$dropboxWrapper, 'tabindex', '0');
       DomUtils.setAria(this.$dropboxWrapper, 'hidden', false);
       DomUtils.setAttr(this.$dropboxContainerTop, 'tabindex', '0');
@@ -2738,6 +2825,13 @@ var VirtualSelect = /*#__PURE__*/function () {
       this.setDropboxWrapperWidth();
       DomUtils.removeClass(this.$allWrappers, 'closed');
       DomUtils.changeTabIndex(this.$allWrappers, 0);
+      if (!isSilent) {
+        // Force synchronous layout and style calculation
+        // Trigger reflow
+        this.$dropboxContainer.offsetHeight; // eslint-disable-line no-unused-expressions
+        // Restore transitions immediately after reflow
+        this.$dropboxContainer.style.transition = originalTransition;
+      }
       if (this.dropboxPopover && !isSilent) {
         this.dropboxPopover.show();
       } else {
@@ -2766,6 +2860,9 @@ var VirtualSelect = /*#__PURE__*/function () {
     key: "closeDropbox",
     value: function closeDropbox(isSilent) {
       this.isSilentClose = isSilent;
+
+      // Remove from open instances
+      VirtualSelect.openInstances["delete"](this);
       if (this.isOpened() === false) {
         return;
       }
@@ -2807,7 +2904,13 @@ var VirtualSelect = /*#__PURE__*/function () {
       if (!isSilent) {
         DomUtils.dispatchEvent(this.$ele, 'afterClose');
       }
-      this.$wrapper.focus();
+
+      // Only focus if this is the last interacted instance AND shouldFocusWrapperOnClose is true
+      if (this.shouldFocusWrapperOnClose && VirtualSelect.lastInteractedInstance === this && !isSilent) {
+        this.$wrapper.focus();
+      }
+      this.shouldFocusWrapperOnClose = true; // Reset for next close
+
       DomUtils.setAttr(this.$dropboxWrapper, 'tabindex', '-1');
       DomUtils.setAria(this.$dropboxWrapper, 'hidden', true);
       DomUtils.setAttr(this.$dropboxContainerTop, 'tabindex', '-1');
@@ -2826,10 +2929,12 @@ var VirtualSelect = /*#__PURE__*/function () {
       }
       this.setSortedOptions();
       this.scrollToTop();
+      this.setVisibleOptions();
     }
   }, {
     key: "toggleDropbox",
     value: function toggleDropbox() {
+      VirtualSelect.lastInteractedInstance = this;
       if (this.isOpened()) {
         this.closeDropbox();
       } else {
@@ -3047,7 +3152,7 @@ var VirtualSelect = /*#__PURE__*/function () {
   }, {
     key: "selectRangeOptions",
     value: function selectRangeOptions(lastSelectedOptionIndex, selectedIndex) {
-      var _this11 = this;
+      var _this12 = this;
       if (typeof lastSelectedOptionIndex !== 'number' || this.maxValues) {
         return;
       }
@@ -3093,7 +3198,7 @@ var VirtualSelect = /*#__PURE__*/function () {
 
       /** using setTimeout to fix the issue of dropbox getting closed on select */
       setTimeout(function () {
-        _this11.renderOptions();
+        _this12.renderOptions();
       }, 0);
     }
   }, {
@@ -3202,7 +3307,7 @@ var VirtualSelect = /*#__PURE__*/function () {
   }, {
     key: "toggleGroupOptions",
     value: function toggleGroupOptions($ele, isSelected) {
-      var _this12 = this;
+      var _this13 = this;
       if (!this.hasOptionGroup || this.disableOptionGroupCheckbox || !$ele) {
         return;
       }
@@ -3238,7 +3343,7 @@ var VirtualSelect = /*#__PURE__*/function () {
 
       /** using setTimeout to fix the issue of dropbox getting closed on select */
       setTimeout(function () {
-        _this12.renderOptions();
+        _this13.renderOptions();
       }, 0);
     }
   }, {
@@ -3372,7 +3477,7 @@ var VirtualSelect = /*#__PURE__*/function () {
         searchGroup = _ref7.searchGroup,
         searchByStartsWith = _ref7.searchByStartsWith;
       var value = data.value.toLowerCase();
-      var label = this.searchNormalize ? data.labelNormalized : data.label.toLowerCase();
+      var label = this.searchNormalize && data.labelNormalized != null ? data.labelNormalized : (data.label || '').trim().toLowerCase();
       var description = data.description,
         alias = data.alias;
       var isVisible = searchByStartsWith ? label.startsWith(searchValue) : label.includes(searchValue);
@@ -3496,6 +3601,13 @@ var VirtualSelect = /*#__PURE__*/function () {
       $ele.value = undefined;
       $ele.innerHTML = '';
 
+      // Remove from open instances
+      VirtualSelect.openInstances["delete"](this);
+
+      // Reset the last interacted instance only if this is the last interacted instance
+      if (this === VirtualSelect.lastInteractedInstance) {
+        VirtualSelect.lastInteractedInstance = null;
+      }
       /** Remove all event listeners to prevent memory leaks and ensure proper cleanup */
       this.removeEvents();
       if (this.hasDropboxWrapper) {
@@ -3809,6 +3921,12 @@ document.addEventListener('submit', VirtualSelect.onFormSubmit);
 window.addEventListener('resize', VirtualSelect.onResizeMethod);
 attrPropsMapping = VirtualSelect.getAttrProps();
 window.VirtualSelect = VirtualSelect;
+
+// Static property for tracking open dropdowns
+VirtualSelect.openInstances = new Set();
+
+// Static property for tracking the last interacted instance
+VirtualSelect.lastInteractedInstance = null;
 
 /** polyfill to fix an issue in ie browser */
 if (typeof NodeList !== 'undefined' && NodeList.prototype && !NodeList.prototype.forEach) {

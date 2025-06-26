@@ -4,6 +4,9 @@
 
 Change event would be trigged on choosing option
 
+<div id="select-onchange"></div>
+<div id="select-onchange-changes">Selected = - | No.changes = -</div>
+
 ```js
 /** in vanilla javascript */
 document.querySelector('#sample-select').addEventListener('change', function() {
@@ -39,3 +42,9 @@ document.querySelector('#sample-select').addEventListener('reset', callbackFunct
 /** in jquery */
 $('#sample-select').on('reset', callbackFunction);
 ```
+
+<script>
+  setTimeout(function() {
+    initPageEvents();
+  }, 0);
+</script>

@@ -26,7 +26,6 @@
 - [Disable/Enable](#disable-enable)
 - [Validation](#validation)
 - [Custom styling](#custom-styling)
-- [Add Events](#add-events)
 
 ## Default dropdown
 
@@ -425,22 +424,6 @@ VirtualSelect.init({
   additionalToggleButtonClasses: 'custom-toggle-button',
 });
 ```
-
-## Add Events
-
-<div id="select-onchange"></div>
-<div id="select-onchange-results"></div>
-
-```js
-  initVirtualSelect({
-    ele: '#select-onchange',
-    ...
-  });
-  document.querySelector('#select-onchange').addEventListener('change', function() {
-    document.querySelector('#select-onchange-results').innerText = `value = ${this.value}`;
-  });
-```
-
 
 <script>
   setTimeout(function() {
