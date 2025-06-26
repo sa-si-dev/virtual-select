@@ -1,12 +1,18 @@
 /** cSpell:ignore vscomp */
 
-describe('Open Get Started page for Dropdowns interaction test', () => {
-  const idSingle = 'single-select'
-  const idMultiple = 'multiple-select'
+// // // // //
+// // // // // Get started page
+// // // // //
 
+describe('Open page', () => {
   it('opened', () => {
     cy.visit('get-started');
   });
+});
+
+describe('Open Get Started page for Dropdowns interaction test', () => {
+  const idSingle = 'single-select'
+  const idMultiple = 'multiple-select'
 
   it('open the single-select dropdown', () => {
     cy.open(idSingle);
@@ -27,10 +33,6 @@ describe('Open Get Started page for Dropdowns interaction test', () => {
 describe('Open Get Started page for Dropdowns interaction test clicking outside', () => {
   const idSingle = 'single-select'
   const idMultiple = 'multiple-select'
-
-  it('opened', () => {
-    cy.visit('get-started');
-  });
 
   it('open the single-select dropdown', () => {
     cy.open(idSingle);
@@ -54,7 +56,13 @@ describe('Open Get Started page for Dropdowns interaction test clicking outside'
 
 });
 
-describe('Open examples page', () => {
+
+
+// // // // //
+// // // // // Examples page
+// // // // //
+
+describe('Open page', () => {
   it('opened', () => {
     cy.visit('examples');
   });
@@ -628,13 +636,23 @@ describe('Validation', () => {
 });
 
 
-describe('To verify that the change event is not fired twice when selecting items via the search input', () => {
 
+// // // // //
+// // // // // Event page
+// // // // //
+
+describe('Open page', () => {
+  it('opened', () => {
+    cy.visit('events');
+  });
+});
+
+describe('To verify that the change event is not fired twice when selecting items via the search input', () => {
   const selid = 'select-onchange';
   const resid = 'select-onchange-results';
 
   it('go to section', () => {
-    cy.goToSection('Add Events');
+    cy.goToSection('On change');
   });
 
   it('select 2 in row', () => {
