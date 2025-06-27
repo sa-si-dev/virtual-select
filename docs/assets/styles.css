@@ -137,6 +137,11 @@ section.cover {
   margin-bottom: 20px;
 }
 
+#select-onchange-results {
+  padding:10px;
+  color:green;
+}
+
 /* utility classes - start */
 
 .custom-wrapper {

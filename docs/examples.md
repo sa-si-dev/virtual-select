@@ -408,6 +408,7 @@ document.querySelector('#sample-form').addEventListener('submit', function() {
   }
 });
 ```
+
 ## Custom styling
 
 Use `additionalClasses`, `additionalDropboxClasses`, `additionalDropboxContainerClasses` and `additionalToggleButtonClasses` to customize the styling of your dropdown
@@ -424,6 +425,8 @@ VirtualSelect.init({
 });
 ```
 
+
+<!-- END -->
 <script>
   setTimeout(function() {
     initPageExamples();

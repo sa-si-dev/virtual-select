@@ -1,12 +1,18 @@
 /** cSpell:ignore vscomp */
 
-describe('Open Get Started page for Dropdowns interaction test', () => {
-  const idSingle = 'single-select'
-  const idMultiple = 'multiple-select'
+// // // // //
+// // // // // Get started page
+// // // // //
 
+describe('Open page', () => {
   it('opened', () => {
     cy.visit('get-started');
   });
+});
+
+describe('Open Get Started page for Dropdowns interaction test', () => {
+  const idSingle = 'single-select'
+  const idMultiple = 'multiple-select'
 
   it('open the single-select dropdown', () => {
     cy.open(idSingle);
@@ -27,10 +33,6 @@ describe('Open Get Started page for Dropdowns interaction test', () => {
 describe('Open Get Started page for Dropdowns interaction test clicking outside', () => {
   const idSingle = 'single-select'
   const idMultiple = 'multiple-select'
-
-  it('opened', () => {
-    cy.visit('get-started');
-  });
 
   it('open the single-select dropdown', () => {
     cy.open(idSingle);
@@ -54,7 +56,13 @@ describe('Open Get Started page for Dropdowns interaction test clicking outside'
 
 });
 
-describe('Open examples page', () => {
+
+
+// // // // //
+// // // // // Examples page
+// // // // //
+
+describe('Open page', () => {
   it('opened', () => {
     cy.visit('examples');
   });
@@ -625,4 +633,33 @@ describe('Validation', () => {
     cy.get('#validation-form').find('[type=reset]').click();
     cy.getVs(id).find('.vscomp-ele-wrapper').should('not.have.class', 'has-error');
   });
+});
+
+
+
+// // // // //
+// // // // // Event page
+// // // // //
+
+describe('Open page', () => {
+  it('opened', () => {
+    cy.visit('events');
+  });
+});
+
+describe('To verify that the change event is not fired twice when selecting items via the search input', () => {
+  const selid = 'select-onchange';
+  const resid = 'select-onchange-results';
+
+  it('go to section', () => {
+    cy.goToSection('On change');
+  });
+
+  it('select 2 in row', () => {
+    cy.open(selid).find('.vscomp-option').first().click();
+    cy.get(`#${resid}`).should('have.text', 'value = 1; count of changes = 1');
+    cy.open(selid).search('123').find('.vscomp-option').first().click();
+    cy.get(`#${resid}`).should('have.text', 'value = 123; count of changes = 2');
+  });
+
 });

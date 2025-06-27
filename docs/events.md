@@ -4,15 +4,23 @@
 
 Change event would be trigged on choosing option
 
+<div id="select-onchange"></div>
+<div id="select-onchange-results"></div>
+
 ```js
+initVirtualSelect({
+  ele: '#select-onchange',
+  ...
+});
+
 /** in vanilla javascript */
-document.querySelector('#sample-select').addEventListener('change', function() {
-  console.log(this.value);
+document.querySelector('#select-onchange').addEventListener('change', function() {
+  document.querySelector('#select-onchange-results').innerText = `value = ${this.value}`;
 });
 
 /** in jquery */
-$('#sample-select').change(function() {
-  console.log(this.value);
+$('#select-onchange').change(function() {
+  $('#select-onchange-results').innerText = `value = ${this.value}`;
 });
 ```
 
@@ -39,3 +47,11 @@ document.querySelector('#sample-select').addEventListener('reset', callbackFunct
 /** in jquery */
 $('#sample-select').on('reset', callbackFunction);
 ```
+
+
+<!-- END -->
+<script>
+  setTimeout(function() {
+    initPageEvents();
+  }, 0);
+</script>

@@ -448,6 +448,8 @@ export class VirtualSelect {
     this.$toggleAllCheckbox = this.$dropboxContainer.querySelector('.vscomp-toggle-all-checkbox');
 
     this.addEvent(this.$searchInput, 'input', 'onSearch');
+    // Prevents the change event from bubbling and triggering the main onChange handler twice.
+    this.addEvent(this.$searchInput, 'change', 'preventPropagation');
     this.addEvent(this.$searchClear, 'click keydown', 'onSearchClear');
     this.addEvent(this.$toggleAllButton, 'click', 'onToggleAllOptions');
     this.addEvent(this.$dropboxContainerBottom, 'focus', 'onDropboxContainerTopOrBottomFocus');
@@ -701,6 +703,10 @@ export class VirtualSelect {
   onSearch(e) {
     e.stopPropagation();
     this.setSearchValue(e.target.value, true);
+  }
+
+  preventPropagation(e) {
+    e.stopPropagation();
   }
 
   onSearchClear(e) {
