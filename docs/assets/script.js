@@ -151,23 +151,6 @@ function initPageGetStarted() {
 }
 
 // eslint-disable-next-line no-unused-vars
-function initPageEvents() {
-
-  initVirtualSelect({
-    ele: '#select-onchange',
-    search: true,
-    dropboxWrapper: 'self', // needed for onchange unit tests
-  });
-  window.onchangeCount=0;
-  document.querySelector('#select-onchange').addEventListener('change', function() {
-    window.onchangeCount++;
-    document.querySelector('#select-onchange-results').innerText = `value = ${this.value}; count of changes = ${window.onchangeCount}`;
-  });
-
-}
-
-
-// eslint-disable-next-line no-unused-vars
 function initPageExamples() {
   initVirtualSelect({
     ele: '#single-select',
@@ -310,30 +293,30 @@ function initPageExamples() {
   initVirtualSelect({
     ele: '#show-value-as-tags-select-with-html',
     multiple: true,
-  search: true,
-  showValueAsTags: true,
-  options: [
-    {
-      label: '<i class="icon-fire" aria-hidden="true"></i> Option 1',
-      value: 1
-    },
-    { label: '<i class="icon-plane" aria-hidden="true"></i> Option 2', 
-      value: 2 },
-    {
-      label:
-        '<i class="icon-apple" aria-hidden="true"></i> This is a very long text to be selected in the selection!! This is a very long text to be selected in the selection!!',
-      value: 3
-    },
-    {
-      label:
-        'This is a very long text to be selected in the selection!! This is a very long text to be selected in the selection!!',
-      value: 4
-    }
-    
-  ],  
-  selectedValue: [1,2]
+    search: true,
+    showValueAsTags: true,
+    options: [
+      {
+        label: '<i class="icon-fire" aria-hidden="true"></i> Option 1',
+        value: 1
+      },
+      { label: '<i class="icon-plane" aria-hidden="true"></i> Option 2', 
+        value: 2 },
+      {
+        label:
+          '<i class="icon-apple" aria-hidden="true"></i> This is a very long text to be selected in the selection!! ' +
+          'This is a very long text to be selected in the selection!!',
+        value: 3
+      },
+      {
+        label:
+          'This is a very long text to be selected in the selection!! ' +
+          'This is a very long text to be selected in the selection!!',
+        value: 4
+      }
+    ],
+    selectedValue: [1, 2]
   });
-
 
   initVirtualSelect({
     ele: '#direction-rtl-select',
@@ -379,4 +362,19 @@ function initPageExamples() {
     additionalToggleButtonClasses: 'custom-toggle-button',
   });
 
+}
+
+// eslint-disable-next-line no-unused-vars
+function initPageEvents() {
+  initVirtualSelect({
+    ele: '#sample-select-onchange',
+    search: true,
+    dropboxWrapper: 'self', // needed for onchange unit tests
+  });
+  window.onchangeCount = 0;
+  document.querySelector('#sample-select-onchange').addEventListener('change', function onchangeHandler() {
+    window.onchangeCount += 1;
+    document.querySelector('#sample-select-changes').innerText =
+      `Selected = ${this.value} | No.changes = ${window.onchangeCount}`;
+  });
 }

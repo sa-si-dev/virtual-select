@@ -137,9 +137,10 @@ section.cover {
   margin-bottom: 20px;
 }
 
-#select-onchange-results {
-  padding:10px;
-  color:green;
+#sample-select-changes {
+  color: var(--theme-color, #42b983);
+  font-size: 0.8rem;
+  padding: 10px 0 0 10px;
 }
 
 /* utility classes - start */
