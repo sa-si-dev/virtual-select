@@ -635,8 +635,11 @@ describe('Validation', () => {
   });
 });
 
+// // // // //
+// // // // // Events page
+// // // // //
 
-describe('To verify that the change event is not fired twice when selecting items via the search input', () => {
+describe('To verify that the change event is not fired twice when selecting items after a search', () => {
 
   const id = 'select-onchange';
   const resId = 'select-onchange-changes';

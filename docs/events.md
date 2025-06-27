@@ -4,23 +4,18 @@
 
 Change event would be trigged on choosing option
 
-<div id="select-onchange"></div>
-<div id="select-onchange-changes" aria-live="polite">Selected = - | No.changes = -</div>
+<div id="sample-select-onchange"></div>
+<div id="sample-select-changes" aria-live="polite">Selected = - | No.changes = -</div>
 
 ```js
-initVirtualSelect({
-  ele: '#select-onchange',
-  ...
-});
-
 /** in vanilla javascript */
-document.querySelector('#select-onchange').addEventListener('change', function() {
-  document.querySelector('#select-onchange-results').innerText = `value = ${this.value}`;
+document.querySelector('#sample-select-onchange').addEventListener('change', function() {
+  document.querySelector('#sample-select-changes').innerText = `Selected = ${this.value}`;
 });
 
 /** in jquery */
-$('#select-onchange').change(function() {
-  $('#select-onchange-results').innerText = `value = ${this.value}`;
+$('#sample-select-onchange').change(function() {
+  $('#sample-select-changes').innerText = `Selected = ${this.value}`;
 });
 ```
 
