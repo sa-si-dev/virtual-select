@@ -5,7 +5,7 @@
 Change event would be trigged on choosing option
 
 <div id="select-onchange"></div>
-<div id="select-onchange-changes">Selected = - | No.changes = -</div>
+<div id="select-onchange-changes" aria-live="polite">Selected = - | No.changes = -</div>
 
 ```js
 initVirtualSelect({
