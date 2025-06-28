@@ -6,7 +6,7 @@ This event will be triggered when choosing an option from the dropdown.
 
 <div class="flex-container">
   <div id="sample-select-onchange"></div>
-  <div id="sample-select-changes" class ="sample-select-results" aria-live="polite">Selected = - | No.changes = -</div>
+  <div id="sample-select-changes" class="sample-select-results" aria-live="polite">Selected = - | No.changes = -</div>
 </div>
 
 ```js
