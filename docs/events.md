@@ -26,18 +26,22 @@ $('#sample-select-onchange').change(function() {
 These events will be triggered when opening or closing the dropdown.
 
 <div class="flex-container">
-  <div id="sample-select-open"></div>
+  <div id="sample-select-openclose"></div>
   <div id="select-openclose-res" class ="sample-select-results" aria-live="polite"></div>
 </div>
 
 ```js
 /** in vanilla javascript */
-document.querySelector('#sample-select-open').addEventListener('beforeOpen', callbackFunction);
-document.querySelector('#sample-select-open').addEventListener('afterOpen', callbackFunction);
+document.querySelector('#sample-select-openclose').addEventListener('beforeOpen', callbackFunction);
+document.querySelector('#sample-select-openclose').addEventListener('afterOpen', callbackFunction);
+document.querySelector('#sample-select-openclose').addEventListener('beforeClose', callbackFunction);
+document.querySelector('#sample-select-openclose').addEventListener('afterClose', callbackFunction);
 
 /** in jquery */
-$('#sample-select-open').on('beforeClose', callbackFunction);
-$('#sample-select-open').on('afterClose', callbackFunction);
+$('#sample-select-openclose').on('beforeOpen', callbackFunction);
+$('#sample-select-openclose').on('afterOpen', callbackFunction);
+$('#sample-select-openclose').on('beforeClose', callbackFunction);
+$('#sample-select-openclose').on('afterClose', callbackFunction);
 ```
 
 ### Reset

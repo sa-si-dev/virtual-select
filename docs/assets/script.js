@@ -383,14 +383,16 @@ function initPageEvents() {
   });
 
   initVirtualSelect({
-    ele: '#sample-select-open',
+    ele: '#sample-select-openclose',
   });
   function callbackFunctionOpen(event) {
     // You can add custom logic here if needed
     document.querySelector('#select-openclose-res').innerText = `'${event.type}' event triggered`;
   }
-  document.querySelector('#sample-select-open').addEventListener('beforeOpen', callbackFunctionOpen);
-  document.querySelector('#sample-select-open').addEventListener('afterOpen', callbackFunctionOpen);
+  document.querySelector('#sample-select-openclose').addEventListener('beforeOpen', callbackFunctionOpen);
+  document.querySelector('#sample-select-openclose').addEventListener('afterOpen', callbackFunctionOpen);
+  document.querySelector('#sample-select-openclose').addEventListener('beforeClose', callbackFunctionOpen);
+  document.querySelector('#sample-select-openclose').addEventListener('afterClose', callbackFunctionOpen);
 
   initVirtualSelect({
     ele: '#sample-select-reset',
