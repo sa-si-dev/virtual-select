@@ -139,7 +139,7 @@ section.cover {
 
 .sample-select-results {
   color: var(--theme-color, #42b983);
-  font-size: 14px;
+  font-size: 0.875rem;
 }
 
 /* utility classes - start */
