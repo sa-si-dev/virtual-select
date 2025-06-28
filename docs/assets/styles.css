@@ -137,10 +137,10 @@ section.cover {
   margin-bottom: 20px;
 }
 
-#sample-select-changes {
+.sample-select-results {
   color: var(--theme-color, #42b983);
-  font-size: 0.8rem;
-  padding: 10px 0 0 10px;
+  font-size: 0.875rem;
+  padding-left: 10px;
 }
 
 /* utility classes - start */
@@ -164,6 +164,29 @@ section.cover {
   border-color: var(--theme-color, #42b983);
   border-radius: 14px;
   color: var(--theme-color, #42b983);
+}
+
+.flex-container {
+  align-items: flex-start;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.flex-container > div:first-child {
+  align-items: center;
+  display: flex;
+  flex: 0 0 auto;
+  min-height: 40px;
+}
+
+.flex-container > div:last-child {
+  align-items: center;
+  display: flex;
+  flex: 1;
+  min-height: 40px;
+  min-width: 200px;
+  padding-top: 0;
 }
 
 /* utility classes - end */
