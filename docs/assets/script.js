@@ -378,7 +378,7 @@ function initPageEvents() {
   window.onchangeCount = 0;
   document.querySelector('#sample-select-onchange').addEventListener('change', function handleOnChangeEvent() {
     window.onchangeCount += 1;
-    document.querySelector('#sample-select-changes').innerText =
+    document.querySelector('#sample-select-changes').textContent =
       `Selected = ${this.value} | No.changes = ${window.onchangeCount}`;
   });
 
