@@ -659,3 +659,28 @@ describe('To verify that the change event is not fired twice when selecting item
   });
 
 });
+
+
+describe('To verify that the reset event is fired', () => {
+
+  const id = 'sample-select-reset';
+  const resId = 'select-reset-res';
+
+  it('go to section', () => {
+    cy.goToSection('Events');
+  });
+
+  it('select Option 1', () => {
+    cy.open(id).selectOption(1).hasValueText('Option 1');
+  });
+
+  it('check clear button exist', () => {
+    cy.getVs(id).checkClearButton(true);
+  });
+
+  it('reset value', () => {
+    cy.resetValue(id);
+    cy.get(`#${resId}`).should('have.text', 'reset event triggered');
+  });
+
+});

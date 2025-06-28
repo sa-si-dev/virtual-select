@@ -27,7 +27,7 @@ These events will be triggered when opening or closing the dropdown.
 
 <div class="flex-container">
   <div id="sample-select-openclose"></div>
-  <div id="select-openclose-res" class ="sample-select-results" aria-live="polite"></div>
+  <div id="select-openclose-res" class="sample-select-results" aria-live="polite"></div>
 </div>
 
 ```js
@@ -50,7 +50,7 @@ This event will be triggered when clear button is clicked or a form is reset.
 
 <div class="flex-container">
   <div id="sample-select-reset"></div>
-  <div id="select-reset-res" class ="sample-select-results" aria-live="polite"></div>
+  <div id="select-reset-res" class="sample-select-results" aria-live="polite"></div>
 </div>
 
 ```js
