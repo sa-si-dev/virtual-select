@@ -387,7 +387,7 @@ function initPageEvents() {
   });
   function handleOpenCloseEvent(event) {
     // You can add custom logic here if needed
-    document.querySelector('#select-openclose-res').innerText = `${event.type} event triggered`;
+    document.querySelector('#select-openclose-res').textContent = `${event.type} event triggered`;
   }
   document.querySelector('#sample-select-openclose').addEventListener('beforeOpen', handleOpenCloseEvent);
   document.querySelector('#sample-select-openclose').addEventListener('afterOpen', handleOpenCloseEvent);
@@ -399,7 +399,7 @@ function initPageEvents() {
   });
   function handleResetEvent(event) {
     // You can add custom logic here if needed
-    document.querySelector('#select-reset-res').innerText = `${event.type} event triggered`;
+    document.querySelector('#select-reset-res').textContent = `${event.type} event triggered`;
   }
   document.querySelector('#sample-select-reset').addEventListener('reset', handleResetEvent);
 }

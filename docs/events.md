@@ -12,12 +12,12 @@ This event will be triggered when choosing an option from the dropdown.
 ```js
 /** in vanilla javascript */
 document.querySelector('#sample-select-onchange').addEventListener('change', function() {
-  document.querySelector('#sample-select-changes').innerText = `Selected = ${this.value}`;
+  document.querySelector('#sample-select-changes').textContent = `Selected = ${this.value}`;
 });
 
 /** in jquery */
 $('#sample-select-onchange').change(function() {
-  $('#sample-select-changes').innerText = `Selected = ${this.value}`;
+  $('#sample-select-changes').textContent = `Selected = ${this.value}`;
 });
 ```
 
