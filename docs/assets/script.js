@@ -376,7 +376,7 @@ function initPageEvents() {
     dropboxWrapper: 'self', // needed for onchange unit tests
   });
   window.onchangeCount = 0;
-  document.querySelector('#sample-select-onchange').addEventListener('change', function onchangeHandler() {
+  document.querySelector('#sample-select-onchange').addEventListener('change', function handleOnChangeEvent() {
     window.onchangeCount += 1;
     document.querySelector('#sample-select-changes').innerText =
       `Selected = ${this.value} | No.changes = ${window.onchangeCount}`;
@@ -385,21 +385,21 @@ function initPageEvents() {
   initVirtualSelect({
     ele: '#sample-select-openclose',
   });
-  function callbackFunctionOpen(event) {
+  function handleOpenCloseEvent(event) {
     // You can add custom logic here if needed
     document.querySelector('#select-openclose-res').innerText = `'${event.type}' event triggered`;
   }
-  document.querySelector('#sample-select-openclose').addEventListener('beforeOpen', callbackFunctionOpen);
-  document.querySelector('#sample-select-openclose').addEventListener('afterOpen', callbackFunctionOpen);
-  document.querySelector('#sample-select-openclose').addEventListener('beforeClose', callbackFunctionOpen);
-  document.querySelector('#sample-select-openclose').addEventListener('afterClose', callbackFunctionOpen);
+  document.querySelector('#sample-select-openclose').addEventListener('beforeOpen', handleOpenCloseEvent);
+  document.querySelector('#sample-select-openclose').addEventListener('afterOpen', handleOpenCloseEvent);
+  document.querySelector('#sample-select-openclose').addEventListener('beforeClose', handleOpenCloseEvent);
+  document.querySelector('#sample-select-openclose').addEventListener('afterClose', handleOpenCloseEvent);
 
   initVirtualSelect({
     ele: '#sample-select-reset',
   });
-  function callbackFunctionReset(event) {
+  function handleResetEvent(event) {
     // You can add custom logic here if needed
     document.querySelector('#select-reset-res').innerText = `'${event.type}' event triggered`;
   }
-  document.querySelector('#sample-select-reset').addEventListener('reset', callbackFunctionReset);
+  document.querySelector('#sample-select-reset').addEventListener('reset', handleResetEvent);
 }
