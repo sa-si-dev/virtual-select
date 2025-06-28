@@ -2,10 +2,12 @@
 
 ### On change
 
-Change event would be trigged on choosing option
+This event will be triggered when choosing an option from the dropdown.
 
-<div id="sample-select-onchange"></div>
-<div id="sample-select-changes" aria-live="polite">Selected = - | No.changes = -</div>
+<div class="flex-container">
+  <div id="sample-select-onchange"></div>
+  <div id="sample-select-changes" class ="sample-select-results" aria-live="polite">Selected = - | No.changes = -</div>
+</div>
 
 ```js
 /** in vanilla javascript */
@@ -21,26 +23,38 @@ $('#sample-select-onchange').change(function() {
 
 ### Open / Close
 
+These events will be triggered when opening or closing the dropdown.
+
+<div class="flex-container">
+  <div id="sample-select-open"></div>
+  <div id="select-openclose-res" class ="sample-select-results" aria-live="polite"></div>
+</div>
+
 ```js
 /** in vanilla javascript */
-document.querySelector('#sample-select').addEventListener('beforeOpen', callbackFunction);
-document.querySelector('#sample-select').addEventListener('afterOpen', callbackFunction);
+document.querySelector('#sample-select-open').addEventListener('beforeOpen', callbackFunction);
+document.querySelector('#sample-select-open').addEventListener('afterOpen', callbackFunction);
 
 /** in jquery */
-$('#sample-select').on('beforeClose', callbackFunction);
-$('#sample-select').on('afterClose', callbackFunction);
+$('#sample-select-open').on('beforeClose', callbackFunction);
+$('#sample-select-open').on('afterClose', callbackFunction);
 ```
 
 ### Reset
 
-This event would be triggered when clear button is clicked or form is reset.
+This event will be triggered when clear button is clicked or a form is reset.
+
+<div class="flex-container">
+  <div id="sample-select-reset"></div>
+  <div id="select-reset-res" class ="sample-select-results" aria-live="polite"></div>
+</div>
 
 ```js
 /** in vanilla javascript */
-document.querySelector('#sample-select').addEventListener('reset', callbackFunction);
+document.querySelector('#sample-select-reset').addEventListener('reset', callbackFunction);
 
 /** in jquery */
-$('#sample-select').on('reset', callbackFunction);
+$('#sample-select-reset').on('reset', callbackFunction);
 ```
 
 

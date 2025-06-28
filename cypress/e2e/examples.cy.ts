@@ -641,8 +641,8 @@ describe('Validation', () => {
 
 describe('To verify that the change event is not fired twice when selecting items after a search', () => {
 
-  const id = 'select-onchange';
-  const resId = 'select-onchange-changes';
+  const id = 'sample-select-onchange';
+  const resId = 'sample-select-changes';
 
   it('go to section', () => {
     cy.goToSection('Events');
