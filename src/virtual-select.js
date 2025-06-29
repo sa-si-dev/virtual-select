@@ -2519,12 +2519,25 @@ export class VirtualSelect {
       DomUtils.dispatchEvent(this.$ele, 'afterClose');
     }
 
-    // Only focus if this is the last interacted instance AND shouldFocusWrapperOnClose is true
-    if (this.shouldFocusWrapperOnClose && VirtualSelect.lastInteractedInstance === this && !isSilent) {
+    // Return focus to wrapper only when no other meaningful element currently has focus
+    const active = document.activeElement;
+    const withinComponent =
+      (active && this.$wrapper.contains(active)) ||
+      (this.hasDropboxWrapper && active && this.$dropboxWrapper.contains(active));
+
+    const shouldRefocus = this.shouldFocusWrapperOnClose &&
+      VirtualSelect.lastInteractedInstance === this &&
+      !isSilent &&
+      (active === null || active === document.body || withinComponent);
+
+    if (shouldRefocus) {
       this.$wrapper.focus();
     }
-    this.shouldFocusWrapperOnClose = true; // Reset for next close
 
+    // Reset for next close
+    this.shouldFocusWrapperOnClose = true;
+
+    // Restore accessibility attributes that were inadvertently removed
     DomUtils.setAttr(this.$dropboxWrapper, 'tabindex', '-1');
     DomUtils.setAria(this.$dropboxWrapper, 'hidden', true);
 

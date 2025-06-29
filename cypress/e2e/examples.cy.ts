@@ -684,3 +684,59 @@ describe('To verify that the reset event is fired', () => {
   });
 
 });
+
+
+/**
+ * Focus management regression tests
+ *
+ * 1. When the dropdown is open and the user clicks another focusable element
+ *    (e.g., an input), the focus must stay on that element – the dropdown
+ *    should not steal it back.
+ * 2. When the dropdown is closed with the Escape key, focus should return to
+ *    the dropdown wrapper to maintain keyboard accessibility.
+ */
+
+describe('Validate focus management clicking outside and pressing ESC', () => {
+
+  const id = 'sample-select-onchange';
+
+  it('go to section', () => {
+    cy.goToSection('Events');
+  });
+
+  it('keeps focus on external input when clicking outside', () => {
+    cy.open(id);
+    // Inject an external input into the DOM for testing
+    cy.document().then((doc) => {
+      const input = doc.createElement('input');
+      input.type = 'text';
+      input.id = 'external-input';
+      input.placeholder = 'External input';
+      input.setAttribute(
+        'style',
+        'position:fixed; top:20px; left:20px; z-index:9999;'
+      );
+      doc.body.appendChild(input);
+    });
+    // Click the external input and verify focus stays there
+    cy.get('#external-input').click({ force: true }).should('have.focus');
+    // Verify the dropdown is closed (wrapper has class "closed")
+    cy.getVs(id).find('.vscomp-ele-wrapper').should('have.class', 'closed');
+    // Clean up the injected input to avoid side effects
+    cy.get('#external-input').then($input => {
+      $input.remove();
+    });
+  });
+
+  it('refocuses dropdown wrapper when closed with ESC', () => {
+    // 1. Open the dropdown
+    cy.open(id);
+    // 2. Press ESC to close it
+    cy.getVs(id).find('.vscomp-toggle-button').type('{esc}');
+    // 3. Wrapper should now have focus
+    cy.getVs(id).find('.vscomp-ele-wrapper').should('have.focus');
+    // 4. Ensure it is closed
+    cy.getVs(id).find('.vscomp-ele-wrapper').should('have.class', 'closed');
+  });
+
+});
