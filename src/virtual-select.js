@@ -2528,7 +2528,7 @@ export class VirtualSelect {
     const shouldRefocus = this.shouldFocusWrapperOnClose &&
       VirtualSelect.lastInteractedInstance === this &&
       !isSilent &&
-      (active === document.body || withinComponent);
+      (active === null || active === document.body || withinComponent);
 
     if (shouldRefocus) {
       this.$wrapper.focus();
