@@ -2908,7 +2908,7 @@ var VirtualSelect = /*#__PURE__*/function () {
       // Return focus to wrapper only when no other meaningful element currently has focus
       var active = document.activeElement;
       var withinComponent = active && this.$wrapper.contains(active) || this.hasDropboxWrapper && active && this.$dropboxWrapper.contains(active);
-      var shouldRefocus = this.shouldFocusWrapperOnClose && VirtualSelect.lastInteractedInstance === this && !isSilent && (active === document.body || active === null || withinComponent);
+      var shouldRefocus = this.shouldFocusWrapperOnClose && VirtualSelect.lastInteractedInstance === this && !isSilent && (active === null || active === document.body || withinComponent);
       if (shouldRefocus) {
         this.$wrapper.focus();
       }
