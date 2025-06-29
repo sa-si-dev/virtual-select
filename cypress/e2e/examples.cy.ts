@@ -722,6 +722,10 @@ describe('Validate focus management clicking outside and pressing ESC', () => {
     cy.get('#external-input').click({ force: true }).should('have.focus');
     // Verify the dropdown is closed (wrapper has class "closed")
     cy.getVs(id).find('.vscomp-ele-wrapper').should('have.class', 'closed');
+    // Clean up the injected input to avoid side effects
+    cy.get('#external-input').then($input => {
+      $input.remove();
+    });
   });
 
   it('refocuses dropdown wrapper when closed with ESC', () => {
