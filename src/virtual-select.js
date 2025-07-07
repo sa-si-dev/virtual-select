@@ -286,7 +286,7 @@ export class VirtualSelect {
     return html;
   }
 
-  renderOptions() {
+  renderOptions(isRenderingdOnScroll = false) {
     let html = '';
     const visibleOptions = this.getVisibleOptions();
     let checkboxHtml = '';
@@ -403,7 +403,7 @@ export class VirtualSelect {
     this.$options.innerHTML = html;
     this.$visibleOptions = this.$options.querySelectorAll('.vscomp-option');
 
-    this.afterRenderOptions();
+    this.afterRenderOptions(isRenderingdOnScroll);
   }
 
   renderSearch() {
@@ -648,7 +648,7 @@ export class VirtualSelect {
   }
 
   onOptionsScroll() {
-    this.setVisibleOptions();
+    this.setVisibleOptions(true);
   }
 
   onOptionsClick(e) {
@@ -823,7 +823,7 @@ export class VirtualSelect {
     }
   }
 
-  afterRenderOptions() {
+  afterRenderOptions(hasRenderedOnScroll = false) {
     const visibleOptions = this.getVisibleOptions();
     const hasNoOptions = !this.options.length && !this.hasServerSearch;
     const hasNoSearchResults = !hasNoOptions && !visibleOptions.length;
@@ -852,7 +852,7 @@ export class VirtualSelect {
     this.setOptionsPosition();
     this.setOptionsTooltip();
 
-    if (document.activeElement !== this.$searchInput) {
+    if (document.activeElement !== this.$searchInput && hasRenderedOnScroll === false) {
       const focusedOption = DomUtils.getElementsBySelector('.focused', this.$dropboxContainer)[0];
       if (focusedOption !== undefined) {
         focusedOption.focus();
@@ -1539,7 +1539,7 @@ export class VirtualSelect {
     this.sortedOptions = sortedOptions;
   }
 
-  setVisibleOptions() {
+  setVisibleOptions(isOnScrollUpdating = false) {
     let visibleOptions = [...this.sortedOptions];
     const maxOptionsToShow = this.optionsCount * 2;
     const startIndex = this.getVisibleStartIndex();
@@ -1572,7 +1572,7 @@ export class VirtualSelect {
     this.visibleOptions = visibleOptions;
     // update number of visible options
     this.visibleOptionsCount = visibleOptions.length;
-    this.renderOptions();
+    this.renderOptions(isOnScrollUpdating);
   }
 
   setOptionsPosition(startIndex) {
