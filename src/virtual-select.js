@@ -1467,6 +1467,12 @@ export class VirtualSelect {
     this.hasOptionGroup = hasOptionGroup;
     this.hasEmptyValueOption = hasEmptyValueOption;
     this.setSortedOptions();
+
+    if (optionsLength) {
+      const $eleSearchInput = this.$searchInput;
+      $eleSearchInput.removeAttribute('disabled');
+    }
+
   }
 
   setServerOptions(options = []) {
