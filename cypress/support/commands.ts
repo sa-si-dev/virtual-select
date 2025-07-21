@@ -74,6 +74,11 @@ Cypress.Commands.add('search', { prevSubject: true }, (vsElem, value) => {
   cy.get(vsElem);
 });
 
+Cypress.Commands.add('searchClear', { prevSubject: true }, (vsElem) => {
+  cy.getDropbox(vsElem).find('.vscomp-search-input').clear();
+  cy.get(vsElem);
+});
+
 Cypress.Commands.add('toggleSelectAll', { prevSubject: true }, (vsElem, byLabel) => {
   cy.getDropbox(vsElem)
     .find(byLabel ? '.vscomp-toggle-all-label' : '.vscomp-toggle-all-button')

@@ -75,6 +75,12 @@ declare namespace Cypress {
 
     /**
      * @example
+     * cy.searchClear()
+     */
+    searchClear(): Chainable<any>;
+
+    /**
+     * @example
      * cy.search('Option 2')
      */
     search(value: string): Chainable<any>;
