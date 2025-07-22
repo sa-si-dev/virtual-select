@@ -659,7 +659,6 @@ export class VirtualSelect {
         this.onGroupTitleClick($option);
       } else {
         this.selectOption($option, { event: e });
-        $option.focus();
       }
     }
   }

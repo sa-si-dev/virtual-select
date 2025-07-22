@@ -152,7 +152,6 @@ describe('Multiple select', () => {
   });
 
   it('search and select available option', () => {
-    // cy.open(id).search('Option 2340').selectOption([2340, 2342]).hasValueText('Option 2340, Option 2342');
     cy.open(id)
       .search('Option 2340')
       .selectOption(2340)
