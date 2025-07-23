@@ -1,5 +1,5 @@
 /*!
- * Virtual Select v1.0.49
+ * Virtual Select v1.1.0
  * https://sa-si-dev.github.io/virtual-select
  * Licensed under MIT (https://github.com/sa-si-dev/virtual-select/blob/master/LICENSE)
  *//******/ (function() { // webpackBootstrap
@@ -89,6 +89,42 @@ var Utils = /*#__PURE__*/function () {
     key: "isNotEmpty",
     value: function isNotEmpty(value) {
       return !Utils.isEmpty(value);
+    }
+
+    /**
+     * Normalizes values by converting booleans to strings while preserving other types
+     * Handles both single values and arrays efficiently
+     * @param {*} value - The value to normalize
+     * @return {*} - Normalized value(s)
+     * @memberof Utils
+     */
+  }, {
+    key: "normalizeValues",
+    value: function normalizeValues(value) {
+      // Fast path for arrays
+      if (Array.isArray(value)) {
+        var result = new Array(value.length);
+        for (var i = 0; i < value.length; i += 1) {
+          var v = value[i];
+          if (v === true) {
+            result[i] = 'true';
+          } else if (v === false) {
+            result[i] = 'false';
+          } else {
+            result[i] = v;
+          }
+        }
+        return result;
+      }
+
+      // Handle single values
+      if (value === true) {
+        return 'true';
+      }
+      if (value === false) {
+        return 'false';
+      }
+      return value;
     }
 
     /**
@@ -793,6 +829,7 @@ var VirtualSelect = /*#__PURE__*/function () {
     key: "renderOptions",
     value: function renderOptions() {
       var _this = this;
+      var isRenderingdOnScroll = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
       var html = '';
       var visibleOptions = this.getVisibleOptions();
       var checkboxHtml = '';
@@ -881,7 +918,7 @@ var VirtualSelect = /*#__PURE__*/function () {
       groupName = '';
       this.$options.innerHTML = html;
       this.$visibleOptions = this.$options.querySelectorAll('.vscomp-option');
-      this.afterRenderOptions();
+      this.afterRenderOptions(isRenderingdOnScroll);
     }
   }, {
     key: "renderSearch",
@@ -905,6 +942,8 @@ var VirtualSelect = /*#__PURE__*/function () {
       this.$toggleAllButton = this.$dropboxContainer.querySelector('.vscomp-toggle-all-button');
       this.$toggleAllCheckbox = this.$dropboxContainer.querySelector('.vscomp-toggle-all-checkbox');
       this.addEvent(this.$searchInput, 'input', 'onSearch');
+      // Prevents the change event from bubbling and triggering the main onChange handler twice.
+      this.addEvent(this.$searchInput, 'change', 'preventPropagation');
       this.addEvent(this.$searchClear, 'click keydown', 'onSearchClear');
       this.addEvent(this.$toggleAllButton, 'click', 'onToggleAllOptions');
       this.addEvent(this.$dropboxContainerBottom, 'focus', 'onDropboxContainerTopOrBottomFocus');
@@ -982,8 +1021,24 @@ var VirtualSelect = /*#__PURE__*/function () {
   }, {
     key: "onDocumentClick",
     value: function onDocumentClick(e) {
-      var $eleToKeepOpen = e.target.closest('.vscomp-wrapper');
-      if ($eleToKeepOpen !== this.$wrapper && $eleToKeepOpen !== this.$dropboxWrapper && this.isOpened()) {
+      var $clickedEle = e.target.closest('.vscomp-wrapper');
+
+      // Close all if clicking outside any dropdown
+      if (!$clickedEle) {
+        VirtualSelect.openInstances.forEach(function (instance) {
+          // Don't focus when closing due to clicking outside
+          var instanceObj = instance;
+          instanceObj.shouldFocusWrapperOnClose = false;
+          instanceObj.closeDropbox();
+        });
+        return;
+      }
+
+      // If clicking a different dropdown, close current one
+      var clickedInstance = $clickedEle.parentElement.virtualSelect;
+      if (clickedInstance && clickedInstance !== this && this.isOpened() && !this.keepAlwaysOpen) {
+        // Don't focus when closing due to another dropdown being opened
+        this.shouldFocusWrapperOnClose = false;
         this.closeDropbox();
       }
     }
@@ -1004,7 +1059,7 @@ var VirtualSelect = /*#__PURE__*/function () {
       // Handle the Escape key when showing the dropdown as a popup, closing it
       if (key === 27 || e.key === 'Escape') {
         var wrapper = this.showAsPopup ? this.$wrapper : this.$dropboxWrapper;
-        if ((document.activeElement === wrapper || wrapper.contains(document.activeElement)) && !this.keepAlwaysOpen) {
+        if (wrapper && (document.activeElement === wrapper || wrapper.contains(document.activeElement)) && !this.keepAlwaysOpen) {
           this.closeDropbox();
           return;
         }
@@ -1060,14 +1115,18 @@ var VirtualSelect = /*#__PURE__*/function () {
   }, {
     key: "onToggleButtonPress",
     value: function onToggleButtonPress(e) {
-      e.stopPropagation();
-      if (e.type === 'keydown' && e.code !== 'Enter' && e.code !== 'Space') {
-        return;
+      if (e.type === 'keydown') {
+        e.preventDefault();
+        if (e.code !== 'Enter' && e.code !== 'Space') return;
       }
       var $target = e.target;
       if ($target.closest('.vscomp-value-tag-clear-button')) {
+        e.stopPropagation();
         this.removeValue($target.closest('.vscomp-value-tag'));
-      } else if (!$target.closest('.toggle-button-child')) {
+        return;
+      }
+      if (!$target.closest('.toggle-button-child')) {
+        // Let the event bubble normally
         this.toggleDropbox();
       }
     }
@@ -1084,7 +1143,7 @@ var VirtualSelect = /*#__PURE__*/function () {
   }, {
     key: "onOptionsScroll",
     value: function onOptionsScroll() {
-      this.setVisibleOptions();
+      this.setVisibleOptions(true);
     }
   }, {
     key: "onOptionsClick",
@@ -1148,6 +1207,11 @@ var VirtualSelect = /*#__PURE__*/function () {
       this.setSearchValue(e.target.value, true);
     }
   }, {
+    key: "preventPropagation",
+    value: function preventPropagation(e) {
+      e.stopPropagation();
+    }
+  }, {
     key: "onSearchClear",
     value: function onSearchClear(e) {
       e.stopPropagation();
@@ -1208,7 +1272,9 @@ var VirtualSelect = /*#__PURE__*/function () {
   }, {
     key: "removeMutationObserver",
     value: function removeMutationObserver() {
-      this.mutationObserver.disconnect();
+      if (this.hasDropboxWrapper) {
+        this.mutationObserver.disconnect();
+      }
     }
 
     /** dom event methods - end */
@@ -1270,6 +1336,7 @@ var VirtualSelect = /*#__PURE__*/function () {
   }, {
     key: "afterRenderOptions",
     value: function afterRenderOptions() {
+      var hasRenderedOnScroll = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
       var visibleOptions = this.getVisibleOptions();
       var hasNoOptions = !this.options.length && !this.hasServerSearch;
       var hasNoSearchResults = !hasNoOptions && !visibleOptions.length;
@@ -1294,7 +1361,7 @@ var VirtualSelect = /*#__PURE__*/function () {
       this.setOptionAttr();
       this.setOptionsPosition();
       this.setOptionsTooltip();
-      if (document.activeElement !== this.$searchInput) {
+      if (document.activeElement !== this.$searchInput && hasRenderedOnScroll === false) {
         var focusedOption = DomUtils.getElementsBySelector('.focused', this.$dropboxContainer)[0];
         if (focusedOption !== undefined) {
           focusedOption.focus();
@@ -1479,6 +1546,7 @@ var VirtualSelect = /*#__PURE__*/function () {
       this.halfOptionsCount = Math.ceil(this.optionsCount / 2);
       this.optionsHeight = this.getOptionsHeight();
       this.uniqueId = this.getUniqueId();
+      this.shouldFocusWrapperOnClose = true; // Initialize focus management property
     }
 
     /**
@@ -1598,7 +1666,8 @@ var VirtualSelect = /*#__PURE__*/function () {
       var valuesOrder = {};
       var validValues = [];
       var isMultiSelect = this.multiple;
-      var value = newValue;
+      // Normalize input value first
+      var value = Utils.normalizeValues(newValue);
       if (value) {
         if (!Array.isArray(value)) {
           value = [value];
@@ -1611,11 +1680,6 @@ var VirtualSelect = /*#__PURE__*/function () {
         } else if (value.length > 1) {
           value = [value[0]];
         }
-
-        /** converting value to string */
-        value = value.map(function (v) {
-          return v || v === 0 ? v.toString() : '';
-        });
         if (this.useGroupValue) {
           value = this.setGroupOptionsValue(value);
         }
@@ -1628,9 +1692,12 @@ var VirtualSelect = /*#__PURE__*/function () {
         }
       }
       this.options.forEach(function (d) {
-        if (valuesMapping[d.value] === true && !d.isDisabled && !d.isGroupTitle) {
+        // Compare with normalized option values
+        var normalizedOptionValue = Utils.normalizeValues(d.value);
+        if (valuesMapping[normalizedOptionValue] === true && !d.isDisabled && !d.isGroupTitle) {
           // eslint-disable-next-line no-param-reassign
           d.isSelected = true;
+          // Store original value but compare with normalized value
           validValues.push(d.value);
         } else {
           // eslint-disable-next-line no-param-reassign
@@ -1644,7 +1711,7 @@ var VirtualSelect = /*#__PURE__*/function () {
 
         /** sorting validValues in the given values order */
         validValues.sort(function (a, b) {
-          return valuesOrder[a] - valuesOrder[b];
+          return valuesOrder[Utils.normalizeValues(a)] - valuesOrder[Utils.normalizeValues(b)];
         });
       } else {
         /** taking first value for single select */
@@ -1826,7 +1893,7 @@ var VirtualSelect = /*#__PURE__*/function () {
           index: index,
           value: value,
           label: label,
-          labelNormalized: _this7.searchNormalize ? Utils.normalizeString(label).toLowerCase() : label.toLowerCase(),
+          labelNormalized: _this7.searchNormalize && label.trim() !== '' ? Utils.normalizeString(label).toLowerCase() : label.toLowerCase(),
           alias: getAlias(d[aliasKey]),
           isVisible: convertToBoolean(d.isVisible, true),
           isNew: d.isNew || false,
@@ -1950,6 +2017,7 @@ var VirtualSelect = /*#__PURE__*/function () {
   }, {
     key: "setVisibleOptions",
     value: function setVisibleOptions() {
+      var isOnScrollUpdating = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
       var visibleOptions = virtual_select_toConsumableArray(this.sortedOptions);
       var maxOptionsToShow = this.optionsCount * 2;
       var startIndex = this.getVisibleStartIndex();
@@ -1976,7 +2044,7 @@ var VirtualSelect = /*#__PURE__*/function () {
       this.visibleOptions = visibleOptions;
       // update number of visible options
       this.visibleOptionsCount = visibleOptions.length;
-      this.renderOptions();
+      this.renderOptions(isOnScrollUpdating);
     }
   }, {
     key: "setOptionsPosition",
@@ -2008,13 +2076,15 @@ var VirtualSelect = /*#__PURE__*/function () {
         disableEvent = _ref2$disableEvent === void 0 ? false : _ref2$disableEvent,
         _ref2$disableValidati = _ref2.disableValidation,
         disableValidation = _ref2$disableValidati === void 0 ? false : _ref2$disableValidati;
-      var isValidValue = this.hasEmptyValueOption && value === '' || value;
+      // Normalize input value first
+      var normalizedValue = Utils.normalizeValues(value);
+      var isValidValue = this.hasEmptyValueOption && normalizedValue === '' || normalizedValue;
       if (!isValidValue) {
         this.selectedValues = [];
-      } else if (Array.isArray(value)) {
-        this.selectedValues = virtual_select_toConsumableArray(value);
+      } else if (Array.isArray(normalizedValue)) {
+        this.selectedValues = virtual_select_toConsumableArray(normalizedValue);
       } else {
-        this.selectedValues = [value];
+        this.selectedValues = [normalizedValue];
       }
       var newValue = this.getValue();
       this.$ele.value = newValue;
@@ -2173,7 +2243,7 @@ var VirtualSelect = /*#__PURE__*/function () {
 
       /** If searchNormalize we'll normalize the searchValue */
       var searchValue = this.searchValue;
-      searchValue = this.searchNormalize ? Utils.normalizeString(searchValue) : searchValue;
+      searchValue = this.searchNormalize && searchValue.trim() !== '' ? Utils.normalizeString(searchValue) : searchValue;
       var isOptionVisible = this.isOptionVisible.bind(this);
       if (this.hasOptionGroup) {
         visibleOptionGroupsMapping = this.getVisibleOptionGroupsMapping(searchValue);
@@ -2417,15 +2487,11 @@ var VirtualSelect = /*#__PURE__*/function () {
     value: function getValue() {
       var value;
       if (this.multiple) {
-        if (this.useGroupValue) {
-          value = this.getGroupValue();
-        } else {
-          value = this.selectedValues;
-        }
+        value = this.useGroupValue ? this.getGroupValue() : this.selectedValues;
       } else {
         value = this.selectedValues[0] || '';
       }
-      return value;
+      return Utils.normalizeValues(value);
     }
   }, {
     key: "getGroupValue",
@@ -2722,7 +2788,31 @@ var VirtualSelect = /*#__PURE__*/function () {
   }, {
     key: "openDropbox",
     value: function openDropbox(isSilent) {
+      var _this11 = this;
+      // Set this instance as the last interacted one immediately
+      VirtualSelect.lastInteractedInstance = this;
+      var originalTransition = '';
+      // Disable transitions for programmatic opening
+      if (!isSilent) {
+        // Store original transition
+        originalTransition = this.$dropboxContainer.style.transition;
+        this.$dropboxContainer.style.transition = 'none';
+      }
+      // Perform the open operation
       this.isSilentOpen = isSilent;
+
+      // Close all other open instances first
+      VirtualSelect.openInstances.forEach(function (instance) {
+        if (instance !== _this11) {
+          // Don't focus when closing due to another dropdown being opened
+          var instanceObj = instance;
+          instanceObj.shouldFocusWrapperOnClose = false;
+          instanceObj.closeDropbox(true); // silent close
+        }
+      });
+
+      // Add to open instances
+      VirtualSelect.openInstances.add(this);
       DomUtils.setAttr(this.$dropboxWrapper, 'tabindex', '0');
       DomUtils.setAria(this.$dropboxWrapper, 'hidden', false);
       DomUtils.setAttr(this.$dropboxContainerTop, 'tabindex', '0');
@@ -2738,6 +2828,13 @@ var VirtualSelect = /*#__PURE__*/function () {
       this.setDropboxWrapperWidth();
       DomUtils.removeClass(this.$allWrappers, 'closed');
       DomUtils.changeTabIndex(this.$allWrappers, 0);
+      if (!isSilent) {
+        // Force synchronous layout and style calculation
+        // Trigger reflow
+        this.$dropboxContainer.offsetHeight; // eslint-disable-line no-unused-expressions
+        // Restore transitions immediately after reflow
+        this.$dropboxContainer.style.transition = originalTransition;
+      }
       if (this.dropboxPopover && !isSilent) {
         this.dropboxPopover.show();
       } else {
@@ -2766,6 +2863,9 @@ var VirtualSelect = /*#__PURE__*/function () {
     key: "closeDropbox",
     value: function closeDropbox(isSilent) {
       this.isSilentClose = isSilent;
+
+      // Remove from open instances
+      VirtualSelect.openInstances["delete"](this);
       if (this.isOpened() === false) {
         return;
       }
@@ -2807,7 +2907,19 @@ var VirtualSelect = /*#__PURE__*/function () {
       if (!isSilent) {
         DomUtils.dispatchEvent(this.$ele, 'afterClose');
       }
-      this.$wrapper.focus();
+
+      // Return focus to wrapper only when no other meaningful element currently has focus
+      var active = document.activeElement;
+      var withinComponent = active && this.$wrapper.contains(active) || this.hasDropboxWrapper && active && this.$dropboxWrapper.contains(active);
+      var shouldRefocus = this.shouldFocusWrapperOnClose && VirtualSelect.lastInteractedInstance === this && !isSilent && (active === null || active === document.body || withinComponent);
+      if (shouldRefocus) {
+        this.$wrapper.focus();
+      }
+
+      // Reset for next close
+      this.shouldFocusWrapperOnClose = true;
+
+      // Restore accessibility attributes that were inadvertently removed
       DomUtils.setAttr(this.$dropboxWrapper, 'tabindex', '-1');
       DomUtils.setAria(this.$dropboxWrapper, 'hidden', true);
       DomUtils.setAttr(this.$dropboxContainerTop, 'tabindex', '-1');
@@ -2826,10 +2938,12 @@ var VirtualSelect = /*#__PURE__*/function () {
       }
       this.setSortedOptions();
       this.scrollToTop();
+      this.setVisibleOptions();
     }
   }, {
     key: "toggleDropbox",
     value: function toggleDropbox() {
+      VirtualSelect.lastInteractedInstance = this;
       if (this.isOpened()) {
         this.closeDropbox();
       } else {
@@ -3047,7 +3161,7 @@ var VirtualSelect = /*#__PURE__*/function () {
   }, {
     key: "selectRangeOptions",
     value: function selectRangeOptions(lastSelectedOptionIndex, selectedIndex) {
-      var _this11 = this;
+      var _this12 = this;
       if (typeof lastSelectedOptionIndex !== 'number' || this.maxValues) {
         return;
       }
@@ -3093,7 +3207,7 @@ var VirtualSelect = /*#__PURE__*/function () {
 
       /** using setTimeout to fix the issue of dropbox getting closed on select */
       setTimeout(function () {
-        _this11.renderOptions();
+        _this12.renderOptions();
       }, 0);
     }
   }, {
@@ -3202,7 +3316,7 @@ var VirtualSelect = /*#__PURE__*/function () {
   }, {
     key: "toggleGroupOptions",
     value: function toggleGroupOptions($ele, isSelected) {
-      var _this12 = this;
+      var _this13 = this;
       if (!this.hasOptionGroup || this.disableOptionGroupCheckbox || !$ele) {
         return;
       }
@@ -3238,7 +3352,7 @@ var VirtualSelect = /*#__PURE__*/function () {
 
       /** using setTimeout to fix the issue of dropbox getting closed on select */
       setTimeout(function () {
-        _this12.renderOptions();
+        _this13.renderOptions();
       }, 0);
     }
   }, {
@@ -3372,7 +3486,7 @@ var VirtualSelect = /*#__PURE__*/function () {
         searchGroup = _ref7.searchGroup,
         searchByStartsWith = _ref7.searchByStartsWith;
       var value = data.value.toLowerCase();
-      var label = this.searchNormalize ? data.labelNormalized : data.label.toLowerCase();
+      var label = this.searchNormalize && data.labelNormalized != null ? data.labelNormalized : (data.label || '').trim().toLowerCase();
       var description = data.description,
         alias = data.alias;
       var isVisible = searchByStartsWith ? label.startsWith(searchValue) : label.includes(searchValue);
@@ -3496,6 +3610,13 @@ var VirtualSelect = /*#__PURE__*/function () {
       $ele.value = undefined;
       $ele.innerHTML = '';
 
+      // Remove from open instances
+      VirtualSelect.openInstances["delete"](this);
+
+      // Reset the last interacted instance only if this is the last interacted instance
+      if (this === VirtualSelect.lastInteractedInstance) {
+        VirtualSelect.lastInteractedInstance = null;
+      }
       /** Remove all event listeners to prevent memory leaks and ensure proper cleanup */
       this.removeEvents();
       if (this.hasDropboxWrapper) {
@@ -3810,6 +3931,12 @@ window.addEventListener('resize', VirtualSelect.onResizeMethod);
 attrPropsMapping = VirtualSelect.getAttrProps();
 window.VirtualSelect = VirtualSelect;
 
+// Static property for tracking open dropdowns
+VirtualSelect.openInstances = new Set();
+
+// Static property for tracking the last interacted instance
+VirtualSelect.lastInteractedInstance = null;
+
 /** polyfill to fix an issue in ie browser */
 if (typeof NodeList !== 'undefined' && NodeList.prototype && !NodeList.prototype.forEach) {
   NodeList.prototype.forEach = Array.prototype.forEach;
@@ -3821,7 +3948,10 @@ if (typeof NodeList !== 'undefined' && NodeList.prototype && !NodeList.prototype
  * Popover v1.0.13
  * https://sa-si-dev.github.io/popover
  * Licensed under MIT (https://github.com/sa-si-dev/popover/blob/master/LICENSE)
- */!function(){"use strict";function e(e){return function(e){if(Array.isArray(e))return t(e)}(e)||function(e){if("undefined"!=typeof Symbol&&null!=e[Symbol.iterator]||null!=e["@@iterator"])return Array.from(e)}(e)||function(e,o){if(e){if("string"==typeof e)return t(e,o);var i=Object.prototype.toString.call(e).slice(8,-1);return"Object"===i&&e.constructor&&(i=e.constructor.name),"Map"===i||"Set"===i?Array.from(e):"Arguments"===i||/^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(i)?t(e,o):void 0}}(e)||function(){throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.")}()}function t(e,t){(null==t||t>e.length)&&(t=e.length);for(var o=0,i=new Array(t);o<t;o++)i[o]=e[o];return i}function o(e,t){for(var o=0;o<t.length;o++){var i=t[o];i.enumerable=i.enumerable||!1,i.configurable=!0,"value"in i&&(i.writable=!0),Object.defineProperty(e,i.key,i)}}var i=function(){function t(){!function(e,t){if(!(e instanceof t))throw new TypeError("Cannot call a class as a function")}(this,t)}var i,r;return i=t,r=[{key:"addClass",value:function(o,i){o&&(i=i.split(" "),t.getElements(o).forEach((function(t){var o;(o=t.classList).add.apply(o,e(i))})))}},{key:"removeClass",value:function(o,i){o&&(i=i.split(" "),t.getElements(o).forEach((function(t){var o;(o=t.classList).remove.apply(o,e(i))})))}},{key:"getElements",value:function(e){if(e)return void 0===e.forEach&&(e=[e]),e}},{key:"getMoreVisibleSides",value:function(e){if(!e)return{};var t=e.getBoundingClientRect(),o=window.innerWidth,i=window.innerHeight,r=t.left,n=t.top;return{horizontal:r>o-r-t.width?"left":"right",vertical:n>i-n-t.height?"top":"bottom"}}},{key:"getAbsoluteCoords",value:function(e){if(e){var t=e.getBoundingClientRect(),o=window.pageXOffset,i=window.pageYOffset;return{width:t.width,height:t.height,top:t.top+i,right:t.right+o,bottom:t.bottom+i,left:t.left+o}}}},{key:"getCoords",value:function(e){return e?e.getBoundingClientRect():{}}},{key:"getData",value:function(e,t,o){if(e){var i=e?e.dataset[t]:"";return"number"===o?i=parseFloat(i)||0:"true"===i?i=!0:"false"===i&&(i=!1),i}}},{key:"setData",value:function(e,t,o){e&&(e.dataset[t]=o)}},{key:"setStyle",value:function(e,t,o){e&&(e.style[t]=o)}},{key:"show",value:function(e){var o=arguments.length>1&&void 0!==arguments[1]?arguments[1]:"block";t.setStyle(e,"display",o)}},{key:"hide",value:function(e){t.setStyle(e,"display","none")}},{key:"getHideableParent",value:function(e){for(var t,o=e.parentElement;o;){var i=getComputedStyle(o).overflow;if(-1!==i.indexOf("scroll")||-1!==i.indexOf("auto")){t=o;break}o=o.parentElement}return t}}],r&&o(i,r),t}();function r(e,t){for(var o=0;o<t.length;o++){var i=t[o];i.enumerable=i.enumerable||!1,i.configurable=!0,"value"in i&&(i.writable=!0),Object.defineProperty(e,i.key,i)}}var n=["top","bottom","left","right"].map((function(e){return"position-".concat(e)})),a={top:"rotate(180deg)",left:"rotate(90deg)",right:"rotate(-90deg)"},s=function(){function e(t){!function(e,t){if(!(e instanceof t))throw new TypeError("Cannot call a class as a function")}(this,e);try{this.setProps(t),this.init()}catch(e){console.warn("Couldn't initiate popper"),console.error(e)}}var t,o;return t=e,o=[{key:"init",value:function(){var e=this.$popperEle;e&&this.$triggerEle&&(i.setStyle(e,"zIndex",this.zIndex),this.setPosition())}},{key:"setProps",value:function(e){var t=(e=this.setDefaultProps(e)).position?e.position.toLowerCase():"auto";if(this.$popperEle=e.$popperEle,this.$triggerEle=e.$triggerEle,this.$arrowEle=e.$arrowEle,this.margin=parseFloat(e.margin),this.offset=parseFloat(e.offset),this.enterDelay=parseFloat(e.enterDelay),this.exitDelay=parseFloat(e.exitDelay),this.showDuration=parseFloat(e.showDuration),this.hideDuration=parseFloat(e.hideDuration),this.transitionDistance=parseFloat(e.transitionDistance),this.zIndex=parseFloat(e.zIndex),this.afterShowCallback=e.afterShow,this.afterHideCallback=e.afterHide,this.hasArrow=!!this.$arrowEle,-1!==t.indexOf(" ")){var o=t.split(" ");this.position=o[0],this.secondaryPosition=o[1]}else this.position=t}},{key:"setDefaultProps",value:function(e){return Object.assign({position:"auto",margin:8,offset:5,enterDelay:0,exitDelay:0,showDuration:300,hideDuration:200,transitionDistance:10,zIndex:1},e)}},{key:"setPosition",value:function(){i.show(this.$popperEle,"inline-flex");var e,t,o,r=window.innerWidth,s=window.innerHeight,l=i.getAbsoluteCoords(this.$popperEle),u=i.getAbsoluteCoords(this.$triggerEle),p=l.width,h=l.height,c=l.top,f=l.right,v=l.bottom,d=l.left,y=u.width,m=u.height,g=u.top,b=u.right,w=u.bottom,E=u.left,k=g-c,$=E-d,D=$,S=k,C=this.position,P=this.secondaryPosition,O=y/2-p/2,T=m/2-h/2,A=this.margin,x=this.transitionDistance,I=window.scrollY-c,H=s+I,j=window.scrollX-d,L=r+j,R=this.offset;R&&(I+=R,H-=R,j+=R,L-=R),"auto"===C&&(C=i.getMoreVisibleSides(this.$triggerEle).vertical);var z={top:{top:S-h-A,left:D+O},bottom:{top:S+m+A,left:D+O},right:{top:S+T,left:D+y+A},left:{top:S+T,left:D-p-A}},F=z[C];if(S=F.top,D=F.left,P&&("top"===P?S=k:"bottom"===P?S=k+m-h:"left"===P?D=$:"right"===P&&(D=$+y-p)),D<j?"left"===C?o="right":D=j+d>b?b-d:j:D+p>L&&("right"===C?o="left":D=L+d<E?E-f:L-p),S<I?"top"===C?o="bottom":S=I+c>w?w-c:I:S+h>H&&("bottom"===C?o="top":S=H+c<g?g-v:H-h),o){var M=z[o];"top"===(C=o)||"bottom"===C?S=M.top:"left"!==C&&"right"!==C||(D=M.left)}"top"===C?(e=S+x,t=D):"right"===C?(e=S,t=D-x):"left"===C?(e=S,t=D+x):(e=S-x,t=D);var U="translate3d(".concat(parseInt(t),"px, ").concat(parseInt(e),"px, 0)");if(i.setStyle(this.$popperEle,"transform",U),i.setData(this.$popperEle,"fromLeft",t),i.setData(this.$popperEle,"fromTop",e),i.setData(this.$popperEle,"top",S),i.setData(this.$popperEle,"left",D),i.removeClass(this.$popperEle,n.join(" ")),i.addClass(this.$popperEle,"position-".concat(C)),this.hasArrow){var B=0,q=0,N=D+d,W=S+c,K=this.$arrowEle.offsetWidth/2,V=a[C]||"";"top"===C||"bottom"===C?(B=y/2+E-N)<K?B=K:B>p-K&&(B=p-K):"left"!==C&&"right"!==C||((q=m/2+g-W)<K?q=K:q>h-K&&(q=h-K)),i.setStyle(this.$arrowEle,"transform","translate3d(".concat(parseInt(B),"px, ").concat(parseInt(q),"px, 0) ").concat(V))}i.hide(this.$popperEle)}},{key:"resetPosition",value:function(){i.setStyle(this.$popperEle,"transform","none"),this.setPosition()}},{key:"show",value:function(){var e=this,t=arguments.length>0&&void 0!==arguments[0]?arguments[0]:{},o=t.resetPosition,r=t.data;clearTimeout(this.exitDelayTimeout),clearTimeout(this.hideDurationTimeout),o&&this.resetPosition(),this.enterDelayTimeout=setTimeout((function(){var t=i.getData(e.$popperEle,"left"),o=i.getData(e.$popperEle,"top"),n="translate3d(".concat(parseInt(t),"px, ").concat(parseInt(o),"px, 0)"),a=e.showDuration;i.show(e.$popperEle,"inline-flex"),i.getCoords(e.$popperEle),i.setStyle(e.$popperEle,"transitionDuration",a+"ms"),i.setStyle(e.$popperEle,"transform",n),i.setStyle(e.$popperEle,"opacity",1),e.showDurationTimeout=setTimeout((function(){"function"==typeof e.afterShowCallback&&e.afterShowCallback(r)}),a)}),this.enterDelay)}},{key:"hide",value:function(){var e=this,t=(arguments.length>0&&void 0!==arguments[0]?arguments[0]:{}).data;clearTimeout(this.enterDelayTimeout),clearTimeout(this.showDurationTimeout),this.exitDelayTimeout=setTimeout((function(){if(e.$popperEle){var o=parseInt(i.getData(e.$popperEle,"fromLeft")),r=parseInt(i.getData(e.$popperEle,"fromTop")),n="translate3d(".concat(o,"px, ").concat(r,"px, 0)"),a=e.hideDuration;i.setStyle(e.$popperEle,"transitionDuration",a+"ms"),i.setStyle(e.$popperEle,"transform",n),i.setStyle(e.$popperEle,"opacity",0),e.hideDurationTimeout=setTimeout((function(){i.hide(e.$popperEle),"function"==typeof e.afterHideCallback&&e.afterHideCallback(t)}),a)}}),this.exitDelay)}},{key:"updatePosition",value:function(){i.setStyle(this.$popperEle,"transitionDuration","0ms"),this.resetPosition();var e=parseInt(i.getData(this.$popperEle,"left")),t=parseInt(i.getData(this.$popperEle,"top"));i.show(this.$popperEle,"inline-flex"),i.setStyle(this.$popperEle,"transform","translate3d(".concat(e,"px, ").concat(t,"px, 0)"))}}],o&&r(t.prototype,o),e}();window.PopperComponent=s}(),function(){"use strict";function e(t){return e="function"==typeof Symbol&&"symbol"==typeof Symbol.iterator?function(e){return typeof e}:function(e){return e&&"function"==typeof Symbol&&e.constructor===Symbol&&e!==Symbol.prototype?"symbol":typeof e},e(t)}function t(e,t){for(var i=0;i<t.length;i++){var r=t[i];r.enumerable=r.enumerable||!1,r.configurable=!0,"value"in r&&(r.writable=!0),Object.defineProperty(e,o(r.key),r)}}function o(t){var o=function(t,o){if("object"!=e(t)||!t)return t;var i=t[Symbol.toPrimitive];if(void 0!==i){var r=i.call(t,o||"default");if("object"!=e(r))return r;throw new TypeError("@@toPrimitive must return a primitive value.")}return("string"===o?String:Number)(t)}(t,"string");return"symbol"==e(o)?o:o+""}var i=function(){return e=function e(){!function(e,t){if(!(e instanceof t))throw new TypeError("Cannot call a class as a function")}(this,e)},i=[{key:"convertToBoolean",value:function(e){return e=!0===e||"true"===e||!1!==e&&"false"!==e&&arguments.length>1&&void 0!==arguments[1]&&arguments[1]}},{key:"removeArrayEmpty",value:function(e){return Array.isArray(e)&&e.length?e.filter((function(e){return!!e})):[]}},{key:"throttle",value:function(e,t){var o,i=0;return function(){for(var r=arguments.length,n=new Array(r),a=0;a<r;a++)n[a]=arguments[a];var s=(new Date).getTime(),l=t-(s-i);clearTimeout(o),l<=0?(i=s,e.apply(void 0,n)):o=setTimeout((function(){e.apply(void 0,n)}),l)}}}],(o=null)&&t(e.prototype,o),i&&t(e,i),Object.defineProperty(e,"prototype",{writable:!1}),e;var e,o,i}();function r(e){return r="function"==typeof Symbol&&"symbol"==typeof Symbol.iterator?function(e){return typeof e}:function(e){return e&&"function"==typeof Symbol&&e.constructor===Symbol&&e!==Symbol.prototype?"symbol":typeof e},r(e)}function n(e){return function(e){if(Array.isArray(e))return a(e)}(e)||function(e){if("undefined"!=typeof Symbol&&null!=e[Symbol.iterator]||null!=e["@@iterator"])return Array.from(e)}(e)||function(e,t){if(e){if("string"==typeof e)return a(e,t);var o=Object.prototype.toString.call(e).slice(8,-1);return"Object"===o&&e.constructor&&(o=e.constructor.name),"Map"===o||"Set"===o?Array.from(e):"Arguments"===o||/^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(o)?a(e,t):void 0}}(e)||function(){throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.")}()}function a(e,t){(null==t||t>e.length)&&(t=e.length);for(var o=0,i=new Array(t);o<t;o++)i[o]=e[o];return i}function s(e,t){for(var o=0;o<t.length;o++){var i=t[o];i.enumerable=i.enumerable||!1,i.configurable=!0,"value"in i&&(i.writable=!0),Object.defineProperty(e,l(i.key),i)}}function l(e){var t=function(e,t){if("object"!=r(e)||!e)return e;var o=e[Symbol.toPrimitive];if(void 0!==o){var i=o.call(e,t||"default");if("object"!=r(i))return i;throw new TypeError("@@toPrimitive must return a primitive value.")}return("string"===t?String:Number)(e)}(e,"string");return"symbol"==r(t)?t:t+""}var u=function(){function e(){!function(e,t){if(!(e instanceof t))throw new TypeError("Cannot call a class as a function")}(this,e)}return t=e,r=[{key:"addClass",value:function(t,o){t&&(o=o.split(" "),e.getElements(t).forEach((function(e){var t;(t=e.classList).add.apply(t,n(o))})))}},{key:"removeClass",value:function(t,o){t&&(o=o.split(" "),e.getElements(t).forEach((function(e){var t;(t=e.classList).remove.apply(t,n(o))})))}},{key:"hasClass",value:function(e,t){return!!e&&e.classList.contains(t)}},{key:"getElement",value:function(e){return e&&("string"==typeof e?e=document.querySelector(e):void 0!==e.length&&(e=e[0])),e||null}},{key:"getElements",value:function(e){if(e)return void 0===e.forEach&&(e=[e]),e}},{key:"addEvent",value:function(t,o,i){e.addOrRemoveEvent(t,o,i,"add")}},{key:"removeEvent",value:function(t,o,i){e.addOrRemoveEvent(t,o,i,"remove")}},{key:"addOrRemoveEvent",value:function(t,o,r,n){t&&(o=i.removeArrayEmpty(o.split(" "))).forEach((function(o){(t=e.getElements(t)).forEach((function(e){"add"===n?e.addEventListener(o,r):e.removeEventListener(o,r)}))}))}},{key:"getScrollableParents",value:function(e){if(!e)return[];for(var t=[window],o=e.parentElement;o;){var i=getComputedStyle(o).overflow;-1===i.indexOf("scroll")&&-1===i.indexOf("auto")||t.push(o),o=o.parentElement}return t}},{key:"convertPropToDataAttr",value:function(e){return e?"data-popover-".concat(e).replace(/([A-Z])/g,"-$1").toLowerCase():""}}],(o=null)&&s(t.prototype,o),r&&s(t,r),Object.defineProperty(t,"prototype",{writable:!1}),t;var t,o,r}();function p(e){return p="function"==typeof Symbol&&"symbol"==typeof Symbol.iterator?function(e){return typeof e}:function(e){return e&&"function"==typeof Symbol&&e.constructor===Symbol&&e!==Symbol.prototype?"symbol":typeof e},p(e)}function h(e,t){for(var o=0;o<t.length;o++){var i=t[o];i.enumerable=i.enumerable||!1,i.configurable=!0,"value"in i&&(i.writable=!0),Object.defineProperty(e,c(i.key),i)}}function c(e){var t=function(e,t){if("object"!=p(e)||!e)return e;var o=e[Symbol.toPrimitive];if(void 0!==o){var i=o.call(e,t||"default");if("object"!=p(i))return i;throw new TypeError("@@toPrimitive must return a primitive value.")}return("string"===t?String:Number)(e)}(e,"string");return"symbol"==p(t)?t:t+""}var f,v={27:"onEscPress"},d=["target","position","margin","offset","enterDelay","exitDelay","showDuration","hideDuration","transitionDistance","updatePositionThrottle","zIndex","hideOnOuterClick","showOnHover","hideArrowIcon","disableManualAction","disableUpdatePosition"],y=function(){function e(t){!function(e,t){if(!(e instanceof t))throw new TypeError("Cannot call a class as a function")}(this,e);try{this.setProps(t),this.init()}catch(e){console.warn("Couldn't initiate Popover component"),console.error(e)}}return t=e,r=[{key:"init",value:function(t){var o=t.ele;if(o){var i=!1;if("string"==typeof o){if(!(o=document.querySelectorAll(o)))return;1===o.length&&(i=!0)}void 0===o.length&&(o=[o],i=!0);var r=[];return o.forEach((function(o){t.ele=o,e.destroy(o),r.push(new e(t))})),i?r[0]:r}}},{key:"destroy",value:function(e){if(e){var t=e.popComp;t&&t.destroy()}}},{key:"showMethod",value:function(){this.popComp.show()}},{key:"hideMethod",value:function(){this.popComp.hide()}},{key:"updatePositionMethod",value:function(){this.popComp.popper.updatePosition()}},{key:"getAttrProps",value:function(){var e=u.convertPropToDataAttr,t={};return d.forEach((function(o){t[e(o)]=o})),t}}],(o=[{key:"init",value:function(){this.$popover&&(this.setElementProps(),this.renderArrow(),this.initPopper(),this.addEvents())}},{key:"getEvents",value:function(){var e=[{$ele:document,event:"click",method:"onDocumentClick"},{$ele:document,event:"keydown",method:"onDocumentKeyDown"}];return this.disableManualAction||(e.push({$ele:this.$ele,event:"click",method:"onTriggerEleClick"}),this.showOnHover&&(e.push({$ele:this.$ele,event:"mouseenter",method:"onTriggerEleMouseEnter"}),e.push({$ele:this.$ele,event:"mouseleave",method:"onTriggerEleMouseLeave"}))),e}},{key:"addOrRemoveEvents",value:function(e){var t=this;this.getEvents().forEach((function(o){t.addOrRemoveEvent({action:e,$ele:o.$ele,events:o.event,method:o.method})}))}},{key:"addEvents",value:function(){this.addOrRemoveEvents("add")}},{key:"removeEvents",value:function(){this.addOrRemoveEvents("remove"),this.removeScrollEventListeners(),this.removeResizeEventListeners()}},{key:"addOrRemoveEvent",value:function(e){var t=this,o=e.action,r=e.$ele,n=e.events,a=e.method,s=e.throttle;r&&(n=i.removeArrayEmpty(n.split(" "))).forEach((function(e){var n="".concat(a,"-").concat(e),l=t.events[n];l||(l=t[a].bind(t),s&&(l=i.throttle(l,s)),t.events[n]=l),"add"===o?u.addEvent(r,e,l):u.removeEvent(r,e,l)}))}},{key:"addScrollEventListeners",value:function(){this.$scrollableElems=u.getScrollableParents(this.$ele),this.addOrRemoveEvent({action:"add",$ele:this.$scrollableElems,events:"scroll",method:"onAnyParentScroll",throttle:this.updatePositionThrottle})}},{key:"removeScrollEventListeners",value:function(){this.$scrollableElems&&(this.addOrRemoveEvent({action:"remove",$ele:this.$scrollableElems,events:"scroll",method:"onAnyParentScroll"}),this.$scrollableElems=null)}},{key:"addResizeEventListeners",value:function(){this.addOrRemoveEvent({action:"add",$ele:window,events:"resize",method:"onResize",throttle:this.updatePositionThrottle})}},{key:"removeResizeEventListeners",value:function(){this.addOrRemoveEvent({action:"remove",$ele:window,events:"resize",method:"onResize"})}},{key:"onAnyParentScroll",value:function(){this.popper.updatePosition()}},{key:"onResize",value:function(){this.popper.updatePosition()}},{key:"onDocumentClick",value:function(e){var t=e.target,o=t.closest(".pop-comp-ele"),i=t.closest(".pop-comp-wrapper");this.hideOnOuterClick&&o!==this.$ele&&i!==this.$popover&&this.hide()}},{key:"onDocumentKeyDown",value:function(e){var t=e.which||e.keyCode,o=v[t];o&&this[o](e)}},{key:"onEscPress",value:function(){this.hideOnOuterClick&&this.hide()}},{key:"onTriggerEleClick",value:function(){this.toggle()}},{key:"onTriggerEleMouseEnter",value:function(){this.show()}},{key:"onTriggerEleMouseLeave",value:function(){this.hide()}},{key:"setProps",value:function(e){e=this.setDefaultProps(e),this.setPropsFromElementAttr(e);var t=i.convertToBoolean;this.$ele=e.ele,this.target=e.target,this.position=e.position,this.margin=parseFloat(e.margin),this.offset=parseFloat(e.offset),this.enterDelay=parseFloat(e.enterDelay),this.exitDelay=parseFloat(e.exitDelay),this.showDuration=parseFloat(e.showDuration),this.hideDuration=parseFloat(e.hideDuration),this.transitionDistance=parseFloat(e.transitionDistance),this.updatePositionThrottle=parseFloat(e.updatePositionThrottle),this.zIndex=parseFloat(e.zIndex),this.hideOnOuterClick=t(e.hideOnOuterClick),this.showOnHover=t(e.showOnHover),this.hideArrowIcon=t(e.hideArrowIcon),this.disableManualAction=t(e.disableManualAction),this.disableUpdatePosition=t(e.disableUpdatePosition),this.beforeShowCallback=e.beforeShow,this.afterShowCallback=e.afterShow,this.beforeHideCallback=e.beforeHide,this.afterHideCallback=e.afterHide,this.events={},this.$popover=u.getElement(this.target)}},{key:"setDefaultProps",value:function(e){return Object.assign({position:"auto",margin:8,offset:5,enterDelay:0,exitDelay:0,showDuration:300,hideDuration:200,transitionDistance:10,updatePositionThrottle:100,zIndex:1,hideOnOuterClick:!0,showOnHover:!1,hideArrowIcon:!1,disableManualAction:!1,disableUpdatePosition:!1},e)}},{key:"setPropsFromElementAttr",value:function(e){var t=e.ele;for(var o in f){var i=t.getAttribute(o);i&&(e[f[o]]=i)}}},{key:"setElementProps",value:function(){var t=this.$ele;t.popComp=this,t.show=e.showMethod,t.hide=e.hideMethod,t.updatePosition=e.updatePositionMethod,u.addClass(this.$ele,"pop-comp-ele"),u.addClass(this.$popover,"pop-comp-wrapper")}},{key:"getOtherTriggerPopComp",value:function(){var e,t=this.$popover.popComp;return t&&t.$ele!==this.$ele&&(e=t),e}},{key:"initPopper",value:function(){var e={$popperEle:this.$popover,$triggerEle:this.$ele,$arrowEle:this.$arrowEle,position:this.position,margin:this.margin,offset:this.offset,enterDelay:this.enterDelay,exitDelay:this.exitDelay,showDuration:this.showDuration,hideDuration:this.hideDuration,transitionDistance:this.transitionDistance,zIndex:this.zIndex,afterShow:this.afterShow.bind(this),afterHide:this.afterHide.bind(this)};this.popper=new PopperComponent(e)}},{key:"beforeShow",value:function(){"function"==typeof this.beforeShowCallback&&this.beforeShowCallback(this)}},{key:"beforeHide",value:function(){"function"==typeof this.beforeHideCallback&&this.beforeHideCallback(this)}},{key:"show",value:function(){this.isShown()||(this.isShownForOtherTrigger()?this.showAfterOtherHide():(u.addClass(this.$popover,"pop-comp-disable-events"),this.$popover.popComp=this,this.beforeShow(),this.popper.show({resetPosition:!0}),u.addClass(this.$ele,"pop-comp-active")))}},{key:"hide",value:function(){this.isShown()&&(this.beforeHide(),this.popper.hide(),this.removeScrollEventListeners(),this.removeResizeEventListeners())}},{key:"toggle",value:function(e){void 0===e&&(e=!this.isShown()),e?this.show():this.hide()}},{key:"isShown",value:function(){return u.hasClass(this.$ele,"pop-comp-active")}},{key:"isShownForOtherTrigger",value:function(){var e=this.getOtherTriggerPopComp();return!!e&&e.isShown()}},{key:"showAfterOtherHide",value:function(){var e=this,t=this.getOtherTriggerPopComp();if(t){var o=t.exitDelay+t.hideDuration+100;setTimeout((function(){e.show()}),o)}}},{key:"afterShow",value:function(){var e=this;this.showOnHover?setTimeout((function(){u.removeClass(e.$popover,"pop-comp-disable-events")}),2e3):u.removeClass(this.$popover,"pop-comp-disable-events"),this.disableUpdatePosition||(this.addScrollEventListeners(),this.addResizeEventListeners()),"function"==typeof this.afterShowCallback&&this.afterShowCallback(this)}},{key:"afterHide",value:function(){u.removeClass(this.$ele,"pop-comp-active"),"function"==typeof this.afterHideCallback&&this.afterHideCallback(this)}},{key:"renderArrow",value:function(){if(!this.hideArrowIcon){var e=this.$popover.querySelector(".pop-comp-arrow");e||(this.$popover.insertAdjacentHTML("afterbegin",'<i class="pop-comp-arrow"></i>'),e=this.$popover.querySelector(".pop-comp-arrow")),this.$arrowEle=e}}},{key:"destroy",value:function(){this.removeEvents()}}])&&h(t.prototype,o),r&&h(t,r),Object.defineProperty(t,"prototype",{writable:!1}),t;var t,o,r}();f=y.getAttrProps(),window.PopoverComponent=y}();
+ */!function(){"use strict";function e(e){return function(e){if(Array.isArray(e))return t(e)}(e)||function(e){if("undefined"!=typeof Symbol&&null!=e[Symbol.iterator]||null!=e["@@iterator"])return Array.from(e)}(e)||function(e,o){if(e){if("string"==typeof e)return t(e,o);var i=Object.prototype.toString.call(e).slice(8,-1);return"Object"===i&&e.constructor&&(i=e.constructor.name),"Map"===i||"Set"===i?Array.from(e):"Arguments"===i||/^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(i)?t(e,o):void 0}}(e)||function(){throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.")}()}function t(e,t){(null==t||t>e.length)&&(t=e.length);for(var o=0,i=new Array(t);o<t;o++)i[o]=e[o];return i}function o(e,t){for(var o=0;o<t.length;o++){var i=t[o];i.enumerable=i.enumerable||!1,i.configurable=!0,"value"in i&&(i.writable=!0),Object.defineProperty(e,i.key,i)}}var i=function(){function t(){!function(e,t){if(!(e instanceof t))throw new TypeError("Cannot call a class as a function")}(this,t)}var i,r;return i=t,r=[{key:"addClass",value:function(o,i){o&&(i=i.split(" "),t.getElements(o).forEach((function(t){var o;(o=t.classList).add.apply(o,e(i))})))}},{key:"removeClass",value:function(o,i){o&&(i=i.split(" "),t.getElements(o).forEach((function(t){var o;(o=t.classList).remove.apply(o,e(i))})))}},{key:"getElements",value:function(e){if(e)return void 0===e.forEach&&(e=[e]),e}},{key:"getMoreVisibleSides",value:function(e){if(!e)return{};var t=e.getBoundingClientRect(),o=window.innerWidth,i=window.innerHeight,r=t.left,n=t.top;return{horizontal:r>o-r-t.width?"left":"right",vertical:n>i-n-t.height?"top":"bottom"}}},{key:"getAbsoluteCoords",value:function(e){if(e){var t=e.getBoundingClientRect(),o=window.pageXOffset,i=window.pageYOffset;return{width:t.width,height:t.height,top:t.top+i,right:t.right+o,bottom:t.bottom+i,left:t.left+o}}}},{key:"getCoords",value:function(e){return e?e.getBoundingClientRect():{}}},{key:"getData",value:function(e,t,o){if(e){var i=e?e.dataset[t]:"";return"number"===o?i=parseFloat(i)||0:"true"===i?i=!0:"false"===i&&(i=!1),i}}},{key:"setData",value:function(e,t,o){e&&(e.dataset[t]=o)}},{key:"setStyle",value:function(e,t,o){e&&(e.style[t]=o)}},{key:"show",value:function(e){var o=arguments.length>1&&void 0!==arguments[1]?arguments[1]:"block";t.setStyle(e,"display",o)}},{key:"hide",value:function(e){t.setStyle(e,"display","none")}},{key:"getHideableParent",value:function(e){for(var t,o=e.parentElement;o;){var i=getComputedStyle(o).overflow;if(-1!==i.indexOf("scroll")||-1!==i.indexOf("auto")){t=o;break}o=o.parentElement}return t}}],r&&o(i,r),t}();function r(e,t){for(var o=0;o<t.length;o++){var i=t[o];i.enumerable=i.enumerable||!1,i.configurable=!0,"value"in i&&(i.writable=!0),Object.defineProperty(e,i.key,i)}}var n=["top","bottom","left","right"].map((function(e){return"position-".concat(e)})),a={top:"rotate(180deg)",left:"rotate(90deg)",right:"rotate(-90deg)"},s=function(){function e(t){!function(e,t){if(!(e instanceof t))throw new TypeError("Cannot call a class as a function")}(this,e);try{this.setProps(t),this.init()}catch(e){console.warn("Couldn't initiate popper"),console.error(e)}}var t,o;return t=e,o=[{key:"init",value:function(){var e=this.$popperEle;e&&this.$triggerEle&&(i.setStyle(e,"zIndex",this.zIndex),this.setPosition())}},{key:"setProps",value:function(e){var t=(e=this.setDefaultProps(e)).position?e.position.toLowerCase():"auto";if(this.$popperEle=e.$popperEle,this.$triggerEle=e.$triggerEle,this.$arrowEle=e.$arrowEle,this.margin=parseFloat(e.margin),this.offset=parseFloat(e.offset),this.enterDelay=parseFloat(e.enterDelay),this.exitDelay=parseFloat(e.exitDelay),this.showDuration=parseFloat(e.showDuration),this.hideDuration=parseFloat(e.hideDuration),this.transitionDistance=parseFloat(e.transitionDistance),this.zIndex=parseFloat(e.zIndex),this.afterShowCallback=e.afterShow,this.afterHideCallback=e.afterHide,this.hasArrow=!!this.$arrowEle,-1!==t.indexOf(" ")){var o=t.split(" ");this.position=o[0],this.secondaryPosition=o[1]}else this.position=t}},{key:"setDefaultProps",value:function(e){return Object.assign({position:"auto",margin:8,offset:5,enterDelay:0,exitDelay:0,showDuration:300,hideDuration:200,transitionDistance:10,zIndex:1},e)}},{key:"setPosition",value:function(){i.show(this.$popperEle,"inline-flex");var e,t,o,r=window.innerWidth,s=window.innerHeight,l=i.getAbsoluteCoords(this.$popperEle),u=i.getAbsoluteCoords(this.$triggerEle),p=l.width,h=l.height,c=l.top,f=l.right,v=l.bottom,d=l.left,y=u.width,m=u.height,g=u.top,b=u.right,w=u.bottom,E=u.left,k=g-c,$=E-d,D=$,S=k,C=this.position,P=this.secondaryPosition,O=y/2-p/2,T=m/2-h/2,A=this.margin,x=this.transitionDistance,I=window.scrollY-c,H=s+I,j=window.scrollX-d,L=r+j,R=this.offset;R&&(I+=R,H-=R,j+=R,L-=R),"auto"===C&&(C=i.getMoreVisibleSides(this.$triggerEle).vertical);var z={top:{top:S-h-A,left:D+O},bottom:{top:S+m+A,left:D+O},right:{top:S+T,left:D+y+A},left:{top:S+T,left:D-p-A}},F=z[C];if(S=F.top,D=F.left,P&&("top"===P?S=k:"bottom"===P?S=k+m-h:"left"===P?D=$:"right"===P&&(D=$+y-p)),D<j?"left"===C?o="right":D=j+d>b?b-d:j:D+p>L&&("right"===C?o="left":D=L+d<E?E-f:L-p),S<I?"top"===C?o="bottom":S=I+c>w?w-c:I:S+h>H&&("bottom"===C?o="top":S=H+c<g?g-v:H-h),o){var M=z[o];"top"===(C=o)||"bottom"===C?S=M.top:"left"!==C&&"right"!==C||(D=M.left)}"top"===C?(e=S+x,t=D):"right"===C?(e=S,t=D-x):"left"===C?(e=S,t=D+x):(e=S-x,t=D);var U="translate3d(".concat(parseInt(t),"px, ").concat(parseInt(e),"px, 0)");if(i.setStyle(this.$popperEle,"transform",U),i.setData(this.$popperEle,"fromLeft",t),i.setData(this.$popperEle,"fromTop",e),i.setData(this.$popperEle,"top",S),i.setData(this.$popperEle,"left",D),i.removeClass(this.$popperEle,n.join(" ")),i.addClass(this.$popperEle,"position-".concat(C)),this.hasArrow){var B=0,q=0,N=D+d,W=S+c,K=this.$arrowEle.offsetWidth/2,V=a[C]||"";"top"===C||"bottom"===C?(B=y/2+E-N)<K?B=K:B>p-K&&(B=p-K):"left"!==C&&"right"!==C||((q=m/2+g-W)<K?q=K:q>h-K&&(q=h-K)),i.setStyle(this.$arrowEle,"transform","translate3d(".concat(parseInt(B),"px, ").concat(parseInt(q),"px, 0) ").concat(V))}i.hide(this.$popperEle)}},{key:"resetPosition",value:function(){i.setStyle(this.$popperEle,"transform","none"),this.setPosition()}},{key:"show",value:function(){var e=this,t=arguments.length>0&&void 0!==arguments[0]?arguments[0]:{},o=t.resetPosition,r=t.data;clearTimeout(this.exitDelayTimeout),clearTimeout(this.hideDurationTimeout),o&&this.resetPosition(),this.enterDelayTimeout=setTimeout((function(){var t=i.getData(e.$popperEle,"left"),o=i.getData(e.$popperEle,"top"),n="translate3d(".concat(parseInt(t),"px, ").concat(parseInt(o),"px, 0)"),a=e.showDuration;i.show(e.$popperEle,"inline-flex"),i.getCoords(e.$popperEle),i.setStyle(e.$popperEle,"transitionDuration",a+"ms"),i.setStyle(e.$popperEle,"transform",n),i.setStyle(e.$popperEle,"opacity",1),e.showDurationTimeout=setTimeout((function(){"function"==typeof e.afterShowCallback&&e.afterShowCallback(r)}),a)}),this.enterDelay)}},{key:"hide",value:function(){var e=this,t=(arguments.length>0&&void 0!==arguments[0]?arguments[0]:{}).data;clearTimeout(this.enterDelayTimeout),clearTimeout(this.showDurationTimeout),this.exitDelayTimeout=setTimeout((function(){if(e.$popperEle){var o=parseInt(i.getData(e.$popperEle,"fromLeft")),r=parseInt(i.getData(e.$popperEle,"fromTop")),n="translate3d(".concat(o,"px, ").concat(r,"px, 0)"),a=e.hideDuration;i.setStyle(e.$popperEle,"transitionDuration",a+"ms"),i.setStyle(e.$popperEle,"transform",n),i.setStyle(e.$popperEle,"opacity",0),e.hideDurationTimeout=setTimeout((function(){i.hide(e.$popperEle),"function"==typeof e.afterHideCallback&&e.afterHideCallback(t)}),a)}}),this.exitDelay)}},{key:"updatePosition",value:function(){i.setStyle(this.$popperEle,"transitionDuration","0ms"),this.resetPosition();var e=parseInt(i.getData(this.$popperEle,"left")),t=parseInt(i.getData(this.$popperEle,"top"));i.show(this.$popperEle,"inline-flex"),i.setStyle(this.$popperEle,"transform","translate3d(".concat(e,"px, ").concat(t,"px, 0)"))}}],o&&r(t.prototype,o),e}();window.PopperComponent=s}(),function(){"use strict";function e(t){return e="function"==typeof Symbol&&"symbol"==typeof Symbol.iterator?function(e){return typeof e}:function(e){return e&&"function"==typeof Symbol&&e.constructor===Symbol&&e!==Symbol.prototype?"symbol":typeof e},e(t)}function t(e,t){for(var i=0;i<t.length;i++){var r=t[i];r.enumerable=r.enumerable||!1,r.configurable=!0,"value"in r&&(r.writable=!0),Object.defineProperty(e,o(r.key),r)}}function o(t){var o=function(t,o){if("object"!=e(t)||!t)return t;var i=t[Symbol.toPrimitive];if(void 0!==i){var r=i.call(t,o||"default");if("object"!=e(r))return r;throw new TypeError("@@toPrimitive must return a primitive value.")}return("string"===o?String:Number)(t)}(t,"string");return"symbol"==e(o)?o:o+""}var i=function(){return e=function e(){!function(e,t){if(!(e instanceof t))throw new TypeError("Cannot call a class as a function")}(this,e)},i=[{key:"convertToBoolean",value:function(e){return e=!0===e||"true"===e||!1!==e&&"false"!==e&&arguments.length>1&&void 0!==arguments[1]&&arguments[1]}},{key:"removeArrayEmpty",value:function(e){return Array.isArray(e)&&e.length?e.filter((function(e){return!!e})):[]}},{key:"throttle",value:function(e,t){var o,i=0;return function(){for(var r=arguments.length,n=new Array(r),a=0;a<r;a++)n[a]=arguments[a];var s=(new Date).getTime(),l=t-(s-i);clearTimeout(o),l<=0?(i=s,e.apply(void 0,n)):o=setTimeout((function(){e.apply(void 0,n)}),l)}}}],(o=null)&&t(e.prototype,o),i&&t(e,i),Object.defineProperty(e,"prototype",{writable:!1}),e;// removed by dead control flow
+{ var e, o, i; }}();function r(e){return r="function"==typeof Symbol&&"symbol"==typeof Symbol.iterator?function(e){return typeof e}:function(e){return e&&"function"==typeof Symbol&&e.constructor===Symbol&&e!==Symbol.prototype?"symbol":typeof e},r(e)}function n(e){return function(e){if(Array.isArray(e))return a(e)}(e)||function(e){if("undefined"!=typeof Symbol&&null!=e[Symbol.iterator]||null!=e["@@iterator"])return Array.from(e)}(e)||function(e,t){if(e){if("string"==typeof e)return a(e,t);var o=Object.prototype.toString.call(e).slice(8,-1);return"Object"===o&&e.constructor&&(o=e.constructor.name),"Map"===o||"Set"===o?Array.from(e):"Arguments"===o||/^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(o)?a(e,t):void 0}}(e)||function(){throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.")}()}function a(e,t){(null==t||t>e.length)&&(t=e.length);for(var o=0,i=new Array(t);o<t;o++)i[o]=e[o];return i}function s(e,t){for(var o=0;o<t.length;o++){var i=t[o];i.enumerable=i.enumerable||!1,i.configurable=!0,"value"in i&&(i.writable=!0),Object.defineProperty(e,l(i.key),i)}}function l(e){var t=function(e,t){if("object"!=r(e)||!e)return e;var o=e[Symbol.toPrimitive];if(void 0!==o){var i=o.call(e,t||"default");if("object"!=r(i))return i;throw new TypeError("@@toPrimitive must return a primitive value.")}return("string"===t?String:Number)(e)}(e,"string");return"symbol"==r(t)?t:t+""}var u=function(){function e(){!function(e,t){if(!(e instanceof t))throw new TypeError("Cannot call a class as a function")}(this,e)}return t=e,r=[{key:"addClass",value:function(t,o){t&&(o=o.split(" "),e.getElements(t).forEach((function(e){var t;(t=e.classList).add.apply(t,n(o))})))}},{key:"removeClass",value:function(t,o){t&&(o=o.split(" "),e.getElements(t).forEach((function(e){var t;(t=e.classList).remove.apply(t,n(o))})))}},{key:"hasClass",value:function(e,t){return!!e&&e.classList.contains(t)}},{key:"getElement",value:function(e){return e&&("string"==typeof e?e=document.querySelector(e):void 0!==e.length&&(e=e[0])),e||null}},{key:"getElements",value:function(e){if(e)return void 0===e.forEach&&(e=[e]),e}},{key:"addEvent",value:function(t,o,i){e.addOrRemoveEvent(t,o,i,"add")}},{key:"removeEvent",value:function(t,o,i){e.addOrRemoveEvent(t,o,i,"remove")}},{key:"addOrRemoveEvent",value:function(t,o,r,n){t&&(o=i.removeArrayEmpty(o.split(" "))).forEach((function(o){(t=e.getElements(t)).forEach((function(e){"add"===n?e.addEventListener(o,r):e.removeEventListener(o,r)}))}))}},{key:"getScrollableParents",value:function(e){if(!e)return[];for(var t=[window],o=e.parentElement;o;){var i=getComputedStyle(o).overflow;-1===i.indexOf("scroll")&&-1===i.indexOf("auto")||t.push(o),o=o.parentElement}return t}},{key:"convertPropToDataAttr",value:function(e){return e?"data-popover-".concat(e).replace(/([A-Z])/g,"-$1").toLowerCase():""}}],(o=null)&&s(t.prototype,o),r&&s(t,r),Object.defineProperty(t,"prototype",{writable:!1}),t;// removed by dead control flow
+{ var t, o, r; }}();function p(e){return p="function"==typeof Symbol&&"symbol"==typeof Symbol.iterator?function(e){return typeof e}:function(e){return e&&"function"==typeof Symbol&&e.constructor===Symbol&&e!==Symbol.prototype?"symbol":typeof e},p(e)}function h(e,t){for(var o=0;o<t.length;o++){var i=t[o];i.enumerable=i.enumerable||!1,i.configurable=!0,"value"in i&&(i.writable=!0),Object.defineProperty(e,c(i.key),i)}}function c(e){var t=function(e,t){if("object"!=p(e)||!e)return e;var o=e[Symbol.toPrimitive];if(void 0!==o){var i=o.call(e,t||"default");if("object"!=p(i))return i;throw new TypeError("@@toPrimitive must return a primitive value.")}return("string"===t?String:Number)(e)}(e,"string");return"symbol"==p(t)?t:t+""}var f,v={27:"onEscPress"},d=["target","position","margin","offset","enterDelay","exitDelay","showDuration","hideDuration","transitionDistance","updatePositionThrottle","zIndex","hideOnOuterClick","showOnHover","hideArrowIcon","disableManualAction","disableUpdatePosition"],y=function(){function e(t){!function(e,t){if(!(e instanceof t))throw new TypeError("Cannot call a class as a function")}(this,e);try{this.setProps(t),this.init()}catch(e){console.warn("Couldn't initiate Popover component"),console.error(e)}}return t=e,r=[{key:"init",value:function(t){var o=t.ele;if(o){var i=!1;if("string"==typeof o){if(!(o=document.querySelectorAll(o)))return;1===o.length&&(i=!0)}void 0===o.length&&(o=[o],i=!0);var r=[];return o.forEach((function(o){t.ele=o,e.destroy(o),r.push(new e(t))})),i?r[0]:r}}},{key:"destroy",value:function(e){if(e){var t=e.popComp;t&&t.destroy()}}},{key:"showMethod",value:function(){this.popComp.show()}},{key:"hideMethod",value:function(){this.popComp.hide()}},{key:"updatePositionMethod",value:function(){this.popComp.popper.updatePosition()}},{key:"getAttrProps",value:function(){var e=u.convertPropToDataAttr,t={};return d.forEach((function(o){t[e(o)]=o})),t}}],(o=[{key:"init",value:function(){this.$popover&&(this.setElementProps(),this.renderArrow(),this.initPopper(),this.addEvents())}},{key:"getEvents",value:function(){var e=[{$ele:document,event:"click",method:"onDocumentClick"},{$ele:document,event:"keydown",method:"onDocumentKeyDown"}];return this.disableManualAction||(e.push({$ele:this.$ele,event:"click",method:"onTriggerEleClick"}),this.showOnHover&&(e.push({$ele:this.$ele,event:"mouseenter",method:"onTriggerEleMouseEnter"}),e.push({$ele:this.$ele,event:"mouseleave",method:"onTriggerEleMouseLeave"}))),e}},{key:"addOrRemoveEvents",value:function(e){var t=this;this.getEvents().forEach((function(o){t.addOrRemoveEvent({action:e,$ele:o.$ele,events:o.event,method:o.method})}))}},{key:"addEvents",value:function(){this.addOrRemoveEvents("add")}},{key:"removeEvents",value:function(){this.addOrRemoveEvents("remove"),this.removeScrollEventListeners(),this.removeResizeEventListeners()}},{key:"addOrRemoveEvent",value:function(e){var t=this,o=e.action,r=e.$ele,n=e.events,a=e.method,s=e.throttle;r&&(n=i.removeArrayEmpty(n.split(" "))).forEach((function(e){var n="".concat(a,"-").concat(e),l=t.events[n];l||(l=t[a].bind(t),s&&(l=i.throttle(l,s)),t.events[n]=l),"add"===o?u.addEvent(r,e,l):u.removeEvent(r,e,l)}))}},{key:"addScrollEventListeners",value:function(){this.$scrollableElems=u.getScrollableParents(this.$ele),this.addOrRemoveEvent({action:"add",$ele:this.$scrollableElems,events:"scroll",method:"onAnyParentScroll",throttle:this.updatePositionThrottle})}},{key:"removeScrollEventListeners",value:function(){this.$scrollableElems&&(this.addOrRemoveEvent({action:"remove",$ele:this.$scrollableElems,events:"scroll",method:"onAnyParentScroll"}),this.$scrollableElems=null)}},{key:"addResizeEventListeners",value:function(){this.addOrRemoveEvent({action:"add",$ele:window,events:"resize",method:"onResize",throttle:this.updatePositionThrottle})}},{key:"removeResizeEventListeners",value:function(){this.addOrRemoveEvent({action:"remove",$ele:window,events:"resize",method:"onResize"})}},{key:"onAnyParentScroll",value:function(){this.popper.updatePosition()}},{key:"onResize",value:function(){this.popper.updatePosition()}},{key:"onDocumentClick",value:function(e){var t=e.target,o=t.closest(".pop-comp-ele"),i=t.closest(".pop-comp-wrapper");this.hideOnOuterClick&&o!==this.$ele&&i!==this.$popover&&this.hide()}},{key:"onDocumentKeyDown",value:function(e){var t=e.which||e.keyCode,o=v[t];o&&this[o](e)}},{key:"onEscPress",value:function(){this.hideOnOuterClick&&this.hide()}},{key:"onTriggerEleClick",value:function(){this.toggle()}},{key:"onTriggerEleMouseEnter",value:function(){this.show()}},{key:"onTriggerEleMouseLeave",value:function(){this.hide()}},{key:"setProps",value:function(e){e=this.setDefaultProps(e),this.setPropsFromElementAttr(e);var t=i.convertToBoolean;this.$ele=e.ele,this.target=e.target,this.position=e.position,this.margin=parseFloat(e.margin),this.offset=parseFloat(e.offset),this.enterDelay=parseFloat(e.enterDelay),this.exitDelay=parseFloat(e.exitDelay),this.showDuration=parseFloat(e.showDuration),this.hideDuration=parseFloat(e.hideDuration),this.transitionDistance=parseFloat(e.transitionDistance),this.updatePositionThrottle=parseFloat(e.updatePositionThrottle),this.zIndex=parseFloat(e.zIndex),this.hideOnOuterClick=t(e.hideOnOuterClick),this.showOnHover=t(e.showOnHover),this.hideArrowIcon=t(e.hideArrowIcon),this.disableManualAction=t(e.disableManualAction),this.disableUpdatePosition=t(e.disableUpdatePosition),this.beforeShowCallback=e.beforeShow,this.afterShowCallback=e.afterShow,this.beforeHideCallback=e.beforeHide,this.afterHideCallback=e.afterHide,this.events={},this.$popover=u.getElement(this.target)}},{key:"setDefaultProps",value:function(e){return Object.assign({position:"auto",margin:8,offset:5,enterDelay:0,exitDelay:0,showDuration:300,hideDuration:200,transitionDistance:10,updatePositionThrottle:100,zIndex:1,hideOnOuterClick:!0,showOnHover:!1,hideArrowIcon:!1,disableManualAction:!1,disableUpdatePosition:!1},e)}},{key:"setPropsFromElementAttr",value:function(e){var t=e.ele;for(var o in f){var i=t.getAttribute(o);i&&(e[f[o]]=i)}}},{key:"setElementProps",value:function(){var t=this.$ele;t.popComp=this,t.show=e.showMethod,t.hide=e.hideMethod,t.updatePosition=e.updatePositionMethod,u.addClass(this.$ele,"pop-comp-ele"),u.addClass(this.$popover,"pop-comp-wrapper")}},{key:"getOtherTriggerPopComp",value:function(){var e,t=this.$popover.popComp;return t&&t.$ele!==this.$ele&&(e=t),e}},{key:"initPopper",value:function(){var e={$popperEle:this.$popover,$triggerEle:this.$ele,$arrowEle:this.$arrowEle,position:this.position,margin:this.margin,offset:this.offset,enterDelay:this.enterDelay,exitDelay:this.exitDelay,showDuration:this.showDuration,hideDuration:this.hideDuration,transitionDistance:this.transitionDistance,zIndex:this.zIndex,afterShow:this.afterShow.bind(this),afterHide:this.afterHide.bind(this)};this.popper=new PopperComponent(e)}},{key:"beforeShow",value:function(){"function"==typeof this.beforeShowCallback&&this.beforeShowCallback(this)}},{key:"beforeHide",value:function(){"function"==typeof this.beforeHideCallback&&this.beforeHideCallback(this)}},{key:"show",value:function(){this.isShown()||(this.isShownForOtherTrigger()?this.showAfterOtherHide():(u.addClass(this.$popover,"pop-comp-disable-events"),this.$popover.popComp=this,this.beforeShow(),this.popper.show({resetPosition:!0}),u.addClass(this.$ele,"pop-comp-active")))}},{key:"hide",value:function(){this.isShown()&&(this.beforeHide(),this.popper.hide(),this.removeScrollEventListeners(),this.removeResizeEventListeners())}},{key:"toggle",value:function(e){void 0===e&&(e=!this.isShown()),e?this.show():this.hide()}},{key:"isShown",value:function(){return u.hasClass(this.$ele,"pop-comp-active")}},{key:"isShownForOtherTrigger",value:function(){var e=this.getOtherTriggerPopComp();return!!e&&e.isShown()}},{key:"showAfterOtherHide",value:function(){var e=this,t=this.getOtherTriggerPopComp();if(t){var o=t.exitDelay+t.hideDuration+100;setTimeout((function(){e.show()}),o)}}},{key:"afterShow",value:function(){var e=this;this.showOnHover?setTimeout((function(){u.removeClass(e.$popover,"pop-comp-disable-events")}),2e3):u.removeClass(this.$popover,"pop-comp-disable-events"),this.disableUpdatePosition||(this.addScrollEventListeners(),this.addResizeEventListeners()),"function"==typeof this.afterShowCallback&&this.afterShowCallback(this)}},{key:"afterHide",value:function(){u.removeClass(this.$ele,"pop-comp-active"),"function"==typeof this.afterHideCallback&&this.afterHideCallback(this)}},{key:"renderArrow",value:function(){if(!this.hideArrowIcon){var e=this.$popover.querySelector(".pop-comp-arrow");e||(this.$popover.insertAdjacentHTML("afterbegin",'<i class="pop-comp-arrow"></i>'),e=this.$popover.querySelector(".pop-comp-arrow")),this.$arrowEle=e}}},{key:"destroy",value:function(){this.removeEvents()}}])&&h(t.prototype,o),r&&h(t,r),Object.defineProperty(t,"prototype",{writable:!1}),t;// removed by dead control flow
+{ var t, o, r; }}();f=y.getAttrProps(),window.PopoverComponent=y}();
 }();
 /******/ })()
 ;
