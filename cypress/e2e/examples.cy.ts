@@ -152,7 +152,12 @@ describe('Multiple select', () => {
   });
 
   it('search and select available option', () => {
-    cy.open(id).search('Option 234').selectOption([2340, 2342]).hasValueText('Option 2340, Option 2342');
+    cy.open(id)
+      .search('Option 2340')
+      .selectOption(2340)
+      .search('Option 2342')
+      .selectOption(2342)
+      .hasValueText('Option 2340, Option 2342');
   });
 
   it('search, scroll, and select option', () => {
@@ -214,7 +219,10 @@ describe('Option group', () => {
 
   it('select all group options', () => {
     cy.getVs(id)
-      .selectOption(['1-2', '1-3'])
+      .search('1-2')
+      .selectOption('1-2')
+      .search('1-3')
+      .selectOption('1-3')
       .hasValueText('3 options selected')
       .checkOptionGroup('Option group 1', true);
   });
@@ -229,6 +237,7 @@ describe('Option group', () => {
 
   it('select all options', () => {
     cy.getVs(id)
+      .searchClear()
       .toggleSelectAll()
       .hasValueText('All (9)')
       .checkOptionGroup('Option group 1', true)
@@ -445,7 +454,15 @@ describe('Show dropbox as popup - Multiple', () => {
   });
 
   it('select options', () => {
-    cy.open(id).selectOption([1, 3, 7]).hasValueText('Option 1, Option 3, Option 7');
+    cy.open(id)
+    .search('1')
+    .selectOption(1)
+    .search('3')
+    .selectOption(3)
+    .search('7')
+    .selectOption(7)
+    .hasValueText('Option 1, Option 3, Option 7')
+    .searchClear();
   });
 
   it('dropbox is fixed', () => {
@@ -534,9 +551,15 @@ describe('Show values as tags', () => {
 
   it('select options', () => {
     cy.open(id)
-      .selectOption([3, 7])
+      .search('3')
+      .selectOption(3)
+      .search('7')
+      .selectOption(7)
       .scrollOptions(600)
-      .selectOption([18, 20])
+      .search('18')
+      .selectOption(18)
+      .search('20')
+      .selectOption(20)
       .hasValueTags(['Option 3', 'Option 7', 'Option 18', 'Option 20'])
   });
 
@@ -556,7 +579,15 @@ describe('Show values as tags', () => {
   });
 
   it('reset value', () => {
-    cy.open(id).selectOption([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]).checkValueTagsCount(10).resetValue(id);
+    const optsList = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+
+    const vs = cy.open(id);
+    for (let i = 0; i < optsList.length; i++) {
+      vs
+        .search(`Option ${optsList[i]}`)
+        .selectOption(i+1);
+    }
+    vs.checkValueTagsCount(10).resetValue(id)
   });
 });
 
@@ -572,7 +603,12 @@ describe('Right-to-Left text', () => {
   });
 
   it('select available option', () => {
-    cy.open(id).selectOption([1, 3]).hasValueText('Option 1, Option 3');
+    cy.open(id)
+      .search(`1`)
+      .selectOption(1)
+      .search(`3`)
+      .selectOption(3)
+      .hasValueText('Option 1, Option 3');
   });
 
   it('value aligned to right', () => {
