@@ -69,6 +69,19 @@ declare namespace Cypress {
 
     /**
      * @example
+     * cy.checkOptionLabelExists('Option 2')
+     * cy.checkOptionLabelExists(['Option 2', 'Option 3'])
+     */
+    checkOptionLabelExists(label: string | number | (string | number)[]): Chainable<any>;
+
+    /**
+     * @example
+     * cy.checkActiveElementHasClass('vscomp-search-input')
+     */
+    checkActiveElementHasClass(className: string): Chainable<Subject>;
+
+    /**
+     * @example
      * cy.hasValueText('Option 2')
      */
     hasValueText(valueText: string): Chainable<any>;
@@ -84,6 +97,20 @@ declare namespace Cypress {
      * cy.search('Option 2')
      */
     search(value: string): Chainable<any>;
+
+    /**
+     * @example
+     * cy.typeValue('Option 2')
+     * cy.typeValue('Option 2', true)
+     */
+    typeValue(value: string, clearText?: boolean): Chainable<any>;
+
+    /**
+     * @example
+     * cy.pressKeys('Enter')
+     * cy.pressKeys(['ArrowDown', 'Enter'])
+     */
+    pressKeys(keys: string | string[]): Chainable<Subject>;
 
     /**
      * @example

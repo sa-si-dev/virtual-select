@@ -4,7 +4,7 @@
 // // // // // Get started page
 // // // // //
 
-describe('Open page', () => {
+describe('Open Get started page', () => {
   it('opened', () => {
     cy.visit('get-started');
   });
@@ -58,11 +58,147 @@ describe('Open Get Started page for Dropdowns interaction test clicking outside'
 
 
 
+/**
+ * Arrow key behavior tests for search input
+ * Tests the fix that allows normal cursor movement in search input
+ * while preserving option navigation when focus moves away from search
+ */
+
+describe('Arrow key behavior in search input - cursor movement', () => {
+  const idMultiple = 'multiple-select'
+
+  it('should allow cursor movement to beginning with up arrow in search input', () => {
+    cy.open(idMultiple);
+    // Type some text in search input
+    cy.getVs(idMultiple).typeValue('ption 9', true);
+    // Press Up arrow - should move cursor to beginning
+    cy.getVs(idMultiple).pressKeys('ArrowUp');
+    // Type 'O' at cursor position (should be at beginning)
+    cy.getVs(idMultiple).typeValue('O');
+    // Verify the text has 'O' at the beginning
+    cy.getVs(idMultiple).checkOptionLabelExists('Option 9');
+  });
+
+  it('should allow cursor movement to end with down arrow in search input', () => {
+    // Clear and test Down arrow - use actual dropdown data
+    cy.getVs(idMultiple).typeValue('Option 1', true);
+    // Press Down arrow - should move cursor to end
+    cy.getVs(idMultiple).pressKeys('ArrowDown');
+    // Type '0' at cursor position (should be at end, making "Option 10")
+    cy.getVs(idMultiple).typeValue('0');
+    // Verify the text has '0' at the end
+    cy.getVs(idMultiple).checkOptionLabelExists('Option 10');
+  });
+
+  it('should allow left and right arrow keys for cursor movement in search', () => {
+    // Clear and type new text using actual dropdown data
+    cy.getVs(idMultiple).typeValue('Option 55', true);
+    // Move cursor left twice (to position before '5')
+    cy.getVs(idMultiple).pressKeys(['ArrowLeft', 'ArrowLeft']);
+    // Type 'X' in middle (before the '5')
+    cy.getVs(idMultiple).typeValue('4');
+    // Should have 'Option 455'
+    cy.getVs(idMultiple).checkOptionLabelExists('Option 455');
+    // Move cursor right twice (to end)
+    cy.getVs(idMultiple).pressKeys(['ArrowRight', 'ArrowRight']);
+    // Type 'Y' at end
+    cy.getVs(idMultiple).typeValue('6');
+    // Should have 'Option 4556'
+    cy.getVs(idMultiple).checkOptionLabelExists('Option 4556');
+  });
+
+  it('should close multiple-select dropdown', () => {
+    cy.get('body').click(10, 10); // Click outside to close
+    cy.getVs(idMultiple).find('.vscomp-ele-wrapper').should('have.class', 'closed');
+  });
+});
+
+describe('Arrow key behavior - no option navigation when search input focused', () => {
+  const idMultiple = 'multiple-select'
+  const searchInputSelector = '.vscomp-search-input';
+
+  it('should not navigate options when arrow keys used in search input', () => {
+    cy.open(idMultiple);
+    // Type in search input - use text that will filter to a few options
+    cy.getVs(idMultiple).typeValue('Option 1', true);
+    // Wait for filtering to complete
+    cy.wait(100);
+    // Verify search input is focused
+    cy.checkActiveElementHasClass('vscomp-search-input');
+    // Press Down arrow while focused on search input
+    cy.getVs(idMultiple).pressKeys('ArrowDown');
+    // Search input should still be focused (arrow key should move cursor, not navigate options)
+    cy.checkActiveElementHasClass('vscomp-search-input');
+    // Press Up arrow while focused on search input
+    cy.getVs(idMultiple).pressKeys('ArrowUp');
+    // Search input should still be focused
+    cy.checkActiveElementHasClass('vscomp-search-input');
+  });
+
+  it('should close multiple-select dropdown', () => {
+    cy.get('body').click(10, 10); // Click outside to close
+    cy.getVs(idMultiple).find('.vscomp-ele-wrapper').should('have.class', 'closed');
+  });
+});
+
+describe('Arrow key behavior - Home and End keys in search input', () => {
+  const idMultiple = 'multiple-select'
+
+  it('should work correctly with Home and End keys in search input', () => {
+    cy.open(idMultiple);
+    // Type some text using search to ensure dropdown is properly opened
+    cy.getVs(idMultiple).typeValue('ption 55', true);
+    // Press Home to go to beginning
+    cy.getVs(idMultiple).pressKeys('Home');
+    // Type at beginning
+    cy.getVs(idMultiple).typeValue('O');
+    // Should have 'Option 55'
+    cy.getVs(idMultiple).checkOptionLabelExists('Option 55');
+    // Press End to go to end
+    cy.getVs(idMultiple).pressKeys('End');
+    // Type at end
+    cy.getVs(idMultiple).typeValue('6');
+    // Should have 'Option 556'
+    cy.getVs(idMultiple).checkOptionLabelExists('Option 556');
+    cy.getVs(idMultiple).searchClear();
+  });
+
+  it('should close multiple-select dropdown', () => {
+    cy.get('body').click(10, 10); // Click outside to close
+    cy.getVs(idMultiple).find('.vscomp-ele-wrapper').should('have.class', 'closed');
+  });
+});
+
+describe('Arrow key behavior - focus management and accessibility', () => {
+  const idMultiple = 'multiple-select'
+
+  it('should allow normal text editing with arrow keys in search', () => {
+    cy.open(idMultiple);
+    // Clear and test more text editing using realistic data
+    cy.getVs(idMultiple).typeValue('tion 123', true);
+    // Use Up arrow to go to beginning
+    cy.getVs(idMultiple).pressKeys('ArrowUp');
+    cy.getVs(idMultiple).typeValue('Op');
+    cy.getVs(idMultiple).checkOptionLabelExists('Option 123');
+    // Use Down arrow to go to end
+    cy.getVs(idMultiple).pressKeys('ArrowDown');
+    cy.getVs(idMultiple).typeValue('44');
+    cy.getVs(idMultiple).checkOptionLabelExists('Option 12344');
+  });
+
+  it('should close multiple-select dropdown', () => {
+    cy.get('body').click(10, 10); // Click outside to close
+    cy.getVs(idMultiple).find('.vscomp-ele-wrapper').should('have.class', 'closed');
+  });
+});
+
+
+
 // // // // //
 // // // // // Examples page
 // // // // //
 
-describe('Open page', () => {
+describe('Open Examples page', () => {
   it('opened', () => {
     cy.visit('examples');
   });
