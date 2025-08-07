@@ -1,6 +1,16 @@
 /** cSpell:ignore vscomp */
+import 'cypress-real-events';
+
 const dropboxCloseDuration = 200;
 const optionsScrollDuration = 300;
+
+type SpecialKey = 'Tab' | 'Enter' | 'Escape' | 'ArrowUp' | 'ArrowDown' | 'ArrowLeft' | 'ArrowRight' | 'Home' | 'End';
+
+// Type guard function
+const isValidKey = (key: string): key is SpecialKey => {
+  const specialKeys = ['Tab', 'Enter', 'Escape', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Home', 'End'];
+  return specialKeys.includes(key);
+};
 
 Cypress.Commands.add('goToSection', (title) => {
   cy.get('a').contains(title).click({force: true});
@@ -64,6 +74,28 @@ Cypress.Commands.add('selectOption', { prevSubject: true }, (vsElem, value, { fo
   cy.get(vsElem);
 });
 
+Cypress.Commands.add('checkOptionLabelExists', { prevSubject: true }, (vsElem, label) => {
+  const labels = Array.isArray(label) ? label : [label];
+  cy.log('Checking option labels in visible options container:', labels);
+
+  labels.forEach((l) => {
+    cy.log(`Checking option label: ${l}`);
+    // Use the data-tooltip attribute to find the option
+    cy.getDropbox(vsElem)
+      .find('.vscomp-options-container')
+      .find(`.vscomp-option-text[data-tooltip="${l}"]`)
+      .contains(l);
+  });
+});
+
+Cypress.Commands.add('checkActiveElementHasClass', (className: string) => {
+  cy.log(`Checking if active element has class: ${className}`);
+  
+  // cy.focused() is the most performant and correct way to get the active element.
+  // It automatically retries until an element is focused.
+  cy.focused().should('have.class', className);
+});
+
 Cypress.Commands.add('hasValueText', { prevSubject: true }, (vsElem, valueText) => {
   cy.get(vsElem).find('.vscomp-value').contains(valueText);
   cy.get(vsElem);
@@ -71,6 +103,38 @@ Cypress.Commands.add('hasValueText', { prevSubject: true }, (vsElem, valueText) 
 
 Cypress.Commands.add('search', { prevSubject: true }, (vsElem, value) => {
   cy.getDropbox(vsElem).find('.vscomp-search-input').clear().type(value);
+  cy.get(vsElem);
+});
+
+Cypress.Commands.add('typeValue', { prevSubject: true }, (vsElem, value, clearText = false) => {
+  // Use `cy.getDropbox(vsElem)` to get the main container and then find the search input.
+  const searchInput = cy.getDropbox(vsElem).find('.vscomp-search-input');
+  // Focus on the input first, which is a good practice for keyboard interactions.
+  searchInput.focus();
+  // Conditionally clear the text if `clearText` is true.
+  if (clearText) {
+    searchInput.clear();
+  }
+  // Use the new `cy.realType()` command from the plugin to type the value.
+  searchInput.realType(value);
+  cy.get(vsElem);
+});
+
+Cypress.Commands.add('pressKeys', { prevSubject: true }, (vsElem, keys) => {
+  const searchInput = cy.getDropbox(vsElem).find('.vscomp-search-input');
+  searchInput.focus();
+
+  const keysToPress = Array.isArray(keys) ? keys : [keys];
+  
+  keysToPress.forEach(key => {
+    if (isValidKey(key)) {
+      // TypeScript now knows this is a valid key type
+      cy.realPress(key);
+    } else {
+      // Log an error or fail the test if an invalid key is passed
+      throw new Error(`Invalid key provided: "${key}". Must be one of: ${keysToPress.join(', ')}`);
+    }
+  });
   cy.get(vsElem);
 });
 

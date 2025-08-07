@@ -9,7 +9,7 @@
     "checkJs": true,
     "strict": true,
     "declaration": true,
-    "types": ["cypress"],
+    "types": ["cypress", "node", "cypress-real-events"],
     "emitDeclarationOnly": true
   },
 

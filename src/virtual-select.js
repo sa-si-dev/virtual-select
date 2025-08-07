@@ -590,6 +590,10 @@ export class VirtualSelect {
   }
 
   onDownArrowPress(e) {
+    // Allow default behavior (cursor movement) when search input is focused
+    if (document.activeElement === this.$searchInput) {
+      return;
+    }
     e.preventDefault();
 
     if (this.isOpened()) {
@@ -600,6 +604,10 @@ export class VirtualSelect {
   }
 
   onUpArrowPress(e) {
+    // Allow default behavior (cursor movement) when search input is focused
+    if (document.activeElement === this.$searchInput) {
+      return;
+    }
     e.preventDefault();
 
     if (this.isOpened()) {
