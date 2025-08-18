@@ -510,7 +510,8 @@ export class VirtualSelect {
       this.removeEvent(this.$searchInput, 'input', 'onSearch');
       this.removeEvent(this.$searchInput, 'change', 'preventPropagation');
       if (this.$searchClear) {
-        this.removeEvent(this.$searchClear, 'click keydown', 'onSearchClear');
+        this.removeEvent(this.$searchClear, 'click', 'onSearchClear');
+        this.removeEvent(this.$searchClear, 'keydown', 'onSearchClear');
       }
     }
     if (this.$toggleAllButton) {
