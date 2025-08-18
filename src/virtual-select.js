@@ -506,12 +506,20 @@ export class VirtualSelect {
     this.removeEvent(this.$options, 'touchmove', 'onOptionsTouchMove');
 
     // Remove search-related events that are added in renderSearch()
-    this.removeEvent(this.$searchInput, 'input', 'onSearch');
-    this.removeEvent(this.$searchInput, 'change', 'preventPropagation');
-    this.removeEvent(this.$searchClear, 'click keydown', 'onSearchClear');
-    this.removeEvent(this.$toggleAllButton, 'click', 'onToggleAllOptions');
-    this.removeEvent(this.$dropboxContainerBottom, 'focus', 'onDropboxContainerTopOrBottomFocus');
-    this.removeEvent(this.$dropboxContainerTop, 'focus', 'onDropboxContainerTopOrBottomFocus');
+    if (this.$searchInput) {
+      this.removeEvent(this.$searchInput, 'input', 'onSearch');
+      this.removeEvent(this.$searchInput, 'change', 'preventPropagation');
+      this.removeEvent(this.$searchClear, 'click keydown', 'onSearchClear');
+    }
+    if (this.$toggleAllButton) {
+      this.removeEvent(this.$toggleAllButton, 'click', 'onToggleAllOptions');
+    }
+    if (this.$dropboxContainerBottom) {
+      this.removeEvent(this.$dropboxContainerBottom, 'focus', 'onDropboxContainerTopOrBottomFocus');
+    }
+    if (this.$dropboxContainerTop) {
+      this.removeEvent(this.$dropboxContainerTop, 'focus', 'onDropboxContainerTopOrBottomFocus');
+    }
 
     this.removeMutationObserver();
   }
