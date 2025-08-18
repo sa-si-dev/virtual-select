@@ -509,7 +509,9 @@ export class VirtualSelect {
     if (this.$searchInput) {
       this.removeEvent(this.$searchInput, 'input', 'onSearch');
       this.removeEvent(this.$searchInput, 'change', 'preventPropagation');
-      this.removeEvent(this.$searchClear, 'click keydown', 'onSearchClear');
+      if (this.$searchClear) {
+        this.removeEvent(this.$searchClear, 'click keydown', 'onSearchClear');
+      }
     }
     if (this.$toggleAllButton) {
       this.removeEvent(this.$toggleAllButton, 'click', 'onToggleAllOptions');
