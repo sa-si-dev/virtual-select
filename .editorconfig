@@ -12,7 +12,6 @@ indent_size = 2
 [*.md]
 trim_trailing_whitespace = false
 # Editor configuration, see https://editorconfig.org
-root = true
 
 [*]
 end_of_line = lf      # Enforce LF line endings
