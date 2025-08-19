@@ -1,3 +1,4 @@
+@use './variable' as v;
 @mixin prefix($property, $value) {
   #{'-webkit-' + $property}: $value;
   #{$property}: $value;
@@ -5,7 +6,7 @@
 
 @mixin checkbox-checked {
   @include prefix(transform, rotate(45deg) translate(1px, -4px));
-  border-color: $primary-color;
+  border-color: v.$primary-color;
   border-left-color: transparent;
   border-top-color: transparent;
   width: 50%;
