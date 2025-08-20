@@ -1,8 +1,11 @@
+@use './variable' as v;
+@use './mixins' as m;
+
 .vscomp-wrapper.text-direction-rtl {
   direction: rtl;
 
   .vscomp-toggle-button {
-    padding: 7px 10px 7px $arrow-width;
+    padding: 7px 10px 7px v.$arrow-width;
   }
 
   .vscomp-arrow {
@@ -11,16 +14,16 @@
   }
 
   .vscomp-clear-button {
-    left: $arrow-width;
+    left: v.$arrow-width;
     right: auto !important;
   }
 
   .checkbox-icon {
-    margin-left: $option-checkbox-margin;
+    margin-left: v.$option-checkbox-margin;
     margin-right: 0;
 
     &.checked::after {
-      @include checkbox-checked-rtl;
+      @include m.checkbox-checked-rtl;
     }
   }
 
@@ -45,7 +48,7 @@
     right: auto;
 
     &::before {
-      border-left-color: $primary-color;
+      border-left-color: v.$primary-color;
       border-right-color: transparent;
     }
 
@@ -58,20 +61,20 @@
   &.multiple {
     .vscomp-option {
       &.selected .checkbox-icon::after {
-        @include checkbox-checked-rtl;
+        @include m.checkbox-checked-rtl;
       }
     }
   }
 
   &.has-clear-button {
     .vscomp-toggle-button {
-      padding-left: #{$arrow-width + $clear-button-width};
+      padding-left: #{v.$arrow-width + v.$clear-button-width};
     }
   }
 
   &.keep-always-open {
     .vscomp-toggle-button {
-      padding-left: $clear-button-width;
+      padding-left: v.$clear-button-width;
     }
 
     .vscomp-clear-button {

@@ -1,3 +1,7 @@
+@use 'sass:math';
+@use './variable' as v;
+@use './mixins' as m;
+
 .vscomp-popup-active {
   overflow: hidden !important;
 }
@@ -9,11 +13,11 @@
 }
 
 .vscomp-wrapper {
-  color: $font-color;
+  color: v.$font-color;
   display: inline-flex;
   flex-wrap: wrap;
-  font-family: $font-family;
-  font-size: $font-size;
+  font-family: v.$font-family;
+  font-size: v.$font-size;
   position: relative;
   text-align: left;
   width: 100%;
@@ -37,11 +41,11 @@
 
 .vscomp-toggle-button {
   align-items: center;
-  background-color: $primary-bg;
-  border: 1px solid $border-color;
+  background-color: v.$primary-bg;
+  border: 1px solid v.$border-color;
   cursor: pointer;
   display: flex;
-  padding: 7px $arrow-width 7px 10px;
+  padding: 7px v.$arrow-width 7px 10px;
   position: relative;
   width: 100%;
 }
@@ -63,30 +67,30 @@
   position: absolute;
   right: 0;
   top: 0;
-  width: $arrow-width;
+  width: v.$arrow-width;
 
   &::after {
-    @include prefix(transform, rotate(45deg));
+    @include m.prefix(transform, rotate(45deg));
     border: 1px solid transparent;
-    border-bottom-color: $arrow-color;
-    border-right-color: $arrow-color;
+    border-bottom-color: v.$arrow-color;
+    border-right-color: v.$arrow-color;
     content: '';
-    height: $arrow-size;
+    height: v.$arrow-size;
     margin-top: -6px;
-    width: $arrow-size;
+    width: v.$arrow-size;
   }
 }
 
 .vscomp-clear-icon {
-  height: $clear-icon-size;
+  height: v.$clear-icon-size;
   position: relative;
-  width: $clear-icon-size;
+  width: v.$clear-icon-size;
 
   &::before,
   &::after {
     background-color: #999;
     content: '';
-    height: $clear-icon-size;
+    height: v.$clear-icon-size;
     left: 5px;
     position: absolute;
     top: 0;
@@ -94,17 +98,17 @@
   }
 
   &::before {
-    @include prefix(transform, rotate(45deg));
+    @include m.prefix(transform, rotate(45deg));
   }
 
   &::after {
-    @include prefix(transform, rotate(-45deg));
+    @include m.prefix(transform, rotate(-45deg));
   }
 
   &:hover {
     &::before,
     &::after {
-      background: $icon-hover-color;
+      background: v.$icon-hover-color;
     }
   }
 }
@@ -113,21 +117,21 @@
   align-items: center;
   border-radius: 50%;
   display: none;
-  height: $clear-button-width;
+  height: v.$clear-button-width;
   justify-content: center;
-  margin-top: math.div($clear-button-width, -2);
+  margin-top: math.div(v.$clear-button-width, -2);
   position: absolute;
-  right: $arrow-width;
+  right: v.$arrow-width;
   top: 50%;
-  width: $clear-button-width;
+  width: v.$clear-button-width;
 
   &:hover {
-    background: $focus-color;
+    background: v.$focus-color;
 
     .vscomp-clear-icon {
       &::before,
       &::after {
-        background-color: $icon-hover-color;
+        background-color: v.$icon-hover-color;
       }
     }
   }
@@ -135,17 +139,17 @@
 
 .vscomp-dropbox-close-button {
   align-items: center;
-  background-color: $primary-bg;
+  background-color: v.$primary-bg;
   border-radius: 50%;
-  bottom: -#{$dropbox-close-button-width + $dropbox-close-button-offset};
+  bottom: -#{v.$dropbox-close-button-width + v.$dropbox-close-button-offset};
   cursor: pointer;
   display: none;
-  height: $dropbox-close-button-width;
+  height: v.$dropbox-close-button-width;
   justify-content: center;
   left: 50%;
-  margin-left: math.div($dropbox-close-button-width, -2);
+  margin-left: math.div(v.$dropbox-close-button-width, -2);
   position: absolute;
-  width: $dropbox-close-button-width;
+  width: v.$dropbox-close-button-width;
 }
 
 .vscomp-value-tag {
@@ -156,16 +160,16 @@
 
 .vscomp-dropbox-container {
   width: 100%;
-  z-index: $z-index + 1;
+  z-index: v.$z-index + 1;
 }
 
 .vscomp-dropbox {
-  background-color: $primary-bg;
+  background-color: v.$primary-bg;
   width: 100%;
 }
 
 .vscomp-options-container {
-  max-height: #{$dropbox-height - $search-height};
+  max-height: #{v.$dropbox-height - v.$search-height};
   overflow: auto;
   position: relative;
 }
@@ -183,16 +187,16 @@
   cursor: pointer;
   display: flex;
   flex-wrap: wrap;
-  height: $option-height;
+  height: v.$option-height;
   padding: 0 15px;
   position: relative;
 
   &.selected {
-    background-color: $selected-color;
+    background-color: v.$selected-color;
   }
 
   &.focused {
-    background-color: $focus-color;
+    background-color: v.$focus-color;
   }
 
   &.disabled {
@@ -217,14 +221,14 @@
 }
 
 .vscomp-new-option-icon {
-  height: $new-option-icon-width;
+  height: v.$new-option-icon-width;
   position: absolute;
   right: 0;
   top: 0;
-  width: $new-option-icon-width;
+  width: v.$new-option-icon-width;
 
   &::before {
-    border: math.div($new-option-icon-width, 2) solid $primary-color;
+    border: math.div(v.$new-option-icon-width, 2) solid v.$primary-color;
     border-bottom-color: transparent;
     border-left-color: transparent;
     content: '';
@@ -239,34 +243,34 @@
     content: '+';
     display: flex;
     font-size: 18px;
-    height: math.div($new-option-icon-width, 2);
+    height: math.div(v.$new-option-icon-width, 2);
     justify-content: center;
     position: absolute;
     right: 1px;
     top: 0;
-    width: math.div($new-option-icon-width, 2);
+    width: math.div(v.$new-option-icon-width, 2);
   }
 }
 
 .vscomp-option-text {
-  @include ellipse;
+  @include m.ellipse;
   user-select: none;
   width: 100%;
 }
 
 .vscomp-option-description {
-  @include ellipse;
-  color: $font-color-light;
-  font-size: $font-size-small;
+  @include m.ellipse;
+  color: v.$font-color-light;
+  font-size: v.$font-size-small;
   line-height: 15px;
   width: 100%;
 }
 
 .vscomp-search-container {
   align-items: center;
-  border-bottom: 1px solid $border-color;
+  border-bottom: 1px solid v.$border-color;
   display: flex;
-  height: $search-height;
+  height: v.$search-height;
   padding: 0 5px 0 15px;
   position: relative;
 }
@@ -291,9 +295,9 @@
   border: 0;
   color: inherit;
   font-size: 15px;
-  height: #{$search-height - 2px};
+  height: #{v.$search-height - 2px};
   padding: 10px 0;
-  width: calc(100% - #{$search-clear-width});
+  width: calc(100% - #{v.$search-clear-width});
 
   &:focus {
     outline: none;
@@ -306,11 +310,11 @@
   cursor: pointer;
   display: flex;
   font-size: 25px;
-  height: $search-clear-width;
+  height: v.$search-clear-width;
   justify-content: center;
   user-select: none;
   visibility: hidden;
-  width: $search-clear-width;
+  width: v.$search-clear-width;
 
   &:hover {
     color: inherit;
@@ -331,15 +335,15 @@
   text-align: center;
 
   &::before {
-    @include prefix(animation, vscomp-animation-spin 0.8s infinite linear);
-    background-color: $primary-bg;
+    @include m.prefix(animation, vscomp-animation-spin 0.8s infinite linear);
+    background-color: v.$primary-bg;
     border-radius: 50%;
     box-shadow: -4px -5px 3px -3px rgba(0, 0, 0, 0.3);
     content: '';
     display: inline-block;
-    height: $options-loader-size;
+    height: v.$options-loader-size;
     opacity: 0.7;
-    width: $options-loader-size;
+    width: v.$options-loader-size;
   }
 }
 
@@ -359,13 +363,13 @@
   .checkbox-icon {
     display: inline-flex;
     height: 15px;
-    margin-right: $option-checkbox-margin;
+    margin-right: v.$option-checkbox-margin;
     position: relative;
     width: 15px;
 
     &::after {
-      @include prefix(transition-duration, 0.2s);
-      border: 2px solid $checkbox-color;
+      @include m.prefix(transition-duration, 0.2s);
+      border: 2px solid v.$checkbox-color;
       content: '';
       display: inline-block;
       height: 100%;
@@ -373,14 +377,14 @@
     }
 
     &.checked::after {
-      @include checkbox-checked;
+      @include m.checkbox-checked;
     }
   }
 
   &.show-as-popup {
     .vscomp-dropbox-container {
       align-items: center;
-      background-color: $overlay-bg;
+      background-color: v.$overlay-bg;
       display: flex;
       height: 100vh;
       justify-content: center;
@@ -394,8 +398,8 @@
     }
 
     .vscomp-dropbox {
-      margin-top: math.div(($dropbox-close-button-width + $dropbox-close-button-offset), -2);
-      max-height: calc(80% - #{$dropbox-close-button-width + $dropbox-close-button-offset});
+      margin-top: math.div((v.$dropbox-close-button-width + v.$dropbox-close-button-offset), -2);
+      max-height: calc(80% - #{v.$dropbox-close-button-width + v.$dropbox-close-button-offset});
       max-width: 500px;
       position: relative;
       width: 80%;
@@ -427,7 +431,7 @@
 
     .vscomp-search-input,
     .vscomp-toggle-all-label {
-      width: calc(100% - #{$search-clear-width + $checkbox-full-width});
+      width: calc(100% - #{v.$search-clear-width + v.$checkbox-full-width});
     }
 
     .vscomp-toggle-all-label {
@@ -448,15 +452,15 @@
   &.multiple {
     .vscomp-option {
       .vscomp-option-text {
-        width: calc(100% - #{$checkbox-full-width});
+        width: calc(100% - #{v.$checkbox-full-width});
       }
 
       .vscomp-option-description {
-        padding-left: $checkbox-full-width;
+        padding-left: v.$checkbox-full-width;
       }
 
       &.selected .checkbox-icon::after {
-        @include checkbox-checked;
+        @include m.checkbox-checked;
       }
     }
   }
@@ -464,7 +468,7 @@
   &.focused,
   &:focus {
     .vscomp-toggle-button {
-      box-shadow: $box-shadow1;
+      box-shadow: v.$box-shadow1;
     }
   }
 
@@ -487,7 +491,7 @@
     }
 
     .vscomp-toggle-button {
-      padding-right: #{$arrow-width + $clear-button-width};
+      padding-right: #{v.$arrow-width + v.$clear-button-width};
     }
   }
 
@@ -525,7 +529,7 @@
 
   &.keep-always-open {
     .vscomp-toggle-button {
-      padding-right: $clear-button-width;
+      padding-right: v.$clear-button-width;
     }
 
     .vscomp-clear-button {
@@ -538,19 +542,19 @@
 
     .vscomp-dropbox-container {
       position: relative;
-      z-index: $z-index;
+      z-index: v.$z-index;
     }
 
     .vscomp-dropbox {
-      @include prefix(transition-duration, 0s);
-      border: 1px solid $border-color;
+      @include m.prefix(transition-duration, 0s);
+      border: 1px solid v.$border-color;
       box-shadow: none;
     }
 
     &.focused,
     &:focus,
     &:hover {
-      box-shadow: $box-shadow1;
+      box-shadow: v.$box-shadow1;
     }
   }
 
@@ -566,7 +570,7 @@
 
   &.has-error {
     .vscomp-toggle-button {
-      border-color: $error-color;
+      border-color: v.$error-color;
     }
   }
 
@@ -586,7 +590,7 @@
     }
 
     .vscomp-value-tag {
-      @include ellipse;
+      @include m.ellipse;
       align-items: center;
       border: 1px solid #ddd;
       border-radius: 20px;
@@ -603,16 +607,16 @@
     }
 
     .vscomp-value-tag-content {
-      @include ellipse;
-      width: calc(100% - #{$value-tag-clear-width});
+      @include m.ellipse;
+      width: calc(100% - #{v.$value-tag-clear-width});
     }
 
     .vscomp-value-tag-clear-button {
       align-items: center;
       display: flex;
-      height: $value-tag-clear-width;
+      height: v.$value-tag-clear-width;
       justify-content: center;
-      width: $value-tag-clear-width;
+      width: v.$value-tag-clear-width;
 
       .vscomp-clear-icon {
         transform: scale(0.8);
