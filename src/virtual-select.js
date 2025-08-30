@@ -504,6 +504,26 @@ export class VirtualSelect {
     this.removeEvent(this.$options, 'click', 'onOptionsClick');
     this.removeEvent(this.$options, 'mouseover', 'onOptionsMouseOver');
     this.removeEvent(this.$options, 'touchmove', 'onOptionsTouchMove');
+
+    // Remove search-related events that are added in renderSearch()
+    if (this.$searchInput) {
+      this.removeEvent(this.$searchInput, 'input', 'onSearch');
+      this.removeEvent(this.$searchInput, 'change', 'preventPropagation');
+      if (this.$searchClear) {
+        this.removeEvent(this.$searchClear, 'click', 'onSearchClear');
+        this.removeEvent(this.$searchClear, 'keydown', 'onSearchClear');
+      }
+    }
+    if (this.$toggleAllButton) {
+      this.removeEvent(this.$toggleAllButton, 'click', 'onToggleAllOptions');
+    }
+    if (this.$dropboxContainerBottom) {
+      this.removeEvent(this.$dropboxContainerBottom, 'focus', 'onDropboxContainerTopOrBottomFocus');
+    }
+    if (this.$dropboxContainerTop) {
+      this.removeEvent(this.$dropboxContainerTop, 'focus', 'onDropboxContainerTopOrBottomFocus');
+    }
+
     this.removeMutationObserver();
   }
 
@@ -876,7 +896,7 @@ export class VirtualSelect {
 
   afterSetSearchValue() {
     if (this.hasServerSearch) {
-      clearInterval(this.serverSearchTimeout);
+      clearTimeout(this.serverSearchTimeout);
 
       this.serverSearchTimeout = setTimeout(() => {
         this.serverSearch();
@@ -3297,6 +3317,13 @@ export class VirtualSelect {
     if (this === VirtualSelect.lastInteractedInstance) {
       VirtualSelect.lastInteractedInstance = null;
     }
+
+    // Clear any pending server search timeout to prevent memory leaks
+    if (this.serverSearchTimeout) {
+      clearTimeout(this.serverSearchTimeout);
+      this.serverSearchTimeout = null;
+    }
+
     /** Remove all event listeners to prevent memory leaks and ensure proper cleanup */
     this.removeEvents();
 
