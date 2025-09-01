@@ -648,8 +648,11 @@ export class VirtualSelect {
 
   onToggleButtonPress(e) {
     if (e.type === 'keydown') {
+      // Allow default Tab navigation and other non-activation keys
+      if (e.code !== 'Enter' && e.code !== 'Space') {
+        return;
+      }
       e.preventDefault();
-      if (e.code !== 'Enter' && e.code !== 'Space') return;
     }
 
     const $target = e.target;
