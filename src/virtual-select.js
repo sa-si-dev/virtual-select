@@ -286,7 +286,7 @@ export class VirtualSelect {
     return html;
   }
 
-  renderOptions(isRenderingdOnScroll = false) {
+  renderOptions() {
     let html = '';
     const visibleOptions = this.getVisibleOptions();
     let checkboxHtml = '';
@@ -403,7 +403,7 @@ export class VirtualSelect {
     this.$options.innerHTML = html;
     this.$visibleOptions = this.$options.querySelectorAll('.vscomp-option');
 
-    this.afterRenderOptions(isRenderingdOnScroll);
+    this.afterRenderOptions();
   }
 
   renderSearch() {
@@ -854,7 +854,7 @@ export class VirtualSelect {
     }
   }
 
-  afterRenderOptions(hasRenderedOnScroll = false) {
+  afterRenderOptions() {
     const visibleOptions = this.getVisibleOptions();
     const hasNoOptions = !this.options.length && !this.hasServerSearch;
     const hasNoSearchResults = !hasNoOptions && !visibleOptions.length;
@@ -883,11 +883,13 @@ export class VirtualSelect {
     this.setOptionsPosition();
     this.setOptionsTooltip();
 
-    if (document.activeElement !== this.$searchInput && hasRenderedOnScroll === false) {
-      const focusedOption = DomUtils.getElementsBySelector('.focused', this.$dropboxContainer)[0];
-      if (focusedOption !== undefined) {
-        focusedOption.focus();
-      }
+    if (document.activeElement !== this.$searchInput) {
+      setTimeout(() => {
+        const focusedOption = DomUtils.getElementsBySelector('.focused', this.$dropboxContainer)[0];
+        if (focusedOption !== undefined) {
+          focusedOption.focus();
+        }
+      }, 20);
     }
   }
 
@@ -1570,7 +1572,7 @@ export class VirtualSelect {
     this.sortedOptions = sortedOptions;
   }
 
-  setVisibleOptions(isOnScrollUpdating = false) {
+  setVisibleOptions() {
     let visibleOptions = [...this.sortedOptions];
     const maxOptionsToShow = this.optionsCount * 2;
     const startIndex = this.getVisibleStartIndex();
@@ -1603,7 +1605,7 @@ export class VirtualSelect {
     this.visibleOptions = visibleOptions;
     // update number of visible options
     this.visibleOptionsCount = visibleOptions.length;
-    this.renderOptions(isOnScrollUpdating);
+    this.renderOptions();
   }
 
   setOptionsPosition(startIndex) {
