@@ -2510,6 +2510,21 @@ export class VirtualSelect {
       return;
     }
 
+    // Return focus to wrapper only when no other meaningful element currently has focus
+    const active = document.activeElement;
+    const withinComponent =
+      (active && this.$wrapper.contains(active)) ||
+      (this.hasDropboxWrapper && active && this.$dropboxWrapper.contains(active));
+
+    const shouldRefocus = this.shouldFocusWrapperOnClose &&
+      VirtualSelect.lastInteractedInstance === this &&
+      !isSilent &&
+      (active === null || active === document.body || withinComponent);
+
+    if (shouldRefocus) {
+      this.$wrapper.focus();
+    }
+
     if (isSilent) {
       DomUtils.setStyle(this.$dropboxContainer, 'display', '');
     } else {
@@ -2550,21 +2565,6 @@ export class VirtualSelect {
 
     if (!isSilent) {
       DomUtils.dispatchEvent(this.$ele, 'afterClose');
-    }
-
-    // Return focus to wrapper only when no other meaningful element currently has focus
-    const active = document.activeElement;
-    const withinComponent =
-      (active && this.$wrapper.contains(active)) ||
-      (this.hasDropboxWrapper && active && this.$dropboxWrapper.contains(active));
-
-    const shouldRefocus = this.shouldFocusWrapperOnClose &&
-      VirtualSelect.lastInteractedInstance === this &&
-      !isSilent &&
-      (active === null || active === document.body || withinComponent);
-
-    if (shouldRefocus) {
-      this.$wrapper.focus();
     }
 
     // Reset for next close
