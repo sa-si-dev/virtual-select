@@ -105,7 +105,7 @@ describe('Accessibility attributes - virtualized options metadata', () => {
         .invoke('attr', 'aria-posinset')
         .then((value) => {
           const newLast = Number(value);
-          expect(newLast, 'last rendered option should advance after scrolling').to.be.greaterThan(initialLastPosition);
+          expect(newLast, 'last rendered option should advance after scrolling').to.be.greaterThan(initialLastPosition as unknown as number);
         });
     });
 
