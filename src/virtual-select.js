@@ -287,6 +287,9 @@ export class VirtualSelect {
   }
 
   renderOptions() {
+    // Calculate ARIA metadata before rendering to ensure it's always up to date
+    this.calculateAriaMetadata();
+
     let html = '';
     const visibleOptions = this.getVisibleOptions();
     let checkboxHtml = '';
@@ -385,9 +388,18 @@ export class VirtualSelect {
         optionLabel = optionLabel.replace(searchRegex, '<mark>$1</mark>');
       }
 
+      // Add aria-setsize and aria-posinset for virtualized listbox accessibility
+      let ariaAttrs = '';
+      if (this.ariaSetSize > 0) {
+        ariaAttrs = `aria-setsize="${this.ariaSetSize}"`;
+        if (d.filteredIndex) {
+          ariaAttrs += ` aria-posinset="${d.filteredIndex}"`;
+        }
+      }
+
       html += `<div role="option" aria-selected="${isSelected}" id="vscomp-option-${uniqueId}-${index}"
           class="${optionClasses}" data-value="${d.value}" data-index="${index}" data-visible-index="${d.visibleIndex}"
-          tabindex=${tabIndexValue} ${groupIndexText} ${ariaDisabledText} ${ariaLabel}
+          tabindex=${tabIndexValue} ${groupIndexText} ${ariaDisabledText} ${ariaLabel} ${ariaAttrs}
         >
           ${leftSection}
           <span class="vscomp-option-text" ${optionTooltip}>
@@ -825,8 +837,7 @@ export class VirtualSelect {
     this.renderSearch();
     this.setEleStyles();
     this.setDropboxStyles();
-    this.setOptionsHeight();
-    this.setVisibleOptions();
+    this.setVisibleOptionsCount();
     this.setOptionsContainerHeight();
     this.addEvents();
     this.setEleProps();
@@ -1077,6 +1088,7 @@ export class VirtualSelect {
     this.optionsHeight = this.getOptionsHeight();
     this.uniqueId = this.getUniqueId();
     this.shouldFocusWrapperOnClose = true; // Initialize focus management property
+    this.ariaSetSize = 0;
   }
 
   /**
@@ -1886,6 +1898,51 @@ export class VirtualSelect {
     this.visibleOptionsCount = visibleOptionsCount;
 
     this.afterSetVisibleOptionsCount();
+  }
+
+  calculateAriaMetadata() {
+    let ariaSetSize = 0;
+    let filteredPosition = 0;
+    const optionsSource = this.sortedOptions && this.sortedOptions.length ? this.sortedOptions : this.options;
+
+    optionsSource.forEach((d) => {
+      if (d.isCurrentNew) {
+        // eslint-disable-next-line no-param-reassign
+        d.filteredIndex = undefined;
+        return;
+      }
+
+      if (d.isVisible === true) {
+        const isSelectableGroupTitle = d.isGroupTitle && this.multiple && !this.disableOptionGroupCheckbox;
+        if (!d.isGroupTitle || isSelectableGroupTitle) {
+          filteredPosition += 1;
+          ariaSetSize += 1;
+          // eslint-disable-next-line no-param-reassign
+          d.filteredIndex = filteredPosition;
+        } else {
+          // eslint-disable-next-line no-param-reassign
+          d.filteredIndex = undefined;
+        }
+      } else {
+        // eslint-disable-next-line no-param-reassign
+        d.filteredIndex = undefined;
+      }
+    });
+
+    if (this.allowNewOption) {
+      const newOption = this.getNewOption();
+      if (newOption && newOption.isVisible === true) {
+        filteredPosition += 1;
+        ariaSetSize += 1;
+        // eslint-disable-next-line no-param-reassign
+        newOption.filteredIndex = filteredPosition;
+      } else if (newOption) {
+        // eslint-disable-next-line no-param-reassign
+        newOption.filteredIndex = undefined;
+      }
+    }
+
+    this.ariaSetSize = ariaSetSize;
   }
 
   setOptionProp(index, key, value) {

@@ -829,6 +829,8 @@ var VirtualSelect = /*#__PURE__*/function () {
     key: "renderOptions",
     value: function renderOptions() {
       var _this = this;
+      // Calculate ARIA metadata before rendering to ensure it's always up to date
+      this.calculateAriaMetadata();
       var html = '';
       var visibleOptions = this.getVisibleOptions();
       var checkboxHtml = '';
@@ -912,7 +914,16 @@ var VirtualSelect = /*#__PURE__*/function () {
         } else if (markSearchResults && (!d.isGroupTitle || searchGroup)) {
           optionLabel = optionLabel.replace(searchRegex, '<mark>$1</mark>');
         }
-        html += "<div role=\"option\" aria-selected=\"".concat(isSelected, "\" id=\"vscomp-option-").concat(uniqueId, "-").concat(index, "\"\n          class=\"").concat(optionClasses, "\" data-value=\"").concat(d.value, "\" data-index=\"").concat(index, "\" data-visible-index=\"").concat(d.visibleIndex, "\"\n          tabindex=").concat(tabIndexValue, " ").concat(groupIndexText, " ").concat(ariaDisabledText, " ").concat(ariaLabel, "\n        >\n          ").concat(leftSection, "\n          <span class=\"vscomp-option-text\" ").concat(optionTooltip, ">\n            ").concat(optionLabel, "\n          </span>\n          ").concat(description, "\n          ").concat(rightSection, "\n        </div>");
+
+        // Add aria-setsize and aria-posinset for virtualized listbox accessibility
+        var ariaAttrs = '';
+        if (_this.ariaSetSize > 0) {
+          ariaAttrs = "aria-setsize=\"".concat(_this.ariaSetSize, "\"");
+          if (d.filteredIndex) {
+            ariaAttrs += " aria-posinset=\"".concat(d.filteredIndex, "\"");
+          }
+        }
+        html += "<div role=\"option\" aria-selected=\"".concat(isSelected, "\" id=\"vscomp-option-").concat(uniqueId, "-").concat(index, "\"\n          class=\"").concat(optionClasses, "\" data-value=\"").concat(d.value, "\" data-index=\"").concat(index, "\" data-visible-index=\"").concat(d.visibleIndex, "\"\n          tabindex=").concat(tabIndexValue, " ").concat(groupIndexText, " ").concat(ariaDisabledText, " ").concat(ariaLabel, " ").concat(ariaAttrs, "\n        >\n          ").concat(leftSection, "\n          <span class=\"vscomp-option-text\" ").concat(optionTooltip, ">\n            ").concat(optionLabel, "\n          </span>\n          ").concat(description, "\n          ").concat(rightSection, "\n        </div>");
       });
       groupName = '';
       this.$options.innerHTML = html;
@@ -1339,8 +1350,7 @@ var VirtualSelect = /*#__PURE__*/function () {
       this.renderSearch();
       this.setEleStyles();
       this.setDropboxStyles();
-      this.setOptionsHeight();
-      this.setVisibleOptions();
+      this.setVisibleOptionsCount();
       this.setOptionsContainerHeight();
       this.addEvents();
       this.setEleProps();
@@ -1578,6 +1588,7 @@ var VirtualSelect = /*#__PURE__*/function () {
       this.optionsHeight = this.getOptionsHeight();
       this.uniqueId = this.getUniqueId();
       this.shouldFocusWrapperOnClose = true; // Initialize focus management property
+      this.ariaSetSize = 0;
     }
 
     /**
@@ -2319,6 +2330,49 @@ var VirtualSelect = /*#__PURE__*/function () {
       this.afterSetVisibleOptionsCount();
     }
   }, {
+    key: "calculateAriaMetadata",
+    value: function calculateAriaMetadata() {
+      var _this10 = this;
+      var ariaSetSize = 0;
+      var filteredPosition = 0;
+      var optionsSource = this.sortedOptions && this.sortedOptions.length ? this.sortedOptions : this.options;
+      optionsSource.forEach(function (d) {
+        if (d.isCurrentNew) {
+          // eslint-disable-next-line no-param-reassign
+          d.filteredIndex = undefined;
+          return;
+        }
+        if (d.isVisible === true) {
+          var isSelectableGroupTitle = d.isGroupTitle && _this10.multiple && !_this10.disableOptionGroupCheckbox;
+          if (!d.isGroupTitle || isSelectableGroupTitle) {
+            filteredPosition += 1;
+            ariaSetSize += 1;
+            // eslint-disable-next-line no-param-reassign
+            d.filteredIndex = filteredPosition;
+          } else {
+            // eslint-disable-next-line no-param-reassign
+            d.filteredIndex = undefined;
+          }
+        } else {
+          // eslint-disable-next-line no-param-reassign
+          d.filteredIndex = undefined;
+        }
+      });
+      if (this.allowNewOption) {
+        var newOption = this.getNewOption();
+        if (newOption && newOption.isVisible === true) {
+          filteredPosition += 1;
+          ariaSetSize += 1;
+          // eslint-disable-next-line no-param-reassign
+          newOption.filteredIndex = filteredPosition;
+        } else if (newOption) {
+          // eslint-disable-next-line no-param-reassign
+          newOption.filteredIndex = undefined;
+        }
+      }
+      this.ariaSetSize = ariaSetSize;
+    }
+  }, {
     key: "setOptionProp",
     value: function setOptionProp(index, key, value) {
       if (!this.options[index]) {
@@ -2818,7 +2872,7 @@ var VirtualSelect = /*#__PURE__*/function () {
   }, {
     key: "openDropbox",
     value: function openDropbox(isSilent) {
-      var _this10 = this;
+      var _this11 = this;
       // Set this instance as the last interacted one immediately
       VirtualSelect.lastInteractedInstance = this;
       var originalTransition = '';
@@ -2833,7 +2887,7 @@ var VirtualSelect = /*#__PURE__*/function () {
 
       // Close all other open instances first
       VirtualSelect.openInstances.forEach(function (instance) {
-        if (instance !== _this10) {
+        if (instance !== _this11) {
           // Don't focus when closing due to another dropdown being opened
           var instanceObj = instance;
           instanceObj.shouldFocusWrapperOnClose = false;
@@ -3191,7 +3245,7 @@ var VirtualSelect = /*#__PURE__*/function () {
   }, {
     key: "selectRangeOptions",
     value: function selectRangeOptions(lastSelectedOptionIndex, selectedIndex) {
-      var _this11 = this;
+      var _this12 = this;
       if (typeof lastSelectedOptionIndex !== 'number' || this.maxValues) {
         return;
       }
@@ -3237,7 +3291,7 @@ var VirtualSelect = /*#__PURE__*/function () {
 
       /** using setTimeout to fix the issue of dropbox getting closed on select */
       setTimeout(function () {
-        _this11.renderOptions();
+        _this12.renderOptions();
       }, 0);
     }
   }, {
@@ -3346,7 +3400,7 @@ var VirtualSelect = /*#__PURE__*/function () {
   }, {
     key: "toggleGroupOptions",
     value: function toggleGroupOptions($ele, isSelected) {
-      var _this12 = this;
+      var _this13 = this;
       if (!this.hasOptionGroup || this.disableOptionGroupCheckbox || !$ele) {
         return;
       }
@@ -3382,7 +3436,7 @@ var VirtualSelect = /*#__PURE__*/function () {
 
       /** using setTimeout to fix the issue of dropbox getting closed on select */
       setTimeout(function () {
-        _this12.renderOptions();
+        _this13.renderOptions();
       }, 0);
     }
   }, {
