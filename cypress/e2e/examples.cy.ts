@@ -99,13 +99,14 @@ describe('Accessibility attributes - virtualized options metadata', () => {
     cy.wait(300);
 
     cy.get('@initialLastPosition').then((initialLastPosition) => {
+      const initialPosition = Number(initialLastPosition);
       cy.getDropbox(null, id)
         .find('[role="option"][aria-posinset]')
         .last()
         .invoke('attr', 'aria-posinset')
         .then((value) => {
           const newLast = Number(value);
-          expect(newLast, 'last rendered option should advance after scrolling').to.be.greaterThan(initialLastPosition as unknown as number);
+          expect(newLast, 'last rendered option should advance after scrolling').to.be.greaterThan(initialPosition);
         });
     });
 
