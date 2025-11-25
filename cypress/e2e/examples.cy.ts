@@ -151,6 +151,80 @@ describe('Accessibility attributes - virtualized options metadata', () => {
     cy.get('body').click(10, 10);
     cy.reload();
   });
+
+  it('has proper ARIA attributes on listbox and options container for screen reader navigation', () => {
+    cy.open(id);
+
+    // Get the combobox wrapper ID for reference
+    cy.getVs(id)
+      .find('.vscomp-ele-wrapper')
+      .invoke('attr', 'id')
+      .as('comboboxId');
+
+    // Verify listbox container has correct role and aria-labelledby
+    // Note: getDropbox returns .vscomp-dropbox, but role="listbox" is on .vscomp-dropbox-container (parent)
+    cy.get('@comboboxId').then((comboboxId) => {
+      cy.getDropbox(null, id)
+        .parent('.vscomp-dropbox-container')
+        .should('have.attr', 'role', 'listbox')
+        .should('have.attr', 'aria-labelledby', comboboxId);
+    });
+
+    // Verify options container has aria-labelledby
+    cy.get('@comboboxId').then((comboboxId) => {
+      cy.getDropbox(null, id)
+        .find('.vscomp-options-container')
+        .should('have.attr', 'aria-labelledby', comboboxId);
+    });
+
+    // Navigate to first option using keyboard (Down arrow from combobox)
+    cy.getVs(id).find('.vscomp-ele-wrapper').type('{downarrow}');
+    cy.wait(100); // Wait for focus to update
+
+    // Get first option and verify it's focused
+    cy.getDropbox(null, id)
+      .find('[role="option"]')
+      .first()
+      .as('firstOption')
+      .should('have.class', 'focused');
+
+    // Get the ID of the first option
+    cy.get('@firstOption')
+      .invoke('attr', 'id')
+      .as('firstOptionId');
+
+    // Verify aria-activedescendant is set on listbox container when option is focused
+    cy.get('@firstOptionId').then((firstOptionId) => {
+      cy.getDropbox(null, id)
+        .parent('.vscomp-dropbox-container')
+        .should('have.attr', 'aria-activedescendant', firstOptionId);
+    });
+
+    // Navigate to second option using arrow key
+    cy.get('@firstOption').type('{downarrow}');
+    cy.wait(100); // Wait for focus to update
+
+    // Get second option
+    cy.getDropbox(null, id)
+      .find('[role="option"]')
+      .eq(1)
+      .as('secondOption')
+      .should('have.class', 'focused');
+
+    // Get the ID of the second option
+    cy.get('@secondOption')
+      .invoke('attr', 'id')
+      .as('secondOptionId');
+
+    // Verify aria-activedescendant updates to second option
+    cy.get('@secondOptionId').then((secondOptionId) => {
+      cy.getDropbox(null, id)
+        .parent('.vscomp-dropbox-container')
+        .should('have.attr', 'aria-activedescendant', secondOptionId);
+    });
+
+    cy.get('body').click(10, 10);
+  });
 });
 
 
