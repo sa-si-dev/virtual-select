@@ -32,7 +32,7 @@
     "cypress": "^14.5.4",
     "cypress-real-events": "^1.14.0",
     "docsify-cli": "^4.4.4",
-    "eslint": "^8.57.0",
+    "eslint": "^8.57.1",
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-import-resolver-webpack": "^0.13.10",
     "eslint-plugin-import": "^2.32.0",
