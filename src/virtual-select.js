@@ -241,13 +241,12 @@ export class VirtualSelect {
 
     // eslint-disable-next-line no-trailing-spaces
     const html =
-      `<div id="vscomp-dropbox-container-${this.uniqueId}" role="listbox" 
-        aria-labelledby="vscomp-ele-wrapper-${this.uniqueId}" class="${dropboxContainerClasses}">
+      `<div id="vscomp-dropbox-container-${this.uniqueId}" class="${dropboxContainerClasses}">
         <div class="vscomp-dropbox-container-top" aria-hidden="true" tabindex="-1">&nbsp;</div>
         <div class="${dropboxClasses}">
           <div class="vscomp-search-wrapper"></div>
 
-          <div class="vscomp-options-container" aria-labelledby="vscomp-ele-wrapper-${this.uniqueId}">
+          <div class="vscomp-options-container" role="listbox" aria-labelledby="vscomp-ele-wrapper-${this.uniqueId}" >
             <div class="vscomp-options-loader"></div>
 
             <div class="vscomp-options-list">
