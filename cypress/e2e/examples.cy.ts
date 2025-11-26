@@ -155,6 +155,17 @@ describe('Accessibility attributes - virtualized options metadata', () => {
   it('has proper ARIA attributes on listbox and options container for screen reader navigation', () => {
     cy.open(id);
 
+    // Cache references to relevant elements for repeated assertions
+    cy.getDropbox(null, id)
+      .find('.vscomp-options-container')
+      .should('exist')
+      .as('listboxContainer');
+
+    cy.getDropbox(null, id)
+      .parent('.vscomp-dropbox-container')
+      .should('exist')
+      .as('listboxRegion');
+
     // Get the combobox wrapper ID for reference
     cy.getVs(id)
       .find('.vscomp-ele-wrapper')
@@ -162,18 +173,9 @@ describe('Accessibility attributes - virtualized options metadata', () => {
       .as('comboboxId');
 
     // Verify listbox container has correct role and aria-labelledby
-    // Note: getDropbox returns .vscomp-dropbox, but role="listbox" is on .vscomp-dropbox-container (parent)
     cy.get('@comboboxId').then((comboboxId) => {
-      cy.getDropbox(null, id)
-        .parent('.vscomp-dropbox-container')
+      cy.get('@listboxContainer')
         .should('have.attr', 'role', 'listbox')
-        .should('have.attr', 'aria-labelledby', comboboxId);
-    });
-
-    // Verify options container has aria-labelledby
-    cy.get('@comboboxId').then((comboboxId) => {
-      cy.getDropbox(null, id)
-        .find('.vscomp-options-container')
         .should('have.attr', 'aria-labelledby', comboboxId);
     });
 
@@ -195,8 +197,7 @@ describe('Accessibility attributes - virtualized options metadata', () => {
 
     // Verify aria-activedescendant is set on listbox container when option is focused
     cy.get('@firstOptionId').then((firstOptionId) => {
-      cy.getDropbox(null, id)
-        .parent('.vscomp-dropbox-container')
+      cy.get('@listboxRegion')
         .should('have.attr', 'aria-activedescendant', firstOptionId);
     });
 
@@ -218,8 +219,7 @@ describe('Accessibility attributes - virtualized options metadata', () => {
 
     // Verify aria-activedescendant updates to second option
     cy.get('@secondOptionId').then((secondOptionId) => {
-      cy.getDropbox(null, id)
-        .parent('.vscomp-dropbox-container')
+      cy.get('@listboxRegion')
         .should('have.attr', 'aria-activedescendant', secondOptionId);
     });
 
