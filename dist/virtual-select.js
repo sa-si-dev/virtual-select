@@ -808,7 +808,7 @@ var VirtualSelect = /*#__PURE__*/function () {
       }
 
       // eslint-disable-next-line no-trailing-spaces
-      var html = "<div id=\"vscomp-dropbox-container-".concat(this.uniqueId, "\" role=\"listbox\" class=\"").concat(dropboxContainerClasses, "\">\n        <div class=\"vscomp-dropbox-container-top\" aria-hidden=\"true\" tabindex=\"-1\">&nbsp;</div>\n        <div class=\"").concat(dropboxClasses, "\">\n          <div class=\"vscomp-search-wrapper\"></div>\n\n          <div class=\"vscomp-options-container\">\n            <div class=\"vscomp-options-loader\"></div>\n\n            <div class=\"vscomp-options-list\">\n              <div class=\"vscomp-options\"></div>\n            </div>\n          </div>\n\n          <div class=\"vscomp-options-bottom-freezer\"></div>\n          <div class=\"vscomp-no-options\">").concat(this.noOptionsText, "</div>\n          <div class=\"vscomp-no-search-results\">").concat(this.noSearchResultsText, "</div>\n\n          <span class=\"vscomp-dropbox-close-button\"><i class=\"vscomp-clear-icon\"></i></span>\n        </div>\n        <div class=\"vscomp-dropbox-container-bottom\" aria-hidden=\"true\" tabindex=\"-1\">&nbsp;</div>\n      </div>");
+      var html = "<div id=\"vscomp-dropbox-container-".concat(this.uniqueId, "\" class=\"").concat(dropboxContainerClasses, "\">\n        <div class=\"vscomp-dropbox-container-top\" aria-hidden=\"true\" tabindex=\"-1\">&nbsp;</div>\n        <div class=\"").concat(dropboxClasses, "\">\n          <div class=\"vscomp-search-wrapper\"></div>\n\n          <div class=\"vscomp-options-container\" role=\"listbox\" aria-labelledby=\"vscomp-ele-wrapper-").concat(this.uniqueId, "\" >\n            <div class=\"vscomp-options-loader\"></div>\n\n            <div class=\"vscomp-options-list\">\n              <div class=\"vscomp-options\"></div>\n            </div>\n          </div>\n\n          <div class=\"vscomp-options-bottom-freezer\"></div>\n          <div class=\"vscomp-no-options\">").concat(this.noOptionsText, "</div>\n          <div class=\"vscomp-no-search-results\">").concat(this.noSearchResultsText, "</div>\n\n          <span class=\"vscomp-dropbox-close-button\"><i class=\"vscomp-clear-icon\"></i></span>\n        </div>\n        <div class=\"vscomp-dropbox-container-bottom\" aria-hidden=\"true\" tabindex=\"-1\">&nbsp;</div>\n      </div>");
       if ($wrapper) {
         var $dropboxWrapper = document.createElement('div');
         this.$dropboxWrapper = $dropboxWrapper;
@@ -2329,6 +2329,19 @@ var VirtualSelect = /*#__PURE__*/function () {
       this.visibleOptionsCount = visibleOptionsCount;
       this.afterSetVisibleOptionsCount();
     }
+
+    /**
+     * Calculates ARIA metadata (aria-setsize and aria-posinset) for virtualized listbox accessibility.
+     * This method iterates through ALL filtered options (not just rendered ones) to calculate
+     * the correct position in the full filtered set. This ensures screen readers announce
+     * correct positions even when only a subset of options is rendered (e.g., "Option 50, 50 of 10001").
+     *
+     * Example: With 10,001 filtered options showing only 5 at a time:
+     * - All 10,001 options get filteredIndex values: 1, 2, 3, ..., 10001
+     * - ariaSetSize = 10001
+     * - When options 50-54 are rendered, they have filteredIndex: 50, 51, 52, 53, 54
+     * - Screen reader announces: "Option 50, 50 of 10001"
+     */
   }, {
     key: "calculateAriaMetadata",
     value: function calculateAriaMetadata() {
@@ -2336,6 +2349,8 @@ var VirtualSelect = /*#__PURE__*/function () {
       var ariaSetSize = 0;
       var filteredPosition = 0;
       var optionsSource = this.sortedOptions && this.sortedOptions.length ? this.sortedOptions : this.options;
+
+      // Iterate through ALL options (not just rendered ones) to calculate positions in the full filtered set
       optionsSource.forEach(function (d) {
         if (d.isCurrentNew) {
           // eslint-disable-next-line no-param-reassign
@@ -2971,6 +2986,8 @@ var VirtualSelect = /*#__PURE__*/function () {
         DomUtils.dispatchEvent(this.$ele, 'beforeClose');
         DomUtils.setAria(this.$wrapper, 'expanded', false);
         DomUtils.setAria(this.$wrapper, 'activedescendant', '');
+        // Also clear aria-activedescendant on the listbox container
+        DomUtils.setAria(this.$dropboxContainer, 'activedescendant', '');
       }
       if (this.dropboxPopover && !isSilent) {
         this.dropboxPopover.hide();
@@ -3764,6 +3781,8 @@ var VirtualSelect = /*#__PURE__*/function () {
       }
       if (isFocused) {
         DomUtils.setAria(this.$wrapper, 'activedescendant', $ele.id);
+        // Also set aria-activedescendant on the listbox container for better screen reader support
+        DomUtils.setAria(this.$dropboxContainer, 'activedescendant', $ele.id);
       }
     }
 
