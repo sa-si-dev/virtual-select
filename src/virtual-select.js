@@ -898,7 +898,7 @@ export class VirtualSelect {
       setTimeout(() => {
         const focusedOption = DomUtils.getElementsBySelector('.focused', this.$dropboxContainer)[0];
         if (focusedOption !== undefined) {
-          focusedOption.focus();
+          focusedOption.focus({ preventScroll: true });
         }
       }, 20);
     }
