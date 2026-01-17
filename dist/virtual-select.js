@@ -1,5 +1,5 @@
 /*!
- * Virtual Select v1.1.3
+ * Virtual Select v1.1.4
  * https://sa-si-dev.github.io/virtual-select
  * Licensed under MIT (https://github.com/sa-si-dev/virtual-select/blob/master/LICENSE)
  *//******/ (function() { // webpackBootstrap
@@ -1404,7 +1404,9 @@ var VirtualSelect = /*#__PURE__*/function () {
         setTimeout(function () {
           var focusedOption = DomUtils.getElementsBySelector('.focused', _this6.$dropboxContainer)[0];
           if (focusedOption !== undefined) {
-            focusedOption.focus();
+            focusedOption.focus({
+              preventScroll: true
+            });
           }
         }, 20);
       }
