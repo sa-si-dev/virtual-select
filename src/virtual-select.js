@@ -2619,6 +2619,8 @@ export class VirtualSelect {
     } else {
       this.afterHidePopper();
     }
+
+    this.reset();
   }
 
   afterHidePopper() {
