@@ -1592,7 +1592,7 @@ var VirtualSelect = /*#__PURE__*/function () {
       }
       this.hasServerSearch = typeof this.onServerSearch === 'function';
       this.hasServerPagination = typeof this.onServerPage === 'function';
-      if (this.maxValues || this.hasServerSearch || this.showOptionsOnlyOnSearch) {
+      if (this.maxValues || this.hasServerSearch || this.hasServerPagination || this.showOptionsOnlyOnSearch) {
         this.disableSelectAll = true;
         this.disableOptionGroupCheckbox = true;
       }
@@ -1600,8 +1600,6 @@ var VirtualSelect = /*#__PURE__*/function () {
         this.currentPage = 0;
         this.hasMorePages = true;
         this.isLoadingMorePages = false;
-        this.disableSelectAll = true;
-        this.disableOptionGroupCheckbox = true;
       }
       if (this.keepAlwaysOpen) {
         this.dropboxWrapper = 'self';

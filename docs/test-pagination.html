@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Virtual Select - Server-Side Pagination Test</title>
+  <link rel="stylesheet" href="assets/virtual-select.min.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+    }
+    h1 {
+      color: #333;
+    }
+    .test-container {
+      margin: 30px 0;
+    }
+    label {
+      display: block;
+      margin-bottom: 10px;
+      font-weight: bold;
+    }
+    .info {
+      background-color: #f0f8ff;
+      border: 1px solid #0066cc;
+      border-radius: 4px;
+      padding: 15px;
+      margin: 20px 0;
+    }
+    .info h3 {
+      margin-top: 0;
+    }
+    #log {
+      background-color: #f5f5f5;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 10px;
+      margin-top: 20px;
+      max-height: 300px;
+      overflow-y: auto;
+      font-family: monospace;
+      font-size: 12px;
+    }
+    .log-entry {
+      margin: 5px 0;
+      padding: 5px;
+      border-left: 3px solid #0066cc;
+      padding-left: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Virtual Select - Server-Side Pagination Test</h1>
+  
+  <div class="info">
+    <h3>How to test:</h3>
+    <ol>
+      <li>Open the dropdown by clicking on it</li>
+      <li>The first page (50 options) will load automatically</li>
+      <li>Scroll down to the bottom of the options list</li>
+      <li>The next page will load automatically when you reach the bottom</li>
+      <li>Continue scrolling to load more pages</li>
+      <li>Check the log below to see the pagination events</li>
+    </ol>
+  </div>
+
+  <div class="test-container">
+    <label for="pagination-select">Select with Server-Side Pagination (200 total options):</label>
+    <div id="pagination-select"></div>
+  </div>
+
+  <div id="log">
+    <div class="log-entry">📝 Log will appear here...</div>
+  </div>
+
+  <script src="assets/virtual-select.min.js"></script>
+  <script>
+    // Log function
+    function log(message) {
+      const logDiv = document.getElementById('log');
+      const entry = document.createElement('div');
+      entry.className = 'log-entry';
+      entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+      logDiv.appendChild(entry);
+      logDiv.scrollTop = logDiv.scrollHeight;
+    }
+
+    // Simulate a database with 200 options
+    const totalOptions = 200;
+    const allOptions = [];
+    for (let i = 1; i <= totalOptions; i++) {
+      allOptions.push({
+        label: `Option ${i}`,
+        value: i
+      });
+    }
+
+    // Simulate server-side pagination
+    function onServerPage(params, virtualSelect) {
+      const { page, pageSize, searchValue } = params;
+      
+      log(`📥 Loading page ${page} (pageSize: ${pageSize}, search: "${searchValue || 'none'}")`);
+      
+      // Simulate API delay
+      setTimeout(() => {
+        const startIndex = (page - 1) * pageSize;
+        const endIndex = startIndex + pageSize;
+        
+        // Filter by search if provided
+        let filteredOptions = allOptions;
+        if (searchValue) {
+          filteredOptions = allOptions.filter(opt => 
+            opt.label.toLowerCase().includes(searchValue.toLowerCase())
+          );
+        }
+        
+        const pageOptions = filteredOptions.slice(startIndex, endIndex);
+        const hasMorePages = endIndex < filteredOptions.length;
+        
+        log(`✅ Loaded ${pageOptions.length} options. More pages available: ${hasMorePages}`);
+        log(`📊 Total options loaded so far: ${startIndex + pageOptions.length}/${filteredOptions.length}`);
+        
+        // Set the paginated options
+        virtualSelect.setServerPaginatedOptions(pageOptions, hasMorePages);
+      }, 500); // Simulate network delay
+    }
+
+    // Initialize VirtualSelect with server-side pagination
+    log('🚀 Initializing Virtual Select with server-side pagination...');
+    
+    VirtualSelect.init({
+      ele: '#pagination-select',
+      placeholder: 'Select an option...',
+      search: true,
+      onServerPage: onServerPage,
+      serverPageSize: 50,
+    });
+    
+    log('✅ Virtual Select initialized. Open the dropdown to load the first page.');
+  </script>
+</body>
+</html>
