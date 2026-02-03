@@ -931,6 +931,12 @@ export class VirtualSelect {
       this.serverSearchTimeout = setTimeout(() => {
         this.serverSearch();
       }, this.searchDelay);
+    } else if (this.hasServerPagination) {
+      clearTimeout(this.serverSearchTimeout);
+
+      this.serverSearchTimeout = setTimeout(() => {
+        this.serverSearchForPagination();
+      }, this.searchDelay);
     } else {
       this.setVisibleOptionsCount();
     }
@@ -1081,12 +1087,12 @@ export class VirtualSelect {
     this.searchValueOriginal = '';
     this.isAllSelected = false;
 
-    if ((options.search === undefined && this.multiple) || this.allowNewOption || this.showOptionsOnlyOnSearch) {
-      this.hasSearch = true;
-    }
-
     this.hasServerSearch = typeof this.onServerSearch === 'function';
     this.hasServerPagination = typeof this.onServerPage === 'function';
+
+    if ((options.search === undefined && this.multiple) || this.allowNewOption || this.showOptionsOnlyOnSearch || this.hasServerPagination) {
+      this.hasSearch = true;
+    }
 
     if (this.maxValues || this.hasServerSearch || this.hasServerPagination || this.showOptionsOnlyOnSearch) {
       this.disableSelectAll = true;
@@ -3365,6 +3371,25 @@ export class VirtualSelect {
     this.onServerSearch(this.searchValue, this);
   }
 
+  serverSearchForPagination() {
+    // Reset pagination state when search value changes
+    this.currentPage = 0;
+    this.hasMorePages = true;
+    this.isLoadingMorePages = false;
+    
+    // Clear existing options before loading the first page with new search
+    this.options = [];
+    this.visibleOptionsCount = 0;
+    
+    DomUtils.removeClass(this.$allWrappers, 'has-no-search-results');
+    DomUtils.addClass(this.$allWrappers, 'server-searching');
+
+    this.setSelectedOptions();
+    
+    // Load the first page with the new search value
+    this.loadMoreServerPages();
+  }
+
   loadMoreServerPages() {
     if (!this.hasServerPagination || this.isLoadingMorePages || !this.hasMorePages) {
       return;
@@ -3390,12 +3415,19 @@ export class VirtualSelect {
       return;
     }
 
+    // Save current scroll position
+    const scrollTop = this.$optionsContainer ? this.$optionsContainer.scrollTop : 0;
+
     // Append new options to existing ones
     const existingOptions = this.options || [];
     const newOptions = existingOptions.concat(options);
     
     this.setOptionsMethod(newOptions, true);
-    this.setVisibleOptionsCount();
+    
+    // Update visible options count without resetting scroll
+    this.visibleOptionsCount = this.options.length;
+    this.setOptionsHeight();
+    this.setVisibleOptions();
 
     if (this.multiple) {
       this.toggleAllOptionsClass();
@@ -3403,6 +3435,11 @@ export class VirtualSelect {
 
     this.setValueText();
     this.updatePosition();
+
+    // Restore scroll position
+    if (this.$optionsContainer) {
+      this.$optionsContainer.scrollTop = scrollTop;
+    }
 
     DomUtils.removeClass(this.$allWrappers, 'server-searching');
   }
