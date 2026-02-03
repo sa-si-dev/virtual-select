@@ -693,14 +693,14 @@ export class VirtualSelect {
 
   onOptionsScroll() {
     this.setVisibleOptions(true);
-    
+
     // Check if we need to load more pages (server-side pagination)
     if (this.hasServerPagination && this.hasMorePages && !this.isLoadingMorePages) {
       const container = this.$optionsContainer;
       const scrollTop = container.scrollTop;
       const scrollHeight = container.scrollHeight;
       const clientHeight = container.clientHeight;
-      
+
       // Load more when scrolled to within 100px of bottom
       if (scrollTop + clientHeight >= scrollHeight - 100) {
         this.loadMoreServerPages();
@@ -1097,7 +1097,7 @@ export class VirtualSelect {
     // 4. Server pagination is enabled (to allow filtering)
     const autoEnableSearch = (options.search === undefined && this.multiple);
     const requiresSearch = this.allowNewOption || this.showOptionsOnlyOnSearch || this.hasServerPagination;
-    
+
     if (autoEnableSearch || requiresSearch) {
       this.hasSearch = true;
     }
@@ -1112,6 +1112,7 @@ export class VirtualSelect {
       this.hasMorePages = true;
       this.isLoadingMorePages = false;
       this.totalItems = 0; // Total count from server, to avoid recalculating on each page
+      this.currentScrollTop = 0; // To preserve scroll position during server page loading
     }
 
     if (this.keepAlwaysOpen) {
@@ -3394,16 +3395,17 @@ export class VirtualSelect {
     this.hasMorePages = true;
     this.isLoadingMorePages = false;
     this.totalItems = 0; // Reset total so it gets recalculated with new search
-    
+    this.currentScrollTop = 0; // Reset scroll position
+
     // Clear existing options before loading the first page with new search
     this.options = [];
     this.visibleOptionsCount = 0;
-    
+
     DomUtils.removeClass(this.$allWrappers, 'has-no-search-results');
     DomUtils.addClass(this.$allWrappers, 'server-searching');
 
     this.setSelectedOptions();
-    
+
     // Load the first page with the new search value
     this.loadMoreServerPages();
   }
@@ -3413,8 +3415,11 @@ export class VirtualSelect {
       return;
     }
 
+    // Save scroll position BEFORE adding server-searching class (which hides options and resets scrollTop)
+    this.currentScrollTop = this.$optionsContainer ? this.$optionsContainer.scrollTop : 0;
     this.isLoadingMorePages = true;
     this.currentPage += 1;
+
     DomUtils.addClass(this.$allWrappers, 'server-searching');
 
     this.onServerPage({
@@ -3427,7 +3432,6 @@ export class VirtualSelect {
 
   setServerPaginatedOptions(options = [], hasMorePages = true, totalItems = 0) {
     this.hasMorePages = hasMorePages;
-    this.isLoadingMorePages = false;
 
     // Store total items from server if provided (usually on first request)
     if (totalItems > 0) {
@@ -3439,15 +3443,15 @@ export class VirtualSelect {
       return;
     }
 
-    // Save current scroll position
-    const scrollTop = this.$optionsContainer ? this.$optionsContainer.scrollTop : 0;
+    // Use currentScrollTop saved before adding server-searching class
+    const scrollTop = this.currentScrollTop || 0;
 
     // Append new options to existing ones
     const existingOptions = this.options || [];
     const newOptions = existingOptions.concat(options);
-    
+
     this.setOptionsMethod(newOptions, true);
-    
+
     // Update visible options count without resetting scroll or filtering
     // Note: We don't call setVisibleOptionsCount() because:
     // 1. Server pagination handles filtering server-side, not client-side
@@ -3463,12 +3467,21 @@ export class VirtualSelect {
     this.setValueText();
     this.updatePosition();
 
-    // Restore scroll position
-    if (this.$optionsContainer) {
-      this.$optionsContainer.scrollTop = scrollTop;
-    }
+    // Restore scroll position and clean up after all DOM updates
+    requestAnimationFrame(() => {
+      // Remove server-searching class first to make options visible again
+      DomUtils.removeClass(this.$allWrappers, 'server-searching');
 
-    DomUtils.removeClass(this.$allWrappers, 'server-searching');
+      // Then restore scroll position in next frame to ensure DOM is fully updated
+      requestAnimationFrame(() => {
+        if (this.$optionsContainer && scrollTop > 0) {
+          this.$optionsContainer.scrollTop = scrollTop;
+        }
+
+        // Clear the flag
+        this.isLoadingMorePages = false;
+      });
+    });
   }
 
   removeValue($ele) {
