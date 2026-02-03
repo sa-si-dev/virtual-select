@@ -686,7 +686,7 @@ var keyDownMethodMapping = {
 var valueLessProps = ['autofocus', 'disabled', 'multiple', 'required'];
 var nativeProps = ['autofocus', 'class', 'disabled', 'id', 'multiple', 'name', 'placeholder', 'required'];
 var attrPropsMapping;
-var dataProps = ['additionalClasses', 'additionalDropboxClasses', 'additionalDropboxContainerClasses', 'additionalToggleButtonClasses', 'aliasKey', 'allOptionsSelectedText', 'allowNewOption', 'alwaysShowSelectedOptionsCount', 'alwaysShowSelectedOptionsLabel', 'ariaLabelledby', 'ariaLabelText', 'ariaLabelClearButtonText', 'ariaLabelTagClearButtonText', 'ariaLabelSearchClearButtonText', 'autoSelectFirstOption', 'clearButtonText', 'descriptionKey', 'disableAllOptionsSelectedText', 'disableOptionGroupCheckbox', 'disableSelectAll', 'disableValidation', 'dropboxWidth', 'dropboxWrapper', 'emptyValue', 'enableSecureText', 'focusSelectedOptionOnOpen', 'hasOptionDescription', 'hideClearButton', 'hideValueTooltipOnSelectAll', 'keepAlwaysOpen', 'labelKey', 'markSearchResults', 'maxValues', 'maxWidth', 'minValues', 'moreText', 'noOfDisplayValues', 'noOptionsText', 'noSearchResultsText', 'optionHeight', 'optionSelectedText', 'optionsCount', 'optionsSelectedText', 'popupDropboxBreakpoint', 'popupPosition', 'position', 'search', 'searchByStartsWith', 'searchDelay', 'searchFormLabel', 'searchGroup', 'searchNormalize', 'searchPlaceholderText', 'selectAllOnlyVisible', 'selectAllText', 'setValueAsArray', 'showDropboxAsPopup', 'showOptionsOnlyOnSearch', 'showSelectedOptionsFirst', 'showValueAsTags', 'silentInitialValueSet', 'textDirection', 'tooltipAlignment', 'tooltipFontSize', 'tooltipMaxWidth', 'updatePositionThrottle', 'useGroupValue', 'valueKey', 'zIndex'];
+var dataProps = ['additionalClasses', 'additionalDropboxClasses', 'additionalDropboxContainerClasses', 'additionalToggleButtonClasses', 'aliasKey', 'allOptionsSelectedText', 'allowNewOption', 'alwaysShowSelectedOptionsCount', 'alwaysShowSelectedOptionsLabel', 'ariaLabelledby', 'ariaLabelText', 'ariaLabelClearButtonText', 'ariaLabelTagClearButtonText', 'ariaLabelSearchClearButtonText', 'autoSelectFirstOption', 'clearButtonText', 'descriptionKey', 'disableAllOptionsSelectedText', 'disableOptionGroupCheckbox', 'disableSelectAll', 'disableValidation', 'dropboxWidth', 'dropboxWrapper', 'emptyValue', 'enableSecureText', 'focusSelectedOptionOnOpen', 'hasOptionDescription', 'hideClearButton', 'hideValueTooltipOnSelectAll', 'keepAlwaysOpen', 'labelKey', 'markSearchResults', 'maxValues', 'maxWidth', 'minValues', 'moreText', 'noOfDisplayValues', 'noOptionsText', 'noSearchResultsText', 'optionHeight', 'optionSelectedText', 'optionsCount', 'optionsSelectedText', 'popupDropboxBreakpoint', 'popupPosition', 'position', 'search', 'searchByStartsWith', 'searchDelay', 'searchFormLabel', 'searchGroup', 'searchNormalize', 'searchPlaceholderText', 'selectAllOnlyVisible', 'selectAllText', 'serverPageSize', 'setValueAsArray', 'showDropboxAsPopup', 'showOptionsOnlyOnSearch', 'showSelectedOptionsFirst', 'showValueAsTags', 'silentInitialValueSet', 'textDirection', 'tooltipAlignment', 'tooltipFontSize', 'tooltipMaxWidth', 'updatePositionThrottle', 'useGroupValue', 'valueKey', 'zIndex'];
 
 /** Class representing VirtualSelect */
 var VirtualSelect = /*#__PURE__*/function () {
@@ -1184,6 +1184,19 @@ var VirtualSelect = /*#__PURE__*/function () {
     key: "onOptionsScroll",
     value: function onOptionsScroll() {
       this.setVisibleOptions(true);
+
+      // Check if we need to load more pages (server-side pagination)
+      if (this.hasServerPagination && this.hasMorePages && !this.isLoadingMorePages) {
+        var container = this.$optionsContainer;
+        var scrollTop = container.scrollTop;
+        var scrollHeight = container.scrollHeight;
+        var clientHeight = container.clientHeight;
+
+        // Load more when scrolled to within 100px of bottom
+        if (scrollTop + clientHeight >= scrollHeight - 100) {
+          this.loadMoreServerPages();
+        }
+      }
     }
   }, {
     key: "onOptionsClick",
@@ -1548,6 +1561,7 @@ var VirtualSelect = /*#__PURE__*/function () {
       this.popupDropboxBreakpoint = options.popupDropboxBreakpoint;
       this.popupPosition = options.popupPosition;
       this.onServerSearch = options.onServerSearch;
+      this.onServerPage = options.onServerPage;
       this.labelRenderer = options.labelRenderer;
       this.selectedLabelRenderer = options.selectedLabelRenderer;
       this.initialSelectedValue = options.selectedValue === 0 ? '0' : options.selectedValue;
@@ -1559,6 +1573,7 @@ var VirtualSelect = /*#__PURE__*/function () {
       this.ariaLabelSearchClearButtonText = options.ariaLabelSearchClearButtonText;
       this.maxWidth = options.maxWidth;
       this.searchDelay = options.searchDelay;
+      this.serverPageSize = parseInt(options.serverPageSize) || 50;
       this.showDuration = parseInt(options.showDuration);
       this.hideDuration = parseInt(options.hideDuration);
 
@@ -1576,9 +1591,15 @@ var VirtualSelect = /*#__PURE__*/function () {
         this.hasSearch = true;
       }
       this.hasServerSearch = typeof this.onServerSearch === 'function';
-      if (this.maxValues || this.hasServerSearch || this.showOptionsOnlyOnSearch) {
+      this.hasServerPagination = typeof this.onServerPage === 'function';
+      if (this.maxValues || this.hasServerSearch || this.hasServerPagination || this.showOptionsOnlyOnSearch) {
         this.disableSelectAll = true;
         this.disableOptionGroupCheckbox = true;
+      }
+      if (this.hasServerPagination) {
+        this.currentPage = 0;
+        this.hasMorePages = true;
+        this.isLoadingMorePages = false;
       }
       if (this.keepAlwaysOpen) {
         this.dropboxWrapper = 'self';
@@ -1998,6 +2019,13 @@ var VirtualSelect = /*#__PURE__*/function () {
       var selectedOptions = this.selectedOptions;
       var newOptions = this.options;
       var optionsUpdated = false;
+
+      // Reset pagination state when setting new server options (e.g., on new search)
+      if (this.hasServerPagination) {
+        this.currentPage = 0;
+        this.hasMorePages = true;
+        this.isLoadingMorePages = false;
+      }
 
       /** merging already selected options details with new options */
       if (selectedOptions.length) {
@@ -2957,6 +2985,11 @@ var VirtualSelect = /*#__PURE__*/function () {
         } else {
           this.focusElementOnOpen();
         }
+
+        // Load first page for server-side pagination if no options loaded yet
+        if (this.hasServerPagination && (!this.options || this.options.length === 0) && this.currentPage === 0) {
+          this.loadMoreServerPages();
+        }
         DomUtils.dispatchEvent(this.$ele, 'afterOpen');
       }
     }
@@ -3002,6 +3035,7 @@ var VirtualSelect = /*#__PURE__*/function () {
       } else {
         this.afterHidePopper();
       }
+      this.setSearchValue('');
     }
   }, {
     key: "afterHidePopper",
@@ -3656,6 +3690,45 @@ var VirtualSelect = /*#__PURE__*/function () {
       DomUtils.addClass(this.$allWrappers, 'server-searching');
       this.setSelectedOptions();
       this.onServerSearch(this.searchValue, this);
+    }
+  }, {
+    key: "loadMoreServerPages",
+    value: function loadMoreServerPages() {
+      if (!this.hasServerPagination || this.isLoadingMorePages || !this.hasMorePages) {
+        return;
+      }
+      this.isLoadingMorePages = true;
+      this.currentPage += 1;
+      DomUtils.addClass(this.$allWrappers, 'server-searching');
+      this.onServerPage({
+        page: this.currentPage,
+        pageSize: this.serverPageSize,
+        searchValue: this.searchValue
+      }, this);
+    }
+  }, {
+    key: "setServerPaginatedOptions",
+    value: function setServerPaginatedOptions() {
+      var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
+      var hasMorePages = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
+      this.hasMorePages = hasMorePages;
+      this.isLoadingMorePages = false;
+      if (!options || options.length === 0) {
+        DomUtils.removeClass(this.$allWrappers, 'server-searching');
+        return;
+      }
+
+      // Append new options to existing ones
+      var existingOptions = this.options || [];
+      var newOptions = existingOptions.concat(options);
+      this.setOptionsMethod(newOptions, true);
+      this.setVisibleOptionsCount();
+      if (this.multiple) {
+        this.toggleAllOptionsClass();
+      }
+      this.setValueText();
+      this.updatePosition();
+      DomUtils.removeClass(this.$allWrappers, 'server-searching');
     }
   }, {
     key: "removeValue",

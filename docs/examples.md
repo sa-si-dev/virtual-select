@@ -293,6 +293,44 @@ function onSampleSelectServerSearch(searchValue, virtualSelect) {
 }
 ```
 
+## Server-side pagination
+
+Load options from server in pages as user scrolls
+
+<div id="server-pagination-select"></div>
+
+```js
+VirtualSelect.init({
+  ele: '#server-pagination-select',
+  onServerPage: onPageLoad,
+  serverPageSize: 50, // Number of options per page (default: 50)
+});
+
+function onPageLoad(params, virtualSelect) {
+  /** 
+   * params contains: { page, pageSize, searchValue }
+   * page: Current page number (starts from 1)
+   * pageSize: Number of options per page
+   * searchValue: Current search text (if any)
+   */
+  
+  // Example API call to get paginated data
+  fetch(`/api/options?page=${params.page}&pageSize=${params.pageSize}&search=${params.searchValue}`)
+    .then(response => response.json())
+    .then(data => {
+      // data should contain: { options: [...], hasMorePages: true/false }
+      virtualSelect.setServerPaginatedOptions(data.options, data.hasMorePages);
+    });
+}
+```
+
+**Note:** When using server-side pagination:
+- The first page is loaded automatically when the dropdown is opened
+- More pages are loaded automatically when user scrolls near the bottom
+- Use `setServerPaginatedOptions(options, hasMorePages)` to append new options
+- Set `hasMorePages` to `false` when no more pages are available
+- The component will show a loading indicator while fetching data
+
 ## Show options only on search
 
 <div id="options-on-search-select"></div>

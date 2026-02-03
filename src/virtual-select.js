@@ -74,6 +74,7 @@ const dataProps = [
   'searchPlaceholderText',
   'selectAllOnlyVisible',
   'selectAllText',
+  'serverPageSize',
   'setValueAsArray',
   'showDropboxAsPopup',
   'showOptionsOnlyOnSearch',
@@ -692,6 +693,19 @@ export class VirtualSelect {
 
   onOptionsScroll() {
     this.setVisibleOptions(true);
+    
+    // Check if we need to load more pages (server-side pagination)
+    if (this.hasServerPagination && this.hasMorePages && !this.isLoadingMorePages) {
+      const container = this.$optionsContainer;
+      const scrollTop = container.scrollTop;
+      const scrollHeight = container.scrollHeight;
+      const clientHeight = container.clientHeight;
+      
+      // Load more when scrolled to within 100px of bottom
+      if (scrollTop + clientHeight >= scrollHeight - 100) {
+        this.loadMoreServerPages();
+      }
+    }
   }
 
   onOptionsClick(e) {
@@ -1038,6 +1052,7 @@ export class VirtualSelect {
     this.popupDropboxBreakpoint = options.popupDropboxBreakpoint;
     this.popupPosition = options.popupPosition;
     this.onServerSearch = options.onServerSearch;
+    this.onServerPage = options.onServerPage;
     this.labelRenderer = options.labelRenderer;
     this.selectedLabelRenderer = options.selectedLabelRenderer;
     this.initialSelectedValue = options.selectedValue === 0 ? '0' : options.selectedValue;
@@ -1050,6 +1065,7 @@ export class VirtualSelect {
 
     this.maxWidth = options.maxWidth;
     this.searchDelay = options.searchDelay;
+    this.serverPageSize = parseInt(options.serverPageSize) || 50;
 
     this.showDuration = parseInt(options.showDuration);
     this.hideDuration = parseInt(options.hideDuration);
@@ -1070,10 +1086,17 @@ export class VirtualSelect {
     }
 
     this.hasServerSearch = typeof this.onServerSearch === 'function';
+    this.hasServerPagination = typeof this.onServerPage === 'function';
 
-    if (this.maxValues || this.hasServerSearch || this.showOptionsOnlyOnSearch) {
+    if (this.maxValues || this.hasServerSearch || this.hasServerPagination || this.showOptionsOnlyOnSearch) {
       this.disableSelectAll = true;
       this.disableOptionGroupCheckbox = true;
+    }
+
+    if (this.hasServerPagination) {
+      this.currentPage = 0;
+      this.hasMorePages = true;
+      this.isLoadingMorePages = false;
     }
 
     if (this.keepAlwaysOpen) {
@@ -1520,6 +1543,13 @@ export class VirtualSelect {
     const { selectedOptions } = this;
     const newOptions = this.options;
     let optionsUpdated = false;
+
+    // Reset pagination state when setting new server options (e.g., on new search)
+    if (this.hasServerPagination) {
+      this.currentPage = 0;
+      this.hasMorePages = true;
+      this.isLoadingMorePages = false;
+    }
 
     /** merging already selected options details with new options */
     if (selectedOptions.length) {
@@ -2561,6 +2591,11 @@ export class VirtualSelect {
         this.focusElementOnOpen();
       }
 
+      // Load first page for server-side pagination if no options loaded yet
+      if (this.hasServerPagination && (!this.options || this.options.length === 0) && this.currentPage === 0) {
+        this.loadMoreServerPages();
+      }
+
       DomUtils.dispatchEvent(this.$ele, 'afterOpen');
     }
   }
@@ -3328,6 +3363,48 @@ export class VirtualSelect {
 
     this.setSelectedOptions();
     this.onServerSearch(this.searchValue, this);
+  }
+
+  loadMoreServerPages() {
+    if (!this.hasServerPagination || this.isLoadingMorePages || !this.hasMorePages) {
+      return;
+    }
+
+    this.isLoadingMorePages = true;
+    this.currentPage += 1;
+    DomUtils.addClass(this.$allWrappers, 'server-searching');
+
+    this.onServerPage({
+      page: this.currentPage,
+      pageSize: this.serverPageSize,
+      searchValue: this.searchValue,
+    }, this);
+  }
+
+  setServerPaginatedOptions(options = [], hasMorePages = true) {
+    this.hasMorePages = hasMorePages;
+    this.isLoadingMorePages = false;
+
+    if (!options || options.length === 0) {
+      DomUtils.removeClass(this.$allWrappers, 'server-searching');
+      return;
+    }
+
+    // Append new options to existing ones
+    const existingOptions = this.options || [];
+    const newOptions = existingOptions.concat(options);
+    
+    this.setOptionsMethod(newOptions, true);
+    this.setVisibleOptionsCount();
+
+    if (this.multiple) {
+      this.toggleAllOptionsClass();
+    }
+
+    this.setValueText();
+    this.updatePosition();
+
+    DomUtils.removeClass(this.$allWrappers, 'server-searching');
   }
 
   removeValue($ele) {
