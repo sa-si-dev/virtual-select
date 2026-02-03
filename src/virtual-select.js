@@ -2620,7 +2620,7 @@ export class VirtualSelect {
       this.afterHidePopper();
     }
 
-    this.reset();
+    this.setSearchValue('');
   }
 
   afterHidePopper() {
