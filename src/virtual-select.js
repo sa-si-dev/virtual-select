@@ -1111,6 +1111,7 @@ export class VirtualSelect {
       this.currentPage = 0;
       this.hasMorePages = true;
       this.isLoadingMorePages = false;
+      this.totalItems = 0; // Total count from server, to avoid recalculating on each page
     }
 
     if (this.keepAlwaysOpen) {
@@ -3392,6 +3393,7 @@ export class VirtualSelect {
     this.currentPage = 0;
     this.hasMorePages = true;
     this.isLoadingMorePages = false;
+    this.totalItems = 0; // Reset total so it gets recalculated with new search
     
     // Clear existing options before loading the first page with new search
     this.options = [];
@@ -3419,12 +3421,18 @@ export class VirtualSelect {
       page: this.currentPage,
       pageSize: this.serverPageSize,
       searchValue: this.searchValue,
+      totalItems: this.totalItems, // Pass stored total so server can skip recalculation
     }, this);
   }
 
-  setServerPaginatedOptions(options = [], hasMorePages = true) {
+  setServerPaginatedOptions(options = [], hasMorePages = true, totalItems = 0) {
     this.hasMorePages = hasMorePages;
     this.isLoadingMorePages = false;
+
+    // Store total items from server if provided (usually on first request)
+    if (totalItems > 0) {
+      this.totalItems = totalItems;
+    }
 
     if (!options || options.length === 0) {
       DomUtils.removeClass(this.$allWrappers, 'server-searching');

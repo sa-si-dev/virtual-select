@@ -1613,6 +1613,7 @@ var VirtualSelect = /*#__PURE__*/function () {
         this.currentPage = 0;
         this.hasMorePages = true;
         this.isLoadingMorePages = false;
+        this.totalItems = 0; // Total count from server, to avoid recalculating on each page
       }
       if (this.keepAlwaysOpen) {
         this.dropboxWrapper = 'self';
@@ -3720,6 +3721,7 @@ var VirtualSelect = /*#__PURE__*/function () {
       this.currentPage = 0;
       this.hasMorePages = true;
       this.isLoadingMorePages = false;
+      this.totalItems = 0; // Reset total so it gets recalculated with new search
 
       // Clear existing options before loading the first page with new search
       this.options = [];
@@ -3743,7 +3745,8 @@ var VirtualSelect = /*#__PURE__*/function () {
       this.onServerPage({
         page: this.currentPage,
         pageSize: this.serverPageSize,
-        searchValue: this.searchValue
+        searchValue: this.searchValue,
+        totalItems: this.totalItems // Pass stored total so server can skip recalculation
       }, this);
     }
   }, {
@@ -3751,8 +3754,14 @@ var VirtualSelect = /*#__PURE__*/function () {
     value: function setServerPaginatedOptions() {
       var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
       var hasMorePages = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
+      var totalItems = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 0;
       this.hasMorePages = hasMorePages;
       this.isLoadingMorePages = false;
+
+      // Store total items from server if provided (usually on first request)
+      if (totalItems > 0) {
+        this.totalItems = totalItems;
+      }
       if (!options || options.length === 0) {
         DomUtils.removeClass(this.$allWrappers, 'server-searching');
         return;

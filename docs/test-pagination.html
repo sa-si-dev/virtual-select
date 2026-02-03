@@ -64,7 +64,13 @@
       <li>The next page will load automatically when you reach the bottom</li>
       <li>Continue scrolling to load more pages</li>
       <li>Check the log below to see the pagination events</li>
+      <li><strong>Try searching</strong> - notice how totalItems resets and is recalculated</li>
+      <li><strong>Clear search</strong> - totalItems resets again for new query</li>
     </ol>
+    <h3>Optimization:</h3>
+    <p>The <code>totalItems</code> is calculated only on the first page request and passed to subsequent pages.
+    When the search changes, <code>totalItems</code> resets to 0, forcing a recalculation.
+    This avoids expensive COUNT(*) queries on every pagination request.</p>
   </div>
 
   <div class="test-container">
@@ -100,9 +106,14 @@
 
     // Simulate server-side pagination
     function onServerPage(params, virtualSelect) {
-      const { page, pageSize, searchValue } = params;
+      const { page, pageSize, searchValue, totalItems } = params;
       
-      log(`📥 Loading page ${page} (pageSize: ${pageSize}, search: "${searchValue || 'none'}")`);
+      // Log the optimization in action
+      if (totalItems > 0) {
+        log(`📥 Loading page ${page} (pageSize: ${pageSize}, search: "${searchValue || 'none'}", totalItems: ${totalItems} [cached])`);
+      } else {
+        log(`📥 Loading page ${page} (pageSize: ${pageSize}, search: "${searchValue || 'none'}", totalItems: calculating...)`);
+      }
       
       // Simulate API delay
       setTimeout(() => {
@@ -120,11 +131,19 @@
         const pageOptions = filteredOptions.slice(startIndex, endIndex);
         const hasMorePages = endIndex < filteredOptions.length;
         
-        log(`✅ Loaded ${pageOptions.length} options. More pages available: ${hasMorePages}`);
-        log(`📊 Total options loaded so far: ${startIndex + pageOptions.length}/${filteredOptions.length}`);
+        // Only calculate total on first request (when totalItems is 0)
+        // This simulates expensive database COUNT(*) query
+        const calculatedTotal = totalItems > 0 ? totalItems : filteredOptions.length;
         
-        // Set the paginated options
-        virtualSelect.setServerPaginatedOptions(pageOptions, hasMorePages);
+        if (totalItems === 0) {
+          log(`✅ Loaded ${pageOptions.length} options. Total calculated: ${calculatedTotal}`);
+        } else {
+          log(`✅ Loaded ${pageOptions.length} options. Total reused: ${calculatedTotal} (no recalculation needed)`);
+        }
+        log(`📊 Progress: ${startIndex + pageOptions.length}/${calculatedTotal}. More pages: ${hasMorePages}`);
+        
+        // Set the paginated options with total
+        virtualSelect.setServerPaginatedOptions(pageOptions, hasMorePages, calculatedTotal);
       }, 500); // Simulate network delay
     }
 
