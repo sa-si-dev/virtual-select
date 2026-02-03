@@ -3117,7 +3117,7 @@ var VirtualSelect = /*#__PURE__*/function () {
     key: "focusElementOnOpen",
     value: function focusElementOnOpen() {
       var $ele = this.$searchInput;
-      var hasNoOptions = !this.options.length && !this.hasServerSearch;
+      var hasNoOptions = !this.options.length && !this.hasServerSearch && !this.hasServerPagination;
       if ($ele) {
         if (hasNoOptions && !this.allowNewOption) {
           DomUtils.setAttr($ele, 'disabled', '');

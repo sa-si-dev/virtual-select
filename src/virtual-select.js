@@ -2741,7 +2741,7 @@ export class VirtualSelect {
 
   focusElementOnOpen() {
     const $ele = this.$searchInput;
-    const hasNoOptions = !this.options.length && !this.hasServerSearch;
+    const hasNoOptions = !this.options.length && !this.hasServerSearch && !this.hasServerPagination;
 
     if ($ele) {
       if (hasNoOptions && !this.allowNewOption) {
