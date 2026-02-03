@@ -1090,7 +1090,15 @@ export class VirtualSelect {
     this.hasServerSearch = typeof this.onServerSearch === 'function';
     this.hasServerPagination = typeof this.onServerPage === 'function';
 
-    if ((options.search === undefined && this.multiple) || this.allowNewOption || this.showOptionsOnlyOnSearch || this.hasServerPagination) {
+    // Enable search in the following scenarios:
+    // 1. Multiple select mode (when search option is not explicitly set)
+    // 2. Allow new option is enabled
+    // 3. Show options only on search is enabled
+    // 4. Server pagination is enabled (to allow filtering)
+    const autoEnableSearch = (options.search === undefined && this.multiple);
+    const requiresSearch = this.allowNewOption || this.showOptionsOnlyOnSearch || this.hasServerPagination;
+    
+    if (autoEnableSearch || requiresSearch) {
       this.hasSearch = true;
     }
 
@@ -3371,6 +3379,14 @@ export class VirtualSelect {
     this.onServerSearch(this.searchValue, this);
   }
 
+  /**
+   * Handles search functionality for server-side pagination.
+   * Unlike serverSearch() which replaces all options, this method:
+   * 1. Resets pagination state (page 0, hasMorePages true)
+   * 2. Clears existing options
+   * 3. Triggers loadMoreServerPages() to fetch first page with new search value
+   * This ensures search works seamlessly with pagination by starting fresh.
+   */
   serverSearchForPagination() {
     // Reset pagination state when search value changes
     this.currentPage = 0;
