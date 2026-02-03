@@ -1440,6 +1440,11 @@ var VirtualSelect = /*#__PURE__*/function () {
         this.serverSearchTimeout = setTimeout(function () {
           _this7.serverSearch();
         }, this.searchDelay);
+      } else if (this.hasServerPagination) {
+        clearTimeout(this.serverSearchTimeout);
+        this.serverSearchTimeout = setTimeout(function () {
+          _this7.serverSearchForPagination();
+        }, this.searchDelay);
       } else {
         this.setVisibleOptionsCount();
       }
@@ -1587,11 +1592,19 @@ var VirtualSelect = /*#__PURE__*/function () {
       this.searchValue = '';
       this.searchValueOriginal = '';
       this.isAllSelected = false;
-      if (options.search === undefined && this.multiple || this.allowNewOption || this.showOptionsOnlyOnSearch) {
-        this.hasSearch = true;
-      }
       this.hasServerSearch = typeof this.onServerSearch === 'function';
       this.hasServerPagination = typeof this.onServerPage === 'function';
+
+      // Enable search in the following scenarios:
+      // 1. Multiple select mode (when search option is not explicitly set)
+      // 2. Allow new option is enabled
+      // 3. Show options only on search is enabled
+      // 4. Server pagination is enabled (to allow filtering)
+      var autoEnableSearch = options.search === undefined && this.multiple;
+      var requiresSearch = this.allowNewOption || this.showOptionsOnlyOnSearch || this.hasServerPagination;
+      if (autoEnableSearch || requiresSearch) {
+        this.hasSearch = true;
+      }
       if (this.maxValues || this.hasServerSearch || this.hasServerPagination || this.showOptionsOnlyOnSearch) {
         this.disableSelectAll = true;
         this.disableOptionGroupCheckbox = true;
@@ -1600,6 +1613,7 @@ var VirtualSelect = /*#__PURE__*/function () {
         this.currentPage = 0;
         this.hasMorePages = true;
         this.isLoadingMorePages = false;
+        this.totalItems = 0; // Total count from server, to avoid recalculating on each page
       }
       if (this.keepAlwaysOpen) {
         this.dropboxWrapper = 'self';
@@ -3112,7 +3126,7 @@ var VirtualSelect = /*#__PURE__*/function () {
     key: "focusElementOnOpen",
     value: function focusElementOnOpen() {
       var $ele = this.$searchInput;
-      var hasNoOptions = !this.options.length && !this.hasServerSearch;
+      var hasNoOptions = !this.options.length && !this.hasServerSearch && !this.hasServerPagination;
       if ($ele) {
         if (hasNoOptions && !this.allowNewOption) {
           DomUtils.setAttr($ele, 'disabled', '');
@@ -3691,6 +3705,34 @@ var VirtualSelect = /*#__PURE__*/function () {
       this.setSelectedOptions();
       this.onServerSearch(this.searchValue, this);
     }
+
+    /**
+     * Handles search functionality for server-side pagination.
+     * Unlike serverSearch() which replaces all options, this method:
+     * 1. Resets pagination state (page 0, hasMorePages true)
+     * 2. Clears existing options
+     * 3. Triggers loadMoreServerPages() to fetch first page with new search value
+     * This ensures search works seamlessly with pagination by starting fresh.
+     */
+  }, {
+    key: "serverSearchForPagination",
+    value: function serverSearchForPagination() {
+      // Reset pagination state when search value changes
+      this.currentPage = 0;
+      this.hasMorePages = true;
+      this.isLoadingMorePages = false;
+      this.totalItems = 0; // Reset total so it gets recalculated with new search
+
+      // Clear existing options before loading the first page with new search
+      this.options = [];
+      this.visibleOptionsCount = 0;
+      DomUtils.removeClass(this.$allWrappers, 'has-no-search-results');
+      DomUtils.addClass(this.$allWrappers, 'server-searching');
+      this.setSelectedOptions();
+
+      // Load the first page with the new search value
+      this.loadMoreServerPages();
+    }
   }, {
     key: "loadMoreServerPages",
     value: function loadMoreServerPages() {
@@ -3703,7 +3745,8 @@ var VirtualSelect = /*#__PURE__*/function () {
       this.onServerPage({
         page: this.currentPage,
         pageSize: this.serverPageSize,
-        searchValue: this.searchValue
+        searchValue: this.searchValue,
+        totalItems: this.totalItems // Pass stored total so server can skip recalculation
       }, this);
     }
   }, {
@@ -3711,23 +3754,44 @@ var VirtualSelect = /*#__PURE__*/function () {
     value: function setServerPaginatedOptions() {
       var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
       var hasMorePages = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
+      var totalItems = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 0;
       this.hasMorePages = hasMorePages;
       this.isLoadingMorePages = false;
+
+      // Store total items from server if provided (usually on first request)
+      if (totalItems > 0) {
+        this.totalItems = totalItems;
+      }
       if (!options || options.length === 0) {
         DomUtils.removeClass(this.$allWrappers, 'server-searching');
         return;
       }
 
+      // Save current scroll position
+      var scrollTop = this.$optionsContainer ? this.$optionsContainer.scrollTop : 0;
+
       // Append new options to existing ones
       var existingOptions = this.options || [];
       var newOptions = existingOptions.concat(options);
       this.setOptionsMethod(newOptions, true);
-      this.setVisibleOptionsCount();
+
+      // Update visible options count without resetting scroll or filtering
+      // Note: We don't call setVisibleOptionsCount() because:
+      // 1. Server pagination handles filtering server-side, not client-side
+      // 2. setVisibleOptionsCount() calls afterSetVisibleOptionsCount() which resets scroll
+      this.visibleOptionsCount = this.options.length;
+      this.setOptionsHeight();
+      this.setVisibleOptions();
       if (this.multiple) {
         this.toggleAllOptionsClass();
       }
       this.setValueText();
       this.updatePosition();
+
+      // Restore scroll position
+      if (this.$optionsContainer) {
+        this.$optionsContainer.scrollTop = scrollTop;
+      }
       DomUtils.removeClass(this.$allWrappers, 'server-searching');
     }
   }, {
