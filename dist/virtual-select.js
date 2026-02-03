@@ -3766,7 +3766,10 @@ var VirtualSelect = /*#__PURE__*/function () {
       var newOptions = existingOptions.concat(options);
       this.setOptionsMethod(newOptions, true);
 
-      // Update visible options count without resetting scroll
+      // Update visible options count without resetting scroll or filtering
+      // Note: We don't call setVisibleOptionsCount() because:
+      // 1. Server pagination handles filtering server-side, not client-side
+      // 2. setVisibleOptionsCount() calls afterSetVisibleOptionsCount() which resets scroll
       this.visibleOptionsCount = this.options.length;
       this.setOptionsHeight();
       this.setVisibleOptions();
