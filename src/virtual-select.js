@@ -471,7 +471,7 @@ export class VirtualSelect {
 
   /** dom event methods - start */
   addEvents() {
-    this.addEvent(document, 'click', 'onDocumentClick');
+    this.addEvent(document, 'click', 'onDocumentClick', true);
     this.addEvent(this.$allWrappers, 'keydown', 'onKeyDown');
     this.addEvent(this.$toggleButton, 'click keydown', 'onToggleButtonPress');
     this.addEvent(this.$clearButton, 'click keydown', 'onClearButtonClick');
@@ -484,7 +484,7 @@ export class VirtualSelect {
     this.addMutationObserver();
   }
 
-  addEvent($ele, events, method) {
+  addEvent($ele, events, method, capture = false) {
     if (!$ele) {
       return;
     }
@@ -500,7 +500,7 @@ export class VirtualSelect {
         this.events[eventsKey] = callback;
       }
 
-      DomUtils.addEvent($ele, event, callback);
+      DomUtils.addEvent($ele, event, callback, capture);
     });
   }
 
