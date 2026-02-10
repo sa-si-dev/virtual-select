@@ -238,8 +238,9 @@ export class DomUtils {
    * @param {HTMLElement} $ele
    * @param {string} events
    * @param {Function} callback
+   * @param {boolean} capture
    */
-  static addEvent($ele, events, callback) {
+  static addEvent($ele, events, callback, capture) {
     if (!$ele) {
       return;
     }
@@ -250,7 +251,7 @@ export class DomUtils {
       const $eleArray = DomUtils.getElements($ele);
 
       $eleArray.forEach(($this) => {
-        $this.addEventListener(event, callback);
+        $this.addEventListener(event, callback, { capture });
       });
     });
   }
