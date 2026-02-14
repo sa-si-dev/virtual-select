@@ -20,6 +20,7 @@
 - [disable()](#disable)
 - [destroy()](#destroy)
 - [setServerOptions()](#setserveroptions)
+- [setServerPaginatedOptions()](#setserverpaginatedoptions)
 - [validate()](#validate)
 - [toggleRequired()](#togglerequired)
 
@@ -241,6 +242,33 @@ function onSampleSelectServerSearch(searchValue, virtualSelect) {
   anyMehodToGetDataFromServer(searchValue).then(function(newOptions) {
     virtualSelect.setServerOptions(newOptions);
   });
+}
+```
+
+### setServerPaginatedOptions()
+
+Use this method to append paginated options loaded from server.
+
+**Arguments:**
+
+- options - array of option objects to append
+- hasMorePages - boolean indicating if more pages are available (default: true)
+
+```js
+VirtualSelect.init({
+  ...
+  onServerPage: onPageLoad,
+  serverPageSize: 50,
+});
+
+function onPageLoad(params, virtualSelect) {
+  // params: { page, pageSize, searchValue }
+  fetch(`/api/options?page=${params.page}&pageSize=${params.pageSize}`)
+    .then(response => response.json())
+    .then(data => {
+      // Append new options and indicate if more pages exist
+      virtualSelect.setServerPaginatedOptions(data.options, data.hasMorePages);
+    });
 }
 ```
 
