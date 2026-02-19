@@ -536,10 +536,11 @@ var DomUtils = /*#__PURE__*/function () {
      * @param {HTMLElement} $ele
      * @param {string} events
      * @param {Function} callback
+     * @param {boolean} capture
      */
   }, {
     key: "addEvent",
-    value: function addEvent($ele, events, callback) {
+    value: function addEvent($ele, events, callback, capture) {
       if (!$ele) {
         return;
       }
@@ -547,7 +548,9 @@ var DomUtils = /*#__PURE__*/function () {
       eventsArray.forEach(function (event) {
         var $eleArray = DomUtils.getElements($ele);
         $eleArray.forEach(function ($this) {
-          $this.addEventListener(event, callback);
+          $this.addEventListener(event, callback, {
+            capture: capture
+          });
         });
       });
     }
@@ -965,7 +968,7 @@ var VirtualSelect = /*#__PURE__*/function () {
   }, {
     key: "addEvents",
     value: function addEvents() {
-      this.addEvent(document, 'click', 'onDocumentClick');
+      this.addEvent(document, 'click', 'onDocumentClick', true);
       this.addEvent(this.$allWrappers, 'keydown', 'onKeyDown');
       this.addEvent(this.$toggleButton, 'click keydown', 'onToggleButtonPress');
       this.addEvent(this.$clearButton, 'click keydown', 'onClearButtonClick');
@@ -981,6 +984,7 @@ var VirtualSelect = /*#__PURE__*/function () {
     key: "addEvent",
     value: function addEvent($ele, events, method) {
       var _this2 = this;
+      var capture = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : false;
       if (!$ele) {
         return;
       }
@@ -992,7 +996,7 @@ var VirtualSelect = /*#__PURE__*/function () {
           callback = _this2[method].bind(_this2);
           _this2.events[eventsKey] = callback;
         }
-        DomUtils.addEvent($ele, event, callback);
+        DomUtils.addEvent($ele, event, callback, capture);
       });
     }
 
@@ -1326,13 +1330,20 @@ var VirtualSelect = /*#__PURE__*/function () {
     }
   }, {
     key: "beforeSelectNewValue",
-    value: function beforeSelectNewValue() {
+    value: function beforeSelectNewValue(selectedValue) {
       var _this5 = this;
       var newOption = this.getNewOption();
-      var newIndex = newOption.index;
-      this.newValues.push(newOption.value);
-      this.setOptionProp(newIndex, 'isCurrentNew', false);
-      this.setOptionProp(newIndex, 'isNew', true);
+      if (newOption) {
+        var newIndex = newOption.index;
+        this.newValues.push(newOption.value);
+        this.setOptionProp(newIndex, 'isCurrentNew', false);
+        this.setOptionProp(newIndex, 'isNew', true);
+      } else if (selectedValue) {
+        // In single-select flow the temporary current-new option can be removed
+        // when dropdown close resets search, so re-add as a persisted new option.
+        this.setNewOption(selectedValue);
+        this.toggleSelectedProp(this.lastOptionIndex, true);
+      }
 
       /** using setTimeout to fix the issue of dropbox getting closed on select */
       setTimeout(function () {
@@ -1936,6 +1947,7 @@ var VirtualSelect = /*#__PURE__*/function () {
         var option = {
           index: index,
           value: value,
+          valueNormalized: value.toLowerCase(),
           label: label,
           labelNormalized: _this8.searchNormalize && label.trim() !== '' ? Utils.normalizeString(label).toLowerCase() : label.toLowerCase(),
           alias: getAlias(d[aliasKey]),
@@ -1955,7 +1967,9 @@ var VirtualSelect = /*#__PURE__*/function () {
           option.groupIndex = d.groupIndex;
         }
         if (hasOptionDescription) {
-          option.description = secureText(getString(d[descriptionKey]));
+          var description = secureText(getString(d[descriptionKey]));
+          option.description = description;
+          option.descriptionNormalized = _this8.searchNormalize && description.trim() !== '' ? Utils.normalizeString(description).toLowerCase() : description.toLowerCase();
         }
         if (d.customData) {
           option.customData = d.customData;
@@ -2674,11 +2688,17 @@ var VirtualSelect = /*#__PURE__*/function () {
       }
       var getString = Utils.getString;
       var secureText = this.secureText.bind(this);
+      var value = secureText(getString(data.value));
+      var label = secureText(getString(data.label));
+      var description = secureText(getString(data.description));
       return {
         index: data.index,
-        value: secureText(getString(data.value)),
-        label: secureText(getString(data.label)),
-        description: secureText(getString(data.description)),
+        value: value,
+        valueNormalized: value.toLowerCase(),
+        label: label,
+        labelNormalized: this.searchNormalize && label.trim() !== '' ? Utils.normalizeString(label).toLowerCase() : label.toLowerCase(),
+        description: description,
+        descriptionNormalized: this.searchNormalize && description.trim() !== '' ? Utils.normalizeString(description).toLowerCase() : description.toLowerCase(),
         alias: this.getAlias(data.alias),
         isCurrentNew: data.isCurrentNew || false,
         isNew: data.isNew || false,
@@ -3002,6 +3022,7 @@ var VirtualSelect = /*#__PURE__*/function () {
       } else {
         this.afterHidePopper();
       }
+      this.setSearchValue('');
     }
   }, {
     key: "afterHidePopper",
@@ -3249,7 +3270,7 @@ var VirtualSelect = /*#__PURE__*/function () {
         this.toggleGroupOptionsParent($ele, false);
       }
       if (isNewOption) {
-        this.beforeSelectNewValue();
+        this.beforeSelectNewValue(selectedValue);
       }
       this.setValue(selectedValues);
       if (shouldSelectRange) {
@@ -3588,10 +3609,27 @@ var VirtualSelect = /*#__PURE__*/function () {
         visibleOptionGroupsMapping = _ref7.visibleOptionGroupsMapping,
         searchGroup = _ref7.searchGroup,
         searchByStartsWith = _ref7.searchByStartsWith;
-      var value = data.value.toLowerCase();
-      var label = this.searchNormalize && data.labelNormalized != null ? data.labelNormalized : (data.label || '').trim().toLowerCase();
+      var value = data.valueNormalized != null ? data.valueNormalized : data.value.toLowerCase();
+      var label = data.labelNormalized;
+      if (label == null) {
+        var rawLabel = (data.label || '').trim();
+        if (this.searchNormalize && rawLabel !== '') {
+          label = Utils.normalizeString(rawLabel).toLowerCase();
+        } else {
+          label = rawLabel.toLowerCase();
+        }
+      }
       var description = data.description,
         alias = data.alias;
+      var descriptionNormalized = data.descriptionNormalized;
+      if (descriptionNormalized == null) {
+        var rawDescription = description || '';
+        if (this.searchNormalize && rawDescription.trim() !== '') {
+          descriptionNormalized = Utils.normalizeString(rawDescription).toLowerCase();
+        } else {
+          descriptionNormalized = rawDescription.toLowerCase();
+        }
+      }
       var isVisible = searchByStartsWith ? label.startsWith(searchValue) : label.includes(searchValue);
       if (data.isGroupTitle && (!searchGroup || !isVisible)) {
         isVisible = visibleOptionGroupsMapping[data.index];
@@ -3599,8 +3637,8 @@ var VirtualSelect = /*#__PURE__*/function () {
       if (!searchByStartsWith && alias && !isVisible) {
         isVisible = alias.includes(searchValue);
       }
-      if (!searchByStartsWith && description && !isVisible) {
-        isVisible = description.toLowerCase().includes(searchValue);
+      if (!searchByStartsWith && descriptionNormalized && !isVisible) {
+        isVisible = descriptionNormalized.includes(searchValue);
       }
 
       // eslint-disable-next-line no-param-reassign
