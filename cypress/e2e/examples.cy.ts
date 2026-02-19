@@ -728,6 +728,27 @@ describe('Label with description', () => {
   });
 });
 
+describe('Search descriptions with and without normalize', () => {
+  const plainId = 'with-description-search-select';
+  const normalizedId = 'with-description-normalized-search-select';
+
+  it('go to section', () => {
+    cy.goToSection('Description search normalize');
+  });
+
+  it('matches descriptions as-is when searchNormalize is false', () => {
+    cy.open(plainId).search('brû').checkFirstOption('Beta Crème brûlée');
+  });
+
+  it('does not normalize descriptions when searchNormalize is false', () => {
+    cy.getVs(plainId).search('brulee').hasNoOptions().close();
+  });
+
+  it('normalizes descriptions when searchNormalize is true', () => {
+    cy.open(normalizedId).search('brulee').checkFirstOption('Beta Crème brûlée');
+  });
+});
+
 describe('Show dropbox as popup - Clear search text', () => {
   const id = 'multiple-show-as-popup-select';
 
