@@ -3609,9 +3609,9 @@ var VirtualSelect = /*#__PURE__*/function () {
         visibleOptionGroupsMapping = _ref7.visibleOptionGroupsMapping,
         searchGroup = _ref7.searchGroup,
         searchByStartsWith = _ref7.searchByStartsWith;
-      var value = data.valueNormalized != null ? data.valueNormalized : data.value.toLowerCase();
+      var value = data.valueNormalized !== null ? data.valueNormalized : data.value.toLowerCase();
       var label = data.labelNormalized;
-      if (label == null) {
+      if (label === null) {
         var rawLabel = (data.label || '').trim();
         if (this.searchNormalize && rawLabel !== '') {
           label = Utils.normalizeString(rawLabel).toLowerCase();
@@ -3620,9 +3620,9 @@ var VirtualSelect = /*#__PURE__*/function () {
         }
       }
       var description = data.description,
-        alias = data.alias;
+      alias = data.alias;
       var descriptionNormalized = data.descriptionNormalized;
-      if (descriptionNormalized == null) {
+      if (descriptionNormalized === null) {
         var rawDescription = description || '';
         if (this.searchNormalize && rawDescription.trim() !== '') {
           descriptionNormalized = Utils.normalizeString(rawDescription).toLowerCase();
