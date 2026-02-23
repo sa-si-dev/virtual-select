@@ -17,6 +17,7 @@
 - [Keep dropbox always open](#keep-dropbox-always-open)
 - [Maximum values](#maximum-values)
 - [Label with description](#label-with-description)
+- [Description search normalize](#description-search-normalize)
 - [Show dropbox as popup](#show-dropbox-as-popup)
 - [Server search](#server-search)
 - [Show options only on search](#show-options-only-on-search)
@@ -255,6 +256,39 @@ VirtualSelect.init({
     { label: 'Options 3', value: '3', description: 'Description 3' },
   ],
   hasOptionDescription: true
+});
+```
+
+## Description search normalize
+
+<div id="with-description-search-select"></div> <span style="font-size: .8rem; margin-left: 5px;">searchNormalize: false</span>
+
+<br>
+
+<div id="with-description-normalized-search-select"></div> <span style="font-size: .8rem; margin-left: 5px;">searchNormalize: true</span>
+
+```js
+const options = [
+  { label: 'Alpha', value: 'alpha', description: 'Café central' },
+  { label: 'Beta', value: 'beta', description: 'Crème brûlée' },
+];
+
+VirtualSelect.init({
+  ...
+  ele: '#with-description-search-select',
+  options,
+  search: true,
+  hasOptionDescription: true,
+  searchNormalize: false
+});
+
+VirtualSelect.init({
+  ...
+  ele: '#with-description-normalized-search-select',
+  options,
+  search: true,
+  hasOptionDescription: true,
+  searchNormalize: true
 });
 ```
 

@@ -814,13 +814,21 @@ export class VirtualSelect {
     this.toggleAllOptionsClass(isReset ? false : undefined);
   }
 
-  beforeSelectNewValue() {
+  beforeSelectNewValue(selectedValue) {
     const newOption = this.getNewOption();
-    const newIndex = newOption.index;
 
-    this.newValues.push(newOption.value);
-    this.setOptionProp(newIndex, 'isCurrentNew', false);
-    this.setOptionProp(newIndex, 'isNew', true);
+    if (newOption) {
+      const newIndex = newOption.index;
+
+      this.newValues.push(newOption.value);
+      this.setOptionProp(newIndex, 'isCurrentNew', false);
+      this.setOptionProp(newIndex, 'isNew', true);
+    } else if (selectedValue) {
+      // In single-select flow the temporary current-new option can be removed
+      // when dropdown close resets search, so re-add as a persisted new option.
+      this.setNewOption(selectedValue);
+      this.toggleSelectedProp(this.lastOptionIndex, true);
+    }
 
     /** using setTimeout to fix the issue of dropbox getting closed on select */
     setTimeout(() => {
@@ -1447,6 +1455,7 @@ export class VirtualSelect {
       const option = {
         index,
         value,
+        valueNormalized: value.toLowerCase(),
         label,
         labelNormalized: this.searchNormalize && label.trim() !== ''
           ? Utils.normalizeString(label).toLowerCase()
@@ -1472,7 +1481,11 @@ export class VirtualSelect {
       }
 
       if (hasOptionDescription) {
-        option.description = secureText(getString(d[descriptionKey]));
+        const description = secureText(getString(d[descriptionKey]));
+        option.description = description;
+        option.descriptionNormalized = this.searchNormalize && description.trim() !== ''
+          ? Utils.normalizeString(description).toLowerCase()
+          : description.toLowerCase();
       }
 
       if (d.customData) {
@@ -2262,12 +2275,22 @@ export class VirtualSelect {
 
     const { getString } = Utils;
     const secureText = this.secureText.bind(this);
+    const value = secureText(getString(data.value));
+    const label = secureText(getString(data.label));
+    const description = secureText(getString(data.description));
 
     return {
       index: data.index,
-      value: secureText(getString(data.value)),
-      label: secureText(getString(data.label)),
-      description: secureText(getString(data.description)),
+      value,
+      valueNormalized: value.toLowerCase(),
+      label,
+      labelNormalized: this.searchNormalize && label.trim() !== ''
+        ? Utils.normalizeString(label).toLowerCase()
+        : label.toLowerCase(),
+      description,
+      descriptionNormalized: this.searchNormalize && description.trim() !== ''
+        ? Utils.normalizeString(description).toLowerCase()
+        : description.toLowerCase(),
       alias: this.getAlias(data.alias),
       isCurrentNew: data.isCurrentNew || false,
       isNew: data.isNew || false,
@@ -2886,7 +2909,7 @@ export class VirtualSelect {
     }
 
     if (isNewOption) {
-      this.beforeSelectNewValue();
+      this.beforeSelectNewValue(selectedValue);
     }
 
     this.setValue(selectedValues);
@@ -3251,11 +3274,33 @@ export class VirtualSelect {
   }
 
   isOptionVisible({ data, searchValue, hasExactOption, visibleOptionGroupsMapping, searchGroup, searchByStartsWith }) {
-    const value = data.value.toLowerCase();
-    const label = (this.searchNormalize && data.labelNormalized != null)
-      ? data.labelNormalized
-      : (data.label || '').trim().toLowerCase();
+    const value = data.valueNormalized != null
+      ? data.valueNormalized
+      : data.value.toLowerCase();
+    let label = data.labelNormalized;
+
+    if (label == null) {
+      const rawLabel = (data.label || '').trim();
+
+      if (this.searchNormalize && rawLabel !== '') {
+        label = Utils.normalizeString(rawLabel).toLowerCase();
+      } else {
+        label = rawLabel.toLowerCase();
+      }
+    }
+
     const { description, alias } = data;
+    let { descriptionNormalized } = data;
+
+    if (descriptionNormalized == null) {
+      const rawDescription = description || '';
+
+      if (this.searchNormalize && rawDescription.trim() !== '') {
+        descriptionNormalized = Utils.normalizeString(rawDescription).toLowerCase();
+      } else {
+        descriptionNormalized = rawDescription.toLowerCase();
+      }
+    }
 
     let isVisible = searchByStartsWith ? label.startsWith(searchValue) : label.includes(searchValue);
 
@@ -3267,8 +3312,8 @@ export class VirtualSelect {
       isVisible = alias.includes(searchValue);
     }
 
-    if (!searchByStartsWith && description && !isVisible) {
-      isVisible = description.toLowerCase().includes(searchValue);
+    if (!searchByStartsWith && descriptionNormalized && !isVisible) {
+      isVisible = descriptionNormalized.includes(searchValue);
     }
 
     // eslint-disable-next-line no-param-reassign

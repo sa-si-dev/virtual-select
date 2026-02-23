@@ -257,6 +257,28 @@ function initPageExamples() {
     hasOptionDescription: true,
   });
 
+  const descriptionSearchOptions = [
+    { label: 'Alpha', value: 'alpha', description: 'Café central' },
+    { label: 'Beta', value: 'beta', description: 'Crème brûlée' },
+    { label: 'Gamma', value: 'gamma', description: 'Niño azul' },
+  ];
+
+  initVirtualSelect({
+    ele: '#with-description-search-select',
+    options: descriptionSearchOptions,
+    search: true,
+    hasOptionDescription: true,
+    searchNormalize: false,
+  });
+
+  initVirtualSelect({
+    ele: '#with-description-normalized-search-select',
+    options: descriptionSearchOptions,
+    search: true,
+    hasOptionDescription: true,
+    searchNormalize: true,
+  });
+
   initVirtualSelect({
     ele: '#single-show-as-popup-select',
     popupDropboxBreakpoint: '3000px',

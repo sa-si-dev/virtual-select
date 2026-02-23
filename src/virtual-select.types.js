@@ -13,6 +13,7 @@
  * @property {boolean} [search=false] Enable search
  * @property {boolean} [searchByStartsWith=false] Search options by startsWith() method
  * @property {boolean} [searchGroup=false] Include group title for searching
+ * @property {boolean} [searchNormalize=false] Allow searching by label and description ignoring diacritics
  * @property {boolean} [disabled=false] Disable dropdown
  * @property {boolean} [required=false] Enable required validation
  * @property {boolean} [autofocus=false] Autofocus dropdown on load
