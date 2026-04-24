@@ -279,6 +279,50 @@ function initPageExamples() {
     searchNormalize: true,
   });
 
+  const greekOptions = [
+    { label: 'Ένα', value: 'ena', description: 'Πρώτο στοιχείο' },
+    { label: 'Δύο', value: 'dyo', description: 'Δεύτερο στοιχείο' },
+    { label: 'Τρία', value: 'tria', description: 'Τρίτο στοιχείο' },
+  ];
+
+  initVirtualSelect({
+    ele: '#greek-search-select',
+    options: greekOptions,
+    search: true,
+    hasOptionDescription: true,
+    searchNormalize: true,
+  });
+
+  initVirtualSelect({
+    ele: '#greek-search-no-normalize-select',
+    options: greekOptions,
+    search: true,
+    hasOptionDescription: true,
+    searchNormalize: false,
+  });
+
+  const cyrillicOptions = [
+    { label: 'Ёжик', value: 'yozhik', description: 'Колючий зверёк' },
+    { label: 'Йогурт', value: 'yogurt', description: 'Молочный продукт' },
+    { label: 'Привет', value: 'privet', description: 'Приветствие' },
+  ];
+
+  initVirtualSelect({
+    ele: '#cyrillic-search-select',
+    options: cyrillicOptions,
+    search: true,
+    hasOptionDescription: true,
+    searchNormalize: true,
+  });
+
+  initVirtualSelect({
+    ele: '#cyrillic-search-no-normalize-select',
+    options: cyrillicOptions,
+    search: true,
+    hasOptionDescription: true,
+    searchNormalize: false,
+  });
+
   initVirtualSelect({
     ele: '#single-show-as-popup-select',
     popupDropboxBreakpoint: '3000px',

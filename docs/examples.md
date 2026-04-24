@@ -18,6 +18,7 @@
 - [Maximum values](#maximum-values)
 - [Label with description](#label-with-description)
 - [Description search normalize](#description-search-normalize)
+- [Greek and Cyrillic search normalize](#greek-and-cyrillic-search-normalize)
 - [Show dropbox as popup](#show-dropbox-as-popup)
 - [Server search](#server-search)
 - [Show options only on search](#show-options-only-on-search)
@@ -289,6 +290,57 @@ VirtualSelect.init({
   search: true,
   hasOptionDescription: true,
   searchNormalize: true
+});
+```
+
+## Greek and Cyrillic search normalize
+
+Search with normalized Greek and Cyrillic characters. With `searchNormalize: true`, try searching "Ενα" (without accent) to find "Ένα", or "Ежик" (with е) to find "Ёжик".
+
+<div id="greek-search-select"></div> <span style="font-size: .8rem; margin-left: 5px;">Greek - searchNormalize: true</span>
+
+<br>
+<br>
+
+<div id="greek-search-no-normalize-select"></div> <span style="font-size: .8rem; margin-left: 5px;">Greek - searchNormalize: false</span>
+
+<br>
+<br>
+
+<div id="cyrillic-search-select"></div> <span style="font-size: .8rem; margin-left: 5px;">Cyrillic - searchNormalize: true</span>
+
+<br>
+<br>
+
+<div id="cyrillic-search-no-normalize-select"></div> <span style="font-size: .8rem; margin-left: 5px;">Cyrillic - searchNormalize: false</span>
+
+```js
+const greekOptions = [
+  { label: 'Ένα', value: 'ena', description: 'Πρώτο στοιχείο' },
+  { label: 'Δύο', value: 'dyo', description: 'Δεύτερο στοιχείο' },
+  { label: 'Τρία', value: 'tria', description: 'Τρίτο στοιχείο' },
+];
+
+const cyrillicOptions = [
+  { label: 'Ёжик', value: 'yozhik', description: 'Колючий зверёк' },
+  { label: 'Йогурт', value: 'yogurt', description: 'Молочный продукт' },
+  { label: 'Привет', value: 'privet', description: 'Приветствие' },
+];
+
+VirtualSelect.init({
+  ele: '#greek-search-select',
+  options: greekOptions,
+  search: true,
+  hasOptionDescription: true,
+  searchNormalize: true,
+});
+
+VirtualSelect.init({
+  ele: '#cyrillic-search-select',
+  options: cyrillicOptions,
+  search: true,
+  hasOptionDescription: true,
+  searchNormalize: true,
 });
 ```
 

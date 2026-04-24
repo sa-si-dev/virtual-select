@@ -749,6 +749,122 @@ describe('Search descriptions with and without normalize', () => {
   });
 });
 
+// // // // //
+// // // // // Greek and Cyrillic search normalize
+// // // // //
+
+describe('Greek search with searchNormalize: true', () => {
+  const id = 'greek-search-select';
+
+  it('go to section', () => {
+    cy.goToSection('Greek and Cyrillic search normalize');
+  });
+
+  it('finds Greek option when searching with accent (exact match)', () => {
+    cy.open(id).search('Ένα').checkFirstOption('Ένα');
+  });
+
+  it('finds Greek option when searching without accent (normalized)', () => {
+    cy.getVs(id).search('Ενα').checkFirstOption('Ένα');
+  });
+
+  it('finds Greek options by partial match', () => {
+    cy.getVs(id).search('α').checkFirstOption('Ένα');
+  });
+
+  it('finds Greek option by normalized description', () => {
+    cy.getVs(id).search('Πρωτο').checkFirstOption('Ένα');
+  });
+
+  it('does not find non-existent Greek text', () => {
+    cy.getVs(id).search('Τέσσερα').hasNoOptions().close();
+  });
+});
+
+describe('Greek search with searchNormalize: false', () => {
+  const id = 'greek-search-no-normalize-select';
+
+  it('finds Greek option when searching with accent (exact lowercase match)', () => {
+    cy.open(id).search('Ένα').checkFirstOption('Ένα');
+  });
+
+  it('does not find Greek option when searching without accent (normalize off)', () => {
+    cy.getVs(id).search('Ενα').hasNoOptions();
+  });
+
+  it('finds Greek options by partial match without accent involved', () => {
+    cy.getVs(id).search('α').checkFirstOption('Ένα').close();
+  });
+});
+
+describe('Cyrillic search with searchNormalize: true', () => {
+  const id = 'cyrillic-search-select';
+
+  it('finds Cyrillic option with ё (exact match)', () => {
+    cy.open(id).search('Ёжик').checkFirstOption('Ёжик');
+  });
+
+  it('finds Cyrillic option searching with е instead of ё (normalized)', () => {
+    cy.getVs(id).search('Ежик').checkFirstOption('Ёжик');
+  });
+
+  it('finds Cyrillic option with й (exact match)', () => {
+    cy.getVs(id).search('Йогурт').checkFirstOption('Йогурт');
+  });
+
+  it('finds Cyrillic option searching with и instead of й (normalized)', () => {
+    cy.getVs(id).search('Иогурт').checkFirstOption('Йогурт');
+  });
+
+  it('finds Cyrillic option by normalized description (зверёк → зверек)', () => {
+    cy.getVs(id).search('зверек').checkFirstOption('Ёжик');
+  });
+
+  it('does not find non-existent Cyrillic text', () => {
+    cy.getVs(id).search('Кошка').hasNoOptions().close();
+  });
+});
+
+describe('Cyrillic search with searchNormalize: false', () => {
+  const id = 'cyrillic-search-no-normalize-select';
+
+  it('finds Cyrillic option with ё (exact lowercase match)', () => {
+    cy.open(id).search('Ёжик').checkFirstOption('Ёжик');
+  });
+
+  it('does not find Cyrillic option when searching with е instead of ё (normalize off)', () => {
+    cy.getVs(id).search('Ежик').hasNoOptions();
+  });
+
+  it('finds Cyrillic option without diacritics (Привет has none)', () => {
+    cy.getVs(id).search('Привет').checkFirstOption('Привет').close();
+  });
+});
+
+describe('Latin diacritics regression with normalize', () => {
+  const normalizedId = 'with-description-normalized-search-select';
+
+  it('go to section', () => {
+    cy.goToSection('Description search normalize');
+  });
+
+  it('still normalizes Latin descriptions (brulee finds brûlée)', () => {
+    cy.open(normalizedId).search('brulee').checkFirstOption('Beta');
+  });
+
+  it('still normalizes Latin descriptions (cafe finds café)', () => {
+    cy.getVs(normalizedId).search('cafe').checkFirstOption('Alpha');
+  });
+
+  it('still normalizes Latin descriptions (nino finds niño)', () => {
+    cy.getVs(normalizedId).search('nino').checkFirstOption('Gamma').close();
+  });
+});
+
+// // // // //
+// // // // // Show dropbox as popup
+// // // // //
+
 describe('Show dropbox as popup - Clear search text', () => {
   const id = 'multiple-show-as-popup-select';
 
