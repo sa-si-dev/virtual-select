@@ -156,8 +156,8 @@ export class Utils {
    * @memberof Utils
    */
   static normalizeString(text) {
-    const NON_WORD_REGEX = /[^\w]/g;
-    return text.normalize('NFD').replace(NON_WORD_REGEX, '');
+    const COMBINING_MARKS_REGEX = /[\u0300-\u036f]/g;
+    return text.normalize('NFD').replace(COMBINING_MARKS_REGEX, '');
   }
 
   /**
