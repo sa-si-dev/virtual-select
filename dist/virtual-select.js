@@ -200,8 +200,8 @@ var Utils = /*#__PURE__*/function () {
   }, {
     key: "normalizeString",
     value: function normalizeString(text) {
-      var NON_WORD_REGEX = /[^\w]/g;
-      return text.normalize('NFD').replace(NON_WORD_REGEX, '');
+      var COMBINING_MARKS_REGEX = /[\u0300-\u036f]/g;
+      return text.normalize('NFD').replace(COMBINING_MARKS_REGEX, '');
     }
 
     /**
