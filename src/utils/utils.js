@@ -1,3 +1,5 @@
+const COMBINING_MARKS_REGEX = /\p{M}/gu;
+
 export class Utils {
   /**
    * @param {any} text
@@ -156,7 +158,6 @@ export class Utils {
    * @memberof Utils
    */
   static normalizeString(text) {
-    const COMBINING_MARKS_REGEX = /\p{M}/gu;
     return text.normalize('NFD').replace(COMBINING_MARKS_REGEX, '');
   }
 
