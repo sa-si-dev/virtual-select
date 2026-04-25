@@ -953,6 +953,120 @@ describe('Multi-language search with searchNormalize: false', () => {
   });
 });
 
+describe('Multi-language tags variant with searchNormalize: true', () => {
+  const id = 'multi-language-tags-search-select';
+
+  it('go to section', () => {
+    cy.goToSection('Multi-language search normalize');
+  });
+
+  it('finds München with normalized search "Munchen"', () => {
+    cy.open(id).search('Munchen').checkFirstOption('München');
+  });
+
+  it('selects München and renders it as a value tag', () => {
+    cy.getVs(id).selectOption('munchen');
+    cy.getVs(id).hasValueTags(['München']);
+  });
+
+  it('finds Việt Nam with normalized search and adds a second tag', () => {
+    cy.getVs(id).search('Viet Nam').checkFirstOption('Việt Nam');
+    cy.getVs(id).selectOption('vietnam');
+    cy.getVs(id).hasValueTags(['München', 'Việt Nam']);
+    cy.getVs(id).checkValueTagsCount(2);
+  });
+
+  it('finds Ёжик with normalized search "Ежик" and adds Cyrillic tag', () => {
+    cy.getVs(id).search('Ежик').checkFirstOption('Ёжик');
+    cy.getVs(id).selectOption('yozhik');
+    cy.getVs(id).hasValueTags(['München', 'Việt Nam', 'Ёжик']);
+    cy.getVs(id).checkValueTagsCount(3);
+  });
+
+  it('removes a value tag and reduces tag count', () => {
+    cy.getVs(id).removeValueTag('München').checkValueTagsCount(2);
+  });
+
+  it('finds CJK options as-is (Chinese 北京)', () => {
+    cy.getVs(id).search('北京').checkFirstOption('北京');
+    cy.getVs(id).selectOption('beijing');
+    cy.getVs(id).checkValueTagsCount(3).close();
+  });
+});
+
+describe('Multi-language tags variant with searchNormalize: false', () => {
+  const id = 'multi-language-tags-search-no-normalize-select';
+
+  it('go to section', () => {
+    cy.goToSection('Multi-language search normalize');
+  });
+
+  it('does NOT find München when searching "Munchen" (no normalize)', () => {
+    cy.open(id).search('Munchen').hasNoOptions();
+  });
+
+  it('finds München only when searching with diacritics and tags it', () => {
+    cy.getVs(id).search('München').checkFirstOption('München');
+    cy.getVs(id).selectOption('munchen');
+    cy.getVs(id).hasValueTags(['München']);
+    cy.getVs(id).checkValueTagsCount(1);
+  });
+
+  it('finds Ёжик only with exact ё (not "Ежик")', () => {
+    cy.getVs(id).search('Ежик').hasNoOptions();
+    cy.getVs(id).search('Ёжик').checkFirstOption('Ёжик');
+    cy.getVs(id).selectOption('yozhik');
+    cy.getVs(id).hasValueTags(['München', 'Ёжик']);
+    cy.getVs(id).checkValueTagsCount(2).close();
+  });
+});
+
+describe('Multi-language popup variant with searchNormalize: true', () => {
+  const id = 'multi-language-popup-search-select';
+
+  it('go to section', () => {
+    cy.goToSection('Multi-language search normalize');
+  });
+
+  it('opens as a popup and finds München with normalized search', () => {
+    cy.open(id).search('Munchen').checkFirstOption('München');
+  });
+
+  it('finds Việt Nam with normalized search inside popup', () => {
+    cy.getVs(id).search('Viet Nam').checkFirstOption('Việt Nam');
+  });
+
+  it('finds Ёжик with normalized search "Ежик" inside popup', () => {
+    cy.getVs(id).search('Ежик').checkFirstOption('Ёжик');
+  });
+
+  it('finds CJK options as-is (Japanese 東京)', () => {
+    cy.getVs(id).search('東京').checkFirstOption('東京');
+    cy.closePopup(id);
+  });
+});
+
+describe('Multi-language popup variant with searchNormalize: false', () => {
+  const id = 'multi-language-popup-search-no-normalize-select';
+
+  it('go to section', () => {
+    cy.goToSection('Multi-language search normalize');
+  });
+
+  it('opens as a popup and does NOT find München with normalized search', () => {
+    cy.open(id).search('Munchen').hasNoOptions();
+  });
+
+  it('finds München only when searching with diacritics inside popup', () => {
+    cy.getVs(id).search('München').checkFirstOption('München');
+  });
+
+  it('CJK options still match as-is (no normalization needed)', () => {
+    cy.getVs(id).search('서울').checkFirstOption('서울');
+    cy.closePopup(id);
+  });
+});
+
 describe('Latin diacritics regression with normalize', () => {
   const normalizedId = 'with-description-normalized-search-select';
 

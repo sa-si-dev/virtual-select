@@ -378,7 +378,71 @@ VirtualSelect.init({
 });
 ```
 
-> **Note on Thai and Japanese hiragana**: stripping combining marks affects Thai vowel signs (e.g. `สวัสดี` → `สวสด`) and Japanese hiragana voicing marks (e.g. `が` → `か`). This enables fuzzy matching but loses some semantic precision. Use `searchNormalize: false` if exact.markdown-section blockquote p-match behavior is required for those scripts.
+### Multi-language with values as tags
+
+Multi-select variant — chosen options render as removable tags. Search normalization works the same way across all scripts.
+
+<div id="multi-language-tags-search-select"></div> <span style="font-size: .8rem; margin-left: 5px;">Tags - searchNormalize: true</span>
+
+<br>
+<br>
+
+<div id="multi-language-tags-search-no-normalize-select"></div> <span style="font-size: .8rem; margin-left: 5px;">Tags - searchNormalize: false</span>
+
+```js
+VirtualSelect.init({
+  ele: '#multi-language-tags-search-select',
+  options: multiLanguageOptions,
+  multiple: true,
+  search: true,
+  hasOptionDescription: true,
+  showValueAsTags: true,
+  searchNormalize: true,
+});
+
+VirtualSelect.init({
+  ele: '#multi-language-tags-search-no-normalize-select',
+  options: multiLanguageOptions,
+  multiple: true,
+  search: true,
+  hasOptionDescription: true,
+  showValueAsTags: true,
+  searchNormalize: false,
+});
+```
+
+### Multi-language as popup
+
+Popup variant — the dropbox renders as a popup (using `popupDropboxBreakpoint: '3000px'` for demo so the popup is visible on desktop too). Diacritic-insensitive search behaves identically inside the popup.
+
+<div id="multi-language-popup-search-select"></div> <span style="font-size: .8rem; margin-left: 5px;">Popup - searchNormalize: true</span>
+
+<br>
+<br>
+
+<div id="multi-language-popup-search-no-normalize-select"></div> <span style="font-size: .8rem; margin-left: 5px;">Popup - searchNormalize: false</span>
+
+```js
+VirtualSelect.init({
+  ele: '#multi-language-popup-search-select',
+  options: multiLanguageOptions,
+  search: true,
+  hasOptionDescription: true,
+  popupDropboxBreakpoint: '3000px',
+  searchNormalize: true,
+});
+
+VirtualSelect.init({
+  ele: '#multi-language-popup-search-no-normalize-select',
+  options: multiLanguageOptions,
+  search: true,
+  hasOptionDescription: true,
+  popupDropboxBreakpoint: '3000px',
+  searchNormalize: false,
+});
+```
+
+> **Note on Thai and Japanese hiragana**: stripping combining marks affects Thai vowel signs (e.g. `สวัสดี` → `สวสด`) and Japanese hiragana voicing marks (e.g. `が` → `か`). This enables fuzzy matching but loses some semantic precision. Use `searchNormalize: false` if exact-match behavior is required for those scripts.
 
 ## Show dropbox as popup
 

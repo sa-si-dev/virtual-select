@@ -424,6 +424,44 @@ function initPageExamples() {
   });
 
   initVirtualSelect({
+    ele: '#multi-language-tags-search-select',
+    options: multiLanguageOptions,
+    multiple: true,
+    search: true,
+    hasOptionDescription: true,
+    showValueAsTags: true,
+    searchNormalize: true,
+  });
+
+  initVirtualSelect({
+    ele: '#multi-language-tags-search-no-normalize-select',
+    options: multiLanguageOptions,
+    multiple: true,
+    search: true,
+    hasOptionDescription: true,
+    showValueAsTags: true,
+    searchNormalize: false,
+  });
+
+  initVirtualSelect({
+    ele: '#multi-language-popup-search-select',
+    options: multiLanguageOptions,
+    search: true,
+    hasOptionDescription: true,
+    popupDropboxBreakpoint: '3000px',
+    searchNormalize: true,
+  });
+
+  initVirtualSelect({
+    ele: '#multi-language-popup-search-no-normalize-select',
+    options: multiLanguageOptions,
+    search: true,
+    hasOptionDescription: true,
+    popupDropboxBreakpoint: '3000px',
+    searchNormalize: false,
+  });
+
+  initVirtualSelect({
     ele: '#single-show-as-popup-select',
     popupDropboxBreakpoint: '3000px',
     placeholder: 'Select a single value',
