@@ -156,7 +156,7 @@ export class Utils {
    * @memberof Utils
    */
   static normalizeString(text) {
-    const COMBINING_MARKS_REGEX = /[\u0300-\u036f]/g;
+    const COMBINING_MARKS_REGEX = /\p{M}/gu;
     return text.normalize('NFD').replace(COMBINING_MARKS_REGEX, '');
   }
 
