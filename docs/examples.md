@@ -336,11 +336,27 @@ VirtualSelect.init({
 });
 
 VirtualSelect.init({
+  ele: '#greek-search-no-normalize-select',
+  options: greekOptions,
+  search: true,
+  hasOptionDescription: true,
+  searchNormalize: false,
+});
+
+VirtualSelect.init({
   ele: '#cyrillic-search-select',
   options: cyrillicOptions,
   search: true,
   hasOptionDescription: true,
   searchNormalize: true,
+});
+
+VirtualSelect.init({
+  ele: '#cyrillic-search-no-normalize-select',
+  options: cyrillicOptions,
+  search: true,
+  hasOptionDescription: true,
+  searchNormalize: false,
 });
 ```
 
