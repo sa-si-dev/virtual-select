@@ -750,94 +750,206 @@ describe('Search descriptions with and without normalize', () => {
 });
 
 // // // // //
-// // // // // Greek and Cyrillic search normalize
+// // // // // Multi-language search normalize
 // // // // //
 
-describe('Greek search with searchNormalize: true', () => {
-  const id = 'greek-search-select';
+describe('Multi-language search with searchNormalize: true', () => {
+  const id = 'multi-language-search-select';
 
   it('go to section', () => {
-    cy.goToSection('Greek and Cyrillic search normalize');
+    cy.goToSection('Multi-language search normalize');
   });
 
-  it('finds Greek option when searching with accent (exact match)', () => {
-    cy.open(id).search('Ένα').checkFirstOption('Ένα');
+  // Latin (French / Spanish)
+  it('Latin: finds Crème brûlée when searching "creme"', () => {
+    cy.open(id).search('creme').checkFirstOption('Crème brûlée');
   });
 
-  it('finds Greek option when searching without accent (normalized)', () => {
+  it('Latin: finds Niño when searching "nino"', () => {
+    cy.getVs(id).search('nino').checkFirstOption('Niño');
+  });
+
+  // German
+  it('German: finds München when searching "Munchen"', () => {
+    cy.getVs(id).search('Munchen').checkFirstOption('München');
+  });
+
+  it('German: finds Mädchen when searching "Madchen"', () => {
+    cy.getVs(id).search('Madchen').checkFirstOption('Mädchen');
+  });
+
+  it('German: ß is atomic — searching "Grosse" does NOT find "Größe"', () => {
+    cy.getVs(id).search('Grosse').hasNoOptions();
+  });
+
+  // Norwegian
+  it('Norwegian: finds Ålesund when searching "Alesund" (å decomposes)', () => {
+    cy.getVs(id).search('Alesund').checkFirstOption('Ålesund');
+  });
+
+  it('Norwegian: ø is atomic — searching "Bjorn" does NOT find "Bjørn"', () => {
+    cy.getVs(id).search('Bjorn').hasNoOptions();
+  });
+
+  // Swedish
+  it('Swedish: finds Göteborg when searching "Goteborg"', () => {
+    cy.getVs(id).search('Goteborg').checkFirstOption('Göteborg');
+  });
+
+  it('Swedish: finds Malmö when searching "Malmo"', () => {
+    cy.getVs(id).search('Malmo').checkFirstOption('Malmö');
+  });
+
+  // Finnish
+  it('Finnish: finds Jyväskylä when searching "Jyvaskyla"', () => {
+    cy.getVs(id).search('Jyvaskyla').checkFirstOption('Jyväskylä');
+  });
+
+  it('Finnish: finds Hämeenlinna when searching "Hameenlinna"', () => {
+    cy.getVs(id).search('Hameenlinna').checkFirstOption('Hämeenlinna');
+  });
+
+  // Greek
+  it('Greek: finds Ένα when searching with accent', () => {
+    cy.getVs(id).search('Ένα').checkFirstOption('Ένα');
+  });
+
+  it('Greek: finds Ένα when searching "Ενα" (without accent)', () => {
     cy.getVs(id).search('Ενα').checkFirstOption('Ένα');
   });
 
-  it('finds Greek options by partial match', () => {
-    cy.getVs(id).search('α').checkFirstOption('Ένα');
+  it('Greek: finds Αθήνα by normalized description ("Πρωτευουσα")', () => {
+    cy.getVs(id).search('Πρωτευουσα').checkFirstOption('Αθήνα');
   });
 
-  it('finds Greek option by normalized description', () => {
-    cy.getVs(id).search('Πρωτο').checkFirstOption('Ένα');
+  // Cyrillic
+  it('Cyrillic: finds Ёжик when searching with ё (exact)', () => {
+    cy.getVs(id).search('Ёжик').checkFirstOption('Ёжик');
   });
 
-  it('does not find non-existent Greek text', () => {
-    cy.getVs(id).search('Τέσσερα').hasNoOptions().close();
-  });
-});
-
-describe('Greek search with searchNormalize: false', () => {
-  const id = 'greek-search-no-normalize-select';
-
-  it('finds Greek option when searching with accent (exact lowercase match)', () => {
-    cy.open(id).search('Ένα').checkFirstOption('Ένα');
-  });
-
-  it('does not find Greek option when searching without accent (normalize off)', () => {
-    cy.getVs(id).search('Ενα').hasNoOptions();
-  });
-
-  it('finds Greek options by partial match without accent involved', () => {
-    cy.getVs(id).search('α').checkFirstOption('Ένα').close();
-  });
-});
-
-describe('Cyrillic search with searchNormalize: true', () => {
-  const id = 'cyrillic-search-select';
-
-  it('finds Cyrillic option with ё (exact match)', () => {
-    cy.open(id).search('Ёжик').checkFirstOption('Ёжик');
-  });
-
-  it('finds Cyrillic option searching with е instead of ё (normalized)', () => {
+  it('Cyrillic: finds Ёжик when searching "Ежик" (е instead of ё)', () => {
     cy.getVs(id).search('Ежик').checkFirstOption('Ёжик');
   });
 
-  it('finds Cyrillic option with й (exact match)', () => {
-    cy.getVs(id).search('Йогурт').checkFirstOption('Йогурт');
-  });
-
-  it('finds Cyrillic option searching with и instead of й (normalized)', () => {
-    cy.getVs(id).search('Иогурт').checkFirstOption('Йогурт');
-  });
-
-  it('finds Cyrillic option by normalized description (зверёк → зверек)', () => {
+  it('Cyrillic: finds Ёжик by normalized description (зверёк → зверек)', () => {
     cy.getVs(id).search('зверек').checkFirstOption('Ёжик');
   });
 
-  it('does not find non-existent Cyrillic text', () => {
-    cy.getVs(id).search('Кошка').hasNoOptions().close();
+  // Vietnamese
+  it('Vietnamese: finds Việt Nam when searching "Viet Nam"', () => {
+    cy.getVs(id).search('Viet Nam').checkFirstOption('Việt Nam');
+  });
+
+  it('Vietnamese: finds Hà Nội when searching "Ha Noi"', () => {
+    cy.getVs(id).search('Ha Noi').checkFirstOption('Hà Nội');
+  });
+
+  // Chinese
+  it('Chinese: finds 北京 when searching "北京" (preserved as-is)', () => {
+    cy.getVs(id).search('北京').checkFirstOption('北京');
+  });
+
+  it('Chinese: finds 北京 by description "首都"', () => {
+    cy.getVs(id).search('首都').checkFirstOption('北京');
+  });
+
+  // Japanese
+  it('Japanese: finds 東京 when searching kanji', () => {
+    cy.getVs(id).search('東京').checkFirstOption('東京');
+  });
+
+  it('Japanese: finds カタカナ (katakana preserved as-is)', () => {
+    cy.getVs(id).search('カタカナ').checkFirstOption('カタカナ');
+  });
+
+  // Korean
+  it('Korean: finds 서울 (NFD-normalized symmetrically)', () => {
+    cy.getVs(id).search('서울').checkFirstOption('서울');
+  });
+
+  it('Korean: finds 한국어', () => {
+    cy.getVs(id).search('한국어').checkFirstOption('한국어');
+  });
+
+  // Arabic
+  it('Arabic: finds مُرَحَّباً when searching "مرحبا" (tashkeel stripped)', () => {
+    cy.getVs(id).search('مرحبا').checkFirstOption('مُرَحَّباً');
+  });
+
+  // Thai
+  it('Thai: finds กรุงเทพ when searching exact text', () => {
+    cy.getVs(id).search('กรุงเทพ').checkFirstOption('กรุงเทพ');
+  });
+
+  // Negative case
+  it('does not find non-existent text', () => {
+    cy.getVs(id).search('zzznotfound').hasNoOptions().close();
   });
 });
 
-describe('Cyrillic search with searchNormalize: false', () => {
-  const id = 'cyrillic-search-no-normalize-select';
+describe('Multi-language search with searchNormalize: false', () => {
+  const id = 'multi-language-search-no-normalize-select';
 
-  it('finds Cyrillic option with ё (exact lowercase match)', () => {
-    cy.open(id).search('Ёжик').checkFirstOption('Ёжик');
+  it('go to section', () => {
+    cy.goToSection('Multi-language search normalize');
   });
 
-  it('does not find Cyrillic option when searching with е instead of ё (normalize off)', () => {
+  // Exact matches — should work
+  it('Latin: finds Crème brûlée only when searching with diacritics', () => {
+    cy.open(id).search('Crème').checkFirstOption('Crème brûlée');
+  });
+
+  it('Greek: finds Ένα when searching exact "Ένα"', () => {
+    cy.getVs(id).search('Ένα').checkFirstOption('Ένα');
+  });
+
+  it('Cyrillic: finds Ёжик when searching exact "Ёжик"', () => {
+    cy.getVs(id).search('Ёжик').checkFirstOption('Ёжик');
+  });
+
+  it('Chinese: finds 北京 (no normalization needed)', () => {
+    cy.getVs(id).search('北京').checkFirstOption('北京');
+  });
+
+  it('Japanese: finds 東京 (no normalization needed)', () => {
+    cy.getVs(id).search('東京').checkFirstOption('東京');
+  });
+
+  it('Korean: finds 서울 (no normalization needed)', () => {
+    cy.getVs(id).search('서울').checkFirstOption('서울');
+  });
+
+  // Negative cases — without normalize, accent-stripped searches should not match
+  it('Latin: does NOT find Crème brûlée when searching "creme" (no normalize)', () => {
+    cy.getVs(id).search('creme').hasNoOptions();
+  });
+
+  it('German: does NOT find München when searching "Munchen"', () => {
+    cy.getVs(id).search('Munchen').hasNoOptions();
+  });
+
+  it('Swedish: does NOT find Göteborg when searching "Goteborg"', () => {
+    cy.getVs(id).search('Goteborg').hasNoOptions();
+  });
+
+  it('Finnish: does NOT find Jyväskylä when searching "Jyvaskyla"', () => {
+    cy.getVs(id).search('Jyvaskyla').hasNoOptions();
+  });
+
+  it('Greek: does NOT find Ένα when searching "Ενα" (no accent)', () => {
+    cy.getVs(id).search('Ενα').hasNoOptions();
+  });
+
+  it('Cyrillic: does NOT find Ёжик when searching "Ежик" (е instead of ё)', () => {
     cy.getVs(id).search('Ежик').hasNoOptions();
   });
 
-  it('finds Cyrillic option without diacritics (Привет has none)', () => {
-    cy.getVs(id).search('Привет').checkFirstOption('Привет').close();
+  it('Vietnamese: does NOT find Việt Nam when searching "Viet Nam"', () => {
+    cy.getVs(id).search('Viet Nam').hasNoOptions();
+  });
+
+  it('Arabic: does NOT find مُرَحَّباً when searching "مرحبا" (tashkeel mismatch)', () => {
+    cy.getVs(id).search('مرحبا').hasNoOptions().close();
   });
 });
 
