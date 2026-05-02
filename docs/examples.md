@@ -263,9 +263,7 @@ VirtualSelect.init({
 ## Description search normalize
 
 <div id="with-description-search-select"></div> <span style="font-size: .8rem; margin-left: 5px;">searchNormalize: false</span>
-
-<br>
-
+<br><br>
 <div id="with-description-normalized-search-select"></div> <span style="font-size: .8rem; margin-left: 5px;">searchNormalize: true</span>
 
 ```js
