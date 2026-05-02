@@ -405,6 +405,9 @@ function initPageExamples() {
     { label: 'เชียงใหม่', value: 'chiangmai', description: 'จังหวัดในภาคเหนือ' },
     { label: 'อาหาร', value: 'ahaan', description: 'สิ่งที่กิน' },
     { label: 'ภูเก็ต', value: 'phuket', description: 'เกาะในภาคใต้ของประเทศไทย' },
+    // Intra-word punctuation (regression coverage for ASCII non-letter stripping)
+    { label: 'co-op', value: 'coop-label', description: 'A jointly-owned enterprise' },
+    { label: 'e-mail', value: 'email-label', description: 'Electronic mail message' },
   ];
 
   initVirtualSelect({

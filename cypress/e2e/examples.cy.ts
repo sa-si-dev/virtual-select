@@ -881,6 +881,16 @@ describe('Multi-language search with searchNormalize: true', () => {
     cy.getVs(id).search('กรุงเทพ').checkFirstOption('กรุงเทพ');
   });
 
+  // Intra-word punctuation regression — guards the second .replace() pass
+  // that strips non-letter characters in a Unicode-aware way.
+  it('Intra-word punctuation: finds "co-op" when searching "coop"', () => {
+    cy.getVs(id).search('coop').checkFirstOption('co-op');
+  });
+
+  it('Intra-word punctuation: finds "e-mail" when searching "email"', () => {
+    cy.getVs(id).search('email').checkFirstOption('e-mail');
+  });
+
   // Negative case
   it('does not find non-existent text', () => {
     cy.getVs(id).search('zzznotfound').hasNoOptions().close();
@@ -949,7 +959,11 @@ describe('Multi-language search with searchNormalize: false', () => {
   });
 
   it('Arabic: does NOT find مُرَحَّباً when searching "مرحبا" (tashkeel mismatch)', () => {
-    cy.getVs(id).search('مرحبا').hasNoOptions().close();
+    cy.getVs(id).search('مرحبا').hasNoOptions();
+  });
+
+  it('Intra-word punctuation: does NOT find "co-op" when searching "coop"', () => {
+    cy.getVs(id).search('coop').hasNoOptions().close();
   });
 });
 
