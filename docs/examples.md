@@ -308,7 +308,7 @@ Examples to try with `searchNormalize: true`:
 - Korean: searching `한국어` matches `한국어` (NFD decomposes Hangul syllables to jamo; both sides are normalized symmetrically)
 - Chinese / Japanese kanji & katakana: characters have no combining marks, so they are matched as-is (previously broken under the old regex)
 
-With `searchNormalize: false`, only exact (case-insensitive) matches are returned.
+With `searchNormalize: false`, matching remains case-insensitive and substring-based, but no normalization is applied. This means partial queries can still match, but accents/diacritics and other equivalent normalized forms are not folded.
 
 <div id="multi-language-search-select"></div> <span style="font-size: .8rem; margin-left: 5px;">Multi-language - searchNormalize: true</span>
 
