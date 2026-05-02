@@ -1,4 +1,5 @@
 const COMBINING_MARKS_REGEX = /\p{M}/gu;
+const NON_WORD_CHARS_REGEX = /[^\p{L}\p{N}_]/gu;
 
 export class Utils {
   /**
@@ -153,12 +154,25 @@ export class Utils {
   }
 
   /**
+   * Normalizes a string for diacritic-insensitive search. Decomposes the input
+   * via NFD, then strips Unicode combining marks (so "München" matches "Munchen",
+   * "Việt Nam" matches "Viet Nam", "Ёжик" matches "Ежик"). Also strips
+   * punctuation and whitespace in a Unicode-aware way so that intra-word
+   * punctuation like "co-op" still matches "coop". Letters from any script
+   * (Latin, Greek, Cyrillic, CJK, etc.) and numbers are preserved.
+   *
+   * Note: a few atomic letters do not decompose under NFD (e.g. "ø", "æ", "ß")
+   * and are kept as-is — a search for "Bjorn" will not match "Bjørn".
+   *
    * @param {string} text
    * @return {string}
    * @memberof Utils
    */
   static normalizeString(text) {
-    return text.normalize('NFD').replace(COMBINING_MARKS_REGEX, '');
+    return text
+      .normalize('NFD')
+      .replace(COMBINING_MARKS_REGEX, '')
+      .replace(NON_WORD_CHARS_REGEX, '');
   }
 
   /**
