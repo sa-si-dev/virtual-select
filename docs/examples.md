@@ -293,7 +293,7 @@ VirtualSelect.init({
 
 ## Multi-language search normalize
 
-A single dropdown can contain options across many writing systems — Latin (with diacritics, including German, Norwegian, Swedish, and Finnish), Greek, Cyrillic, Vietnamese, Chinese, Japanese, Korean, Arabic, and Thai. With `searchNormalize: true`, the search input and option labels/descriptions are normalized via Unicode NFD and stripped of combining marks (`\p{M}`), enabling diacritic-insensitive matching across scripts.
+A single dropdown can contain options across many writing systems — Latin (with diacritics, including German, Norwegian, Swedish, and Finnish), Greek, Cyrillic, Vietnamese, Chinese, Japanese, Korean, Arabic, and Thai. With `searchNormalize: true`, the search input and option labels/descriptions are normalized via Unicode NFD and then stripped of every character that is not a Unicode letter (`\p{L}`), number (`\p{N}`), or underscore. In practice this means combining marks (`\p{M}`) are removed (enabling diacritic-insensitive matching), and so are punctuation and whitespace (so `co-op` matches `coop` and `Viet Nam` matches `VietNam`).
 
 Examples to try with `searchNormalize: true`:
 - Latin (French/Spanish): `creme` finds `Crème brûlée`, `nino` finds `Niño`
@@ -307,6 +307,9 @@ Examples to try with `searchNormalize: true`:
 - Arabic: `مرحبا` finds `مُرَحَّباً` (tashkeel stripped)
 - Korean: searching `한국어` matches `한국어` (NFD decomposes Hangul syllables to jamo; both sides are normalized symmetrically)
 - Chinese / Japanese kanji & katakana: characters have no combining marks, so they are matched as-is (previously broken under the old regex)
+- Intra-word punctuation: `coop` finds `co-op`, `email` finds `e-mail`
+
+Because punctuation and whitespace are stripped, multi-word labels collapse into a single token: `"Foo Bar"` and `"FooBar"` are indistinguishable under `searchNormalize: true`. If you need exact matching on punctuation or word boundaries, use `searchNormalize: false`.
 
 With `searchNormalize: false`, matching remains case-insensitive and substring-based, but no normalization is applied. This means partial queries can still match, but accents/diacritics and other equivalent normalized forms are not folded.
 
