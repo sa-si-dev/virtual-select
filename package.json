@@ -20,6 +20,12 @@
     "virtual scroll"
   ],
   "license": "ISC",
+  "browserslist": [
+    ">= 0.5%",
+    "not ie 11",
+    "not op_mini all",
+    "not dead"
+  ],
   "dependencies": {
     "tooltip-plugin": "^1.0.16"
   },
