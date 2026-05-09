@@ -891,6 +891,46 @@ describe('Multi-language search with searchNormalize: true', () => {
     cy.getVs(id).search('email').checkFirstOption('e-mail');
   });
 
+  // Whitespace folding regression — labels with spaces match spaceless searches
+  it('Whitespace folding: finds "Foo Bar" when searching "FooBar" (no space)', () => {
+    cy.getVs(id).search('FooBar').checkFirstOption('Foo Bar');
+  });
+
+  it('Whitespace folding: finds "Foo Bar" when searching "Foo Bar" (with space)', () => {
+    cy.getVs(id).search('Foo Bar').checkFirstOption('Foo Bar');
+  });
+
+  it('Whitespace folding: finds "Việt Nam" when searching "VietNam" (no space)', () => {
+    cy.getVs(id).search('VietNam').checkFirstOption('Việt Nam');
+  });
+
+  // Symmetric punctuation — label has no punctuation, search has it
+  it('Symmetric punctuation: finds "walkthrough" when searching "walk-through"', () => {
+    cy.getVs(id).search('walk-through').checkFirstOption('walkthrough');
+  });
+
+  // Numbers (\p{N}) preserved alongside letters; non-letter chars fold both ways
+  it('Numbers preserved: finds "Mars-2024" when searching "Mars2024"', () => {
+    cy.getVs(id).search('Mars2024').checkFirstOption('Mars-2024');
+  });
+
+  it('Numbers preserved: finds "Mars-2024" when searching "Mars 2024" (with space)', () => {
+    cy.getVs(id).search('Mars 2024').checkFirstOption('Mars-2024');
+  });
+
+  // Leading/trailing whitespace in the search input still matches
+  it('Search whitespace: leading/trailing whitespace still finds Crème brûlée', () => {
+    cy.getVs(id).search('  creme  ').checkFirstOption('Crème brûlée');
+  });
+
+  // Edge case — pure-punctuation search normalizes to "" and currently
+  // matches every label via includes(""). This test documents the
+  // behavior; if it's later considered a bug, update the assertion.
+  it('Empty-after-normalize: pure-punctuation search currently matches options', () => {
+    cy.getVs(id).search('!@#');
+    cy.getDropbox(null, id).find('[role="option"]').should('have.length.greaterThan', 1);
+  });
+
   // Negative case
   it('does not find non-existent text', () => {
     cy.getVs(id).search('zzznotfound').hasNoOptions().close();

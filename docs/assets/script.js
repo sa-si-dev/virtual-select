@@ -408,6 +408,14 @@ function initPageExamples() {
     // Intra-word punctuation (regression coverage for ASCII non-letter stripping)
     { label: 'co-op', value: 'coop-label', description: 'A jointly-owned enterprise' },
     { label: 'e-mail', value: 'email-label', description: 'Electronic mail message' },
+    // Whitespace folding: multi-word labels collapse with spaceless searches
+    { label: 'Foo Bar', value: 'foo-bar-space', description: 'Multi-word label with whitespace' },
+    // Symmetric punctuation: label has no punctuation, search may include it
+    { label: 'walkthrough', value: 'walkthrough-plain', description: 'Guide without punctuation' },
+    // Numbers preserved alongside letters; non-letter chars fold
+    { label: 'Mars-2024', value: 'mars-2024', description: 'Mission name with hyphen and digits' },
+    // Edge case: label that normalizes to an empty string under searchNormalize: true
+    { label: '!@#', value: 'punct-only', description: 'Punctuation-only label' },
   ];
 
   initVirtualSelect({
