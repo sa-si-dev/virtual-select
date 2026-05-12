@@ -1,3 +1,5 @@
+const NON_WORD_CHARS_REGEX = /[^\p{L}\p{N}_]/gu;
+
 export class Utils {
   /**
    * @param {any} text
@@ -151,13 +153,29 @@ export class Utils {
   }
 
   /**
+   * Normalizes a string for diacritic-insensitive search. Decomposes the input
+   * via NFD, then strips every character that is not a Unicode letter
+   * (\p{L}), number (\p{N}), or underscore. As a side effect this removes
+   * combining marks (so "München" matches "Munchen", "Việt Nam" matches
+   * "Viet Nam", "Ёжик" matches "Ежик") as well as punctuation and whitespace
+   * (so "co-op" matches "coop" and "Foo Bar" collapses into "FooBar").
+   * Base letters and numbers from many scripts (Latin, Greek, Cyrillic, CJK,
+   * etc.) are preserved, but scripts that rely on combining marks are NOT
+   * fully preserved — every Unicode combining mark is removed, which affects
+   * Thai vowel signs, Devanagari matras, hiragana/katakana voicing marks
+   * (dakuten/handakuten), etc. This produces fuzzier matching for those
+   * scripts; use `searchNormalize: false` if exact-match behavior is
+   * required.
+   *
+   * Note: a few atomic letters do not decompose under NFD (e.g. "ø", "æ", "ß")
+   * and are kept as-is — a search for "Bjorn" will not match "Bjørn".
+   *
    * @param {string} text
    * @return {string}
    * @memberof Utils
    */
   static normalizeString(text) {
-    const NON_WORD_REGEX = /[^\w]/g;
-    return text.normalize('NFD').replace(NON_WORD_REGEX, '');
+    return text.normalize('NFD').replace(NON_WORD_CHARS_REGEX, '');
   }
 
   /**

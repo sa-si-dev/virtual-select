@@ -18,6 +18,7 @@
 - [Maximum values](#maximum-values)
 - [Label with description](#label-with-description)
 - [Description search normalize](#description-search-normalize)
+- [Multi-language search normalize](#multi-language-search-normalize)
 - [Show dropbox as popup](#show-dropbox-as-popup)
 - [Server search](#server-search)
 - [Show options only on search](#show-options-only-on-search)
@@ -262,9 +263,7 @@ VirtualSelect.init({
 ## Description search normalize
 
 <div id="with-description-search-select"></div> <span style="font-size: .8rem; margin-left: 5px;">searchNormalize: false</span>
-
-<br>
-
+<br><br>
 <div id="with-description-normalized-search-select"></div> <span style="font-size: .8rem; margin-left: 5px;">searchNormalize: true</span>
 
 ```js
@@ -291,6 +290,160 @@ VirtualSelect.init({
   searchNormalize: true
 });
 ```
+
+## Multi-language search normalize
+
+A single dropdown can contain options across many writing systems — Latin (with diacritics, including German, Norwegian, Swedish, and Finnish), Greek, Cyrillic, Vietnamese, Chinese, Japanese, Korean, Arabic, and Thai. With `searchNormalize: true`, the search input and option labels/descriptions are normalized via Unicode NFD and then stripped of every character that is not a Unicode letter (`\p{L}`), number (`\p{N}`), or underscore. In practice this means combining marks (`\p{M}`) are removed (enabling diacritic-insensitive matching), and so are punctuation and whitespace (so `co-op` matches `coop` and `Viet Nam` matches `VietNam`).
+
+Examples to try with `searchNormalize: true`:
+- Latin (French/Spanish): `creme` finds `Crème brûlée`, `nino` finds `Niño`
+- German: `Munchen` finds `München`, `Koln` finds `Köln`, `Madchen` finds `Mädchen`
+- Norwegian: `Alesund` finds `Ålesund` (note: `ø`, `æ` are atomic and **not** stripped — `Tromso` does **not** find `Tromsø`)
+- Swedish: `Goteborg` finds `Göteborg`, `Malmo` finds `Malmö`
+- Finnish: `Jyvaskyla` finds `Jyväskylä`
+- Greek: `Ενα` finds `Ένα`
+- Cyrillic: `Ежик` finds `Ёжик`
+- Vietnamese: `Viet Nam` finds `Việt Nam`, `Ha Noi` finds `Hà Nội`
+- Arabic: `مرحبا` finds `مُرَحَّباً` (tashkeel stripped)
+- Korean: searching `한국어` matches `한국어` (NFD decomposes Hangul syllables to jamo; both sides are normalized symmetrically)
+- Chinese / Japanese kanji & katakana: characters have no combining marks, so they are matched as-is (previously broken under the old regex)
+- Intra-word punctuation: `coop` finds `co-op`, `email` finds `e-mail`
+
+Because punctuation and whitespace are stripped, multi-word labels collapse into a single token: `"Foo Bar"` and `"FooBar"` are indistinguishable under `searchNormalize: true`. If you need exact matching on punctuation or word boundaries, use `searchNormalize: false`.
+
+With `searchNormalize: false`, matching remains case-insensitive and substring-based, but no normalization is applied. This means partial queries can still match, but accents/diacritics and other equivalent normalized forms are not folded.
+
+<div id="multi-language-search-select"></div> <span style="font-size: .8rem; margin-left: 5px;">Multi-language - searchNormalize: true</span>
+
+<br>
+<br>
+
+<div id="multi-language-search-no-normalize-select"></div> <span style="font-size: .8rem; margin-left: 5px;">Multi-language - searchNormalize: false</span>
+
+```js
+const multiLanguageOptions = [
+  // Latin (French / Spanish)
+  { label: 'Crème brûlée', value: 'creme-brulee', description: 'French dessert' },
+  { label: 'Niño', value: 'nino', description: 'Spanish word for child' },
+  // German
+  { label: 'München', value: 'munchen', description: 'Stadt in Deutschland' },
+  { label: 'Mädchen', value: 'madchen', description: 'Junges weibliches Kind' },
+  { label: 'Größe', value: 'grosse', description: 'Maß für die Ausdehnung' },
+  // Norwegian
+  { label: 'Ålesund', value: 'alesund', description: 'By på vestlandskysten' },
+  { label: 'Bjørn', value: 'bjorn', description: 'Stort pattedyr' },
+  // Swedish
+  { label: 'Göteborg', value: 'goteborg', description: 'Stad på Sveriges västkust' },
+  { label: 'Malmö', value: 'malmo', description: 'Stad i södra Sverige' },
+  // Finnish
+  { label: 'Jyväskylä', value: 'jyvaskyla', description: 'Kaupunki Keski-Suomessa' },
+  { label: 'Hämeenlinna', value: 'hameenlinna', description: 'Kaupunki Kanta-Hämeessä' },
+  // Greek
+  { label: 'Ένα', value: 'ena', description: 'Πρώτο στοιχείο' },
+  { label: 'Αθήνα', value: 'athina', description: 'Πρωτεύουσα της Ελλάδας' },
+  // Cyrillic
+  { label: 'Ёжик', value: 'yozhik', description: 'Колючий зверёк' },
+  { label: 'Москва', value: 'moskva', description: 'Столица России' },
+  // Vietnamese
+  { label: 'Việt Nam', value: 'vietnam', description: 'Quốc gia Đông Nam Á' },
+  { label: 'Hà Nội', value: 'hanoi', description: 'Thủ đô của Việt Nam' },
+  // Chinese
+  { label: '北京', value: 'beijing', description: '中国的首都' },
+  { label: '你好', value: 'nihao', description: '问候语' },
+  // Japanese
+  { label: '東京', value: 'tokyo', description: '日本の首都' },
+  { label: 'カタカナ', value: 'katakana', description: '日本の文字' },
+  // Korean
+  { label: '서울', value: 'seoul', description: '한국의 수도' },
+  { label: '한국어', value: 'hangugeo', description: '한국의 언어' },
+  // Arabic
+  { label: 'مُرَحَّباً', value: 'marhaba', description: 'تحية' },
+  // Thai
+  { label: 'กรุงเทพ', value: 'bangkok', description: 'เมืองหลวงของประเทศไทย' },
+];
+
+VirtualSelect.init({
+  ele: '#multi-language-search-select',
+  options: multiLanguageOptions,
+  search: true,
+  hasOptionDescription: true,
+  searchNormalize: true,
+});
+
+VirtualSelect.init({
+  ele: '#multi-language-search-no-normalize-select',
+  options: multiLanguageOptions,
+  search: true,
+  hasOptionDescription: true,
+  searchNormalize: false,
+});
+```
+
+### Multi-language with values as tags
+
+Multi-select variant — chosen options render as removable tags. Search normalization works the same way across all scripts.
+
+<div id="multi-language-tags-search-select"></div> <span style="font-size: .8rem; margin-left: 5px;">Tags - searchNormalize: true</span>
+
+<br>
+<br>
+
+<div id="multi-language-tags-search-no-normalize-select"></div> <span style="font-size: .8rem; margin-left: 5px;">Tags - searchNormalize: false</span>
+
+```js
+VirtualSelect.init({
+  ele: '#multi-language-tags-search-select',
+  options: multiLanguageOptions,
+  multiple: true,
+  search: true,
+  hasOptionDescription: true,
+  showValueAsTags: true,
+  searchNormalize: true,
+});
+
+VirtualSelect.init({
+  ele: '#multi-language-tags-search-no-normalize-select',
+  options: multiLanguageOptions,
+  multiple: true,
+  search: true,
+  hasOptionDescription: true,
+  showValueAsTags: true,
+  searchNormalize: false,
+});
+```
+
+### Multi-language as popup
+
+Popup variant — the dropbox renders as a popup (using `popupDropboxBreakpoint: '3000px'` for demo so the popup is visible on desktop too). Diacritic-insensitive search behaves identically inside the popup.
+
+<div id="multi-language-popup-search-select"></div> <span style="font-size: .8rem; margin-left: 5px;">Popup - searchNormalize: true</span>
+
+<br>
+<br>
+
+<div id="multi-language-popup-search-no-normalize-select"></div> <span style="font-size: .8rem; margin-left: 5px;">Popup - searchNormalize: false</span>
+
+```js
+VirtualSelect.init({
+  ele: '#multi-language-popup-search-select',
+  options: multiLanguageOptions,
+  search: true,
+  hasOptionDescription: true,
+  popupDropboxBreakpoint: '3000px',
+  searchNormalize: true,
+});
+
+VirtualSelect.init({
+  ele: '#multi-language-popup-search-no-normalize-select',
+  options: multiLanguageOptions,
+  search: true,
+  hasOptionDescription: true,
+  popupDropboxBreakpoint: '3000px',
+  searchNormalize: false,
+});
+```
+
+> **Note on Thai and Japanese hiragana**: stripping combining marks affects Thai vowel signs (e.g. `สวัสดี` → `สวสด`) and Japanese hiragana voicing marks (e.g. `が` → `か`). This enables fuzzy matching but loses some semantic precision. Use `searchNormalize: false` if exact-match behavior is required for those scripts.
 
 ## Show dropbox as popup
 
