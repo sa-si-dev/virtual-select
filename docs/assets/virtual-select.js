@@ -243,6 +243,41 @@ class Utils {
   static sanitizeClassNames(classNames) {
     return classNames ? String(classNames).replace(/["<>]/g, '') : classNames;
   }
+
+  /**
+   * Rate-limit a function so it runs at most once per `wait` ms (leading + trailing edge).
+   * Used to keep high-frequency events (e.g. window resize) from running per-instance work
+   * on every tick.
+   * @static
+   * @param {Function} callback
+   * @param {number} wait
+   * @return {Function}
+   * @memberof Utils
+   */
+  static throttle(callback, wait) {
+    let timeout = null;
+    let lastArgs = null;
+    let previous = 0;
+    return function throttled(...args) {
+      const now = Date.now();
+      const remaining = wait - (now - previous);
+      lastArgs = args;
+      if (remaining <= 0 || remaining > wait) {
+        if (timeout) {
+          clearTimeout(timeout);
+          timeout = null;
+        }
+        previous = now;
+        callback.apply(this, lastArgs);
+      } else if (!timeout) {
+        timeout = setTimeout(() => {
+          previous = Date.now();
+          timeout = null;
+          callback.apply(this, lastArgs);
+        }, remaining);
+      }
+    };
+  }
 }
 ;// ./src/utils/dom-utils.js
 
@@ -3741,14 +3776,19 @@ class VirtualSelect {
   }
   static onResizeMethod() {
     document.querySelectorAll('.vscomp-ele-wrapper').forEach($ele => {
-      $ele.parentElement.virtualSelect.onResize();
+      /** guard against wrappers whose instance is mid-teardown / not initialised */
+      const instance = $ele.parentElement && $ele.parentElement.virtualSelect;
+      if (instance) {
+        instance.onResize();
+      }
     });
   }
   /** static methods - end */
 }
 document.addEventListener('reset', VirtualSelect.onFormReset);
 document.addEventListener('submit', VirtualSelect.onFormSubmit);
-window.addEventListener('resize', VirtualSelect.onResizeMethod);
+/** throttle resize so the per-instance height recompute runs at most ~10x/sec during a drag */
+window.addEventListener('resize', Utils.throttle(VirtualSelect.onResizeMethod, 100));
 attrPropsMapping = VirtualSelect.getAttrProps();
 window.VirtualSelect = VirtualSelect;
 

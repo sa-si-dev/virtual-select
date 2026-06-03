@@ -241,4 +241,41 @@ export class Utils {
   static sanitizeClassNames(classNames) {
     return classNames ? String(classNames).replace(/["<>]/g, '') : classNames;
   }
+
+  /**
+   * Rate-limit a function so it runs at most once per `wait` ms (leading + trailing edge).
+   * Used to keep high-frequency events (e.g. window resize) from running per-instance work
+   * on every tick.
+   * @static
+   * @param {Function} callback
+   * @param {number} wait
+   * @return {Function}
+   * @memberof Utils
+   */
+  static throttle(callback, wait) {
+    let timeout = null;
+    let lastArgs = null;
+    let previous = 0;
+
+    return function throttled(...args) {
+      const now = Date.now();
+      const remaining = wait - (now - previous);
+      lastArgs = args;
+
+      if (remaining <= 0 || remaining > wait) {
+        if (timeout) {
+          clearTimeout(timeout);
+          timeout = null;
+        }
+        previous = now;
+        callback.apply(this, lastArgs);
+      } else if (!timeout) {
+        timeout = setTimeout(() => {
+          previous = Date.now();
+          timeout = null;
+          callback.apply(this, lastArgs);
+        }, remaining);
+      }
+    };
+  }
 }
