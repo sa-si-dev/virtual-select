@@ -3760,7 +3760,12 @@ export class VirtualSelect {
 
   static onResizeMethod() {
     document.querySelectorAll('.vscomp-ele-wrapper').forEach(($ele) => {
-      $ele.parentElement.virtualSelect.onResize();
+      /** guard against wrappers whose instance is mid-teardown / not initialised */
+      const instance = $ele.parentElement && $ele.parentElement.virtualSelect;
+
+      if (instance) {
+        instance.onResize();
+      }
     });
   }
   /** static methods - end */
@@ -3768,7 +3773,8 @@ export class VirtualSelect {
 
 document.addEventListener('reset', VirtualSelect.onFormReset);
 document.addEventListener('submit', VirtualSelect.onFormSubmit);
-window.addEventListener('resize', VirtualSelect.onResizeMethod);
+/** throttle resize so the per-instance height recompute runs at most ~10x/sec during a drag */
+window.addEventListener('resize', Utils.throttle(VirtualSelect.onResizeMethod, 100));
 
 attrPropsMapping = VirtualSelect.getAttrProps();
 window.VirtualSelect = VirtualSelect;

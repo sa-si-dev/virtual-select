@@ -230,6 +230,54 @@ class Utils {
   static containsHTMLorJS(text) {
     return /<([a-z]+)[\s\S]*?>|on\w+="[^"]*"/i.test(text);
   }
+
+  /**
+   * Remove characters that could break out of the double-quoted class attribute
+   * (`"`, `<`, `>`). Valid CSS class tokens never contain these characters, so legitimate
+   * class names are left untouched while attribute-injection via classNames is prevented.
+   * @static
+   * @param {string} classNames
+   * @return {string}
+   * @memberof Utils
+   */
+  static sanitizeClassNames(classNames) {
+    return classNames ? String(classNames).replace(/["<>]/g, '') : classNames;
+  }
+
+  /**
+   * Rate-limit a function so it runs at most once per `wait` ms (leading + trailing edge).
+   * Used to keep high-frequency events (e.g. window resize) from running per-instance work
+   * on every tick.
+   * @static
+   * @param {Function} callback
+   * @param {number} wait
+   * @return {Function}
+   * @memberof Utils
+   */
+  static throttle(callback, wait) {
+    let timeout = null;
+    let lastArgs = null;
+    let previous = 0;
+    return function throttled(...args) {
+      const now = Date.now();
+      const remaining = wait - (now - previous);
+      lastArgs = args;
+      if (remaining <= 0 || remaining > wait) {
+        if (timeout) {
+          clearTimeout(timeout);
+          timeout = null;
+        }
+        previous = now;
+        callback.apply(this, lastArgs);
+      } else if (!timeout) {
+        timeout = setTimeout(() => {
+          previous = Date.now();
+          timeout = null;
+          callback.apply(this, lastArgs);
+        }, remaining);
+      }
+    };
+  }
 }
 ;// ./src/utils/dom-utils.js
 
@@ -539,17 +587,14 @@ class DomUtils {
   * @param {HTMLElement} $ele
   * @param {string} event
   * @param {Function} callback
-  * @param {boolean} [capture] - must match the value passed to addEvent, otherwise the listener is NOT removed
   */
-  static removeEvent($ele, event, callback, capture = false) {
+  static removeEvent($ele, event, callback) {
     if (!$ele) {
       return;
     }
     const $eleArray = DomUtils.getElements($ele);
     $eleArray.forEach($this => {
-      $this.removeEventListener(event, callback, {
-        capture
-      });
+      $this.removeEventListener(event, callback);
     });
   }
 }
@@ -790,7 +835,8 @@ class VirtualSelect {
       const isSelected = convertToBoolean(d.isSelected);
       let ariaDisabledText = '';
       if (d.classNames) {
-        optionClasses += ` ${d.classNames}`;
+        /** sanitize so a consumer-provided class string cannot break out of the class attribute */
+        optionClasses += ` ${Utils.sanitizeClassNames(d.classNames)}`;
       }
       if (d.isFocused) {
         tabIndexValue = '0';
@@ -815,8 +861,17 @@ class VirtualSelect {
         optionClasses += ' group-option';
         groupIndexText = `data-group-index="${d.groupIndex}"`;
         if (d.customData) {
-          groupName = d.customData.group_name !== undefined ? `${d.customData.group_name}, ` : '';
-          optionDesc = d.customData.description !== undefined ? ` ${d.customData.description},` : '';
+          /**
+           * customData fields are interpolated into the aria-label attribute, so they must be
+           * escaped the same way as label/value (via secureText). Otherwise a quote in
+           * group_name/description can break out of the attribute even when enableSecureText
+           * is on - an XSS bypass. secureText is a no-op when enableSecureText is disabled,
+           * keeping the existing behaviour for consumers that intentionally pass raw text.
+           */
+          const groupNameText = this.secureText(Utils.getString(d.customData.group_name));
+          const groupDescText = this.secureText(Utils.getString(d.customData.description));
+          groupName = d.customData.group_name !== undefined ? `${groupNameText}, ` : '';
+          optionDesc = d.customData.description !== undefined ? ` ${groupDescText},` : '';
           ariaLabel = `aria-label="${groupName} ${d.label}, ${optionDesc}"`;
         } else {
           ariaLabel = `aria-label="${groupName}, ${d.label}"`;
@@ -916,7 +971,7 @@ class VirtualSelect {
     this.addEvent(this.$options, 'click', 'onOptionsClick');
     this.addEvent(this.$options, 'mouseover', 'onOptionsMouseOver');
     this.addEvent(this.$options, 'touchmove', 'onOptionsTouchMove');
-    VirtualSelect.observeDomChanges();
+    this.addMutationObserver();
   }
   addEvent($ele, events, method, capture = false) {
     if (!$ele) {
@@ -936,12 +991,7 @@ class VirtualSelect {
 
   /** dom event methods - start */
   removeEvents() {
-    /**
-     * onDocumentClick is registered in the capture phase (see addEvents). The capture flag
-     * MUST match here, otherwise removeEventListener is a no-op and the listener (and the
-     * VirtualSelect instance + detached DOM it closes over) leaks on every destroy/re-render.
-     */
-    this.removeEvent(document, 'click', 'onDocumentClick', true);
+    this.removeEvent(document, 'click', 'onDocumentClick');
     this.removeEvent(this.$allWrappers, 'keydown', 'onKeyDown');
     this.removeEvent(this.$toggleButton, 'click keydown', 'onToggleButtonPress');
     this.removeEvent(this.$clearButton, 'click keydown', 'onClearButtonClick');
@@ -970,8 +1020,9 @@ class VirtualSelect {
     if (this.$dropboxContainerTop) {
       this.removeEvent(this.$dropboxContainerTop, 'focus', 'onDropboxContainerTopOrBottomFocus');
     }
+    this.removeMutationObserver();
   }
-  removeEvent($ele, events, method, capture = false) {
+  removeEvent($ele, events, method) {
     if (!$ele) {
       return;
     }
@@ -980,7 +1031,7 @@ class VirtualSelect {
       const eventsKey = `${method}-${event}`;
       const callback = this.events[eventsKey];
       if (callback) {
-        DomUtils.removeEvent($ele, event, callback, capture);
+        DomUtils.removeEvent($ele, event, callback);
       }
     });
   }
@@ -1171,39 +1222,36 @@ class VirtualSelect {
     this.setOptionsContainerHeight(true);
   }
 
-  /**
-   * Single shared observer (instead of one body-wide subtree observer per instance) that
-   * self-destroys any VirtualSelect whose host element is removed from the DOM. This works
-   * in every mode - so removing the element without calling destroy() no longer leaks the
-   * addEvents() listeners (notably the capture-phase document click listener that retains
-   * the instance and its DOM). Inspecting removedNodes makes the cost proportional to the
-   * number of removed nodes rather than the number of live instances.
-   */
-  static observeDomChanges() {
-    if (VirtualSelect.domObserver) {
+  /** to remove dropboxWrapper on removing vscomp-ele when it is rendered outside of vscomp-ele */
+  addMutationObserver() {
+    if (!this.hasDropboxWrapper) {
       return;
     }
-    VirtualSelect.domObserver = new MutationObserver(mutations => {
+    const $vscompEle = this.$ele;
+    this.mutationObserver = new MutationObserver(mutations => {
+      let isAdded = false;
+      let isRemoved = false;
       mutations.forEach(mutation => {
-        mutation.removedNodes.forEach($node => {
-          if ($node.nodeType !== Node.ELEMENT_NODE) {
-            return;
-          }
-          const $eles = $node.classList.contains('vscomp-ele') ? [$node] : [];
-          $node.querySelectorAll('.vscomp-ele').forEach($ele => $eles.push($ele));
-          $eles.forEach($ele => {
-            /** isConnected is false only when the node was genuinely detached (not moved/re-added) */
-            if (!$ele.isConnected && $ele.virtualSelect) {
-              $ele.virtualSelect.destroy();
-            }
-          });
-        });
+        if (!isAdded) {
+          isAdded = [...mutation.addedNodes].some($ele => !!($ele === $vscompEle || $ele.contains($vscompEle)));
+        }
+        if (!isRemoved) {
+          isRemoved = [...mutation.removedNodes].some($ele => !!($ele === $vscompEle || $ele.contains($vscompEle)));
+        }
       });
+      if (isRemoved && !isAdded) {
+        this.destroy();
+      }
     });
-    VirtualSelect.domObserver.observe(document.documentElement, {
+    this.mutationObserver.observe(document.querySelector('body'), {
       childList: true,
       subtree: true
     });
+  }
+  removeMutationObserver() {
+    if (this.hasDropboxWrapper) {
+      this.mutationObserver.disconnect();
+    }
   }
 
   /** dom event methods - end */
@@ -3493,18 +3541,12 @@ class VirtualSelect {
     /** Remove all event listeners to prevent memory leaks and ensure proper cleanup */
     this.removeEvents();
     if (this.hasDropboxWrapper) {
-      /** clear the back-reference (set in setEleProps) before detaching so the
-       * detached wrapper does not keep this instance and its DOM alive */
-      this.$dropboxWrapper.virtualSelect = undefined;
       this.$dropboxWrapper.remove();
     }
     if (this.dropboxPopover) {
       this.dropboxPopover.destroy();
     }
     DomUtils.removeClass($ele, 'vscomp-ele');
-
-    /** drop references to cached callbacks and DOM so nothing is retained after destroy */
-    this.events = {};
   }
   createSecureTextElements() {
     this.$secureDiv = document.createElement('div');
@@ -3734,22 +3776,24 @@ class VirtualSelect {
   }
   static onResizeMethod() {
     document.querySelectorAll('.vscomp-ele-wrapper').forEach($ele => {
-      $ele.parentElement.virtualSelect.onResize();
+      /** guard against wrappers whose instance is mid-teardown / not initialised */
+      const instance = $ele.parentElement && $ele.parentElement.virtualSelect;
+      if (instance) {
+        instance.onResize();
+      }
     });
   }
   /** static methods - end */
 }
 document.addEventListener('reset', VirtualSelect.onFormReset);
 document.addEventListener('submit', VirtualSelect.onFormSubmit);
-window.addEventListener('resize', VirtualSelect.onResizeMethod);
+/** throttle resize so the per-instance height recompute runs at most ~10x/sec during a drag */
+window.addEventListener('resize', Utils.throttle(VirtualSelect.onResizeMethod, 100));
 attrPropsMapping = VirtualSelect.getAttrProps();
 window.VirtualSelect = VirtualSelect;
 
 // Static property for tracking open dropdowns
 VirtualSelect.openInstances = new Set();
-
-// Single shared MutationObserver that self-destroys instances whose host element is removed
-VirtualSelect.domObserver = null;
 
 // Static property for tracking the last interacted instance
 VirtualSelect.lastInteractedInstance = null;
