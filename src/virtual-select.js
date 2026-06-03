@@ -481,7 +481,7 @@ export class VirtualSelect {
     this.addEvent(this.$options, 'click', 'onOptionsClick');
     this.addEvent(this.$options, 'mouseover', 'onOptionsMouseOver');
     this.addEvent(this.$options, 'touchmove', 'onOptionsTouchMove');
-    this.addMutationObserver();
+    VirtualSelect.observeDomChanges();
   }
 
   addEvent($ele, events, method, capture = false) {
@@ -540,8 +540,6 @@ export class VirtualSelect {
     if (this.$dropboxContainerTop) {
       this.removeEvent(this.$dropboxContainerTop, 'focus', 'onDropboxContainerTopOrBottomFocus');
     }
-
-    this.removeMutationObserver();
   }
 
   removeEvent($ele, events, method, capture = false) {
@@ -777,43 +775,40 @@ export class VirtualSelect {
     this.setOptionsContainerHeight(true);
   }
 
-  /** to remove dropboxWrapper on removing vscomp-ele when it is rendered outside of vscomp-ele */
-  addMutationObserver() {
-    /**
-     * Installed in every mode (not only hasDropboxWrapper) so the component self-destroys
-     * when its host element is removed from the DOM. Without this in inline mode, removing
-     * the element without calling destroy() leaves addEvents() listeners attached - notably
-     * the capture-phase document click listener, which retains the instance and its DOM.
-     */
-    const $vscompEle = this.$ele;
+  /**
+   * Single shared observer (instead of one body-wide subtree observer per instance) that
+   * self-destroys any VirtualSelect whose host element is removed from the DOM. This works
+   * in every mode - so removing the element without calling destroy() no longer leaks the
+   * addEvents() listeners (notably the capture-phase document click listener that retains
+   * the instance and its DOM). Inspecting removedNodes makes the cost proportional to the
+   * number of removed nodes rather than the number of live instances.
+   */
+  static observeDomChanges() {
+    if (VirtualSelect.domObserver) {
+      return;
+    }
 
-    this.mutationObserver = new MutationObserver((mutations) => {
-      let isAdded = false;
-      let isRemoved = false;
-
+    VirtualSelect.domObserver = new MutationObserver((mutations) => {
       mutations.forEach((mutation) => {
-        if (!isAdded) {
-          isAdded = [...mutation.addedNodes].some(($ele) => !!($ele === $vscompEle || $ele.contains($vscompEle)));
-        }
+        mutation.removedNodes.forEach(($node) => {
+          if ($node.nodeType !== Node.ELEMENT_NODE) {
+            return;
+          }
 
-        if (!isRemoved) {
-          isRemoved = [...mutation.removedNodes].some(($ele) => !!($ele === $vscompEle || $ele.contains($vscompEle)));
-        }
+          const $eles = $node.classList.contains('vscomp-ele') ? [$node] : [];
+          $node.querySelectorAll('.vscomp-ele').forEach(($ele) => $eles.push($ele));
+
+          $eles.forEach(($ele) => {
+            /** isConnected is false only when the node was genuinely detached (not moved/re-added) */
+            if (!$ele.isConnected && $ele.virtualSelect) {
+              $ele.virtualSelect.destroy();
+            }
+          });
+        });
       });
-
-      if (isRemoved && !isAdded) {
-        this.destroy();
-      }
     });
 
-    this.mutationObserver.observe(document.querySelector('body'), { childList: true, subtree: true });
-  }
-
-  removeMutationObserver() {
-    if (this.mutationObserver) {
-      this.mutationObserver.disconnect();
-      this.mutationObserver = null;
-    }
+    VirtualSelect.domObserver.observe(document.documentElement, { childList: true, subtree: true });
   }
 
   /** dom event methods - end */
@@ -3780,6 +3775,9 @@ window.VirtualSelect = VirtualSelect;
 
 // Static property for tracking open dropdowns
 VirtualSelect.openInstances = new Set();
+
+// Single shared MutationObserver that self-destroys instances whose host element is removed
+VirtualSelect.domObserver = null;
 
 // Static property for tracking the last interacted instance
 VirtualSelect.lastInteractedInstance = null;
