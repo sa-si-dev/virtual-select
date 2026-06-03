@@ -17,7 +17,6 @@ describe('Hardening: managed timeouts cleared on destroy (P4)', () => {
     doc.body.appendChild($ele);
     // @ts-expect-error - VirtualSelect attached to window by the bundle
     win.VirtualSelect.init({ ele: $ele, options: [{ label: 'A', value: 'a' }, { label: 'B', value: 'b' }] });
-    // @ts-expect-error - instance back-reference
     return $ele.virtualSelect;
   };
 
