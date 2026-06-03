@@ -3,7 +3,7 @@
 // Tests for P1: the global window 'resize' handler used to run per-instance height
 // recomputation on every resize tick, unthrottled, and threw if a wrapper had no instance.
 
-describe('Performance: window resize handler (P1)', () => {
+describe('Performance: window resize handler', () => {
   const mountId = 'vs-p1-resize';
 
   const mount = (win: Window) => {
