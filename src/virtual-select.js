@@ -779,10 +779,12 @@ export class VirtualSelect {
 
   /** to remove dropboxWrapper on removing vscomp-ele when it is rendered outside of vscomp-ele */
   addMutationObserver() {
-    if (!this.hasDropboxWrapper) {
-      return;
-    }
-
+    /**
+     * Installed in every mode (not only hasDropboxWrapper) so the component self-destroys
+     * when its host element is removed from the DOM. Without this in inline mode, removing
+     * the element without calling destroy() leaves addEvents() listeners attached - notably
+     * the capture-phase document click listener, which retains the instance and its DOM.
+     */
     const $vscompEle = this.$ele;
 
     this.mutationObserver = new MutationObserver((mutations) => {
@@ -808,8 +810,9 @@ export class VirtualSelect {
   }
 
   removeMutationObserver() {
-    if (this.hasDropboxWrapper) {
+    if (this.mutationObserver) {
       this.mutationObserver.disconnect();
+      this.mutationObserver = null;
     }
   }
 
@@ -3457,6 +3460,9 @@ export class VirtualSelect {
     this.removeEvents();
 
     if (this.hasDropboxWrapper) {
+      /** clear the back-reference (set in setEleProps) before detaching so the
+       * detached wrapper does not keep this instance and its DOM alive */
+      this.$dropboxWrapper.virtualSelect = undefined;
       this.$dropboxWrapper.remove();
     }
 
@@ -3465,6 +3471,9 @@ export class VirtualSelect {
     }
 
     DomUtils.removeClass($ele, 'vscomp-ele');
+
+    /** drop references to cached callbacks and DOM so nothing is retained after destroy */
+    this.events = {};
   }
 
   createSecureTextElements() {
