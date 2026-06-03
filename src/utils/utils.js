@@ -240,11 +240,13 @@ export class Utils {
    * @memberof Utils
    */
   static throttle(callback, wait) {
+    /** @type {ReturnType<typeof setTimeout> | null} */
     let timeout = null;
-    let lastArgs = null;
+    /** @type {unknown[]} */
+    let lastArgs = [];
     let previous = 0;
 
-    return function throttled(...args) {
+    return function throttled(/** @type {unknown[]} */ ...args) {
       const now = Date.now();
       const remaining = wait - (now - previous);
       lastArgs = args;
@@ -255,12 +257,12 @@ export class Utils {
           timeout = null;
         }
         previous = now;
-        callback.apply(this, lastArgs);
+        callback(...lastArgs);
       } else if (!timeout) {
         timeout = setTimeout(() => {
           previous = Date.now();
           timeout = null;
-          callback.apply(this, lastArgs);
+          callback(...lastArgs);
         }, remaining);
       }
     };
