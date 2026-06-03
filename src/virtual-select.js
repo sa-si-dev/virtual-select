@@ -101,6 +101,7 @@ export class VirtualSelect {
       this.setProps(options);
       this.setDisabledOptions(options.disabledOptions);
       this.setOptions(options.options);
+      this.warnIfSecureTextDisabled();
       this.render();
     } catch (e) {
       // eslint-disable-next-line no-console
@@ -3526,6 +3527,32 @@ export class VirtualSelect {
     return this.$secureDiv.innerHTML;
   }
 
+  /**
+   * Emit a single (per page) console warning when options are rendered while enableSecureText
+   * is disabled. enableSecureText is OFF by default to avoid the per-option escaping cost on
+   * large datasets (10k-100k+ records); this warning makes the XSS trade-off discoverable
+   * without forcing that cost on everyone. O(1): it never scans option content.
+   */
+  warnIfSecureTextDisabled() {
+    if (VirtualSelect.secureTextWarningShown || this.enableSecureText) {
+      return;
+    }
+
+    if (!this.options || this.options.length === 0) {
+      return;
+    }
+
+    VirtualSelect.secureTextWarningShown = true;
+
+    // eslint-disable-next-line no-console
+    console.warn(
+      '[virtual-select] Option labels and values are rendered as HTML and are NOT escaped ' +
+        'because `enableSecureText` is disabled (the default, kept off for performance on large ' +
+        'datasets). If any option text can come from untrusted input, set `enableSecureText: true` ' +
+        'to prevent XSS. Docs: https://sa-si-dev.github.io/virtual-select/#/properties?id=enablesecuretext',
+    );
+  }
+
   toggleRequired(isRequired) {
     this.required = Utils.convertToBoolean(isRequired);
     this.$ele.required = this.required;
@@ -3822,6 +3849,9 @@ VirtualSelect.openInstances = new Set();
 
 // Static property for tracking the last interacted instance
 VirtualSelect.lastInteractedInstance = null;
+
+// Ensures the "enableSecureText disabled" warning is logged at most once per page
+VirtualSelect.secureTextWarningShown = false;
 
 /** polyfill to fix an issue in ie browser */
 if (typeof NodeList !== 'undefined' && NodeList.prototype && !NodeList.prototype.forEach) {
