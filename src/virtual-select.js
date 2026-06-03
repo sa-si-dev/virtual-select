@@ -329,7 +329,8 @@ export class VirtualSelect {
       let ariaDisabledText = '';
 
       if (d.classNames) {
-        optionClasses += ` ${d.classNames}`;
+        /** sanitize so a consumer-provided class string cannot break out of the class attribute */
+        optionClasses += ` ${Utils.sanitizeClassNames(d.classNames)}`;
       }
 
       if (d.isFocused) {

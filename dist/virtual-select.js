@@ -230,6 +230,19 @@ class Utils {
   static containsHTMLorJS(text) {
     return /<([a-z]+)[\s\S]*?>|on\w+="[^"]*"/i.test(text);
   }
+
+  /**
+   * Remove characters that could break out of the double-quoted class attribute
+   * (`"`, `<`, `>`). Valid CSS class tokens never contain these characters, so legitimate
+   * class names are left untouched while attribute-injection via classNames is prevented.
+   * @static
+   * @param {string} classNames
+   * @return {string}
+   * @memberof Utils
+   */
+  static sanitizeClassNames(classNames) {
+    return classNames ? String(classNames).replace(/["<>]/g, '') : classNames;
+  }
 }
 ;// ./src/utils/dom-utils.js
 
@@ -787,7 +800,8 @@ class VirtualSelect {
       const isSelected = convertToBoolean(d.isSelected);
       let ariaDisabledText = '';
       if (d.classNames) {
-        optionClasses += ` ${d.classNames}`;
+        /** sanitize so a consumer-provided class string cannot break out of the class attribute */
+        optionClasses += ` ${Utils.sanitizeClassNames(d.classNames)}`;
       }
       if (d.isFocused) {
         tabIndexValue = '0';

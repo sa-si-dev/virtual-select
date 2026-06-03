@@ -228,4 +228,17 @@ export class Utils {
   static containsHTMLorJS(text) {
     return /<([a-z]+)[\s\S]*?>|on\w+="[^"]*"/i.test(text);
   }
+
+  /**
+   * Remove characters that could break out of the double-quoted class attribute
+   * (`"`, `<`, `>`). Valid CSS class tokens never contain these characters, so legitimate
+   * class names are left untouched while attribute-injection via classNames is prevented.
+   * @static
+   * @param {string} classNames
+   * @return {string}
+   * @memberof Utils
+   */
+  static sanitizeClassNames(classNames) {
+    return classNames ? String(classNames).replace(/["<>]/g, '') : classNames;
+  }
 }
