@@ -1174,12 +1174,9 @@ class VirtualSelect {
 
   /** to remove dropboxWrapper on removing vscomp-ele when it is rendered outside of vscomp-ele */
   addMutationObserver() {
-    /**
-     * Installed in every mode (not only hasDropboxWrapper) so the component self-destroys
-     * when its host element is removed from the DOM. Without this in inline mode, removing
-     * the element without calling destroy() leaves addEvents() listeners attached - notably
-     * the capture-phase document click listener, which retains the instance and its DOM.
-     */
+    if (!this.hasDropboxWrapper) {
+      return;
+    }
     const $vscompEle = this.$ele;
     this.mutationObserver = new MutationObserver(mutations => {
       let isAdded = false;
