@@ -1171,15 +1171,19 @@ class VirtualSelect {
     this.setOptionsContainerHeight(true);
   }
 
-  /** to remove dropboxWrapper on removing vscomp-ele when it is rendered outside of vscomp-ele */
-  addMutationObserver() {
-    if (!this.hasDropboxWrapper) {
+  /**
+   * Single shared observer (instead of one body-wide subtree observer per instance) that
+   * self-destroys any VirtualSelect whose host element is removed from the DOM. This works
+   * in every mode - so removing the element without calling destroy() no longer leaks the
+   * addEvents() listeners (notably the capture-phase document click listener that retains
+   * the instance and its DOM). Inspecting removedNodes makes the cost proportional to the
+   * number of removed nodes rather than the number of live instances.
+   */
+  static observeDomChanges() {
+    if (VirtualSelect.domObserver) {
       return;
     }
-    const $vscompEle = this.$ele;
-    this.mutationObserver = new MutationObserver(mutations => {
-      let isAdded = false;
-      let isRemoved = false;
+    VirtualSelect.domObserver = new MutationObserver(mutations => {
       mutations.forEach(mutation => {
         mutation.removedNodes.forEach($node => {
           if ($node.nodeType !== Node.ELEMENT_NODE) {
