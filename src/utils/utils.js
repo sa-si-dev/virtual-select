@@ -259,9 +259,14 @@ export class Utils {
     let lastArgs = [];
     let previous = 0;
 
-    return function throttled(/** @type {unknown[]} */ ...args) {
+    /**
+     * @this {unknown}
+     * @param {...unknown} args
+     */
+    function throttled(...args) {
       const now = Date.now();
       const remaining = wait - (now - previous);
+      const context = this;
       lastArgs = args;
 
       if (remaining <= 0 || remaining > wait) {
@@ -270,14 +275,16 @@ export class Utils {
           timeout = null;
         }
         previous = now;
-        callback(...lastArgs);
+        callback.apply(context, lastArgs);
       } else if (!timeout) {
         timeout = setTimeout(() => {
           previous = Date.now();
           timeout = null;
-          callback(...lastArgs);
+          callback.apply(context, lastArgs);
         }, remaining);
       }
-    };
+    }
+
+    return throttled;
   }
 }

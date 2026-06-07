@@ -305,8 +305,9 @@ export class VirtualSelect {
       /**
        * Search input is regex-escaped (no ReDoS). The (?!([^<]+)?>) lookahead avoids inserting
        * <mark> inside a tag; it relies on option labels being escaped via enableSecureText. When
-       * enableSecureText is off, labels are rendered as raw HTML by design (see the startup
-       * warning) and this highlight is not an additional injection vector.
+       * enableSecureText is off, labels are rendered as raw HTML by design (the consumer opts into
+       * this), so this highlight does not introduce an additional injection vector beyond the raw
+       * HTML the consumer already chose to render.
        */
       searchRegex = new RegExp(`(${Utils.regexEscape(this.searchValue)})(?!([^<]+)?>)`, 'gi');
     }
