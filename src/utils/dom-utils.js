@@ -329,8 +329,9 @@ export class DomUtils {
  * @param {HTMLElement} $ele
  * @param {string} event
  * @param {Function} callback
+ * @param {boolean} [capture] - must match the value passed to addEvent, otherwise the listener is NOT removed
  */
-  static removeEvent($ele, event, callback) {
+  static removeEvent($ele, event, callback, capture = false) {
     if (!$ele) {
       return;
     }
@@ -338,7 +339,7 @@ export class DomUtils {
     const $eleArray = DomUtils.getElements($ele);
 
     $eleArray.forEach(($this) => {
-      $this.removeEventListener(event, callback);
+      $this.removeEventListener(event, callback, { capture });
     });
   }
 }
