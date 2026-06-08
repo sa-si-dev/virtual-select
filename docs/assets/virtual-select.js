@@ -3797,13 +3797,9 @@ class VirtualSelect {
     return this.virtualSelect.toggleRequired(isRequired);
   }
 
-  /**
-   * Stable reference to the throttled resize handler. Exposed on the class so the listener
-   * registered below can be detached via `removeEventListener` (parity with the previous
-   * `onResizeMethod` reference, which a throttled anonymous wrapper would otherwise lose).
-   * @type {ReturnType<typeof Utils.throttle> | undefined}
-   */
-  static onResizeThrottled;
+  // Stable reference to the throttled resize handler is assigned at module init time
+  // (see `VirtualSelect.onResizeThrottled = ...` near the global resize listener).
+
   static onResizeMethod() {
     document.querySelectorAll('.vscomp-ele-wrapper').forEach($ele => {
       /** guard against wrappers whose instance is mid-teardown / not initialised */
