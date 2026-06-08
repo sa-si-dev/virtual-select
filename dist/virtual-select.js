@@ -259,23 +259,34 @@ class Utils {
     let timeout = null;
     /** @type {unknown[]} */
     let lastArgs = [];
+    /** @type {unknown} */
+    let lastThis;
     let previous = 0;
+
+    /** @this {unknown} */
     return function throttled(/** @type {unknown[]} */...args) {
       const now = Date.now();
       const remaining = wait - (now - previous);
       lastArgs = args;
+      lastThis = this;
       if (remaining <= 0 || remaining > wait) {
         if (timeout) {
           clearTimeout(timeout);
           timeout = null;
         }
         previous = now;
-        callback(...lastArgs);
+        callback.apply(lastThis, lastArgs);
+        /** release references so a large last argument (e.g. a DOM Event) isn't retained */
+        lastArgs = [];
+        lastThis = undefined;
       } else if (!timeout) {
         timeout = setTimeout(() => {
           previous = Date.now();
           timeout = null;
-          callback(...lastArgs);
+          callback.apply(lastThis, lastArgs);
+          /** release references so a large last argument (e.g. a DOM Event) isn't retained */
+          lastArgs = [];
+          lastThis = undefined;
         }, remaining);
       }
     };
@@ -3823,6 +3834,10 @@ class VirtualSelect {
   static toggleRequiredMethod(isRequired) {
     return this.virtualSelect.toggleRequired(isRequired);
   }
+
+  // Stable reference to the throttled resize handler is assigned at module init time
+  // (see `VirtualSelect.onResizeThrottled = ...` near the global resize listener).
+
   static onResizeMethod() {
     document.querySelectorAll('.vscomp-ele-wrapper').forEach($ele => {
       /** guard against wrappers whose instance is mid-teardown / not initialised */
@@ -3836,8 +3851,13 @@ class VirtualSelect {
 }
 document.addEventListener('reset', VirtualSelect.onFormReset);
 document.addEventListener('submit', VirtualSelect.onFormSubmit);
-/** throttle resize so the per-instance height recompute runs at most ~10x/sec during a drag */
-window.addEventListener('resize', Utils.throttle(VirtualSelect.onResizeMethod, 100));
+/**
+ * throttle resize so the per-instance height recompute runs at most ~10x/sec during a drag.
+ * Keep a stable reference on VirtualSelect so the listener can be removed later if needed.
+ */
+const onResizeThrottled = Utils.throttle(VirtualSelect.onResizeMethod, 100);
+VirtualSelect.onResizeThrottled = onResizeThrottled;
+window.addEventListener('resize', onResizeThrottled);
 attrPropsMapping = VirtualSelect.getAttrProps();
 window.VirtualSelect = VirtualSelect;
 

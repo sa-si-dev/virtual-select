@@ -3809,6 +3809,9 @@ export class VirtualSelect {
     return this.virtualSelect.toggleRequired(isRequired);
   }
 
+  // Stable reference to the throttled resize handler is assigned at module init time
+  // (see `VirtualSelect.onResizeThrottled = ...` near the global resize listener).
+
   static onResizeMethod() {
     document.querySelectorAll('.vscomp-ele-wrapper').forEach(($ele) => {
       /** guard against wrappers whose instance is mid-teardown / not initialised */
@@ -3824,8 +3827,13 @@ export class VirtualSelect {
 
 document.addEventListener('reset', VirtualSelect.onFormReset);
 document.addEventListener('submit', VirtualSelect.onFormSubmit);
-/** throttle resize so the per-instance height recompute runs at most ~10x/sec during a drag */
-window.addEventListener('resize', Utils.throttle(VirtualSelect.onResizeMethod, 100));
+/**
+ * throttle resize so the per-instance height recompute runs at most ~10x/sec during a drag.
+ * Keep a stable reference on VirtualSelect so the listener can be removed later if needed.
+ */
+const onResizeThrottled = Utils.throttle(VirtualSelect.onResizeMethod, 100);
+VirtualSelect.onResizeThrottled = onResizeThrottled;
+window.addEventListener('resize', onResizeThrottled);
 
 attrPropsMapping = VirtualSelect.getAttrProps();
 window.VirtualSelect = VirtualSelect;

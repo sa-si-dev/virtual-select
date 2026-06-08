@@ -257,17 +257,17 @@ export class Utils {
     let timeout = null;
     /** @type {unknown[]} */
     let lastArgs = [];
+    /** @type {unknown} */
+    let lastThis;
     let previous = 0;
 
-    /**
-     * @this {unknown}
-     * @param {...unknown} args
-     */
-    function throttled(...args) {
+    /** @this {unknown} */
+    return function throttled(/** @type {unknown[]} */ ...args) {
       const now = Date.now();
       const remaining = wait - (now - previous);
       const context = this;
       lastArgs = args;
+      lastThis = this;
 
       if (remaining <= 0 || remaining > wait) {
         if (timeout) {
@@ -275,12 +275,18 @@ export class Utils {
           timeout = null;
         }
         previous = now;
-        callback.apply(context, lastArgs);
+        callback.apply(lastThis, lastArgs);
+        /** release references so a large last argument (e.g. a DOM Event) isn't retained */
+        lastArgs = [];
+        lastThis = undefined;
       } else if (!timeout) {
         timeout = setTimeout(() => {
           previous = Date.now();
           timeout = null;
-          callback.apply(context, lastArgs);
+          callback.apply(lastThis, lastArgs);
+          /** release references so a large last argument (e.g. a DOM Event) isn't retained */
+          lastArgs = [];
+          lastThis = undefined;
         }, remaining);
       }
     }
