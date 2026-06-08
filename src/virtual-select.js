@@ -302,6 +302,13 @@ export class VirtualSelect {
     let groupName = '';
 
     if (markSearchResults) {
+      /**
+       * Search input is regex-escaped (no ReDoS). The (?!([^<]+)?>) lookahead avoids inserting
+       * <mark> inside a tag; it relies on option labels being escaped via enableSecureText. When
+       * enableSecureText is off, labels are rendered as raw HTML by design (the consumer opts into
+       * this), so this highlight does not introduce an additional injection vector beyond the raw
+       * HTML the consumer already chose to render.
+       */
       searchRegex = new RegExp(`(${Utils.regexEscape(this.searchValue)})(?!([^<]+)?>)`, 'gi');
     }
 
@@ -834,7 +841,7 @@ export class VirtualSelect {
     }
 
     /** using setTimeout to fix the issue of dropbox getting closed on select */
-    setTimeout(() => {
+    this.setManagedTimeout(() => {
       this.setSearchValue('');
       this.focusSearchInput();
     }, 0);
@@ -906,7 +913,7 @@ export class VirtualSelect {
     this.setOptionsTooltip();
 
     if (document.activeElement !== this.$searchInput) {
-      setTimeout(() => {
+      this.setManagedTimeout(() => {
         const focusedOption = DomUtils.getElementsBySelector('.focused', this.$dropboxContainer)[0];
         if (focusedOption !== undefined) {
           focusedOption.focus({ preventScroll: true });
@@ -2557,8 +2564,9 @@ export class VirtualSelect {
     DomUtils.changeTabIndex(this.$allWrappers, 0);
 
     if (!isSilent) {
-      // Force synchronous layout and style calculation
-      // Trigger reflow
+      // INTENTIONAL forced reflow (do not remove as a "no-op"): reading offsetHeight flushes
+      // the 'transition: none' set above so restoring the transition below does not animate the
+      // open from a stale layout. Scoped to a single element on open, so the cost is negligible.
       this.$dropboxContainer.offsetHeight; // eslint-disable-line no-unused-expressions
       // Restore transitions immediately after reflow
       this.$dropboxContainer.style.transition = originalTransition;
@@ -2981,7 +2989,7 @@ export class VirtualSelect {
     }
 
     /** using setTimeout to fix the issue of dropbox getting closed on select */
-    setTimeout(() => {
+    this.setManagedTimeout(() => {
       this.renderOptions();
     }, 0);
   }
@@ -3148,7 +3156,7 @@ export class VirtualSelect {
     this.setValue(selectedValues);
 
     /** using setTimeout to fix the issue of dropbox getting closed on select */
-    setTimeout(() => {
+    this.setManagedTimeout(() => {
       this.renderOptions();
     }, 0);
   }
@@ -3431,6 +3439,32 @@ export class VirtualSelect {
     return !hasError;
   }
 
+  /**
+   * setTimeout wrapper whose pending timers are tracked so they can be cleared on destroy().
+   * Prevents callbacks from running against a destroyed instance (stale DOM access / retention).
+   */
+  setManagedTimeout(callback, delay) {
+    if (!this.managedTimeouts) {
+      this.managedTimeouts = new Set();
+    }
+
+    const id = setTimeout(() => {
+      this.managedTimeouts.delete(id);
+      callback();
+    }, delay);
+
+    this.managedTimeouts.add(id);
+
+    return id;
+  }
+
+  clearManagedTimeouts() {
+    if (this.managedTimeouts) {
+      this.managedTimeouts.forEach((id) => clearTimeout(id));
+      this.managedTimeouts.clear();
+    }
+  }
+
   destroy() {
     const { $ele } = this;
     $ele.virtualSelect = undefined;
@@ -3450,6 +3484,9 @@ export class VirtualSelect {
       clearTimeout(this.serverSearchTimeout);
       this.serverSearchTimeout = null;
     }
+
+    // Clear any other pending timeouts so their callbacks don't run on a destroyed instance
+    this.clearManagedTimeouts();
 
     /** Remove all event listeners to prevent memory leaks and ensure proper cleanup */
     this.removeEvents();
