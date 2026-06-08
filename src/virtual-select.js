@@ -336,7 +336,8 @@ export class VirtualSelect {
       let ariaDisabledText = '';
 
       if (d.classNames) {
-        optionClasses += ` ${d.classNames}`;
+        /** sanitize so a consumer-provided class string cannot break out of the class attribute */
+        optionClasses += ` ${Utils.sanitizeClassNames(d.classNames)}`;
       }
 
       if (d.isFocused) {
@@ -369,8 +370,18 @@ export class VirtualSelect {
         groupIndexText = `data-group-index="${d.groupIndex}"`;
 
         if (d.customData) {
-          groupName = d.customData.group_name !== undefined ? `${d.customData.group_name}, ` : '';
-          optionDesc = d.customData.description !== undefined ? ` ${d.customData.description},` : '';
+          /**
+           * customData fields are interpolated into the aria-label attribute, so they must be
+           * escaped the same way as label/value (via secureText). Otherwise a quote in
+           * group_name/description can break out of the attribute even when enableSecureText
+           * is on - an XSS bypass. secureText is a no-op when enableSecureText is disabled,
+           * keeping the existing behaviour for consumers that intentionally pass raw text.
+           */
+          const groupNameText = this.secureText(Utils.getString(d.customData.group_name));
+          const groupDescText = this.secureText(Utils.getString(d.customData.description));
+
+          groupName = d.customData.group_name !== undefined ? `${groupNameText}, ` : '';
+          optionDesc = d.customData.description !== undefined ? ` ${groupDescText},` : '';
 
           ariaLabel = `aria-label="${groupName} ${d.label}, ${optionDesc}"`;
         } else {
