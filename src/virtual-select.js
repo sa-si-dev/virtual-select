@@ -3778,7 +3778,7 @@ export class VirtualSelect {
    * `onResizeMethod` reference, which a throttled anonymous wrapper would otherwise lose).
    * @type {ReturnType<typeof Utils.throttle> | undefined}
    */
-  // onResizeThrottled is assigned after class definition (see listener registration below).
+  static onResizeThrottled;
 
   static onResizeMethod() {
     document.querySelectorAll('.vscomp-ele-wrapper').forEach(($ele) => {
