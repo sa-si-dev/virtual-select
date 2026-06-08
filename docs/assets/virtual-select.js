@@ -230,6 +230,67 @@ class Utils {
   static containsHTMLorJS(text) {
     return /<([a-z]+)[\s\S]*?>|on\w+="[^"]*"/i.test(text);
   }
+
+  /**
+   * Remove characters that could break out of the double-quoted class attribute
+   * (`"`, `<`, `>`). Valid CSS class tokens never contain these characters, so legitimate
+   * class names are left untouched while attribute-injection via classNames is prevented.
+   * @static
+   * @param {string} classNames
+   * @return {string}
+   * @memberof Utils
+   */
+  static sanitizeClassNames(classNames) {
+    return classNames ? String(classNames).replace(/["<>]/g, '') : classNames;
+  }
+
+  /**
+   * Rate-limit a function so it runs at most once per `wait` ms (leading + trailing edge).
+   * Used to keep high-frequency events (e.g. window resize) from running per-instance work
+   * on every tick.
+   * @static
+   * @param {Function} callback
+   * @param {number} wait
+   * @return {Function}
+   * @memberof Utils
+   */
+  static throttle(callback, wait) {
+    /** @type {ReturnType<typeof setTimeout> | null} */
+    let timeout = null;
+    /** @type {unknown[]} */
+    let lastArgs = [];
+    /** @type {unknown} */
+    let lastThis;
+    let previous = 0;
+
+    /** @this {unknown} */
+    return function throttled(/** @type {unknown[]} */...args) {
+      const now = Date.now();
+      const remaining = wait - (now - previous);
+      lastArgs = args;
+      lastThis = this;
+      if (remaining <= 0 || remaining > wait) {
+        if (timeout) {
+          clearTimeout(timeout);
+          timeout = null;
+        }
+        previous = now;
+        callback.apply(lastThis, lastArgs);
+        /** release references so a large last argument (e.g. a DOM Event) isn't retained */
+        lastArgs = [];
+        lastThis = undefined;
+      } else if (!timeout) {
+        timeout = setTimeout(() => {
+          previous = Date.now();
+          timeout = null;
+          callback.apply(lastThis, lastArgs);
+          /** release references so a large last argument (e.g. a DOM Event) isn't retained */
+          lastArgs = [];
+          lastThis = undefined;
+        }, remaining);
+      }
+    };
+  }
 }
 ;// ./src/utils/dom-utils.js
 
@@ -765,6 +826,13 @@ class VirtualSelect {
     } = Utils;
     let groupName = '';
     if (markSearchResults) {
+      /**
+       * Search input is regex-escaped (no ReDoS). The (?!([^<]+)?>) lookahead avoids inserting
+       * <mark> inside a tag; it relies on option labels being escaped via enableSecureText. When
+       * enableSecureText is off, labels are rendered as raw HTML by design (the consumer opts into
+       * this), so this highlight does not introduce an additional injection vector beyond the raw
+       * HTML the consumer already chose to render.
+       */
       searchRegex = new RegExp(`(${Utils.regexEscape(this.searchValue)})(?!([^<]+)?>)`, 'gi');
     }
     if (this.multiple) {
@@ -790,7 +858,8 @@ class VirtualSelect {
       const isSelected = convertToBoolean(d.isSelected);
       let ariaDisabledText = '';
       if (d.classNames) {
-        optionClasses += ` ${d.classNames}`;
+        /** sanitize so a consumer-provided class string cannot break out of the class attribute */
+        optionClasses += ` ${Utils.sanitizeClassNames(d.classNames)}`;
       }
       if (d.isFocused) {
         tabIndexValue = '0';
@@ -815,8 +884,17 @@ class VirtualSelect {
         optionClasses += ' group-option';
         groupIndexText = `data-group-index="${d.groupIndex}"`;
         if (d.customData) {
-          groupName = d.customData.group_name !== undefined ? `${d.customData.group_name}, ` : '';
-          optionDesc = d.customData.description !== undefined ? ` ${d.customData.description},` : '';
+          /**
+           * customData fields are interpolated into the aria-label attribute, so they must be
+           * escaped the same way as label/value (via secureText). Otherwise a quote in
+           * group_name/description can break out of the attribute even when enableSecureText
+           * is on - an XSS bypass. secureText is a no-op when enableSecureText is disabled,
+           * keeping the existing behaviour for consumers that intentionally pass raw text.
+           */
+          const groupNameText = this.secureText(Utils.getString(d.customData.group_name));
+          const groupDescText = this.secureText(Utils.getString(d.customData.description));
+          groupName = d.customData.group_name !== undefined ? `${groupNameText}, ` : '';
+          optionDesc = d.customData.description !== undefined ? ` ${groupDescText},` : '';
           ariaLabel = `aria-label="${groupName} ${d.label}, ${optionDesc}"`;
         } else {
           ariaLabel = `aria-label="${groupName}, ${d.label}"`;
@@ -916,7 +994,7 @@ class VirtualSelect {
     this.addEvent(this.$options, 'click', 'onOptionsClick');
     this.addEvent(this.$options, 'mouseover', 'onOptionsMouseOver');
     this.addEvent(this.$options, 'touchmove', 'onOptionsTouchMove');
-    VirtualSelect.observeDomChanges();
+    this.addMutationObserver();
   }
   addEvent($ele, events, method, capture = false) {
     if (!$ele) {
@@ -970,6 +1048,7 @@ class VirtualSelect {
     if (this.$dropboxContainerTop) {
       this.removeEvent(this.$dropboxContainerTop, 'focus', 'onDropboxContainerTopOrBottomFocus');
     }
+    this.removeMutationObserver();
   }
   removeEvent($ele, events, method, capture = false) {
     if (!$ele) {
@@ -1171,39 +1250,37 @@ class VirtualSelect {
     this.setOptionsContainerHeight(true);
   }
 
-  /**
-   * Single shared observer (instead of one body-wide subtree observer per instance) that
-   * self-destroys any VirtualSelect whose host element is removed from the DOM. This works
-   * in every mode - so removing the element without calling destroy() no longer leaks the
-   * addEvents() listeners (notably the capture-phase document click listener that retains
-   * the instance and its DOM). Inspecting removedNodes makes the cost proportional to the
-   * number of removed nodes rather than the number of live instances.
-   */
-  static observeDomChanges() {
-    if (VirtualSelect.domObserver) {
+  /** to remove dropboxWrapper on removing vscomp-ele when it is rendered outside of vscomp-ele */
+  addMutationObserver() {
+    if (!this.hasDropboxWrapper) {
       return;
     }
-    VirtualSelect.domObserver = new MutationObserver(mutations => {
+    const $vscompEle = this.$ele;
+    this.mutationObserver = new MutationObserver(mutations => {
+      let isAdded = false;
+      let isRemoved = false;
       mutations.forEach(mutation => {
-        mutation.removedNodes.forEach($node => {
-          if ($node.nodeType !== Node.ELEMENT_NODE) {
-            return;
-          }
-          const $eles = $node.classList.contains('vscomp-ele') ? [$node] : [];
-          $node.querySelectorAll('.vscomp-ele').forEach($ele => $eles.push($ele));
-          $eles.forEach($ele => {
-            /** isConnected is false only when the node was genuinely detached (not moved/re-added) */
-            if (!$ele.isConnected && $ele.virtualSelect) {
-              $ele.virtualSelect.destroy();
-            }
-          });
-        });
+        if (!isAdded) {
+          isAdded = [...mutation.addedNodes].some($ele => !!($ele === $vscompEle || $ele.contains($vscompEle)));
+        }
+        if (!isRemoved) {
+          isRemoved = [...mutation.removedNodes].some($ele => !!($ele === $vscompEle || $ele.contains($vscompEle)));
+        }
       });
+      if (isRemoved && !isAdded) {
+        this.destroy();
+      }
     });
-    VirtualSelect.domObserver.observe(document.documentElement, {
+    this.mutationObserver.observe(document.querySelector('body'), {
       childList: true,
       subtree: true
     });
+  }
+  removeMutationObserver() {
+    if (this.mutationObserver) {
+      this.mutationObserver.disconnect();
+      this.mutationObserver = null;
+    }
   }
 
   /** dom event methods - end */
@@ -1226,7 +1303,7 @@ class VirtualSelect {
     }
 
     /** using setTimeout to fix the issue of dropbox getting closed on select */
-    setTimeout(() => {
+    this.setManagedTimeout(() => {
       this.setSearchValue('');
       this.focusSearchInput();
     }, 0);
@@ -1287,7 +1364,7 @@ class VirtualSelect {
     this.setOptionsPosition();
     this.setOptionsTooltip();
     if (document.activeElement !== this.$searchInput) {
-      setTimeout(() => {
+      this.setManagedTimeout(() => {
         const focusedOption = DomUtils.getElementsBySelector('.focused', this.$dropboxContainer)[0];
         if (focusedOption !== undefined) {
           focusedOption.focus({
@@ -2739,8 +2816,9 @@ class VirtualSelect {
     DomUtils.removeClass(this.$allWrappers, 'closed');
     DomUtils.changeTabIndex(this.$allWrappers, 0);
     if (!isSilent) {
-      // Force synchronous layout and style calculation
-      // Trigger reflow
+      // INTENTIONAL forced reflow (do not remove as a "no-op"): reading offsetHeight flushes
+      // the 'transition: none' set above so restoring the transition below does not animate the
+      // open from a stale layout. Scoped to a single element on open, so the cost is negligible.
       this.$dropboxContainer.offsetHeight; // eslint-disable-line no-unused-expressions
       // Restore transitions immediately after reflow
       this.$dropboxContainer.style.transition = originalTransition;
@@ -3096,7 +3174,7 @@ class VirtualSelect {
     }
 
     /** using setTimeout to fix the issue of dropbox getting closed on select */
-    setTimeout(() => {
+    this.setManagedTimeout(() => {
       this.renderOptions();
     }, 0);
   }
@@ -3232,7 +3310,7 @@ class VirtualSelect {
     this.setValue(selectedValues);
 
     /** using setTimeout to fix the issue of dropbox getting closed on select */
-    setTimeout(() => {
+    this.setManagedTimeout(() => {
       this.renderOptions();
     }, 0);
   }
@@ -3468,6 +3546,28 @@ class VirtualSelect {
     DomUtils.toggleClass(this.$allWrappers, 'has-error', hasError);
     return !hasError;
   }
+
+  /**
+   * setTimeout wrapper whose pending timers are tracked so they can be cleared on destroy().
+   * Prevents callbacks from running against a destroyed instance (stale DOM access / retention).
+   */
+  setManagedTimeout(callback, delay) {
+    if (!this.managedTimeouts) {
+      this.managedTimeouts = new Set();
+    }
+    const id = setTimeout(() => {
+      this.managedTimeouts.delete(id);
+      callback();
+    }, delay);
+    this.managedTimeouts.add(id);
+    return id;
+  }
+  clearManagedTimeouts() {
+    if (this.managedTimeouts) {
+      this.managedTimeouts.forEach(id => clearTimeout(id));
+      this.managedTimeouts.clear();
+    }
+  }
   destroy() {
     const {
       $ele
@@ -3489,6 +3589,9 @@ class VirtualSelect {
       clearTimeout(this.serverSearchTimeout);
       this.serverSearchTimeout = null;
     }
+
+    // Clear any other pending timeouts so their callbacks don't run on a destroyed instance
+    this.clearManagedTimeouts();
 
     /** Remove all event listeners to prevent memory leaks and ensure proper cleanup */
     this.removeEvents();
@@ -3732,24 +3835,35 @@ class VirtualSelect {
   static toggleRequiredMethod(isRequired) {
     return this.virtualSelect.toggleRequired(isRequired);
   }
+
+  // Stable reference to the throttled resize handler is assigned at module init time
+  // (see `VirtualSelect.onResizeThrottled = ...` near the global resize listener).
+
   static onResizeMethod() {
     document.querySelectorAll('.vscomp-ele-wrapper').forEach($ele => {
-      $ele.parentElement.virtualSelect.onResize();
+      /** guard against wrappers whose instance is mid-teardown / not initialised */
+      const instance = $ele.parentElement && $ele.parentElement.virtualSelect;
+      if (instance) {
+        instance.onResize();
+      }
     });
   }
   /** static methods - end */
 }
 document.addEventListener('reset', VirtualSelect.onFormReset);
 document.addEventListener('submit', VirtualSelect.onFormSubmit);
-window.addEventListener('resize', VirtualSelect.onResizeMethod);
+/**
+ * throttle resize so the per-instance height recompute runs at most ~10x/sec during a drag.
+ * Keep a stable reference on VirtualSelect so the listener can be removed later if needed.
+ */
+const onResizeThrottled = Utils.throttle(VirtualSelect.onResizeMethod, 100);
+VirtualSelect.onResizeThrottled = onResizeThrottled;
+window.addEventListener('resize', onResizeThrottled);
 attrPropsMapping = VirtualSelect.getAttrProps();
 window.VirtualSelect = VirtualSelect;
 
 // Static property for tracking open dropdowns
 VirtualSelect.openInstances = new Set();
-
-// Single shared MutationObserver that self-destroys instances whose host element is removed
-VirtualSelect.domObserver = null;
 
 // Static property for tracking the last interacted instance
 VirtualSelect.lastInteractedInstance = null;
