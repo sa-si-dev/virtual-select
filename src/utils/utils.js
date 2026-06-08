@@ -265,7 +265,6 @@ export class Utils {
     return function throttled(/** @type {unknown[]} */ ...args) {
       const now = Date.now();
       const remaining = wait - (now - previous);
-      const context = this;
       lastArgs = args;
       lastThis = this;
 
@@ -289,8 +288,6 @@ export class Utils {
           lastThis = undefined;
         }, remaining);
       }
-    }
-
-    return throttled;
+    };
   }
 }

@@ -22,6 +22,10 @@ describe('Hardening: managed timeouts cleared on destroy (P4)', () => {
 
   it('cancels a pending managed timeout when the instance is destroyed', () => {
     cy.visit('get-started');
+    // Use a synthetic clock so the negative assertion (timer must NOT fire) is deterministic.
+    // With a real-time cy.wait, CI timer-throttling could delay a still-pending 50ms callback
+    // past the wait window, making the test pass even if destroy() failed to clear it.
+    cy.clock();
     cy.window().then((win) => {
       // @ts-expect-error - test marker
       win.__managedTimerFired = false;
@@ -33,7 +37,8 @@ describe('Hardening: managed timeouts cleared on destroy (P4)', () => {
       instance.destroy();
     });
 
-    cy.wait(150);
+    // Advance well past the 50ms timeout; a cleared timer can never fire, a leaked one would.
+    cy.tick(150);
     cy.window().then((win) => {
       // @ts-expect-error - test marker
       expect(win.__managedTimerFired, 'managed timeout must not fire after destroy').to.eq(false);
