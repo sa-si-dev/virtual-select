@@ -262,11 +262,17 @@ export class Utils {
         }
         previous = now;
         callback.apply(lastThis, lastArgs);
+        /** release references so a large last argument (e.g. a DOM Event) isn't retained */
+        lastArgs = [];
+        lastThis = undefined;
       } else if (!timeout) {
         timeout = setTimeout(() => {
           previous = Date.now();
           timeout = null;
           callback.apply(lastThis, lastArgs);
+          /** release references so a large last argument (e.g. a DOM Event) isn't retained */
+          lastArgs = [];
+          lastThis = undefined;
         }, remaining);
       }
     };
