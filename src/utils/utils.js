@@ -241,4 +241,53 @@ export class Utils {
   static sanitizeClassNames(classNames) {
     return classNames ? String(classNames).replace(/["<>]/g, '') : classNames;
   }
+
+  /**
+   * Rate-limit a function so it runs at most once per `wait` ms (leading + trailing edge).
+   * Used to keep high-frequency events (e.g. window resize) from running per-instance work
+   * on every tick.
+   * @static
+   * @param {Function} callback
+   * @param {number} wait
+   * @return {Function}
+   * @memberof Utils
+   */
+  static throttle(callback, wait) {
+    /** @type {ReturnType<typeof setTimeout> | null} */
+    let timeout = null;
+    /** @type {unknown[]} */
+    let lastArgs = [];
+    /** @type {unknown} */
+    let lastThis;
+    let previous = 0;
+
+    /** @this {unknown} */
+    return function throttled(/** @type {unknown[]} */ ...args) {
+      const now = Date.now();
+      const remaining = wait - (now - previous);
+      lastArgs = args;
+      lastThis = this;
+
+      if (remaining <= 0 || remaining > wait) {
+        if (timeout) {
+          clearTimeout(timeout);
+          timeout = null;
+        }
+        previous = now;
+        callback.apply(lastThis, lastArgs);
+        /** release references so a large last argument (e.g. a DOM Event) isn't retained */
+        lastArgs = [];
+        lastThis = undefined;
+      } else if (!timeout) {
+        timeout = setTimeout(() => {
+          previous = Date.now();
+          timeout = null;
+          callback.apply(lastThis, lastArgs);
+          /** release references so a large last argument (e.g. a DOM Event) isn't retained */
+          lastArgs = [];
+          lastThis = undefined;
+        }, remaining);
+      }
+    };
+  }
 }

@@ -243,6 +243,54 @@ class Utils {
   static sanitizeClassNames(classNames) {
     return classNames ? String(classNames).replace(/["<>]/g, '') : classNames;
   }
+
+  /**
+   * Rate-limit a function so it runs at most once per `wait` ms (leading + trailing edge).
+   * Used to keep high-frequency events (e.g. window resize) from running per-instance work
+   * on every tick.
+   * @static
+   * @param {Function} callback
+   * @param {number} wait
+   * @return {Function}
+   * @memberof Utils
+   */
+  static throttle(callback, wait) {
+    /** @type {ReturnType<typeof setTimeout> | null} */
+    let timeout = null;
+    /** @type {unknown[]} */
+    let lastArgs = [];
+    /** @type {unknown} */
+    let lastThis;
+    let previous = 0;
+
+    /** @this {unknown} */
+    return function throttled(/** @type {unknown[]} */...args) {
+      const now = Date.now();
+      const remaining = wait - (now - previous);
+      lastArgs = args;
+      lastThis = this;
+      if (remaining <= 0 || remaining > wait) {
+        if (timeout) {
+          clearTimeout(timeout);
+          timeout = null;
+        }
+        previous = now;
+        callback.apply(lastThis, lastArgs);
+        /** release references so a large last argument (e.g. a DOM Event) isn't retained */
+        lastArgs = [];
+        lastThis = undefined;
+      } else if (!timeout) {
+        timeout = setTimeout(() => {
+          previous = Date.now();
+          timeout = null;
+          callback.apply(lastThis, lastArgs);
+          /** release references so a large last argument (e.g. a DOM Event) isn't retained */
+          lastArgs = [];
+          lastThis = undefined;
+        }, remaining);
+      }
+    };
+  }
 }
 ;// ./src/utils/dom-utils.js
 
@@ -552,14 +600,17 @@ class DomUtils {
   * @param {HTMLElement} $ele
   * @param {string} event
   * @param {Function} callback
+  * @param {boolean} [capture] - must match the value passed to addEvent, otherwise the listener is NOT removed
   */
-  static removeEvent($ele, event, callback) {
+  static removeEvent($ele, event, callback, capture = false) {
     if (!$ele) {
       return;
     }
     const $eleArray = DomUtils.getElements($ele);
     $eleArray.forEach($this => {
-      $this.removeEventListener(event, callback);
+      $this.removeEventListener(event, callback, {
+        capture
+      });
     });
   }
 }
@@ -956,7 +1007,12 @@ class VirtualSelect {
 
   /** dom event methods - start */
   removeEvents() {
-    this.removeEvent(document, 'click', 'onDocumentClick');
+    /**
+     * onDocumentClick is registered in the capture phase (see addEvents). The capture flag
+     * MUST match here, otherwise removeEventListener is a no-op and the listener (and the
+     * VirtualSelect instance + detached DOM it closes over) leaks on every destroy/re-render.
+     */
+    this.removeEvent(document, 'click', 'onDocumentClick', true);
     this.removeEvent(this.$allWrappers, 'keydown', 'onKeyDown');
     this.removeEvent(this.$toggleButton, 'click keydown', 'onToggleButtonPress');
     this.removeEvent(this.$clearButton, 'click keydown', 'onClearButtonClick');
@@ -987,7 +1043,7 @@ class VirtualSelect {
     }
     this.removeMutationObserver();
   }
-  removeEvent($ele, events, method) {
+  removeEvent($ele, events, method, capture = false) {
     if (!$ele) {
       return;
     }
@@ -996,7 +1052,7 @@ class VirtualSelect {
       const eventsKey = `${method}-${event}`;
       const callback = this.events[eventsKey];
       if (callback) {
-        DomUtils.removeEvent($ele, event, callback);
+        DomUtils.removeEvent($ele, event, callback, capture);
       }
     });
   }
@@ -1214,8 +1270,9 @@ class VirtualSelect {
     });
   }
   removeMutationObserver() {
-    if (this.hasDropboxWrapper) {
+    if (this.mutationObserver) {
       this.mutationObserver.disconnect();
+      this.mutationObserver = null;
     }
   }
 
@@ -3506,12 +3563,18 @@ class VirtualSelect {
     /** Remove all event listeners to prevent memory leaks and ensure proper cleanup */
     this.removeEvents();
     if (this.hasDropboxWrapper) {
+      /** clear the back-reference (set in setEleProps) before detaching so the
+       * detached wrapper does not keep this instance and its DOM alive */
+      this.$dropboxWrapper.virtualSelect = undefined;
       this.$dropboxWrapper.remove();
     }
     if (this.dropboxPopover) {
       this.dropboxPopover.destroy();
     }
     DomUtils.removeClass($ele, 'vscomp-ele');
+
+    /** drop references to cached callbacks and DOM so nothing is retained after destroy */
+    this.events = {};
   }
   createSecureTextElements() {
     this.$secureDiv = document.createElement('div');
@@ -3739,16 +3802,30 @@ class VirtualSelect {
   static toggleRequiredMethod(isRequired) {
     return this.virtualSelect.toggleRequired(isRequired);
   }
+
+  // Stable reference to the throttled resize handler is assigned at module init time
+  // (see `VirtualSelect.onResizeThrottled = ...` near the global resize listener).
+
   static onResizeMethod() {
     document.querySelectorAll('.vscomp-ele-wrapper').forEach($ele => {
-      $ele.parentElement.virtualSelect.onResize();
+      /** guard against wrappers whose instance is mid-teardown / not initialised */
+      const instance = $ele.parentElement && $ele.parentElement.virtualSelect;
+      if (instance) {
+        instance.onResize();
+      }
     });
   }
   /** static methods - end */
 }
 document.addEventListener('reset', VirtualSelect.onFormReset);
 document.addEventListener('submit', VirtualSelect.onFormSubmit);
-window.addEventListener('resize', VirtualSelect.onResizeMethod);
+/**
+ * throttle resize so the per-instance height recompute runs at most ~10x/sec during a drag.
+ * Keep a stable reference on VirtualSelect so the listener can be removed later if needed.
+ */
+const onResizeThrottled = Utils.throttle(VirtualSelect.onResizeMethod, 100);
+VirtualSelect.onResizeThrottled = onResizeThrottled;
+window.addEventListener('resize', onResizeThrottled);
 attrPropsMapping = VirtualSelect.getAttrProps();
 window.VirtualSelect = VirtualSelect;
 
