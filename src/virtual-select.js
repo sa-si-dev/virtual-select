@@ -499,7 +499,7 @@ export class VirtualSelect {
     this.addEvent(this.$options, 'click', 'onOptionsClick');
     this.addEvent(this.$options, 'mouseover', 'onOptionsMouseOver');
     this.addEvent(this.$options, 'touchmove', 'onOptionsTouchMove');
-    VirtualSelect.observeDomChanges();
+    VirtualSelect.registerInstance(this);
   }
 
   addEvent($ele, events, method, capture = false) {
@@ -827,6 +827,77 @@ export class VirtualSelect {
     });
 
     VirtualSelect.domObserver.observe(document.documentElement, { childList: true, subtree: true });
+  }
+
+  /**
+   * Disconnect and release the shared DOM observer. Called when the last instance is
+   * destroyed so the observer does not keep running (or retain its callback) for the
+   * lifetime of the page once no VirtualSelect remains.
+   */
+  static disconnectDomObserver() {
+    if (VirtualSelect.domObserver) {
+      VirtualSelect.domObserver.disconnect();
+      VirtualSelect.domObserver = null;
+    }
+  }
+
+  /**
+   * Attach the page-level listeners (resize / form reset / form submit) once, on the first
+   * live instance. Idempotent.
+   */
+  static addGlobalListeners() {
+    if (VirtualSelect.hasGlobalListeners) {
+      return;
+    }
+
+    document.addEventListener('reset', VirtualSelect.onFormReset);
+    document.addEventListener('submit', VirtualSelect.onFormSubmit);
+    window.addEventListener('resize', VirtualSelect.onResizeThrottled);
+    VirtualSelect.hasGlobalListeners = true;
+  }
+
+  /**
+   * Remove the page-level listeners. The same stable references used in addGlobalListeners
+   * are passed so removeEventListener actually unregisters them, and the throttled resize
+   * handler's pending trailing call is cancelled so it cannot fire after teardown.
+   */
+  static removeGlobalListeners() {
+    if (!VirtualSelect.hasGlobalListeners) {
+      return;
+    }
+
+    document.removeEventListener('reset', VirtualSelect.onFormReset);
+    document.removeEventListener('submit', VirtualSelect.onFormSubmit);
+    window.removeEventListener('resize', VirtualSelect.onResizeThrottled);
+
+    if (VirtualSelect.onResizeThrottled && typeof VirtualSelect.onResizeThrottled.cancel === 'function') {
+      VirtualSelect.onResizeThrottled.cancel();
+    }
+
+    VirtualSelect.hasGlobalListeners = false;
+  }
+
+  /**
+   * Track a live instance and make sure the shared observer and page-level listeners exist.
+   * Called once per instance from addEvents().
+   */
+  static registerInstance(instance) {
+    VirtualSelect.activeInstances.add(instance);
+    VirtualSelect.addGlobalListeners();
+    VirtualSelect.observeDomChanges();
+  }
+
+  /**
+   * Stop tracking an instance. When the last one goes away, tear down the page-level
+   * listeners and the shared observer so nothing global outlives the components.
+   */
+  static unregisterInstance(instance) {
+    VirtualSelect.activeInstances.delete(instance);
+
+    if (VirtualSelect.activeInstances.size === 0) {
+      VirtualSelect.removeGlobalListeners();
+      VirtualSelect.disconnectDomObserver();
+    }
   }
 
   /** dom event methods - end */
@@ -3517,6 +3588,9 @@ export class VirtualSelect {
 
     /** drop references to cached callbacks and DOM so nothing is retained after destroy */
     this.events = {};
+
+    /** stop tracking this instance; tears down global listeners/observer when it was the last one */
+    VirtualSelect.unregisterInstance(this);
   }
 
   createSecureTextElements() {
@@ -3807,7 +3881,8 @@ export class VirtualSelect {
   }
 
   // Stable reference to the throttled resize handler is assigned at module init time
-  // (see `VirtualSelect.onResizeThrottled = ...` near the global resize listener).
+  // (see `VirtualSelect.onResizeThrottled = ...`). The resize/reset/submit listeners are
+  // attached lazily in addGlobalListeners() on the first instance, not at module scope.
 
   static onResizeMethod() {
     document.querySelectorAll('.vscomp-ele-wrapper').forEach(($ele) => {
@@ -3822,15 +3897,14 @@ export class VirtualSelect {
   /** static methods - end */
 }
 
-document.addEventListener('reset', VirtualSelect.onFormReset);
-document.addEventListener('submit', VirtualSelect.onFormSubmit);
 /**
  * throttle resize so the per-instance height recompute runs at most ~10x/sec during a drag.
- * Keep a stable reference on VirtualSelect so the listener can be removed later if needed.
+ * Keep a stable reference on VirtualSelect so add/removeGlobalListeners can attach and detach
+ * the exact same handler. The page-level resize/reset/submit listeners are attached lazily on
+ * the first instance (registerInstance) and removed when the last instance is destroyed
+ * (unregisterInstance), so nothing global lingers when no dropdown exists.
  */
-const onResizeThrottled = Utils.throttle(VirtualSelect.onResizeMethod, 100);
-VirtualSelect.onResizeThrottled = onResizeThrottled;
-window.addEventListener('resize', onResizeThrottled);
+VirtualSelect.onResizeThrottled = Utils.throttle(VirtualSelect.onResizeMethod, 100);
 
 attrPropsMapping = VirtualSelect.getAttrProps();
 window.VirtualSelect = VirtualSelect;
@@ -3840,6 +3914,12 @@ VirtualSelect.openInstances = new Set();
 
 // Single shared MutationObserver that self-destroys instances whose host element is removed
 VirtualSelect.domObserver = null;
+
+// Set of live instances; drives lazy setup/teardown of the shared observer and page listeners
+VirtualSelect.activeInstances = new Set();
+
+// Whether the page-level resize/reset/submit listeners are currently attached
+VirtualSelect.hasGlobalListeners = false;
 
 // Static property for tracking the last interacted instance
 VirtualSelect.lastInteractedInstance = null;
