@@ -239,6 +239,19 @@ export class Utils {
   }
 
   /**
+   * Remove characters that could break out of the double-quoted class attribute
+   * (`"`, `<`, `>`). Valid CSS class tokens never contain these characters, so legitimate
+   * class names are left untouched while attribute-injection via classNames is prevented.
+   * @static
+   * @param {string} classNames
+   * @return {string}
+   * @memberof Utils
+   */
+  static sanitizeClassNames(classNames) {
+    return classNames ? String(classNames).replace(/["<>]/g, '') : classNames;
+  }
+
+  /**
    * Rate-limit a function so it runs at most once per `wait` ms (leading + trailing edge).
    * Used to keep high-frequency events (e.g. window resize) from running per-instance work
    * on every tick.
