@@ -242,6 +242,19 @@ class Utils {
   }
 
   /**
+   * Remove characters that could break out of the double-quoted class attribute
+   * (`"`, `<`, `>`). Valid CSS class tokens never contain these characters, so legitimate
+   * class names are left untouched while attribute-injection via classNames is prevented.
+   * @static
+   * @param {string} classNames
+   * @return {string}
+   * @memberof Utils
+   */
+  static sanitizeClassNames(classNames) {
+    return classNames ? String(classNames).replace(/["<>]/g, '') : classNames;
+  }
+
+  /**
    * Rate-limit a function so it runs at most once per `wait` ms (leading + trailing edge).
    * Used to keep high-frequency events (e.g. window resize) from running per-instance work
    * on every tick.
@@ -261,6 +274,21 @@ class Utils {
     let previous = 0;
 
     /**
+     * Invoke the callback with the retained context/args, snapshotting and clearing those
+     * references BEFORE the call. If the callback re-enters (calls the throttled function
+     * again, directly or indirectly) it then captures its own fresh args/this instead of
+     * having them wiped by this invocation's cleanup. Clearing first also avoids retaining
+     * a large last argument (e.g. a DOM Event) after the call.
+     */
+    function invoke() {
+      const thisArg = lastThis;
+      const args = lastArgs;
+      lastArgs = [];
+      lastThis = undefined;
+      callback.apply(thisArg, args);
+    }
+
+    /**
      * @this {unknown}
      * @param {unknown[]} args
      */
@@ -275,18 +303,12 @@ class Utils {
           timeout = null;
         }
         previous = now;
-        callback.apply(lastThis, lastArgs);
-        /** release references so a large last argument (e.g. a DOM Event) isn't retained */
-        lastArgs = [];
-        lastThis = undefined;
+        invoke();
       } else if (!timeout) {
         timeout = setTimeout(() => {
           previous = Date.now();
           timeout = null;
-          callback.apply(lastThis, lastArgs);
-          /** release references so a large last argument (e.g. a DOM Event) isn't retained */
-          lastArgs = [];
-          lastThis = undefined;
+          invoke();
         }, remaining);
       }
     }
