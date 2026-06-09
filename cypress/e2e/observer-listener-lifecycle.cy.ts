@@ -152,4 +152,52 @@ describe('Lifecycle: ref-counted observer/listeners + throttle cancel', () => {
       });
     });
   });
+
+  it('destroy() is idempotent - calling it twice is a safe no-op', () => {
+    cy.visit('get-started');
+    cy.window().then((win) => {
+      const VS = (win as unknown as { VirtualSelect: any }).VirtualSelect;
+
+      destroyAll(win);
+      const $ele = mount(win);
+      const instance = $ele.virtualSelect;
+
+      // First destroy tears the instance down; the second must not throw and must not
+      // corrupt the global teardown state (e.g. re-detach listeners or go negative).
+      expect(() => {
+        instance.destroy();
+        instance.destroy();
+      }, 'second destroy() does not throw').to.not.throw();
+
+      expect(instance.isDestroyed, 'instance flagged destroyed').to.eq(true);
+      expect(VS.activeInstances.size, 'no instances remain after double-destroy').to.eq(0);
+      expect(VS.hasGlobalListeners, 'global-listeners flag cleared').to.eq(false);
+      expect(VS.domObserver, 'shared observer disconnected and nulled').to.eq(null);
+    });
+  });
+
+  it('shared observer auto-destroys an instance whose host is removed without destroy()', () => {
+    cy.visit('get-started');
+    cy.window().then((win) => {
+      const VS = (win as unknown as { VirtualSelect: any }).VirtualSelect;
+
+      // Reach a single-instance state so removing this host empties activeInstances and
+      // the observer/listeners must tear down on their own (no explicit destroy() call).
+      destroyAll(win);
+      const $ele = mount(win);
+      expect($ele.virtualSelect, 'instance attached to host').to.not.eq(undefined);
+      expect(VS.activeInstances.size, 'exactly one live instance').to.eq(1);
+
+      // Detach the host from the DOM directly - this is the observer's primary purpose.
+      $ele.remove();
+
+      // MutationObserver callbacks are delivered asynchronously; use retried assertions.
+      cy.wrap(null).should(() => {
+        expect($ele.virtualSelect, 'instance auto-destroyed (back-reference cleared)').to.eq(undefined);
+        expect(VS.activeInstances.size, 'instance untracked after host removal').to.eq(0);
+        expect(VS.hasGlobalListeners, 'page listeners torn down with the last instance').to.eq(false);
+        expect(VS.domObserver, 'shared observer disconnected once no instance remains').to.eq(null);
+      });
+    });
+  });
 });
