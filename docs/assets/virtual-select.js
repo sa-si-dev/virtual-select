@@ -11,6 +11,16 @@
 
 ;// ./src/utils/utils.js
 const NON_WORD_CHARS_REGEX = /[^\p{L}\p{N}_]/gu;
+
+/**
+ * @typedef {Object} ThrottledFunctionExtras
+ * @property {() => void} cancel - Clears any pending trailing invocation.
+ */
+/**
+ * A throttled wrapper that also exposes a `cancel()` method.
+ * @typedef {((...args: unknown[]) => void) & ThrottledFunctionExtras} ThrottledFunction
+ */
+
 class Utils {
   /**
    * @param {any} text
@@ -232,26 +242,13 @@ class Utils {
   }
 
   /**
-   * Remove characters that could break out of the double-quoted class attribute
-   * (`"`, `<`, `>`). Valid CSS class tokens never contain these characters, so legitimate
-   * class names are left untouched while attribute-injection via classNames is prevented.
-   * @static
-   * @param {string} classNames
-   * @return {string}
-   * @memberof Utils
-   */
-  static sanitizeClassNames(classNames) {
-    return classNames ? String(classNames).replace(/["<>]/g, '') : classNames;
-  }
-
-  /**
    * Rate-limit a function so it runs at most once per `wait` ms (leading + trailing edge).
    * Used to keep high-frequency events (e.g. window resize) from running per-instance work
    * on every tick.
    * @static
    * @param {Function} callback
    * @param {number} wait
-   * @return {Function}
+   * @return {ThrottledFunction}
    * @memberof Utils
    */
   static throttle(callback, wait) {
@@ -263,8 +260,11 @@ class Utils {
     let lastThis;
     let previous = 0;
 
-    /** @this {unknown} */
-    return function throttled(/** @type {unknown[]} */...args) {
+    /**
+     * @this {unknown}
+     * @param {unknown[]} args
+     */
+    function throttled(...args) {
       const now = Date.now();
       const remaining = wait - (now - previous);
       lastArgs = args;
@@ -289,7 +289,22 @@ class Utils {
           lastThis = undefined;
         }, remaining);
       }
+    }
+
+    /**
+     * Clear any pending trailing invocation and reset internal state. Call this before
+     * detaching a throttled listener so a queued trailing call cannot fire afterwards.
+     */
+    throttled.cancel = function cancel() {
+      if (timeout) {
+        clearTimeout(timeout);
+        timeout = null;
+      }
+      previous = 0;
+      lastArgs = [];
+      lastThis = undefined;
     };
+    return throttled;
   }
 }
 ;// ./src/utils/dom-utils.js
@@ -994,7 +1009,7 @@ class VirtualSelect {
     this.addEvent(this.$options, 'click', 'onOptionsClick');
     this.addEvent(this.$options, 'mouseover', 'onOptionsMouseOver');
     this.addEvent(this.$options, 'touchmove', 'onOptionsTouchMove');
-    this.addMutationObserver();
+    VirtualSelect.registerInstance(this);
   }
   addEvent($ele, events, method, capture = false) {
     if (!$ele) {
@@ -1048,7 +1063,6 @@ class VirtualSelect {
     if (this.$dropboxContainerTop) {
       this.removeEvent(this.$dropboxContainerTop, 'focus', 'onDropboxContainerTopOrBottomFocus');
     }
-    this.removeMutationObserver();
   }
   removeEvent($ele, events, method, capture = false) {
     if (!$ele) {
@@ -1250,36 +1264,104 @@ class VirtualSelect {
     this.setOptionsContainerHeight(true);
   }
 
-  /** to remove dropboxWrapper on removing vscomp-ele when it is rendered outside of vscomp-ele */
-  addMutationObserver() {
-    if (!this.hasDropboxWrapper) {
+  /**
+   * Single shared observer (instead of one body-wide subtree observer per instance) that
+   * self-destroys any VirtualSelect whose host element is removed from the DOM. This works
+   * in every mode - so removing the element without calling destroy() no longer leaks the
+   * addEvents() listeners (notably the capture-phase document click listener that retains
+   * the instance and its DOM). Inspecting removedNodes makes the cost proportional to the
+   * number of removed nodes rather than the number of live instances.
+   */
+  static observeDomChanges() {
+    if (VirtualSelect.domObserver) {
       return;
     }
-    const $vscompEle = this.$ele;
-    this.mutationObserver = new MutationObserver(mutations => {
-      let isAdded = false;
-      let isRemoved = false;
+    VirtualSelect.domObserver = new MutationObserver(mutations => {
       mutations.forEach(mutation => {
-        if (!isAdded) {
-          isAdded = [...mutation.addedNodes].some($ele => !!($ele === $vscompEle || $ele.contains($vscompEle)));
-        }
-        if (!isRemoved) {
-          isRemoved = [...mutation.removedNodes].some($ele => !!($ele === $vscompEle || $ele.contains($vscompEle)));
-        }
+        mutation.removedNodes.forEach($node => {
+          if ($node.nodeType !== Node.ELEMENT_NODE) {
+            return;
+          }
+          const $eles = $node.classList.contains('vscomp-ele') ? [$node] : [];
+          $node.querySelectorAll('.vscomp-ele').forEach($ele => $eles.push($ele));
+          $eles.forEach($ele => {
+            /** isConnected is false only when the node was genuinely detached (not moved/re-added) */
+            if (!$ele.isConnected && $ele.virtualSelect) {
+              $ele.virtualSelect.destroy();
+            }
+          });
+        });
       });
-      if (isRemoved && !isAdded) {
-        this.destroy();
-      }
     });
-    this.mutationObserver.observe(document.querySelector('body'), {
+    VirtualSelect.domObserver.observe(document.documentElement, {
       childList: true,
       subtree: true
     });
   }
-  removeMutationObserver() {
-    if (this.mutationObserver) {
-      this.mutationObserver.disconnect();
-      this.mutationObserver = null;
+
+  /**
+   * Disconnect and release the shared DOM observer. Called when the last instance is
+   * destroyed so the observer does not keep running (or retain its callback) for the
+   * lifetime of the page once no VirtualSelect remains.
+   */
+  static disconnectDomObserver() {
+    if (VirtualSelect.domObserver) {
+      VirtualSelect.domObserver.disconnect();
+      VirtualSelect.domObserver = null;
+    }
+  }
+
+  /**
+   * Attach the page-level listeners (resize / form reset / form submit) once, on the first
+   * live instance. Idempotent.
+   */
+  static addGlobalListeners() {
+    if (VirtualSelect.hasGlobalListeners) {
+      return;
+    }
+    document.addEventListener('reset', VirtualSelect.onFormReset);
+    document.addEventListener('submit', VirtualSelect.onFormSubmit);
+    window.addEventListener('resize', VirtualSelect.onResizeThrottled);
+    VirtualSelect.hasGlobalListeners = true;
+  }
+
+  /**
+   * Remove the page-level listeners. The same stable references used in addGlobalListeners
+   * are passed so removeEventListener actually unregisters them, and the throttled resize
+   * handler's pending trailing call is cancelled so it cannot fire after teardown.
+   */
+  static removeGlobalListeners() {
+    if (!VirtualSelect.hasGlobalListeners) {
+      return;
+    }
+    document.removeEventListener('reset', VirtualSelect.onFormReset);
+    document.removeEventListener('submit', VirtualSelect.onFormSubmit);
+    window.removeEventListener('resize', VirtualSelect.onResizeThrottled);
+    if (VirtualSelect.onResizeThrottled && typeof VirtualSelect.onResizeThrottled.cancel === 'function') {
+      VirtualSelect.onResizeThrottled.cancel();
+    }
+    VirtualSelect.hasGlobalListeners = false;
+  }
+
+  /**
+   * Track a live instance and make sure the shared observer and page-level listeners exist.
+   * Called once per instance from addEvents().
+   */
+  static registerInstance(instance) {
+    VirtualSelect.activeInstances.add(instance);
+    VirtualSelect.addGlobalListeners();
+    VirtualSelect.observeDomChanges();
+  }
+
+  /**
+   * Stop tracking an instance. When the last one goes away, tear down the page-level
+   * listeners and the shared observer so nothing global outlives the components.
+   */
+  static unregisterInstance(instance) {
+    VirtualSelect.activeInstances.delete(instance);
+    if (VirtualSelect.activeInstances.size === 0) {
+      VirtualSelect.removeGlobalListeners();
+      VirtualSelect.disconnectDomObserver();
     }
   }
 
@@ -3608,6 +3690,9 @@ class VirtualSelect {
 
     /** drop references to cached callbacks and DOM so nothing is retained after destroy */
     this.events = {};
+
+    /** stop tracking this instance; tears down global listeners/observer when it was the last one */
+    VirtualSelect.unregisterInstance(this);
   }
   createSecureTextElements() {
     this.$secureDiv = document.createElement('div');
@@ -3850,20 +3935,29 @@ class VirtualSelect {
   }
   /** static methods - end */
 }
-document.addEventListener('reset', VirtualSelect.onFormReset);
-document.addEventListener('submit', VirtualSelect.onFormSubmit);
+
 /**
  * throttle resize so the per-instance height recompute runs at most ~10x/sec during a drag.
- * Keep a stable reference on VirtualSelect so the listener can be removed later if needed.
+ * Keep a stable reference on VirtualSelect so add/removeGlobalListeners can attach and detach
+ * the exact same handler. The page-level resize/reset/submit listeners are attached lazily on
+ * the first instance (registerInstance) and removed when the last instance is destroyed
+ * (unregisterInstance), so nothing global lingers when no dropdown exists.
  */
-const onResizeThrottled = Utils.throttle(VirtualSelect.onResizeMethod, 100);
-VirtualSelect.onResizeThrottled = onResizeThrottled;
-window.addEventListener('resize', onResizeThrottled);
+VirtualSelect.onResizeThrottled = Utils.throttle(VirtualSelect.onResizeMethod, 100);
 attrPropsMapping = VirtualSelect.getAttrProps();
 window.VirtualSelect = VirtualSelect;
 
 // Static property for tracking open dropdowns
 VirtualSelect.openInstances = new Set();
+
+// Single shared MutationObserver that self-destroys instances whose host element is removed
+VirtualSelect.domObserver = null;
+
+// Set of live instances; drives lazy setup/teardown of the shared observer and page listeners
+VirtualSelect.activeInstances = new Set();
+
+// Whether the page-level resize/reset/submit listeners are currently attached
+VirtualSelect.hasGlobalListeners = false;
 
 // Static property for tracking the last interacted instance
 VirtualSelect.lastInteractedInstance = null;

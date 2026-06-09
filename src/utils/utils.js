@@ -1,5 +1,14 @@
 const NON_WORD_CHARS_REGEX = /[^\p{L}\p{N}_]/gu;
 
+/**
+ * @typedef {Object} ThrottledFunctionExtras
+ * @property {() => void} cancel - Clears any pending trailing invocation.
+ */
+/**
+ * A throttled wrapper that also exposes a `cancel()` method.
+ * @typedef {((...args: unknown[]) => void) & ThrottledFunctionExtras} ThrottledFunction
+ */
+
 export class Utils {
   /**
    * @param {any} text
@@ -236,7 +245,7 @@ export class Utils {
    * @static
    * @param {Function} callback
    * @param {number} wait
-   * @return {Function}
+   * @return {ThrottledFunction}
    * @memberof Utils
    */
   static throttle(callback, wait) {
@@ -248,8 +257,11 @@ export class Utils {
     let lastThis;
     let previous = 0;
 
-    /** @this {unknown} */
-    return function throttled(/** @type {unknown[]} */ ...args) {
+    /**
+     * @this {unknown}
+     * @param {unknown[]} args
+     */
+    function throttled(...args) {
       const now = Date.now();
       const remaining = wait - (now - previous);
       lastArgs = args;
@@ -275,6 +287,22 @@ export class Utils {
           lastThis = undefined;
         }, remaining);
       }
+    }
+
+    /**
+     * Clear any pending trailing invocation and reset internal state. Call this before
+     * detaching a throttled listener so a queued trailing call cannot fire afterwards.
+     */
+    throttled.cancel = function cancel() {
+      if (timeout) {
+        clearTimeout(timeout);
+        timeout = null;
+      }
+      previous = 0;
+      lastArgs = [];
+      lastThis = undefined;
     };
+
+    return throttled;
   }
 }
