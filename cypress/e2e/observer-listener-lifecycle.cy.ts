@@ -94,7 +94,11 @@ describe('Lifecycle: ref-counted observer/listeners + throttle cancel', () => {
 
   it('cancel() prevents a queued trailing resize call from firing', () => {
     cy.visit('get-started');
-    cy.clock();
+    // Non-zero base time: cy.clock() starts the fake clock at epoch (0). With the throttle's
+    // previous=0 after cancel(), now-previous would equal 0 and the leading edge would not
+    // fire (it would schedule a trailing call instead). A real-world timestamp keeps
+    // now-previous > wait so the leading edge fires synchronously, as it does in production.
+    cy.clock(1_000_000);
     cy.window().then((win) => {
       const VS = (win as unknown as { VirtualSelect: any }).VirtualSelect;
 
@@ -125,7 +129,11 @@ describe('Lifecycle: ref-counted observer/listeners + throttle cancel', () => {
 
   it('control: without cancel(), the trailing resize call does fire (test is meaningful)', () => {
     cy.visit('get-started');
-    cy.clock();
+    // Non-zero base time: cy.clock() starts the fake clock at epoch (0). With the throttle's
+    // previous=0 after cancel(), now-previous would equal 0 and the leading edge would not
+    // fire (it would schedule a trailing call instead). A real-world timestamp keeps
+    // now-previous > wait so the leading edge fires synchronously, as it does in production.
+    cy.clock(1_000_000);
     cy.window().then((win) => {
       const VS = (win as unknown as { VirtualSelect: any }).VirtualSelect;
 
