@@ -677,6 +677,7 @@ class VirtualSelect {
    * @param {virtualSelectOptions} options
    */
   constructor(options) {
+    this.isDestroyed = false;
     try {
       this.createSecureTextElements();
       this.setProps(options);
@@ -708,10 +709,10 @@ class VirtualSelect {
     const ariaLabelClearBtnTxt = this.ariaLabelClearButtonText ? `aria-label="${this.ariaLabelClearButtonText}"` : '';
     let isExpanded = false;
     if (this.additionalClasses) {
-      wrapperClasses += ` ${this.additionalClasses}`;
+      wrapperClasses += ` ${Utils.sanitizeClassNames(this.additionalClasses)}`;
     }
     if (this.additionalToggleButtonClasses) {
-      toggleButtonClasses += ` ${this.additionalToggleButtonClasses}`;
+      toggleButtonClasses += ` ${Utils.sanitizeClassNames(this.additionalToggleButtonClasses)}`;
     }
     if (this.multiple) {
       wrapperClasses += ' multiple';
@@ -797,11 +798,11 @@ class VirtualSelect {
     const $wrapper = this.dropboxWrapper !== 'self' ? document.querySelector(this.dropboxWrapper) : null;
     let dropboxClasses = 'vscomp-dropbox';
     if (this.additionalDropboxClasses) {
-      dropboxClasses += ` ${this.additionalDropboxClasses}`;
+      dropboxClasses += ` ${Utils.sanitizeClassNames(this.additionalDropboxClasses)}`;
     }
     let dropboxContainerClasses = 'vscomp-dropbox-container';
     if (this.additionalDropboxContainerClasses) {
-      dropboxContainerClasses += ` ${this.additionalDropboxContainerClasses}`;
+      dropboxContainerClasses += ` ${Utils.sanitizeClassNames(this.additionalDropboxContainerClasses)}`;
     }
 
     // eslint-disable-next-line no-trailing-spaces
@@ -1423,23 +1424,35 @@ class VirtualSelect {
     this.setVisibleOptionsCount();
     this.setOptionsContainerHeight();
     this.addEvents();
-    this.setEleProps();
-    if (!this.keepAlwaysOpen && !this.showAsPopup) {
-      this.initDropboxPopover();
-    }
-    if (this.initialSelectedValue) {
-      this.setValueMethod(this.initialSelectedValue, this.silentInitialValueSet);
-    } else if (this.autoSelectFirstOption && this.visibleOptions.length) {
-      this.setValueMethod(this.visibleOptions[0].value, this.silentInitialValueSet);
-    }
-    if (this.showOptionsOnlyOnSearch) {
-      this.setSearchValue('', false, true);
-    }
-    if (this.initialDisabled) {
-      this.disable();
-    }
-    if (this.autofocus) {
-      this.focus();
+
+    /**
+     * addEvents() registers this instance (installing the shared observer and the page-level
+     * listeners). If any of the steps below throw, the instance is registered but the caller
+     * has no handle to destroy() it, leaking the global listeners/observer. Self-destroy on
+     * failure and rethrow so the constructor's existing handling still reports the error.
+     */
+    try {
+      this.setEleProps();
+      if (!this.keepAlwaysOpen && !this.showAsPopup) {
+        this.initDropboxPopover();
+      }
+      if (this.initialSelectedValue) {
+        this.setValueMethod(this.initialSelectedValue, this.silentInitialValueSet);
+      } else if (this.autoSelectFirstOption && this.visibleOptions.length) {
+        this.setValueMethod(this.visibleOptions[0].value, this.silentInitialValueSet);
+      }
+      if (this.showOptionsOnlyOnSearch) {
+        this.setSearchValue('', false, true);
+      }
+      if (this.initialDisabled) {
+        this.disable();
+      }
+      if (this.autofocus) {
+        this.focus();
+      }
+    } catch (e) {
+      this.destroy();
+      throw e;
     }
   }
   afterRenderOptions() {
@@ -3673,6 +3686,10 @@ class VirtualSelect {
     }
   }
   destroy() {
+    if (this.isDestroyed) {
+      return;
+    }
+    this.isDestroyed = true;
     const {
       $ele
     } = this;
