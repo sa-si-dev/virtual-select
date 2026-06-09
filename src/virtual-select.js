@@ -3881,7 +3881,8 @@ export class VirtualSelect {
   }
 
   // Stable reference to the throttled resize handler is assigned at module init time
-  // (see `VirtualSelect.onResizeThrottled = ...` near the global resize listener).
+  // (see `VirtualSelect.onResizeThrottled = ...`). The resize/reset/submit listeners are
+  // attached lazily in addGlobalListeners() on the first instance, not at module scope.
 
   static onResizeMethod() {
     document.querySelectorAll('.vscomp-ele-wrapper').forEach(($ele) => {
