@@ -3765,7 +3765,7 @@ class VirtualSelect {
     VirtualSelect.secureTextWarningShown = true;
 
     // eslint-disable-next-line no-console
-    console.warn('[virtual-select] Option text (label, value, description) and any `customData` used in ' + 'markup are rendered as HTML and are NOT escaped because `enableSecureText` is disabled ' + '(the default, kept off for performance on large datasets). If any option text can come ' + 'from untrusted input, set `enableSecureText: true` to prevent XSS. ' + 'Docs: https://sa-si-dev.github.io/virtual-select/#/properties?id=enablesecuretext');
+    console.warn('[virtual-select] Option text (label, value, description) and any `customData` used in ' + 'markup are rendered as HTML and are NOT escaped because `enableSecureText` is disabled ' + '(the default, kept off for performance on large datasets). If any option text can come ' + 'from untrusted input, set `enableSecureText: true` to prevent XSS. ' + 'Docs: https://sa-si-dev.github.io/virtual-select/#/properties');
   }
   toggleRequired(isRequired) {
     this.required = Utils.convertToBoolean(isRequired);

@@ -3654,7 +3654,7 @@ export class VirtualSelect {
         'markup are rendered as HTML and are NOT escaped because `enableSecureText` is disabled ' +
         '(the default, kept off for performance on large datasets). If any option text can come ' +
         'from untrusted input, set `enableSecureText: true` to prevent XSS. ' +
-        'Docs: https://sa-si-dev.github.io/virtual-select/#/properties?id=enablesecuretext',
+        'Docs: https://sa-si-dev.github.io/virtual-select/#/properties',
     );
   }
 
