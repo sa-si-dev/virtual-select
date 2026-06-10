@@ -6,7 +6,7 @@
 >
 > - Set **`enableSecureText: true`** whenever options may contain user-supplied/untrusted text. It escapes the built-in option fields (**label**, **value**, and **description**). Note: `customData` is stored as-is (except where the library itself interpolates it, e.g. into the option `aria-label`), and any HTML returned by `labelRenderer`/`selectedLabelRenderer` is **not** sanitized — escape those yourself.
 > - It is **off by default on purpose**: escaping runs per option and adds measurable cost on **large datasets (10k–100k+ records)**. For large lists of *trusted, developer-controlled* data you can leave it off.
-> - When it is off and options are rendered, the plugin logs a **one-time** console warning so the trade-off is discoverable. Set **`showSecureTextWarning: false`** to suppress it once you have consciously accepted the trade-off.
+> - When it is off, the plugin logs a **one-time** console warning (per page) on initialization so the trade-off is discoverable. Set **`showSecureTextWarning: false`** to suppress it once you have consciously accepted the trade-off.
 
 | Name                              | Type              | Default value                                          | Description                                                                                                                                                                                                   |
 | --------------------------------- | ----------------- | ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
