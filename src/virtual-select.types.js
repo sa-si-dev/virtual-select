@@ -70,8 +70,8 @@
  * Set true to show value text as "10 options selected".
  * @property {boolean} [showValueAsTags=false] Show each selected values as tags with remove icon
  * @property {boolean} [disableOptionGroupCheckbox=false] Disable option group title checkbox
- * @property {boolean} [enableSecureText=false] Set true to replace HTML tags from option's text (value and label)
- * to prevent XSS attack.
+ * @property {boolean} [enableSecureText=false] Security: set true to escape built-in option fields
+ * (label, value, and description) to prevent XSS attack.
  * This feature is not enabled by default to avoid performance issue.
  * @property {boolean} [showSecureTextWarning=true] Whether to log the one-time console warning that fires
  * when enableSecureText is disabled. Set false to suppress it once you have consciously accepted the
