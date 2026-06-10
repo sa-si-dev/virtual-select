@@ -3634,17 +3634,15 @@ export class VirtualSelect {
   }
 
   /**
-   * Emit a single (per page) console warning when options are rendered while enableSecureText
-   * is disabled. enableSecureText is OFF by default to avoid the per-option escaping cost on
-   * large datasets (10k-100k+ records); this warning makes the XSS trade-off discoverable
-   * without forcing that cost on everyone. O(1): it never scans option content.
+   * Emit a single (per page) console warning when an instance is constructed while
+   * enableSecureText is disabled. enableSecureText is OFF by default to avoid the per-option
+   * escaping cost on large datasets (10k-100k+ records); this warning makes the XSS trade-off
+   * discoverable without forcing that cost on everyone. O(1): it never scans option content
+   * and fires on the configuration alone, so it is not missed when options are loaded later
+   * (e.g. via setOptions or server search).
    */
   warnIfSecureTextDisabled() {
     if (VirtualSelect.secureTextWarningShown || this.enableSecureText || !this.showSecureTextWarning) {
-      return;
-    }
-
-    if (!this.options || this.options.length === 0) {
       return;
     }
 
@@ -3652,10 +3650,11 @@ export class VirtualSelect {
 
     // eslint-disable-next-line no-console
     console.warn(
-      '[virtual-select] Option labels and values are rendered as HTML and are NOT escaped ' +
-        'because `enableSecureText` is disabled (the default, kept off for performance on large ' +
-        'datasets). If any option text can come from untrusted input, set `enableSecureText: true` ' +
-        'to prevent XSS. Docs: https://sa-si-dev.github.io/virtual-select/#/properties?id=enablesecuretext',
+      '[virtual-select] Option text (label, value, description) and any `customData` used in ' +
+        'markup are rendered as HTML and are NOT escaped because `enableSecureText` is disabled ' +
+        '(the default, kept off for performance on large datasets). If any option text can come ' +
+        'from untrusted input, set `enableSecureText: true` to prevent XSS. ' +
+        'Docs: https://sa-si-dev.github.io/virtual-select/#/properties?id=enablesecuretext',
     );
   }
 

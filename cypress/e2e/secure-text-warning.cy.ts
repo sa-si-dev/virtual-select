@@ -60,4 +60,29 @@ describe('Security: enableSecureText one-time warning (S1)', () => {
 
     cy.get('@warnOptedOut').should('not.be.called');
   });
+
+  it('warns even when constructed with empty options (options may be loaded later)', () => {
+    cy.visit('get-started');
+    cy.window().then((win) => {
+      // @ts-expect-error - static flag
+      win.VirtualSelect.secureTextWarningShown = false;
+      cy.spy(win.console, 'warn').as('warnEmpty');
+
+      // The warning fires on configuration alone, so a select initialised with no options
+      // (then populated later via setOptions / server search) is still flagged.
+      const doc = win.document;
+      const existing = doc.getElementById('vs-s1-empty');
+      if (existing) {
+        existing.remove();
+      }
+      const $ele = doc.createElement('div');
+      $ele.id = 'vs-s1-empty';
+      doc.body.appendChild($ele);
+      // @ts-expect-error - VirtualSelect attached to window by the bundle
+      win.VirtualSelect.init({ ele: $ele, options: [] });
+    });
+
+    cy.get('@warnEmpty').its('callCount').should('eq', 1);
+    cy.get('@warnEmpty').its('firstCall.args.0').should('include', 'enableSecureText');
+  });
 });
