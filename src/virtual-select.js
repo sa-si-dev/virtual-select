@@ -77,6 +77,7 @@ const dataProps = [
   'setValueAsArray',
   'showDropboxAsPopup',
   'showOptionsOnlyOnSearch',
+  'showSecureTextWarning',
   'showSelectedOptionsFirst',
   'showValueAsTags',
   'silentInitialValueSet',
@@ -103,6 +104,7 @@ export class VirtualSelect {
       this.setProps(options);
       this.setDisabledOptions(options.disabledOptions);
       this.setOptions(options.options);
+      this.warnIfSecureTextDisabled();
       this.render();
     } catch (e) {
       // eslint-disable-next-line no-console
@@ -1114,6 +1116,7 @@ export class VirtualSelect {
     this.showValueAsTags = convertToBoolean(options.showValueAsTags);
     this.disableOptionGroupCheckbox = convertToBoolean(options.disableOptionGroupCheckbox);
     this.enableSecureText = convertToBoolean(options.enableSecureText);
+    this.showSecureTextWarning = convertToBoolean(options.showSecureTextWarning, true);
     this.setValueAsArray = convertToBoolean(options.setValueAsArray);
     this.disableValidation = convertToBoolean(options.disableValidation);
     this.initialDisabled = convertToBoolean(options.disabled);
@@ -1247,6 +1250,7 @@ export class VirtualSelect {
       additionalToggleButtonClasses: '',
       maxValues: 0,
       showDropboxAsPopup: true,
+      showSecureTextWarning: true,
       popupDropboxBreakpoint: '576px',
       popupPosition: 'center',
       hideValueTooltipOnSelectAll: true,
@@ -3629,6 +3633,31 @@ export class VirtualSelect {
     return this.$secureDiv.innerHTML;
   }
 
+  /**
+   * Emit a single (per page) console warning when an instance is constructed while
+   * enableSecureText is disabled. enableSecureText is OFF by default to avoid the per-option
+   * escaping cost on large datasets (10k-100k+ records); this warning makes the XSS trade-off
+   * discoverable without forcing that cost on everyone. O(1): it never scans option content
+   * and fires on the configuration alone, so it is not missed when options are loaded later
+   * (e.g. via setOptions or server search).
+   */
+  warnIfSecureTextDisabled() {
+    if (VirtualSelect.secureTextWarningShown || this.enableSecureText || !this.showSecureTextWarning) {
+      return;
+    }
+
+    VirtualSelect.secureTextWarningShown = true;
+
+    // eslint-disable-next-line no-console
+    console.warn(
+      '[virtual-select] Option text (label, value, description) and any `customData` used in ' +
+        'markup are rendered as HTML and are NOT escaped because `enableSecureText` is disabled ' +
+        '(the default, kept off for performance on large datasets). If any option text can come ' +
+        'from untrusted input, set `enableSecureText: true` to prevent XSS. ' +
+        'Docs: https://sa-si-dev.github.io/virtual-select/#/properties',
+    );
+  }
+
   toggleRequired(isRequired) {
     this.required = Utils.convertToBoolean(isRequired);
     this.$ele.required = this.required;
@@ -3942,6 +3971,9 @@ VirtualSelect.hasGlobalListeners = false;
 
 // Static property for tracking the last interacted instance
 VirtualSelect.lastInteractedInstance = null;
+
+// Ensures the "enableSecureText disabled" warning is logged at most once per page
+VirtualSelect.secureTextWarningShown = false;
 
 /** polyfill to fix an issue in ie browser */
 if (typeof NodeList !== 'undefined' && NodeList.prototype && !NodeList.prototype.forEach) {
