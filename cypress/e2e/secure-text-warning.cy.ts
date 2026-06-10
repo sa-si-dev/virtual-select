@@ -47,4 +47,17 @@ describe('Security: enableSecureText one-time warning (S1)', () => {
 
     cy.get('@warnEnabled').should('not.be.called');
   });
+
+  it('does not warn when showSecureTextWarning is false (explicit opt-out)', () => {
+    cy.visit('get-started');
+    cy.window().then((win) => {
+      // @ts-expect-error - static flag
+      win.VirtualSelect.secureTextWarningShown = false;
+      cy.spy(win.console, 'warn').as('warnOptedOut');
+
+      mount(win, 'vs-s1-d', { showSecureTextWarning: false });
+    });
+
+    cy.get('@warnOptedOut').should('not.be.called');
+  });
 });

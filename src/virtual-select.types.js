@@ -73,6 +73,9 @@
  * @property {boolean} [enableSecureText=false] Set true to replace HTML tags from option's text (value and label)
  * to prevent XSS attack.
  * This feature is not enabled by default to avoid performance issue.
+ * @property {boolean} [showSecureTextWarning=true] Whether to log the one-time console warning that fires
+ * when enableSecureText is disabled. Set false to suppress it once you have consciously accepted the
+ * XSS trade-off (trusted/developer-controlled option data or intentional HTML).
  * @property {boolean} [setValueAsArray=false] Set value for hidden input in array format (e.g. '["1", "2"]')
  * @property {string} [emptyValue=''] Empty value to use for hidden input when no value is selected
  * (e.g. 'null' or '[]' or 'none')

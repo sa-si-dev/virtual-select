@@ -77,6 +77,7 @@ const dataProps = [
   'setValueAsArray',
   'showDropboxAsPopup',
   'showOptionsOnlyOnSearch',
+  'showSecureTextWarning',
   'showSelectedOptionsFirst',
   'showValueAsTags',
   'silentInitialValueSet',
@@ -1115,6 +1116,7 @@ export class VirtualSelect {
     this.showValueAsTags = convertToBoolean(options.showValueAsTags);
     this.disableOptionGroupCheckbox = convertToBoolean(options.disableOptionGroupCheckbox);
     this.enableSecureText = convertToBoolean(options.enableSecureText);
+    this.showSecureTextWarning = convertToBoolean(options.showSecureTextWarning, true);
     this.setValueAsArray = convertToBoolean(options.setValueAsArray);
     this.disableValidation = convertToBoolean(options.disableValidation);
     this.initialDisabled = convertToBoolean(options.disabled);
@@ -1248,6 +1250,7 @@ export class VirtualSelect {
       additionalToggleButtonClasses: '',
       maxValues: 0,
       showDropboxAsPopup: true,
+      showSecureTextWarning: true,
       popupDropboxBreakpoint: '576px',
       popupPosition: 'center',
       hideValueTooltipOnSelectAll: true,
@@ -3637,7 +3640,7 @@ export class VirtualSelect {
    * without forcing that cost on everyone. O(1): it never scans option content.
    */
   warnIfSecureTextDisabled() {
-    if (VirtualSelect.secureTextWarningShown || this.enableSecureText) {
+    if (VirtualSelect.secureTextWarningShown || this.enableSecureText || !this.showSecureTextWarning) {
       return;
     }
 

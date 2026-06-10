@@ -669,7 +669,7 @@ const keyDownMethodMapping = {
 const valueLessProps = ['autofocus', 'disabled', 'multiple', 'required'];
 const nativeProps = ['autofocus', 'class', 'disabled', 'id', 'multiple', 'name', 'placeholder', 'required'];
 let attrPropsMapping;
-const dataProps = ['additionalClasses', 'additionalDropboxClasses', 'additionalDropboxContainerClasses', 'additionalToggleButtonClasses', 'aliasKey', 'allOptionsSelectedText', 'allowNewOption', 'alwaysShowSelectedOptionsCount', 'alwaysShowSelectedOptionsLabel', 'ariaLabelledby', 'ariaLabelText', 'ariaLabelClearButtonText', 'ariaLabelTagClearButtonText', 'ariaLabelSearchClearButtonText', 'autoSelectFirstOption', 'clearButtonText', 'descriptionKey', 'disableAllOptionsSelectedText', 'disableOptionGroupCheckbox', 'disableSelectAll', 'disableValidation', 'dropboxWidth', 'dropboxWrapper', 'emptyValue', 'enableSecureText', 'focusSelectedOptionOnOpen', 'hasOptionDescription', 'hideClearButton', 'hideValueTooltipOnSelectAll', 'keepAlwaysOpen', 'labelKey', 'markSearchResults', 'maxValues', 'maxWidth', 'minValues', 'moreText', 'noOfDisplayValues', 'noOptionsText', 'noSearchResultsText', 'optionHeight', 'optionSelectedText', 'optionsCount', 'optionsSelectedText', 'popupDropboxBreakpoint', 'popupPosition', 'position', 'search', 'searchByStartsWith', 'searchDelay', 'searchFormLabel', 'searchGroup', 'searchNormalize', 'searchPlaceholderText', 'selectAllOnlyVisible', 'selectAllText', 'setValueAsArray', 'showDropboxAsPopup', 'showOptionsOnlyOnSearch', 'showSelectedOptionsFirst', 'showValueAsTags', 'silentInitialValueSet', 'textDirection', 'tooltipAlignment', 'tooltipFontSize', 'tooltipMaxWidth', 'updatePositionThrottle', 'useGroupValue', 'valueKey', 'zIndex'];
+const dataProps = ['additionalClasses', 'additionalDropboxClasses', 'additionalDropboxContainerClasses', 'additionalToggleButtonClasses', 'aliasKey', 'allOptionsSelectedText', 'allowNewOption', 'alwaysShowSelectedOptionsCount', 'alwaysShowSelectedOptionsLabel', 'ariaLabelledby', 'ariaLabelText', 'ariaLabelClearButtonText', 'ariaLabelTagClearButtonText', 'ariaLabelSearchClearButtonText', 'autoSelectFirstOption', 'clearButtonText', 'descriptionKey', 'disableAllOptionsSelectedText', 'disableOptionGroupCheckbox', 'disableSelectAll', 'disableValidation', 'dropboxWidth', 'dropboxWrapper', 'emptyValue', 'enableSecureText', 'focusSelectedOptionOnOpen', 'hasOptionDescription', 'hideClearButton', 'hideValueTooltipOnSelectAll', 'keepAlwaysOpen', 'labelKey', 'markSearchResults', 'maxValues', 'maxWidth', 'minValues', 'moreText', 'noOfDisplayValues', 'noOptionsText', 'noSearchResultsText', 'optionHeight', 'optionSelectedText', 'optionsCount', 'optionsSelectedText', 'popupDropboxBreakpoint', 'popupPosition', 'position', 'search', 'searchByStartsWith', 'searchDelay', 'searchFormLabel', 'searchGroup', 'searchNormalize', 'searchPlaceholderText', 'selectAllOnlyVisible', 'selectAllText', 'setValueAsArray', 'showDropboxAsPopup', 'showOptionsOnlyOnSearch', 'showSecureTextWarning', 'showSelectedOptionsFirst', 'showValueAsTags', 'silentInitialValueSet', 'textDirection', 'tooltipAlignment', 'tooltipFontSize', 'tooltipMaxWidth', 'updatePositionThrottle', 'useGroupValue', 'valueKey', 'zIndex'];
 
 /** Class representing VirtualSelect */
 class VirtualSelect {
@@ -1580,6 +1580,7 @@ class VirtualSelect {
     this.showValueAsTags = convertToBoolean(options.showValueAsTags);
     this.disableOptionGroupCheckbox = convertToBoolean(options.disableOptionGroupCheckbox);
     this.enableSecureText = convertToBoolean(options.enableSecureText);
+    this.showSecureTextWarning = convertToBoolean(options.showSecureTextWarning, true);
     this.setValueAsArray = convertToBoolean(options.setValueAsArray);
     this.disableValidation = convertToBoolean(options.disableValidation);
     this.initialDisabled = convertToBoolean(options.disabled);
@@ -1705,6 +1706,7 @@ class VirtualSelect {
       additionalToggleButtonClasses: '',
       maxValues: 0,
       showDropboxAsPopup: true,
+      showSecureTextWarning: true,
       popupDropboxBreakpoint: '576px',
       popupPosition: 'center',
       hideValueTooltipOnSelectAll: true,
@@ -3755,7 +3757,7 @@ class VirtualSelect {
    * without forcing that cost on everyone. O(1): it never scans option content.
    */
   warnIfSecureTextDisabled() {
-    if (VirtualSelect.secureTextWarningShown || this.enableSecureText) {
+    if (VirtualSelect.secureTextWarningShown || this.enableSecureText || !this.showSecureTextWarning) {
       return;
     }
     if (!this.options || this.options.length === 0) {
