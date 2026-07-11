@@ -420,7 +420,7 @@ export class VirtualSelect {
       }
 
       html += `<div role="option" aria-selected="${isSelected}" id="vscomp-option-${uniqueId}-${index}"
-          class="${optionClasses}" data-value="${d.value}" data-index="${index}" data-visible-index="${d.visibleIndex}"
+          class="${optionClasses}" data-value="${this.secureText(d.value)}" data-index="${index}" data-visible-index="${d.visibleIndex}"
           tabindex=${tabIndexValue} ${groupIndexText} ${ariaDisabledText} ${ariaLabel} ${ariaAttrs}
         >
           ${leftSection}
@@ -1558,7 +1558,7 @@ export class VirtualSelect {
         d = { [valueKey]: d, [labelKey]: d };
       }
 
-      const value = secureText(getString(d[valueKey]));
+      const value = getString(d[valueKey]);
       const label = secureText(getString(d[labelKey]));
       const childOptions = d.options;
       const isGroupTitle = !!childOptions;
@@ -2129,7 +2129,7 @@ export class VirtualSelect {
     if (newOption) {
       const newIndex = newOption.index;
 
-      this.setOptionProp(newIndex, 'value', this.secureText(value));
+      this.setOptionProp(newIndex, 'value', value);
       this.setOptionProp(newIndex, 'label', this.secureText(value));
     } else {
       const data = {
@@ -2385,7 +2385,7 @@ export class VirtualSelect {
 
     const { getString } = Utils;
     const secureText = this.secureText.bind(this);
-    const value = secureText(getString(data.value));
+    const value = getString(data.value);
     const label = secureText(getString(data.label));
     const description = secureText(getString(data.description));
 
