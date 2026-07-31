@@ -2579,7 +2579,7 @@ export class VirtualSelect {
 
   shouldSkipOptionInNavigation($ele) {
     if (!$ele) {
-      return true;
+      return false;
     }
 
     if (DomUtils.hasClass($ele, 'disabled')) {
@@ -2885,12 +2885,14 @@ export class VirtualSelect {
         $focusableEle = this.getSibling($focusableEle, 'next');
       }
 
-      DomUtils.setAttr($focusableEle, 'tabindex', '0');
-      this.$optionsContainer.scrollTop = this.optionHeight * this.getFirstVisibleOptionIndex();
-      this.focusOption({
-        focusFirst: true,
-      });
-      $focusableEle.focus();
+      if ($focusableEle) {
+        DomUtils.setAttr($focusableEle, 'tabindex', '0');
+        this.$optionsContainer.scrollTop = this.optionHeight * this.getFirstVisibleOptionIndex();
+        this.focusOption({
+          focusFirst: true,
+        });
+        $focusableEle.focus();
+      }
     } else {
       $focusableEle = this.$dropbox.querySelector('[tabindex="0"]');
       if ($focusableEle) {
