@@ -13,6 +13,7 @@
  * @property {boolean} [search=false] Enable search
  * @property {boolean} [searchByStartsWith=false] Search options by startsWith() method
  * @property {boolean} [searchGroup=false] Include group title for searching
+ * @property {boolean} [searchNormalize=false] Allow searching by label and description ignoring diacritics
  * @property {boolean} [disabled=false] Disable dropdown
  * @property {boolean} [required=false] Enable required validation
  * @property {boolean} [autofocus=false] Autofocus dropdown on load
@@ -69,9 +70,12 @@
  * Set true to show value text as "10 options selected".
  * @property {boolean} [showValueAsTags=false] Show each selected values as tags with remove icon
  * @property {boolean} [disableOptionGroupCheckbox=false] Disable option group title checkbox
- * @property {boolean} [enableSecureText=false] Set true to replace HTML tags from option's text (value and label)
- * to prevent XSS attack.
+ * @property {boolean} [enableSecureText=false] Security: set true to escape built-in option fields
+ * (label, value, and description) to prevent XSS attack.
  * This feature is not enabled by default to avoid performance issue.
+ * @property {boolean} [showSecureTextWarning=true] Whether to log the one-time console warning that fires
+ * when enableSecureText is disabled. Set false to suppress it once you have consciously accepted the
+ * XSS trade-off (trusted/developer-controlled option data or intentional HTML).
  * @property {boolean} [setValueAsArray=false] Set value for hidden input in array format (e.g. '["1", "2"]')
  * @property {string} [emptyValue=''] Empty value to use for hidden input when no value is selected
  * (e.g. 'null' or '[]' or 'none')

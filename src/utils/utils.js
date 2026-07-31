@@ -1,3 +1,14 @@
+const NON_WORD_CHARS_REGEX = /[^\p{L}\p{N}_]/gu;
+
+/**
+ * @typedef {Object} ThrottledFunctionExtras
+ * @property {() => void} cancel - Clears any pending trailing invocation.
+ */
+/**
+ * A throttled wrapper that also exposes a `cancel()` method.
+ * @typedef {((...args: unknown[]) => void) & ThrottledFunctionExtras} ThrottledFunction
+ */
+
 export class Utils {
   /**
    * @param {any} text
@@ -151,13 +162,29 @@ export class Utils {
   }
 
   /**
+   * Normalizes a string for diacritic-insensitive search. Decomposes the input
+   * via NFD, then strips every character that is not a Unicode letter
+   * (\p{L}), number (\p{N}), or underscore. As a side effect this removes
+   * combining marks (so "München" matches "Munchen", "Việt Nam" matches
+   * "Viet Nam", "Ёжик" matches "Ежик") as well as punctuation and whitespace
+   * (so "co-op" matches "coop" and "Foo Bar" collapses into "FooBar").
+   * Base letters and numbers from many scripts (Latin, Greek, Cyrillic, CJK,
+   * etc.) are preserved, but scripts that rely on combining marks are NOT
+   * fully preserved — every Unicode combining mark is removed, which affects
+   * Thai vowel signs, Devanagari matras, hiragana/katakana voicing marks
+   * (dakuten/handakuten), etc. This produces fuzzier matching for those
+   * scripts; use `searchNormalize: false` if exact-match behavior is
+   * required.
+   *
+   * Note: a few atomic letters do not decompose under NFD (e.g. "ø", "æ", "ß")
+   * and are kept as-is — a search for "Bjorn" will not match "Bjørn".
+   *
    * @param {string} text
    * @return {string}
    * @memberof Utils
    */
   static normalizeString(text) {
-    const NON_WORD_REGEX = /[^\w]/g;
-    return text.normalize('NFD').replace(NON_WORD_REGEX, '');
+    return text.normalize('NFD').replace(NON_WORD_CHARS_REGEX, '');
   }
 
   /**
@@ -209,5 +236,95 @@ export class Utils {
    */
   static containsHTMLorJS(text) {
     return /<([a-z]+)[\s\S]*?>|on\w+="[^"]*"/i.test(text);
+  }
+
+  /**
+   * Remove characters that could break out of the double-quoted class attribute
+   * (`"`, `<`, `>`). Valid CSS class tokens never contain these characters, so legitimate
+   * class names are left untouched while attribute-injection via classNames is prevented.
+   * @static
+   * @param {string} classNames
+   * @return {string}
+   * @memberof Utils
+   */
+  static sanitizeClassNames(classNames) {
+    return classNames ? String(classNames).replace(/["<>]/g, '') : classNames;
+  }
+
+  /**
+   * Rate-limit a function so it runs at most once per `wait` ms (leading + trailing edge).
+   * Used to keep high-frequency events (e.g. window resize) from running per-instance work
+   * on every tick.
+   * @static
+   * @param {Function} callback
+   * @param {number} wait
+   * @return {ThrottledFunction}
+   * @memberof Utils
+   */
+  static throttle(callback, wait) {
+    /** @type {ReturnType<typeof setTimeout> | null} */
+    let timeout = null;
+    /** @type {unknown[]} */
+    let lastArgs = [];
+    /** @type {unknown} */
+    let lastThis;
+    let previous = 0;
+
+    /**
+     * Invoke the callback with the retained context/args, snapshotting and clearing those
+     * references BEFORE the call. If the callback re-enters (calls the throttled function
+     * again, directly or indirectly) it then captures its own fresh args/this instead of
+     * having them wiped by this invocation's cleanup. Clearing first also avoids retaining
+     * a large last argument (e.g. a DOM Event) after the call.
+     */
+    function invoke() {
+      const thisArg = lastThis;
+      const args = lastArgs;
+      lastArgs = [];
+      lastThis = undefined;
+      callback.apply(thisArg, args);
+    }
+
+    /**
+     * @this {unknown}
+     * @param {unknown[]} args
+     */
+    function throttled(...args) {
+      const now = Date.now();
+      const remaining = wait - (now - previous);
+      lastArgs = args;
+      lastThis = this;
+
+      if (remaining <= 0 || remaining > wait) {
+        if (timeout) {
+          clearTimeout(timeout);
+          timeout = null;
+        }
+        previous = now;
+        invoke();
+      } else if (!timeout) {
+        timeout = setTimeout(() => {
+          previous = Date.now();
+          timeout = null;
+          invoke();
+        }, remaining);
+      }
+    }
+
+    /**
+     * Clear any pending trailing invocation and reset internal state. Call this before
+     * detaching a throttled listener so a queued trailing call cannot fire afterwards.
+     */
+    throttled.cancel = function cancel() {
+      if (timeout) {
+        clearTimeout(timeout);
+        timeout = null;
+      }
+      previous = 0;
+      lastArgs = [];
+      lastThis = undefined;
+    };
+
+    return throttled;
   }
 }

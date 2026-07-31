@@ -77,6 +77,7 @@ const dataProps = [
   'setValueAsArray',
   'showDropboxAsPopup',
   'showOptionsOnlyOnSearch',
+  'showSecureTextWarning',
   'showSelectedOptionsFirst',
   'showValueAsTags',
   'silentInitialValueSet',
@@ -96,11 +97,14 @@ export class VirtualSelect {
    * @param {virtualSelectOptions} options
    */
   constructor(options) {
+    this.isDestroyed = false;
+
     try {
       this.createSecureTextElements();
       this.setProps(options);
       this.setDisabledOptions(options.disabledOptions);
       this.setOptions(options.options);
+      this.warnIfSecureTextDisabled();
       this.render();
     } catch (e) {
       // eslint-disable-next-line no-console
@@ -127,11 +131,11 @@ export class VirtualSelect {
     let isExpanded = false;
 
     if (this.additionalClasses) {
-      wrapperClasses += ` ${this.additionalClasses}`;
+      wrapperClasses += ` ${Utils.sanitizeClassNames(this.additionalClasses)}`;
     }
 
     if (this.additionalToggleButtonClasses) {
-      toggleButtonClasses += ` ${this.additionalToggleButtonClasses}`;
+      toggleButtonClasses += ` ${Utils.sanitizeClassNames(this.additionalToggleButtonClasses)}`;
     }
 
     if (this.multiple) {
@@ -230,13 +234,13 @@ export class VirtualSelect {
     let dropboxClasses = 'vscomp-dropbox';
 
     if (this.additionalDropboxClasses) {
-      dropboxClasses += ` ${this.additionalDropboxClasses}`;
+      dropboxClasses += ` ${Utils.sanitizeClassNames(this.additionalDropboxClasses)}`;
     }
 
     let dropboxContainerClasses = 'vscomp-dropbox-container';
 
     if (this.additionalDropboxContainerClasses) {
-      dropboxContainerClasses += ` ${this.additionalDropboxContainerClasses}`;
+      dropboxContainerClasses += ` ${Utils.sanitizeClassNames(this.additionalDropboxContainerClasses)}`;
     }
 
     // eslint-disable-next-line no-trailing-spaces
@@ -302,6 +306,13 @@ export class VirtualSelect {
     let groupName = '';
 
     if (markSearchResults) {
+      /**
+       * Search input is regex-escaped (no ReDoS). The (?!([^<]+)?>) lookahead avoids inserting
+       * <mark> inside a tag; it relies on option labels being escaped via enableSecureText. When
+       * enableSecureText is off, labels are rendered as raw HTML by design (the consumer opts into
+       * this), so this highlight does not introduce an additional injection vector beyond the raw
+       * HTML the consumer already chose to render.
+       */
       searchRegex = new RegExp(`(${Utils.regexEscape(this.searchValue)})(?!([^<]+)?>)`, 'gi');
     }
 
@@ -329,7 +340,8 @@ export class VirtualSelect {
       let ariaDisabledText = '';
 
       if (d.classNames) {
-        optionClasses += ` ${d.classNames}`;
+        /** sanitize so a consumer-provided class string cannot break out of the class attribute */
+        optionClasses += ` ${Utils.sanitizeClassNames(d.classNames)}`;
       }
 
       if (d.isFocused) {
@@ -362,8 +374,18 @@ export class VirtualSelect {
         groupIndexText = `data-group-index="${d.groupIndex}"`;
 
         if (d.customData) {
-          groupName = d.customData.group_name !== undefined ? `${d.customData.group_name}, ` : '';
-          optionDesc = d.customData.description !== undefined ? ` ${d.customData.description},` : '';
+          /**
+           * customData fields are interpolated into the aria-label attribute, so they must be
+           * escaped the same way as label/value (via secureText). Otherwise a quote in
+           * group_name/description can break out of the attribute even when enableSecureText
+           * is on - an XSS bypass. secureText is a no-op when enableSecureText is disabled,
+           * keeping the existing behaviour for consumers that intentionally pass raw text.
+           */
+          const groupNameText = this.secureText(Utils.getString(d.customData.group_name));
+          const groupDescText = this.secureText(Utils.getString(d.customData.description));
+
+          groupName = d.customData.group_name !== undefined ? `${groupNameText}, ` : '';
+          optionDesc = d.customData.description !== undefined ? ` ${groupDescText},` : '';
 
           ariaLabel = `aria-label="${groupName} ${d.label}, ${optionDesc}"`;
         } else {
@@ -481,7 +503,7 @@ export class VirtualSelect {
     this.addEvent(this.$options, 'click', 'onOptionsClick');
     this.addEvent(this.$options, 'mouseover', 'onOptionsMouseOver');
     this.addEvent(this.$options, 'touchmove', 'onOptionsTouchMove');
-    this.addMutationObserver();
+    VirtualSelect.registerInstance(this);
   }
 
   addEvent($ele, events, method, capture = false) {
@@ -506,7 +528,12 @@ export class VirtualSelect {
 
   /** dom event methods - start */
   removeEvents() {
-    this.removeEvent(document, 'click', 'onDocumentClick');
+    /**
+     * onDocumentClick is registered in the capture phase (see addEvents). The capture flag
+     * MUST match here, otherwise removeEventListener is a no-op and the listener (and the
+     * VirtualSelect instance + detached DOM it closes over) leaks on every destroy/re-render.
+     */
+    this.removeEvent(document, 'click', 'onDocumentClick', true);
     this.removeEvent(this.$allWrappers, 'keydown', 'onKeyDown');
     this.removeEvent(this.$toggleButton, 'click keydown', 'onToggleButtonPress');
     this.removeEvent(this.$clearButton, 'click keydown', 'onClearButtonClick');
@@ -535,11 +562,9 @@ export class VirtualSelect {
     if (this.$dropboxContainerTop) {
       this.removeEvent(this.$dropboxContainerTop, 'focus', 'onDropboxContainerTopOrBottomFocus');
     }
-
-    this.removeMutationObserver();
   }
 
-  removeEvent($ele, events, method) {
+  removeEvent($ele, events, method, capture = false) {
     if (!$ele) {
       return;
     }
@@ -551,7 +576,7 @@ export class VirtualSelect {
       const callback = this.events[eventsKey];
 
       if (callback) {
-        DomUtils.removeEvent($ele, event, callback);
+        DomUtils.removeEvent($ele, event, callback, capture);
       }
     });
   }
@@ -772,39 +797,110 @@ export class VirtualSelect {
     this.setOptionsContainerHeight(true);
   }
 
-  /** to remove dropboxWrapper on removing vscomp-ele when it is rendered outside of vscomp-ele */
-  addMutationObserver() {
-    if (!this.hasDropboxWrapper) {
+  /**
+   * Single shared observer (instead of one body-wide subtree observer per instance) that
+   * self-destroys any VirtualSelect whose host element is removed from the DOM. This works
+   * in every mode - so removing the element without calling destroy() no longer leaks the
+   * addEvents() listeners (notably the capture-phase document click listener that retains
+   * the instance and its DOM). Inspecting removedNodes makes the cost proportional to the
+   * number of removed nodes rather than the number of live instances.
+   */
+  static observeDomChanges() {
+    if (VirtualSelect.domObserver) {
       return;
     }
 
-    const $vscompEle = this.$ele;
-
-    this.mutationObserver = new MutationObserver((mutations) => {
-      let isAdded = false;
-      let isRemoved = false;
-
+    VirtualSelect.domObserver = new MutationObserver((mutations) => {
       mutations.forEach((mutation) => {
-        if (!isAdded) {
-          isAdded = [...mutation.addedNodes].some(($ele) => !!($ele === $vscompEle || $ele.contains($vscompEle)));
-        }
+        mutation.removedNodes.forEach(($node) => {
+          if ($node.nodeType !== Node.ELEMENT_NODE) {
+            return;
+          }
 
-        if (!isRemoved) {
-          isRemoved = [...mutation.removedNodes].some(($ele) => !!($ele === $vscompEle || $ele.contains($vscompEle)));
-        }
+          const $eles = $node.classList.contains('vscomp-ele') ? [$node] : [];
+          $node.querySelectorAll('.vscomp-ele').forEach(($ele) => $eles.push($ele));
+
+          $eles.forEach(($ele) => {
+            /** isConnected is false only when the node was genuinely detached (not moved/re-added) */
+            if (!$ele.isConnected && $ele.virtualSelect) {
+              $ele.virtualSelect.destroy();
+            }
+          });
+        });
       });
-
-      if (isRemoved && !isAdded) {
-        this.destroy();
-      }
     });
 
-    this.mutationObserver.observe(document.querySelector('body'), { childList: true, subtree: true });
+    VirtualSelect.domObserver.observe(document.documentElement, { childList: true, subtree: true });
   }
 
-  removeMutationObserver() {
-    if (this.hasDropboxWrapper) {
-      this.mutationObserver.disconnect();
+  /**
+   * Disconnect and release the shared DOM observer. Called when the last instance is
+   * destroyed so the observer does not keep running (or retain its callback) for the
+   * lifetime of the page once no VirtualSelect remains.
+   */
+  static disconnectDomObserver() {
+    if (VirtualSelect.domObserver) {
+      VirtualSelect.domObserver.disconnect();
+      VirtualSelect.domObserver = null;
+    }
+  }
+
+  /**
+   * Attach the page-level listeners (resize / form reset / form submit) once, on the first
+   * live instance. Idempotent.
+   */
+  static addGlobalListeners() {
+    if (VirtualSelect.hasGlobalListeners) {
+      return;
+    }
+
+    document.addEventListener('reset', VirtualSelect.onFormReset);
+    document.addEventListener('submit', VirtualSelect.onFormSubmit);
+    window.addEventListener('resize', VirtualSelect.onResizeThrottled);
+    VirtualSelect.hasGlobalListeners = true;
+  }
+
+  /**
+   * Remove the page-level listeners. The same stable references used in addGlobalListeners
+   * are passed so removeEventListener actually unregisters them, and the throttled resize
+   * handler's pending trailing call is cancelled so it cannot fire after teardown.
+   */
+  static removeGlobalListeners() {
+    if (!VirtualSelect.hasGlobalListeners) {
+      return;
+    }
+
+    document.removeEventListener('reset', VirtualSelect.onFormReset);
+    document.removeEventListener('submit', VirtualSelect.onFormSubmit);
+    window.removeEventListener('resize', VirtualSelect.onResizeThrottled);
+
+    if (VirtualSelect.onResizeThrottled && typeof VirtualSelect.onResizeThrottled.cancel === 'function') {
+      VirtualSelect.onResizeThrottled.cancel();
+    }
+
+    VirtualSelect.hasGlobalListeners = false;
+  }
+
+  /**
+   * Track a live instance and make sure the shared observer and page-level listeners exist.
+   * Called once per instance from addEvents().
+   */
+  static registerInstance(instance) {
+    VirtualSelect.activeInstances.add(instance);
+    VirtualSelect.addGlobalListeners();
+    VirtualSelect.observeDomChanges();
+  }
+
+  /**
+   * Stop tracking an instance. When the last one goes away, tear down the page-level
+   * listeners and the shared observer so nothing global outlives the components.
+   */
+  static unregisterInstance(instance) {
+    VirtualSelect.activeInstances.delete(instance);
+
+    if (VirtualSelect.activeInstances.size === 0) {
+      VirtualSelect.removeGlobalListeners();
+      VirtualSelect.disconnectDomObserver();
     }
   }
 
@@ -814,16 +910,24 @@ export class VirtualSelect {
     this.toggleAllOptionsClass(isReset ? false : undefined);
   }
 
-  beforeSelectNewValue() {
+  beforeSelectNewValue(selectedValue) {
     const newOption = this.getNewOption();
-    const newIndex = newOption.index;
 
-    this.newValues.push(newOption.value);
-    this.setOptionProp(newIndex, 'isCurrentNew', false);
-    this.setOptionProp(newIndex, 'isNew', true);
+    if (newOption) {
+      const newIndex = newOption.index;
+
+      this.newValues.push(newOption.value);
+      this.setOptionProp(newIndex, 'isCurrentNew', false);
+      this.setOptionProp(newIndex, 'isNew', true);
+    } else if (selectedValue) {
+      // In single-select flow the temporary current-new option can be removed
+      // when dropdown close resets search, so re-add as a persisted new option.
+      this.setNewOption(selectedValue);
+      this.toggleSelectedProp(this.lastOptionIndex, true);
+    }
 
     /** using setTimeout to fix the issue of dropbox getting closed on select */
-    setTimeout(() => {
+    this.setManagedTimeout(() => {
       this.setSearchValue('');
       this.focusSearchInput();
     }, 0);
@@ -840,28 +944,40 @@ export class VirtualSelect {
     this.setVisibleOptionsCount();
     this.setOptionsContainerHeight();
     this.addEvents();
-    this.setEleProps();
 
-    if (!this.keepAlwaysOpen && !this.showAsPopup) {
-      this.initDropboxPopover();
-    }
+    /**
+     * addEvents() registers this instance (installing the shared observer and the page-level
+     * listeners). If any of the steps below throw, the instance is registered but the caller
+     * has no handle to destroy() it, leaking the global listeners/observer. Self-destroy on
+     * failure and rethrow so the constructor's existing handling still reports the error.
+     */
+    try {
+      this.setEleProps();
 
-    if (this.initialSelectedValue) {
-      this.setValueMethod(this.initialSelectedValue, this.silentInitialValueSet);
-    } else if (this.autoSelectFirstOption && this.visibleOptions.length) {
-      this.setValueMethod(this.visibleOptions[0].value, this.silentInitialValueSet);
-    }
+      if (!this.keepAlwaysOpen && !this.showAsPopup) {
+        this.initDropboxPopover();
+      }
 
-    if (this.showOptionsOnlyOnSearch) {
-      this.setSearchValue('', false, true);
-    }
+      if (this.initialSelectedValue) {
+        this.setValueMethod(this.initialSelectedValue, this.silentInitialValueSet);
+      } else if (this.autoSelectFirstOption && this.visibleOptions.length) {
+        this.setValueMethod(this.visibleOptions[0].value, this.silentInitialValueSet);
+      }
 
-    if (this.initialDisabled) {
-      this.disable();
-    }
+      if (this.showOptionsOnlyOnSearch) {
+        this.setSearchValue('', false, true);
+      }
 
-    if (this.autofocus) {
-      this.focus();
+      if (this.initialDisabled) {
+        this.disable();
+      }
+
+      if (this.autofocus) {
+        this.focus();
+      }
+    } catch (e) {
+      this.destroy();
+      throw e;
     }
   }
 
@@ -895,7 +1011,7 @@ export class VirtualSelect {
     this.setOptionsTooltip();
 
     if (document.activeElement !== this.$searchInput) {
-      setTimeout(() => {
+      this.setManagedTimeout(() => {
         const focusedOption = DomUtils.getElementsBySelector('.focused', this.$dropboxContainer)[0];
         if (focusedOption !== undefined) {
           focusedOption.focus({ preventScroll: true });
@@ -1000,6 +1116,7 @@ export class VirtualSelect {
     this.showValueAsTags = convertToBoolean(options.showValueAsTags);
     this.disableOptionGroupCheckbox = convertToBoolean(options.disableOptionGroupCheckbox);
     this.enableSecureText = convertToBoolean(options.enableSecureText);
+    this.showSecureTextWarning = convertToBoolean(options.showSecureTextWarning, true);
     this.setValueAsArray = convertToBoolean(options.setValueAsArray);
     this.disableValidation = convertToBoolean(options.disableValidation);
     this.initialDisabled = convertToBoolean(options.disabled);
@@ -1133,6 +1250,7 @@ export class VirtualSelect {
       additionalToggleButtonClasses: '',
       maxValues: 0,
       showDropboxAsPopup: true,
+      showSecureTextWarning: true,
       popupDropboxBreakpoint: '576px',
       popupPosition: 'center',
       hideValueTooltipOnSelectAll: true,
@@ -1447,6 +1565,7 @@ export class VirtualSelect {
       const option = {
         index,
         value,
+        valueNormalized: value.toLowerCase(),
         label,
         labelNormalized: this.searchNormalize && label.trim() !== ''
           ? Utils.normalizeString(label).toLowerCase()
@@ -1472,7 +1591,11 @@ export class VirtualSelect {
       }
 
       if (hasOptionDescription) {
-        option.description = secureText(getString(d[descriptionKey]));
+        const description = secureText(getString(d[descriptionKey]));
+        option.description = description;
+        option.descriptionNormalized = this.searchNormalize && description.trim() !== ''
+          ? Utils.normalizeString(description).toLowerCase()
+          : description.toLowerCase();
       }
 
       if (d.customData) {
@@ -2262,12 +2385,22 @@ export class VirtualSelect {
 
     const { getString } = Utils;
     const secureText = this.secureText.bind(this);
+    const value = secureText(getString(data.value));
+    const label = secureText(getString(data.label));
+    const description = secureText(getString(data.description));
 
     return {
       index: data.index,
-      value: secureText(getString(data.value)),
-      label: secureText(getString(data.label)),
-      description: secureText(getString(data.description)),
+      value,
+      valueNormalized: value.toLowerCase(),
+      label,
+      labelNormalized: this.searchNormalize && label.trim() !== ''
+        ? Utils.normalizeString(label).toLowerCase()
+        : label.toLowerCase(),
+      description,
+      descriptionNormalized: this.searchNormalize && description.trim() !== ''
+        ? Utils.normalizeString(description).toLowerCase()
+        : description.toLowerCase(),
       alias: this.getAlias(data.alias),
       isCurrentNew: data.isCurrentNew || false,
       isNew: data.isNew || false,
@@ -2531,8 +2664,9 @@ export class VirtualSelect {
     DomUtils.changeTabIndex(this.$allWrappers, 0);
 
     if (!isSilent) {
-      // Force synchronous layout and style calculation
-      // Trigger reflow
+      // INTENTIONAL forced reflow (do not remove as a "no-op"): reading offsetHeight flushes
+      // the 'transition: none' set above so restoring the transition below does not animate the
+      // open from a stale layout. Scoped to a single element on open, so the cost is negligible.
       this.$dropboxContainer.offsetHeight; // eslint-disable-line no-unused-expressions
       // Restore transitions immediately after reflow
       this.$dropboxContainer.style.transition = originalTransition;
@@ -2886,7 +3020,7 @@ export class VirtualSelect {
     }
 
     if (isNewOption) {
-      this.beforeSelectNewValue();
+      this.beforeSelectNewValue(selectedValue);
     }
 
     this.setValue(selectedValues);
@@ -2955,7 +3089,7 @@ export class VirtualSelect {
     }
 
     /** using setTimeout to fix the issue of dropbox getting closed on select */
-    setTimeout(() => {
+    this.setManagedTimeout(() => {
       this.renderOptions();
     }, 0);
   }
@@ -3122,7 +3256,7 @@ export class VirtualSelect {
     this.setValue(selectedValues);
 
     /** using setTimeout to fix the issue of dropbox getting closed on select */
-    setTimeout(() => {
+    this.setManagedTimeout(() => {
       this.renderOptions();
     }, 0);
   }
@@ -3251,11 +3385,33 @@ export class VirtualSelect {
   }
 
   isOptionVisible({ data, searchValue, hasExactOption, visibleOptionGroupsMapping, searchGroup, searchByStartsWith }) {
-    const value = data.value.toLowerCase();
-    const label = (this.searchNormalize && data.labelNormalized != null)
-      ? data.labelNormalized
-      : (data.label || '').trim().toLowerCase();
+    const value = data.valueNormalized != null
+      ? data.valueNormalized
+      : data.value.toLowerCase();
+    let label = data.labelNormalized;
+
+    if (label == null) {
+      const rawLabel = (data.label || '').trim();
+
+      if (this.searchNormalize && rawLabel !== '') {
+        label = Utils.normalizeString(rawLabel).toLowerCase();
+      } else {
+        label = rawLabel.toLowerCase();
+      }
+    }
+
     const { description, alias } = data;
+    let { descriptionNormalized } = data;
+
+    if (descriptionNormalized == null) {
+      const rawDescription = description || '';
+
+      if (this.searchNormalize && rawDescription.trim() !== '') {
+        descriptionNormalized = Utils.normalizeString(rawDescription).toLowerCase();
+      } else {
+        descriptionNormalized = rawDescription.toLowerCase();
+      }
+    }
 
     let isVisible = searchByStartsWith ? label.startsWith(searchValue) : label.includes(searchValue);
 
@@ -3267,8 +3423,8 @@ export class VirtualSelect {
       isVisible = alias.includes(searchValue);
     }
 
-    if (!searchByStartsWith && description && !isVisible) {
-      isVisible = description.toLowerCase().includes(searchValue);
+    if (!searchByStartsWith && descriptionNormalized && !isVisible) {
+      isVisible = descriptionNormalized.includes(searchValue);
     }
 
     // eslint-disable-next-line no-param-reassign
@@ -3383,7 +3539,38 @@ export class VirtualSelect {
     return !hasError;
   }
 
+  /**
+   * setTimeout wrapper whose pending timers are tracked so they can be cleared on destroy().
+   * Prevents callbacks from running against a destroyed instance (stale DOM access / retention).
+   */
+  setManagedTimeout(callback, delay) {
+    if (!this.managedTimeouts) {
+      this.managedTimeouts = new Set();
+    }
+
+    const id = setTimeout(() => {
+      this.managedTimeouts.delete(id);
+      callback();
+    }, delay);
+
+    this.managedTimeouts.add(id);
+
+    return id;
+  }
+
+  clearManagedTimeouts() {
+    if (this.managedTimeouts) {
+      this.managedTimeouts.forEach((id) => clearTimeout(id));
+      this.managedTimeouts.clear();
+    }
+  }
+
   destroy() {
+    if (this.isDestroyed) {
+      return;
+    }
+    this.isDestroyed = true;
+
     const { $ele } = this;
     $ele.virtualSelect = undefined;
     $ele.value = undefined;
@@ -3403,10 +3590,16 @@ export class VirtualSelect {
       this.serverSearchTimeout = null;
     }
 
+    // Clear any other pending timeouts so their callbacks don't run on a destroyed instance
+    this.clearManagedTimeouts();
+
     /** Remove all event listeners to prevent memory leaks and ensure proper cleanup */
     this.removeEvents();
 
     if (this.hasDropboxWrapper) {
+      /** clear the back-reference (set in setEleProps) before detaching so the
+       * detached wrapper does not keep this instance and its DOM alive */
+      this.$dropboxWrapper.virtualSelect = undefined;
       this.$dropboxWrapper.remove();
     }
 
@@ -3415,6 +3608,12 @@ export class VirtualSelect {
     }
 
     DomUtils.removeClass($ele, 'vscomp-ele');
+
+    /** drop references to cached callbacks and DOM so nothing is retained after destroy */
+    this.events = {};
+
+    /** stop tracking this instance; tears down global listeners/observer when it was the last one */
+    VirtualSelect.unregisterInstance(this);
   }
 
   createSecureTextElements() {
@@ -3432,6 +3631,31 @@ export class VirtualSelect {
     this.$secureText.nodeValue = Utils.replaceDoubleQuotesWithHTML(text);
 
     return this.$secureDiv.innerHTML;
+  }
+
+  /**
+   * Emit a single (per page) console warning when an instance is constructed while
+   * enableSecureText is disabled. enableSecureText is OFF by default to avoid the per-option
+   * escaping cost on large datasets (10k-100k+ records); this warning makes the XSS trade-off
+   * discoverable without forcing that cost on everyone. O(1): it never scans option content
+   * and fires on the configuration alone, so it is not missed when options are loaded later
+   * (e.g. via setOptions or server search).
+   */
+  warnIfSecureTextDisabled() {
+    if (VirtualSelect.secureTextWarningShown || this.enableSecureText || !this.showSecureTextWarning) {
+      return;
+    }
+
+    VirtualSelect.secureTextWarningShown = true;
+
+    // eslint-disable-next-line no-console
+    console.warn(
+      '[virtual-select] Option text (label, value, description) and any `customData` used in ' +
+        'markup are rendered as HTML and are NOT escaped because `enableSecureText` is disabled ' +
+        '(the default, kept off for performance on large datasets). If any option text can come ' +
+        'from untrusted input, set `enableSecureText: true` to prevent XSS. ' +
+        'Docs: https://sa-si-dev.github.io/virtual-select/#/properties',
+    );
   }
 
   toggleRequired(isRequired) {
@@ -3704,17 +3928,31 @@ export class VirtualSelect {
     return this.virtualSelect.toggleRequired(isRequired);
   }
 
+  // Stable reference to the throttled resize handler is assigned at module init time
+  // (see `VirtualSelect.onResizeThrottled = ...`). The resize/reset/submit listeners are
+  // attached lazily in addGlobalListeners() on the first instance, not at module scope.
+
   static onResizeMethod() {
     document.querySelectorAll('.vscomp-ele-wrapper').forEach(($ele) => {
-      $ele.parentElement.virtualSelect.onResize();
+      /** guard against wrappers whose instance is mid-teardown / not initialised */
+      const instance = $ele.parentElement && $ele.parentElement.virtualSelect;
+
+      if (instance) {
+        instance.onResize();
+      }
     });
   }
   /** static methods - end */
 }
 
-document.addEventListener('reset', VirtualSelect.onFormReset);
-document.addEventListener('submit', VirtualSelect.onFormSubmit);
-window.addEventListener('resize', VirtualSelect.onResizeMethod);
+/**
+ * throttle resize so the per-instance height recompute runs at most ~10x/sec during a drag.
+ * Keep a stable reference on VirtualSelect so add/removeGlobalListeners can attach and detach
+ * the exact same handler. The page-level resize/reset/submit listeners are attached lazily on
+ * the first instance (registerInstance) and removed when the last instance is destroyed
+ * (unregisterInstance), so nothing global lingers when no dropdown exists.
+ */
+VirtualSelect.onResizeThrottled = Utils.throttle(VirtualSelect.onResizeMethod, 100);
 
 attrPropsMapping = VirtualSelect.getAttrProps();
 window.VirtualSelect = VirtualSelect;
@@ -3722,8 +3960,20 @@ window.VirtualSelect = VirtualSelect;
 // Static property for tracking open dropdowns
 VirtualSelect.openInstances = new Set();
 
+// Single shared MutationObserver that self-destroys instances whose host element is removed
+VirtualSelect.domObserver = null;
+
+// Set of live instances; drives lazy setup/teardown of the shared observer and page listeners
+VirtualSelect.activeInstances = new Set();
+
+// Whether the page-level resize/reset/submit listeners are currently attached
+VirtualSelect.hasGlobalListeners = false;
+
 // Static property for tracking the last interacted instance
 VirtualSelect.lastInteractedInstance = null;
+
+// Ensures the "enableSecureText disabled" warning is logged at most once per page
+VirtualSelect.secureTextWarningShown = false;
 
 /** polyfill to fix an issue in ie browser */
 if (typeof NodeList !== 'undefined' && NodeList.prototype && !NodeList.prototype.forEach) {
