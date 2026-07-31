@@ -360,6 +360,9 @@ export class VirtualSelect {
 
         if (disableOptionGroupCheckbox) {
           leftSection = '';
+        } else if (this.multiple) {
+          const groupLabel = this.secureText(Utils.getString(d.label));
+          ariaLabel = `aria-label="${groupLabel}, ${this.secureText(this.selectAllText)}"`;
         }
       }
 
@@ -756,7 +759,7 @@ export class VirtualSelect {
     const $ele = e.target.closest('.vscomp-option');
 
     if ($ele && this.isOpened()) {
-      if (DomUtils.hasClass($ele, 'disabled') || DomUtils.hasClass($ele, 'group-title')) {
+      if (this.shouldSkipOptionInNavigation($ele)) {
         this.removeOptionFocus();
       } else {
         this.focusOption({ $option: $ele });
@@ -2570,6 +2573,22 @@ export class VirtualSelect {
     return `${this.optionsCount * this.optionHeight}px`;
   }
 
+  isSelectableGroupTitle($ele) {
+    return $ele && DomUtils.hasClass($ele, 'group-title') && this.multiple && !this.disableOptionGroupCheckbox;
+  }
+
+  shouldSkipOptionInNavigation($ele) {
+    if (!$ele) {
+      return true;
+    }
+
+    if (DomUtils.hasClass($ele, 'disabled')) {
+      return true;
+    }
+
+    return DomUtils.hasClass($ele, 'group-title') && !this.isSelectableGroupTitle($ele);
+  }
+
   /** getting next/prev valid option element */
   getSibling($ele, direction) {
     const propName = direction === 'next' ? 'nextElementSibling' : 'previousElementSibling';
@@ -2579,7 +2598,7 @@ export class VirtualSelect {
       if ($sibling) {
         $sibling = $sibling[propName];
       }
-    } while (DomUtils.hasClass($sibling, 'disabled') || DomUtils.hasClass($sibling, 'group-title'));
+    } while (this.shouldSkipOptionInNavigation($sibling));
 
     return $sibling;
   }
@@ -2862,7 +2881,7 @@ export class VirtualSelect {
     let $focusableEle = this.$optionsContainer.querySelector(`[data-index='${this.getFirstVisibleOptionIndex()}']`);
 
     if ($focusableEle) {
-      if (DomUtils.hasClass($focusableEle, 'group-title')) {
+      if (this.shouldSkipOptionInNavigation($focusableEle)) {
         $focusableEle = this.getSibling($focusableEle, 'next');
       }
 
@@ -2893,7 +2912,7 @@ export class VirtualSelect {
         `.vscomp-option[data-visible-index="${firstVisibleOptionIndex}"]`,
       );
 
-      if (DomUtils.hasClass($newFocusedEle, 'disabled') || DomUtils.hasClass($newFocusedEle, 'group-title')) {
+      if (this.shouldSkipOptionInNavigation($newFocusedEle)) {
         $newFocusedEle = this.getSibling($newFocusedEle, 'next');
       }
     } else {
@@ -3031,7 +3050,18 @@ export class VirtualSelect {
   }
 
   selectFocusedOption() {
-    this.selectOption(this.$dropboxContainer.querySelector('.vscomp-option.focused'));
+    const $focusedEle = this.$dropboxContainer.querySelector('.vscomp-option.focused');
+
+    if (!$focusedEle) {
+      return;
+    }
+
+    if (this.isSelectableGroupTitle($focusedEle)) {
+      this.onGroupTitleClick($focusedEle);
+      return;
+    }
+
+    this.selectOption($focusedEle);
   }
 
   selectRangeOptions(lastSelectedOptionIndex, selectedIndex) {
