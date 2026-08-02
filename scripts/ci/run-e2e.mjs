@@ -32,10 +32,14 @@ function startServer() {
   });
 }
 
-async function waitForServer() {
+async function waitForServer(getSpawnError) {
   const deadline = Date.now() + READY_TIMEOUT_MS;
 
   while (Date.now() < deadline) {
+    // Fail fast instead of polling for 60s against a child that never started.
+    const spawnError = getSpawnError();
+    if (spawnError) throw new Error(`docsify failed to start: ${spawnError.message}`);
+
     try {
       await fetch(BASE_URL, { signal: AbortSignal.timeout(2000) });
       return;
@@ -67,8 +71,17 @@ const startedAt = Date.now();
 const server = startServer();
 let fragment;
 
+// A ChildProcess 'error' event with no listener is an uncaught exception. That
+// would kill this process outside the try/finally below, so the server would
+// never be torn down and no fragment would be written — the merge step would
+// report E2E as `skipped` with no diagnosis instead of `failed` with the cause.
+let spawnError = null;
+server.once('error', (error) => {
+  spawnError = error;
+});
+
 try {
-  await waitForServer();
+  await waitForServer(() => spawnError);
 
   const cypress = (await import('cypress')).default;
   fragment = normalizeCypressResults(await cypress.run(), Date.now() - startedAt);
