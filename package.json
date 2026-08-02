@@ -6,9 +6,13 @@
     "start": "webpack --mode development --watch",
     "build": "webpack --mode production",
     "validate": "tsc && eslint src/**/*.js --fix --ignore-pattern '*.min.js' && stylelint --fix src/sass/**/*.scss",
+    "typecheck": "tsc",
+    "lint:js": "eslint src/**/*.js --ignore-pattern '*.min.js'",
+    "lint:css": "stylelint src/sass/**/*.scss",
+    "test:scripts": "node --test \"scripts/ci/**/*.test.mjs\"",
     "docs": "docsify serve docs",
     "t": "docsify serve docs -p 3001 | cypress open --e2e -b chrome",
-    "test": "docsify serve docs -p 3001 | cypress run"
+    "test": "node scripts/ci/run-e2e.mjs"
   },
   "author": "Sa Si Dev",
   "keywords": [
