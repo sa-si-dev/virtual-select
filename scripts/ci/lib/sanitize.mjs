@@ -16,8 +16,26 @@ export function stripControl(text) {
   return String(text ?? '').replace(CONTROL_CHARS, '');
 }
 
+/**
+ * Strip HTML comment delimiters, iterating to a fixed point.
+ *
+ * A single pass is not enough: `replaceAll` scans left-to-right once, so
+ * deleting a match splices its neighbours together and any delimiter formed
+ * that way is never rescanned. `<<!--!-- x --->->` collapses to the exact
+ * sticky-comment marker under a single pass. Looping until the string stops
+ * changing closes that. It terminates because every pass either shortens the
+ * string or leaves it untouched.
+ */
 export function stripMarkers(text) {
-  return String(text ?? '').replaceAll('<!--', '').replaceAll('-->', '');
+  let value = String(text ?? '');
+  let previous;
+
+  do {
+    previous = value;
+    value = value.replaceAll('<!--', '').replaceAll('-->', '');
+  } while (value !== previous);
+
+  return value;
 }
 
 export function escapeHtml(text) {

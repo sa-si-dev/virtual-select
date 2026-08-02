@@ -17,6 +17,16 @@ test('stripMarkers removes HTML comment delimiters so the sticky marker cannot b
   assert.equal(stripMarkers('x<!-- virtual-select-pr-tests -->y'), 'x virtual-select-pr-tests y');
 });
 
+test('stripMarkers cannot be tricked into reconstructing the marker', () => {
+  // Regression: deleting one delimiter splices its neighbours into a new one.
+  // Under a single non-iterative pass this input returned the exact marker,
+  // and codeBlock() (which does not escape HTML) leaked it into the comment.
+  const attack = '<<!--!-- virtual-select-pr-tests --->->';
+
+  assert.equal(stripMarkers(attack), ' virtual-select-pr-tests ');
+  assert.ok(!codeBlock(attack).includes('<!-- virtual-select-pr-tests -->'));
+});
+
 test('escapeHtml neutralises angle brackets', () => {
   assert.equal(escapeHtml('<img src=x onerror=alert(1)>'), '&lt;img src=x onerror=alert(1)&gt;');
 });
