@@ -88,4 +88,8 @@ test('missing arguments exit 2 without writing a fragment', async (t) => {
   const { code } = await runStep('OnlyALabel', [], dir);
 
   assert.equal(code, 2);
+  // The exit code alone is not enough: if someone moved the mkdir/writeFile
+  // above the argument check, this test would still pass while the bad-args
+  // path started emitting a bogus fragment.
+  await assert.rejects(readFragment(dir, 'onlyalabel'));
 });
