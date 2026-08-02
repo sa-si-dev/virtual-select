@@ -668,6 +668,9 @@ const keyDownMethodMapping = {
 };
 const valueLessProps = ['autofocus', 'disabled', 'multiple', 'required'];
 const nativeProps = ['autofocus', 'class', 'disabled', 'id', 'multiple', 'name', 'placeholder', 'required'];
+// Deferred: the value comes from VirtualSelect.getAttrProps(), so it cannot be assigned until
+// the class below has been evaluated (see the assignment at the bottom of this file).
+// eslint-disable-next-line prefer-const
 let attrPropsMapping;
 const dataProps = ['additionalClasses', 'additionalDropboxClasses', 'additionalDropboxContainerClasses', 'additionalToggleButtonClasses', 'aliasKey', 'allOptionsSelectedText', 'allowNewOption', 'alwaysShowSelectedOptionsCount', 'alwaysShowSelectedOptionsLabel', 'ariaLabelledby', 'ariaLabelText', 'ariaLabelClearButtonText', 'ariaLabelTagClearButtonText', 'ariaLabelSearchClearButtonText', 'autoSelectFirstOption', 'clearButtonText', 'descriptionKey', 'disableAllOptionsSelectedText', 'disableOptionGroupCheckbox', 'disableSelectAll', 'disableValidation', 'dropboxWidth', 'dropboxWrapper', 'emptyValue', 'enableSecureText', 'focusSelectedOptionOnOpen', 'hasOptionDescription', 'hideClearButton', 'hideValueTooltipOnSelectAll', 'keepAlwaysOpen', 'labelKey', 'markSearchResults', 'maxValues', 'maxWidth', 'minValues', 'moreText', 'noOfDisplayValues', 'noOptionsText', 'noSearchResultsText', 'optionHeight', 'optionSelectedText', 'optionsCount', 'optionsSelectedText', 'popupDropboxBreakpoint', 'popupPosition', 'position', 'search', 'searchByStartsWith', 'searchDelay', 'searchFormLabel', 'searchGroup', 'searchNormalize', 'searchPlaceholderText', 'selectAllOnlyVisible', 'selectAllText', 'setValueAsArray', 'showDropboxAsPopup', 'showOptionsOnlyOnSearch', 'showSecureTextWarning', 'showSelectedOptionsFirst', 'showValueAsTags', 'silentInitialValueSet', 'textDirection', 'tooltipAlignment', 'tooltipFontSize', 'tooltipMaxWidth', 'updatePositionThrottle', 'useGroupValue', 'valueKey', 'zIndex'];
 
@@ -745,8 +748,6 @@ class VirtualSelect {
     if (this.popupPosition) {
       wrapperClasses += ` popup-position-${this.popupPosition.toLowerCase()}`;
     }
-
-    // eslint-disable-next-line no-trailing-spaces
     const html = `<div id="vscomp-ele-wrapper-${uniqueId}" class="vscomp-ele-wrapper ${wrapperClasses}" tabindex="0"
         role="combobox" aria-haspopup="listbox" aria-controls="vscomp-dropbox-container-${uniqueId}"
         aria-expanded="${isExpanded}" ${ariaLabelledbyText} ${ariaLabelText}>
@@ -805,8 +806,6 @@ class VirtualSelect {
     if (this.additionalDropboxContainerClasses) {
       dropboxContainerClasses += ` ${Utils.sanitizeClassNames(this.additionalDropboxContainerClasses)}`;
     }
-
-    // eslint-disable-next-line no-trailing-spaces
     const html = `<div id="vscomp-dropbox-container-${this.uniqueId}" class="${dropboxContainerClasses}">
         <div class="vscomp-dropbox-container-top" aria-hidden="true" tabindex="-1">&nbsp;</div>
         <div class="${dropboxClasses}">
@@ -919,7 +918,6 @@ class VirtualSelect {
         optionClasses += ' selected';
       }
       if (d.isGroupOption) {
-        let optionDesc = '';
         optionClasses += ' group-option';
         groupIndexText = `data-group-index="${d.groupIndex}"`;
         if (d.customData) {
@@ -933,7 +931,7 @@ class VirtualSelect {
           const groupNameText = this.secureText(Utils.getString(d.customData.group_name));
           const groupDescText = this.secureText(Utils.getString(d.customData.description));
           groupName = d.customData.group_name !== undefined ? `${groupNameText}, ` : '';
-          optionDesc = d.customData.description !== undefined ? ` ${groupDescText},` : '';
+          const optionDesc = d.customData.description !== undefined ? ` ${groupDescText},` : '';
           ariaLabel = `aria-label="${groupName} ${d.label}, ${optionDesc}"`;
         } else {
           ariaLabel = `aria-label="${groupName}, ${d.label}"`;
@@ -1607,10 +1605,10 @@ class VirtualSelect {
     this.tooltipAlignment = options.tooltipAlignment;
     this.tooltipMaxWidth = options.tooltipMaxWidth;
     this.updatePositionThrottle = options.updatePositionThrottle;
-    this.noOfDisplayValues = parseInt(options.noOfDisplayValues);
-    this.zIndex = parseInt(options.zIndex);
-    this.maxValues = parseInt(options.maxValues);
-    this.minValues = parseInt(options.minValues);
+    this.noOfDisplayValues = parseInt(options.noOfDisplayValues, 10);
+    this.zIndex = parseInt(options.zIndex, 10);
+    this.maxValues = parseInt(options.maxValues, 10);
+    this.minValues = parseInt(options.minValues, 10);
     this.name = this.secureText(options.name);
     this.additionalClasses = options.additionalClasses;
     this.additionalDropboxClasses = options.additionalDropboxClasses;
@@ -1630,8 +1628,8 @@ class VirtualSelect {
     this.ariaLabelSearchClearButtonText = options.ariaLabelSearchClearButtonText;
     this.maxWidth = options.maxWidth;
     this.searchDelay = options.searchDelay;
-    this.showDuration = parseInt(options.showDuration);
-    this.hideDuration = parseInt(options.hideDuration);
+    this.showDuration = parseInt(options.showDuration, 10);
+    this.hideDuration = parseInt(options.hideDuration, 10);
 
     /** @type {string[]} */
     this.selectedValues = [];
@@ -2134,7 +2132,7 @@ class VirtualSelect {
   }
   setOptionsPosition(startIndex) {
     // We use the parseInt to fix a Chrome issue when dealing with decimal pixels in translate3d
-    const top = parseInt((startIndex || this.getVisibleStartIndex()) * this.optionHeight);
+    const top = parseInt((startIndex || this.getVisibleStartIndex()) * this.optionHeight, 10);
     this.$options.style.transform = `translate3d(0, ${top}px, 0)`;
     DomUtils.setData(this.$options, 'top', top);
   }
@@ -2423,10 +2421,8 @@ class VirtualSelect {
       if (newOption && newOption.isVisible === true) {
         filteredPosition += 1;
         ariaSetSize += 1;
-        // eslint-disable-next-line no-param-reassign
         newOption.filteredIndex = filteredPosition;
       } else if (newOption) {
-        // eslint-disable-next-line no-param-reassign
         newOption.filteredIndex = undefined;
       }
     }
@@ -2847,7 +2843,7 @@ class VirtualSelect {
       }
       result = Math.floor(availableHeight / this.optionHeight);
     } else {
-      result = parseInt(count);
+      result = parseInt(count, 10);
     }
     return result;
   }
@@ -3289,7 +3285,7 @@ class VirtualSelect {
     if (groupIndexes.length) {
       const toggleGroupTitleProp = this.toggleGroupTitleProp.bind(this);
       groupIndexes.forEach(i => {
-        toggleGroupTitleProp(parseInt(i));
+        toggleGroupTitleProp(parseInt(i, 10));
       });
     }
 
@@ -3378,7 +3374,7 @@ class VirtualSelect {
     }
     let groupIndex = DomUtils.getData($option, 'groupIndex');
     if (groupIndex !== undefined) {
-      groupIndex = parseInt(groupIndex);
+      groupIndex = parseInt(groupIndex, 10);
     }
     const $group = this.$options.querySelector(`.vscomp-option[data-index="${groupIndex}"]`);
     const isAllSelected = typeof isSelected === 'boolean' ? isSelected : this.isAllGroupOptionsSelected(groupIndex);
@@ -4031,8 +4027,6 @@ if (typeof NodeList !== 'undefined' && NodeList.prototype && !NodeList.prototype
   NodeList.prototype.forEach = Array.prototype.forEach;
 }
 }();
-// This entry needs to be wrapped in an IIFE because it needs to be isolated against other entry modules.
-!function() {
 /*!
  * Popover v1.0.13
  * https://sa-si-dev.github.io/popover
@@ -4041,6 +4035,5 @@ if (typeof NodeList !== 'undefined' && NodeList.prototype && !NodeList.prototype
  var e, o, i; }();function r(e){return r="function"==typeof Symbol&&"symbol"==typeof Symbol.iterator?function(e){return typeof e}:function(e){return e&&"function"==typeof Symbol&&e.constructor===Symbol&&e!==Symbol.prototype?"symbol":typeof e},r(e)}function n(e){return function(e){if(Array.isArray(e))return a(e)}(e)||function(e){if("undefined"!=typeof Symbol&&null!=e[Symbol.iterator]||null!=e["@@iterator"])return Array.from(e)}(e)||function(e,t){if(e){if("string"==typeof e)return a(e,t);var o=Object.prototype.toString.call(e).slice(8,-1);return"Object"===o&&e.constructor&&(o=e.constructor.name),"Map"===o||"Set"===o?Array.from(e):"Arguments"===o||/^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(o)?a(e,t):void 0}}(e)||function(){throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.")}()}function a(e,t){(null==t||t>e.length)&&(t=e.length);for(var o=0,i=new Array(t);o<t;o++)i[o]=e[o];return i}function s(e,t){for(var o=0;o<t.length;o++){var i=t[o];i.enumerable=i.enumerable||!1,i.configurable=!0,"value"in i&&(i.writable=!0),Object.defineProperty(e,l(i.key),i)}}function l(e){var t=function(e,t){if("object"!=r(e)||!e)return e;var o=e[Symbol.toPrimitive];if(void 0!==o){var i=o.call(e,t||"default");if("object"!=r(i))return i;throw new TypeError("@@toPrimitive must return a primitive value.")}return("string"===t?String:Number)(e)}(e,"string");return"symbol"==r(t)?t:t+""}var u=function(){function e(){!function(e,t){if(!(e instanceof t))throw new TypeError("Cannot call a class as a function")}(this,e)}return t=e,r=[{key:"addClass",value:function(t,o){t&&(o=o.split(" "),e.getElements(t).forEach((function(e){var t;(t=e.classList).add.apply(t,n(o))})))}},{key:"removeClass",value:function(t,o){t&&(o=o.split(" "),e.getElements(t).forEach((function(e){var t;(t=e.classList).remove.apply(t,n(o))})))}},{key:"hasClass",value:function(e,t){return!!e&&e.classList.contains(t)}},{key:"getElement",value:function(e){return e&&("string"==typeof e?e=document.querySelector(e):void 0!==e.length&&(e=e[0])),e||null}},{key:"getElements",value:function(e){if(e)return void 0===e.forEach&&(e=[e]),e}},{key:"addEvent",value:function(t,o,i){e.addOrRemoveEvent(t,o,i,"add")}},{key:"removeEvent",value:function(t,o,i){e.addOrRemoveEvent(t,o,i,"remove")}},{key:"addOrRemoveEvent",value:function(t,o,r,n){t&&(o=i.removeArrayEmpty(o.split(" "))).forEach((function(o){(t=e.getElements(t)).forEach((function(e){"add"===n?e.addEventListener(o,r):e.removeEventListener(o,r)}))}))}},{key:"getScrollableParents",value:function(e){if(!e)return[];for(var t=[window],o=e.parentElement;o;){var i=getComputedStyle(o).overflow;-1===i.indexOf("scroll")&&-1===i.indexOf("auto")||t.push(o),o=o.parentElement}return t}},{key:"convertPropToDataAttr",value:function(e){return e?"data-popover-".concat(e).replace(/([A-Z])/g,"-$1").toLowerCase():""}}],(o=null)&&s(t.prototype,o),r&&s(t,r),Object.defineProperty(t,"prototype",{writable:!1}),t;// removed by dead control flow
  var t, o, r; }();function p(e){return p="function"==typeof Symbol&&"symbol"==typeof Symbol.iterator?function(e){return typeof e}:function(e){return e&&"function"==typeof Symbol&&e.constructor===Symbol&&e!==Symbol.prototype?"symbol":typeof e},p(e)}function h(e,t){for(var o=0;o<t.length;o++){var i=t[o];i.enumerable=i.enumerable||!1,i.configurable=!0,"value"in i&&(i.writable=!0),Object.defineProperty(e,c(i.key),i)}}function c(e){var t=function(e,t){if("object"!=p(e)||!e)return e;var o=e[Symbol.toPrimitive];if(void 0!==o){var i=o.call(e,t||"default");if("object"!=p(i))return i;throw new TypeError("@@toPrimitive must return a primitive value.")}return("string"===t?String:Number)(e)}(e,"string");return"symbol"==p(t)?t:t+""}var f,v={27:"onEscPress"},d=["target","position","margin","offset","enterDelay","exitDelay","showDuration","hideDuration","transitionDistance","updatePositionThrottle","zIndex","hideOnOuterClick","showOnHover","hideArrowIcon","disableManualAction","disableUpdatePosition"],y=function(){function e(t){!function(e,t){if(!(e instanceof t))throw new TypeError("Cannot call a class as a function")}(this,e);try{this.setProps(t),this.init()}catch(e){console.warn("Couldn't initiate Popover component"),console.error(e)}}return t=e,r=[{key:"init",value:function(t){var o=t.ele;if(o){var i=!1;if("string"==typeof o){if(!(o=document.querySelectorAll(o)))return;1===o.length&&(i=!0)}void 0===o.length&&(o=[o],i=!0);var r=[];return o.forEach((function(o){t.ele=o,e.destroy(o),r.push(new e(t))})),i?r[0]:r}}},{key:"destroy",value:function(e){if(e){var t=e.popComp;t&&t.destroy()}}},{key:"showMethod",value:function(){this.popComp.show()}},{key:"hideMethod",value:function(){this.popComp.hide()}},{key:"updatePositionMethod",value:function(){this.popComp.popper.updatePosition()}},{key:"getAttrProps",value:function(){var e=u.convertPropToDataAttr,t={};return d.forEach((function(o){t[e(o)]=o})),t}}],(o=[{key:"init",value:function(){this.$popover&&(this.setElementProps(),this.renderArrow(),this.initPopper(),this.addEvents())}},{key:"getEvents",value:function(){var e=[{$ele:document,event:"click",method:"onDocumentClick"},{$ele:document,event:"keydown",method:"onDocumentKeyDown"}];return this.disableManualAction||(e.push({$ele:this.$ele,event:"click",method:"onTriggerEleClick"}),this.showOnHover&&(e.push({$ele:this.$ele,event:"mouseenter",method:"onTriggerEleMouseEnter"}),e.push({$ele:this.$ele,event:"mouseleave",method:"onTriggerEleMouseLeave"}))),e}},{key:"addOrRemoveEvents",value:function(e){var t=this;this.getEvents().forEach((function(o){t.addOrRemoveEvent({action:e,$ele:o.$ele,events:o.event,method:o.method})}))}},{key:"addEvents",value:function(){this.addOrRemoveEvents("add")}},{key:"removeEvents",value:function(){this.addOrRemoveEvents("remove"),this.removeScrollEventListeners(),this.removeResizeEventListeners()}},{key:"addOrRemoveEvent",value:function(e){var t=this,o=e.action,r=e.$ele,n=e.events,a=e.method,s=e.throttle;r&&(n=i.removeArrayEmpty(n.split(" "))).forEach((function(e){var n="".concat(a,"-").concat(e),l=t.events[n];l||(l=t[a].bind(t),s&&(l=i.throttle(l,s)),t.events[n]=l),"add"===o?u.addEvent(r,e,l):u.removeEvent(r,e,l)}))}},{key:"addScrollEventListeners",value:function(){this.$scrollableElems=u.getScrollableParents(this.$ele),this.addOrRemoveEvent({action:"add",$ele:this.$scrollableElems,events:"scroll",method:"onAnyParentScroll",throttle:this.updatePositionThrottle})}},{key:"removeScrollEventListeners",value:function(){this.$scrollableElems&&(this.addOrRemoveEvent({action:"remove",$ele:this.$scrollableElems,events:"scroll",method:"onAnyParentScroll"}),this.$scrollableElems=null)}},{key:"addResizeEventListeners",value:function(){this.addOrRemoveEvent({action:"add",$ele:window,events:"resize",method:"onResize",throttle:this.updatePositionThrottle})}},{key:"removeResizeEventListeners",value:function(){this.addOrRemoveEvent({action:"remove",$ele:window,events:"resize",method:"onResize"})}},{key:"onAnyParentScroll",value:function(){this.popper.updatePosition()}},{key:"onResize",value:function(){this.popper.updatePosition()}},{key:"onDocumentClick",value:function(e){var t=e.target,o=t.closest(".pop-comp-ele"),i=t.closest(".pop-comp-wrapper");this.hideOnOuterClick&&o!==this.$ele&&i!==this.$popover&&this.hide()}},{key:"onDocumentKeyDown",value:function(e){var t=e.which||e.keyCode,o=v[t];o&&this[o](e)}},{key:"onEscPress",value:function(){this.hideOnOuterClick&&this.hide()}},{key:"onTriggerEleClick",value:function(){this.toggle()}},{key:"onTriggerEleMouseEnter",value:function(){this.show()}},{key:"onTriggerEleMouseLeave",value:function(){this.hide()}},{key:"setProps",value:function(e){e=this.setDefaultProps(e),this.setPropsFromElementAttr(e);var t=i.convertToBoolean;this.$ele=e.ele,this.target=e.target,this.position=e.position,this.margin=parseFloat(e.margin),this.offset=parseFloat(e.offset),this.enterDelay=parseFloat(e.enterDelay),this.exitDelay=parseFloat(e.exitDelay),this.showDuration=parseFloat(e.showDuration),this.hideDuration=parseFloat(e.hideDuration),this.transitionDistance=parseFloat(e.transitionDistance),this.updatePositionThrottle=parseFloat(e.updatePositionThrottle),this.zIndex=parseFloat(e.zIndex),this.hideOnOuterClick=t(e.hideOnOuterClick),this.showOnHover=t(e.showOnHover),this.hideArrowIcon=t(e.hideArrowIcon),this.disableManualAction=t(e.disableManualAction),this.disableUpdatePosition=t(e.disableUpdatePosition),this.beforeShowCallback=e.beforeShow,this.afterShowCallback=e.afterShow,this.beforeHideCallback=e.beforeHide,this.afterHideCallback=e.afterHide,this.events={},this.$popover=u.getElement(this.target)}},{key:"setDefaultProps",value:function(e){return Object.assign({position:"auto",margin:8,offset:5,enterDelay:0,exitDelay:0,showDuration:300,hideDuration:200,transitionDistance:10,updatePositionThrottle:100,zIndex:1,hideOnOuterClick:!0,showOnHover:!1,hideArrowIcon:!1,disableManualAction:!1,disableUpdatePosition:!1},e)}},{key:"setPropsFromElementAttr",value:function(e){var t=e.ele;for(var o in f){var i=t.getAttribute(o);i&&(e[f[o]]=i)}}},{key:"setElementProps",value:function(){var t=this.$ele;t.popComp=this,t.show=e.showMethod,t.hide=e.hideMethod,t.updatePosition=e.updatePositionMethod,u.addClass(this.$ele,"pop-comp-ele"),u.addClass(this.$popover,"pop-comp-wrapper")}},{key:"getOtherTriggerPopComp",value:function(){var e,t=this.$popover.popComp;return t&&t.$ele!==this.$ele&&(e=t),e}},{key:"initPopper",value:function(){var e={$popperEle:this.$popover,$triggerEle:this.$ele,$arrowEle:this.$arrowEle,position:this.position,margin:this.margin,offset:this.offset,enterDelay:this.enterDelay,exitDelay:this.exitDelay,showDuration:this.showDuration,hideDuration:this.hideDuration,transitionDistance:this.transitionDistance,zIndex:this.zIndex,afterShow:this.afterShow.bind(this),afterHide:this.afterHide.bind(this)};this.popper=new PopperComponent(e)}},{key:"beforeShow",value:function(){"function"==typeof this.beforeShowCallback&&this.beforeShowCallback(this)}},{key:"beforeHide",value:function(){"function"==typeof this.beforeHideCallback&&this.beforeHideCallback(this)}},{key:"show",value:function(){this.isShown()||(this.isShownForOtherTrigger()?this.showAfterOtherHide():(u.addClass(this.$popover,"pop-comp-disable-events"),this.$popover.popComp=this,this.beforeShow(),this.popper.show({resetPosition:!0}),u.addClass(this.$ele,"pop-comp-active")))}},{key:"hide",value:function(){this.isShown()&&(this.beforeHide(),this.popper.hide(),this.removeScrollEventListeners(),this.removeResizeEventListeners())}},{key:"toggle",value:function(e){void 0===e&&(e=!this.isShown()),e?this.show():this.hide()}},{key:"isShown",value:function(){return u.hasClass(this.$ele,"pop-comp-active")}},{key:"isShownForOtherTrigger",value:function(){var e=this.getOtherTriggerPopComp();return!!e&&e.isShown()}},{key:"showAfterOtherHide",value:function(){var e=this,t=this.getOtherTriggerPopComp();if(t){var o=t.exitDelay+t.hideDuration+100;setTimeout((function(){e.show()}),o)}}},{key:"afterShow",value:function(){var e=this;this.showOnHover?setTimeout((function(){u.removeClass(e.$popover,"pop-comp-disable-events")}),2e3):u.removeClass(this.$popover,"pop-comp-disable-events"),this.disableUpdatePosition||(this.addScrollEventListeners(),this.addResizeEventListeners()),"function"==typeof this.afterShowCallback&&this.afterShowCallback(this)}},{key:"afterHide",value:function(){u.removeClass(this.$ele,"pop-comp-active"),"function"==typeof this.afterHideCallback&&this.afterHideCallback(this)}},{key:"renderArrow",value:function(){if(!this.hideArrowIcon){var e=this.$popover.querySelector(".pop-comp-arrow");e||(this.$popover.insertAdjacentHTML("afterbegin",'<i class="pop-comp-arrow"></i>'),e=this.$popover.querySelector(".pop-comp-arrow")),this.$arrowEle=e}}},{key:"destroy",value:function(){this.removeEvents()}}])&&h(t.prototype,o),r&&h(t,r),Object.defineProperty(t,"prototype",{writable:!1}),t;// removed by dead control flow
  var t, o, r; }();f=y.getAttrProps(),window.PopoverComponent=y}();
-}();
 /******/ })()
 ;
