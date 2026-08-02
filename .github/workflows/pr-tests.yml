@@ -1,0 +1,165 @@
+# Runs the full test suite on every pull request.
+#
+# SECURITY: this workflow executes code authored by the pull request. It must
+# never hold write permissions or reference secrets. On a fork PR the workflow
+# file itself comes from the PR, so nothing here can be trusted — the results
+# are handed to pr-test-comment.yml as data, and that workflow does the posting.
+#
+# The PR comment is informational and a malicious PR can forge its contents.
+# Branch protection must key on the job checks below, not on the comment.
+
+name: PR Tests
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-tests-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  static:
+    name: Static checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      # Each check uses `if: always()` so one failure does not hide the others.
+      # run-step.mjs still propagates the exit code, so the job fails correctly.
+      - name: Typecheck
+        if: always()
+        run: node scripts/ci/run-step.mjs Typecheck npm run typecheck
+
+      - name: ESLint
+        if: always()
+        run: node scripts/ci/run-step.mjs ESLint npm run lint:js
+
+      - name: Stylelint
+        if: always()
+        run: node scripts/ci/run-step.mjs Stylelint npm run lint:css
+
+      - name: CI script tests
+        if: always()
+        run: node scripts/ci/run-step.mjs "CI Scripts" npm run test:scripts
+
+      - name: Upload result fragments
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: fragments-static
+          path: ci-results/
+          if-no-files-found: ignore
+          retention-days: 3
+
+  e2e:
+    name: Build and E2E
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Cache Cypress binary
+        uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
+        with:
+          path: ~/.cache/Cypress
+          key: cypress-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      # The build copies dist/ into docs/assets/, which is what Cypress serves.
+      # Without this the specs would run against the stale committed bundles.
+      - name: Build
+        run: node scripts/ci/run-step.mjs Build npm run build
+
+      # Deliberately not `if: always()` — if the build failed there is nothing
+      # meaningful to test, and the missing fragment renders as "E2E skipped".
+      - name: E2E
+        run: node scripts/ci/run-e2e.mjs
+
+      - name: Upload result fragments
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: fragments-e2e
+          path: ci-results/
+          if-no-files-found: ignore
+          retention-days: 3
+
+      - name: Upload Cypress screenshots
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: cypress-screenshots
+          path: cypress/screenshots/
+          if-no-files-found: ignore
+          retention-days: 7
+
+  report:
+    name: Report
+    needs: [static, e2e]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 20
+
+      # Jobs run on separate runners, so fragments arrive as artifacts.
+      - name: Download result fragments
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          pattern: fragments-*
+          merge-multiple: true
+          path: ci-results
+
+      - name: Merge results
+        run: node scripts/ci/merge-results.mjs ci-results report/results.json
+
+      # Values reach the script through env, never interpolated into the script body.
+      - name: Write PR metadata
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          node -e '
+            const fs = require("node:fs");
+            fs.writeFileSync("report/pr.json", JSON.stringify({
+              number: Number(process.env.PR_NUMBER),
+              headSha: process.env.PR_HEAD_SHA,
+            }));
+          '
+
+      - name: Upload results artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: pr-test-results
+          path: report/
+          retention-days: 3
