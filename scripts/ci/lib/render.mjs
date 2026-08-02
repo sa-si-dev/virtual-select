@@ -102,5 +102,17 @@ export function renderComment({ results, headSha, runUrl, runNumber, hasScreensh
   if (body.length <= MAX_COMMENT_CHARS) return body;
 
   const keep = MAX_COMMENT_CHARS - footer.length - 64;
-  return `${body.slice(0, keep)}\n\n_Output truncated to fit GitHub's comment limit._\n\n${footer}`;
+  let truncated = body.slice(0, keep);
+
+  // The slice can land inside a fenced failure block. Left open, the fence
+  // swallows the truncation notice and footer into the code block. Fence lines
+  // are always exactly ``` on their own line (codeBlock neutralises any fence
+  // inside untrusted content), so an odd count means one is open — close it.
+  const fenceLine = '`'.repeat(3);
+  const openFences = truncated.split('\n').filter((line) => line.trim() === fenceLine).length;
+  if (openFences % 2 === 1) {
+    truncated += `\n${fenceLine}`;
+  }
+
+  return `${truncated}\n\n_Output truncated to fit GitHub's comment limit._\n\n${footer}`;
 }

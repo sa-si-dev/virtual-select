@@ -150,6 +150,21 @@ test('the comment is capped below the GitHub limit', () => {
   assert.match(body, /output truncated/i);
 });
 
+test('truncation never leaves an unclosed code fence', () => {
+  // The size cap slices the body at a character offset, which can land inside
+  // a fenced failure block. An unclosed fence swallows the truncation notice
+  // and footer into the code block. Every fence in the final body must be
+  // closed: the count of fence-only lines has to be even.
+  const checks = Array.from({ length: 40 }, (_, index) => step(`Check ${index}`, 'failed', 1, 'z'.repeat(50_000)));
+  const body = render(checks, 'failed');
+  const fence = '`'.repeat(3);
+  const fenceLines = body.split('\n').filter((line) => line.trim() === fence).length;
+
+  assert.equal(fenceLines % 2, 0, 'a truncated body must not leave a fence open');
+  assert.match(body, /output truncated/i);
+  assert.ok(body.trimEnd().endsWith(`[Run #${base.runNumber}](${base.runUrl})`), 'the footer must survive outside any fence');
+});
+
 test('an e2e launch failure still reports its reason', () => {
   // Cypress-could-not-start fragments carry specs: [] and a populated outputTail.
   // An `Array.isArray` check alone matches the empty array and swallows the reason.

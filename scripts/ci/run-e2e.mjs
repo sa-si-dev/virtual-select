@@ -41,7 +41,10 @@ async function waitForServer(getSpawnError) {
     if (spawnError) throw new Error(`docsify failed to start: ${spawnError.message}`);
 
     try {
-      await fetch(BASE_URL, { signal: AbortSignal.timeout(2000) });
+      const response = await fetch(BASE_URL, { signal: AbortSignal.timeout(2000) });
+      // Cancel the body so undici releases the connection immediately instead
+      // of holding it until GC — this only needed to prove the port answers.
+      await response.body?.cancel();
       return;
     } catch {
       await new Promise((resolve) => setTimeout(resolve, READY_POLL_MS));
