@@ -1,0 +1,151 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { MARKER, MAX_COMMENT_CHARS, renderComment } from '../render.mjs';
+
+const base = {
+  headSha: 'abc1234def5678901234567890123456789abcde',
+  runUrl: 'https://github.com/o/r/actions/runs/1',
+  runNumber: 123,
+  hasScreenshots: false,
+};
+
+const step = (label, outcome, durationMs = 12000, outputTail = '') => ({ kind: 'step', label, outcome, durationMs, outputTail });
+
+function render(checks, conclusion, overrides = {}) {
+  return renderComment({ results: { conclusion, checks }, ...base, ...overrides });
+}
+
+test('the marker is the first line so the sticky lookup can find it', () => {
+  assert.ok(render([step('Build', 'passed')], 'passed').startsWith(MARKER));
+});
+
+test('a passing report is headed with a tick and no failure count', () => {
+  const body = render([step('Build', 'passed')], 'passed');
+  assert.match(body, /### PR Test Results — ✅/);
+  assert.ok(!body.includes('failing'));
+});
+
+test('a failing report counts the failures', () => {
+  const body = render([step('Build', 'failed'), step('ESLint', 'passed')], 'failed');
+  assert.match(body, /### PR Test Results — ❌ 1 failing/);
+});
+
+test('each check becomes a table row with an icon and duration', () => {
+  const body = render([step('Typecheck', 'passed', 12000)], 'passed');
+  assert.match(body, /\| Typecheck \| ✅ \| 12s \|/);
+});
+
+test('durations over a minute are rendered as minutes and seconds', () => {
+  const body = render([step('Build', 'passed', 62004)], 'passed');
+  assert.match(body, /1m02s/);
+});
+
+test('a skipped check is shown explicitly rather than omitted', () => {
+  const body = render([step('Build', 'failed'), step('E2E', 'skipped', 0)], 'failed');
+  assert.match(body, /\| E2E \| ⏭️ skipped \| — \|/);
+});
+
+test('an e2e check expands into one row per spec', () => {
+  const e2e = {
+    kind: 'e2e',
+    label: 'E2E',
+    outcome: 'failed',
+    durationMs: 90000,
+    specs: [
+      { name: 'examples.cy.ts', outcome: 'passed', tests: 12, passes: 12, failures: 0, durationMs: 62004, failureMessages: [] },
+      { name: 'timer-cleanup.cy.ts', outcome: 'failed', tests: 4, passes: 3, failures: 1, durationMs: 22000, failureMessages: ['boom'] },
+    ],
+  };
+  const body = render([e2e], 'failed');
+
+  assert.match(body, /\| examples\.cy\.ts \| ✅ 12\/12 \| 1m02s \|/);
+  assert.match(body, /\| timer-cleanup\.cy\.ts \| ❌ 3\/4 \| 22s \|/);
+});
+
+test('failure output appears in a collapsed block', () => {
+  const body = render([step('ESLint', 'failed', 1000, 'no-unused-vars')], 'failed');
+  assert.match(body, /<details><summary>Failures<\/summary>/);
+  assert.match(body, /no-unused-vars/);
+});
+
+test('a passing report has no failures block', () => {
+  assert.ok(!render([step('Build', 'passed')], 'passed').includes('<details>'));
+});
+
+test('the tested commit is stamped so a stale comment is visible', () => {
+  assert.match(render([step('Build', 'passed')], 'passed'), /Tested commit: `abc1234`/);
+});
+
+test('screenshots are mentioned only when they exist', () => {
+  assert.ok(!render([step('Build', 'passed')], 'passed').includes('cypress-screenshots'));
+  assert.match(render([step('Build', 'failed')], 'failed', { hasScreenshots: true }), /cypress-screenshots/);
+});
+
+test('a hostile spec name cannot break out of the table', () => {
+  const e2e = {
+    kind: 'e2e',
+    label: 'E2E',
+    outcome: 'failed',
+    durationMs: 1,
+    specs: [{ name: 'a|b <img src=x> <!-- x -->', outcome: 'failed', tests: 1, passes: 0, failures: 1, durationMs: 1, failureMessages: [] }],
+  };
+  const body = render([e2e], 'failed');
+
+  assert.ok(body.includes('a\\|b'));
+  assert.ok(!body.includes('<img'));
+  assert.equal(body.split(MARKER).length, 2, 'the marker must not be forgeable');
+});
+
+test('hostile failure output cannot escape the code fence', () => {
+  const fence = '`'.repeat(3);
+  const body = render([step('Build', 'failed', 1, `x ${fence} y`)], 'failed');
+  assert.ok(!body.includes(`x ${fence} y`));
+  assert.match(body, /x ''' y/);
+});
+
+test('dangerous markup in failure output stays inside a fenced block', () => {
+  // codeBlock deliberately does not escape HTML: inside a fence GitHub renders
+  // content as inert literal text, and escaping would corrupt legitimate output
+  // such as TypeScript generics into visible &lt; entities. The safety property
+  // is therefore *containment*, and this test pins it down.
+  const fence = '`'.repeat(3);
+  const body = render([step('Build', 'failed', 1, '<script>alert(1)</script>')], 'failed');
+  const lines = body.split('\n');
+  const index = lines.findIndex((line) => line.includes('<script>'));
+
+  assert.notEqual(index, -1, 'the payload should be present, just contained');
+
+  const fencesBefore = lines.slice(0, index).filter((line) => line.trim() === fence).length;
+  assert.equal(fencesBefore % 2, 1, '<script> must sit between an opening and closing fence');
+});
+
+test('unvalidated spec fields cannot crash the trusted workflow', () => {
+  // validateResults only type-checks each check's `label` and `outcome`, so
+  // `specs` and `failureMessages` reach here unvalidated from an artifact a PR
+  // author influenced. A `for...of` over a number throws, and this code runs in
+  // the workflow holding the writable token — an uncaught throw there kills the
+  // comment step, so any PR author could suppress reporting.
+  const hostile = {
+    kind: 'e2e',
+    label: 'E2E',
+    outcome: 'failed',
+    durationMs: 1,
+    specs: [
+      { name: 'a.cy.ts', outcome: 'failed', tests: 1, passes: 0, failures: 1, durationMs: 1, failureMessages: 42 },
+      null,
+    ],
+  };
+
+  assert.doesNotThrow(() => render([hostile], 'failed'));
+  assert.doesNotThrow(() => render([{ ...hostile, specs: 'not-an-array' }], 'failed'));
+});
+
+test('the comment is capped below the GitHub limit', () => {
+  // codeBlock already caps each block at 2000 chars, so the overflow has to come
+  // from the number of failing checks rather than the size of any one of them.
+  const checks = Array.from({ length: 40 }, (_, index) => step(`Check ${index}`, 'failed', 1, 'z'.repeat(50_000)));
+  const body = render(checks, 'failed');
+
+  assert.ok(body.length <= MAX_COMMENT_CHARS, `expected <= ${MAX_COMMENT_CHARS}, got ${body.length}`);
+  assert.match(body, /output truncated/i);
+});
