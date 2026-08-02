@@ -49,7 +49,12 @@ export function truncate(text, max) {
 
 /** Render untrusted text safely inside a markdown table cell. */
 export function cell(text, max = 120) {
-  const clean = escapeHtml(stripMarkers(stripControl(text)))
+  // Pre-slice to a cheap upper bound before the expensive fixed-point loop in
+  // stripMarkers, whose cost is quadratic in input length. Without this an
+  // attacker-controlled string near the artifact's 1 MB cap can take minutes.
+  // The final truncate(..., max) below still does the real truncation.
+  const bounded = String(text ?? '').slice(0, max * 4);
+  const clean = escapeHtml(stripMarkers(stripControl(bounded)))
     .replace(/\s+/g, ' ')
     .replaceAll('|', '\\|')
     .trim();
@@ -63,7 +68,12 @@ export function cell(text, max = 120) {
  * neutralised so the text cannot break out.
  */
 export function codeBlock(text, max = 2000) {
-  return truncate(stripMarkers(stripControl(text)).replaceAll(FENCE, "'''"), max);
+  // Pre-slice to a cheap upper bound before the expensive fixed-point loop in
+  // stripMarkers, whose cost is quadratic in input length. Without this an
+  // attacker-controlled string near the artifact's 1 MB cap can take minutes.
+  // The final truncate(..., max) below still does the real truncation.
+  const bounded = String(text ?? '').slice(0, max * 4);
+  return truncate(stripMarkers(stripControl(bounded)).replaceAll(FENCE, "'''"), max);
 }
 
 /** Turn a human check label into a filesystem-safe filename stem. */

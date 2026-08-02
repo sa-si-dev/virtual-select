@@ -4,6 +4,6 @@ node_modules
 ts-types
 videos
 package-lock.json
-ci-results
-report
+/ci-results/
+/report/
 cypress/screenshots

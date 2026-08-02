@@ -21,10 +21,13 @@ permissions:
   pull-requests: write
   actions: read
 
-# Serialized: two rapid pushes would otherwise let both runs find no existing
-# comment and each create one, duplicating the sticky comment permanently.
+# Serialized per PR branch: two rapid pushes to the SAME PR would otherwise let
+# both runs find no existing comment and each create one, duplicating the
+# sticky comment permanently. That race is per-PR, so the group is scoped to
+# the PR's head repo/branch — a repo-global group would let one PR's run
+# cancel another PR's pending comment.
 concurrency:
-  group: pr-test-comment
+  group: pr-test-comment-${{ github.event.workflow_run.head_repository.full_name }}-${{ github.event.workflow_run.head_branch }}
   cancel-in-progress: false
 
 jobs:
@@ -39,6 +42,8 @@ jobs:
       # No `ref:` — see the security note above.
       - name: Checkout trusted tooling
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
 
       - name: Setup Node
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
@@ -99,7 +104,13 @@ jobs:
 
             // Anti-spoofing: only comment on a PR whose head is the commit we tested.
             // This also drops stale runs after a newer push, which is desirable.
-            const { data: pr } = await github.rest.pulls.get({ ...context.repo, pull_number: prNumber });
+            let pr;
+            try {
+              ({ data: pr } = await github.rest.pulls.get({ ...context.repo, pull_number: prNumber }));
+            } catch (error) {
+              core.warning(`Cannot fetch PR #${prNumber}: ${error.message}`);
+              return;
+            }
             if (pr.head.sha !== run.head_sha) {
               core.warning(`Refusing to comment: PR #${prNumber} head ${pr.head.sha} != tested ${run.head_sha}`);
               return;

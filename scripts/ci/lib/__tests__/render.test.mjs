@@ -149,3 +149,64 @@ test('the comment is capped below the GitHub limit', () => {
   assert.ok(body.length <= MAX_COMMENT_CHARS, `expected <= ${MAX_COMMENT_CHARS}, got ${body.length}`);
   assert.match(body, /output truncated/i);
 });
+
+test('an e2e launch failure still reports its reason', () => {
+  // Cypress-could-not-start fragments carry specs: [] and a populated outputTail.
+  // An `Array.isArray` check alone matches the empty array and swallows the reason.
+  const e2e = {
+    kind: 'e2e', label: 'E2E', outcome: 'failed', durationMs: 5000, specs: [],
+    outputTail: 'docsify did not accept connections within 60000ms',
+  };
+  const body = render([e2e], 'failed');
+
+  assert.match(body, /docsify did not accept connections/);
+});
+
+test('skipped checks count toward the failing total', () => {
+  // A job killed by timeout-minutes uploads no fragments, so every check merges
+  // to `skipped`. Counting only `failed` renders the nonsensical "0 failing".
+  const checks = ['Typecheck', 'Build', 'E2E'].map((label) => step(label, 'skipped', 0));
+
+  assert.match(render(checks, 'failed'), /❌ 3 failing/);
+});
+
+test('spec counts cannot inject markdown', () => {
+  const e2e = {
+    kind: 'e2e', label: 'E2E', outcome: 'failed', durationMs: 1,
+    specs: [{ name: 'a.cy.ts', outcome: 'failed', passes: '0 |\n\n### Injected\n\n| x', tests: 1, durationMs: 1, failureMessages: [] }],
+  };
+  const body = render([e2e], 'failed');
+
+  assert.ok(!body.includes('### Injected'));
+  assert.match(body, /❌ 0\/1/);
+});
+
+test('the workflow marker matches the exported MARKER', async () => {
+  // The workflow hardcodes this literal; a desync would silently make every run
+  // create a new comment instead of updating the sticky one.
+  const { readFile } = await import('node:fs/promises');
+  const yaml = await readFile(new URL('../../../../.github/workflows/pr-test-comment.yml', import.meta.url), 'utf8');
+
+  assert.ok(yaml.includes(MARKER), `workflow does not contain MARKER: ${MARKER}`);
+});
+
+test('the hostile fixture renders safely', async () => {
+  const { readFile } = await import('node:fs/promises');
+  const raw = await readFile(new URL('../../__fixtures__/hostile-results.json', import.meta.url), 'utf8');
+  const results = JSON.parse(raw);
+  const body = renderComment({ results, headSha: 'a'.repeat(40), runUrl: 'http://x', runNumber: 1, hasScreenshots: false });
+
+  assert.equal(body.split(MARKER).length - 1, 1, 'marker must appear exactly once');
+  assert.ok(!body.includes('<img'), 'no live img tag');
+
+  // The fixture's <script> lives inside a fenced code block, where it is inert
+  // BY DESIGN (codeBlock deliberately does not escape HTML — escaping there
+  // would corrupt legitimate output like `Array<string>`). So the safety
+  // property to assert is containment between fences, not absence.
+  const lines = body.split('\n');
+  const fence = '`'.repeat(3);
+  const index = lines.findIndex((line) => line.includes('<script'));
+  assert.notEqual(index, -1, 'the payload should be present, just contained');
+  const fencesBefore = lines.slice(0, index).filter((line) => line.trim() === fence).length;
+  assert.equal(fencesBefore % 2, 1, '<script must sit between an opening and closing fence');
+});

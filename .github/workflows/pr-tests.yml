@@ -1,12 +1,24 @@
 # Runs the full test suite on every pull request.
 #
 # SECURITY: this workflow executes code authored by the pull request. It must
-# never hold write permissions or reference secrets. On a fork PR the workflow
-# file itself comes from the PR, so nothing here can be trusted — the results
-# are handed to pr-test-comment.yml as data, and that workflow does the posting.
+# never hold write permissions or reference secrets. Results are handed to
+# pr-test-comment.yml as data, and that workflow does the posting.
 #
-# The PR comment is informational and a malicious PR can forge its contents.
-# Branch protection must key on the job checks below, not on the comment.
+# IMPORTANT — what these checks are and are not:
+# On a pull_request event GitHub runs the workflow definition from the PR's
+# merge commit, so a pull request can edit THIS FILE. A malicious fork PR can
+# therefore replace these jobs with no-ops and make every check green, and can
+# equally forge the contents of the results comment. Neither the job checks nor
+# the comment is a trust anchor against a hostile contributor.
+#
+# The controls that actually work for that threat are:
+#   1. Settings > Actions > "Require approval for all external contributors",
+#      so no fork workflow runs until a maintainer approves it.
+#   2. CODEOWNERS on .github/** and scripts/ci/**, so changes to CI itself
+#      require review.
+# Required status checks are still worth enabling: they catch honest mistakes,
+# which is the overwhelmingly common case. Use "Report" — it aggregates every
+# other check (see the gate step at the end of that job).
 
 name: PR Tests
 
@@ -29,6 +41,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
 
       - name: Setup Node
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
@@ -73,6 +87,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
 
       - name: Setup Node
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
@@ -126,6 +142,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
 
       - name: Setup Node
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0

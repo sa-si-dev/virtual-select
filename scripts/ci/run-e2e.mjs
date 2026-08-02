@@ -92,7 +92,7 @@ try {
     outcome: 'failed',
     durationMs: Date.now() - startedAt,
     specs: [],
-    outputTail: error.message,
+    outputTail: String(error?.message ?? error),
   };
 } finally {
   await stopServer(server);

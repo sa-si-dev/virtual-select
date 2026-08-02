@@ -28,7 +28,7 @@ function rowsFor(check) {
   if (check.kind === 'e2e' && Array.isArray(check.specs) && check.specs.length > 0) {
     return check.specs.map((spec) => [
       cell(spec?.name),
-      `${icon(spec?.outcome)} ${spec?.passes ?? 0}/${spec?.tests ?? 0}`,
+      `${icon(spec?.outcome)} ${Number(spec?.passes) || 0}/${Number(spec?.tests) || 0}`,
       duration(spec?.durationMs),
     ]);
   }
@@ -41,7 +41,7 @@ function failureBlocks(checks) {
   const blocks = [];
 
   for (const check of checks) {
-    if (check.kind === 'e2e' && Array.isArray(check.specs)) {
+    if (check.kind === 'e2e' && Array.isArray(check.specs) && check.specs.length > 0) {
       for (const spec of check.specs) {
         // `Array.isArray`, not `?? []`. validateResults only type-checks each
         // check's `label` and `outcome`, so `failureMessages` arrives
@@ -64,7 +64,7 @@ function failureBlocks(checks) {
 
 export function renderComment({ results, headSha, runUrl, runNumber, hasScreenshots }) {
   const { conclusion, checks } = results;
-  const failing = checks.filter((check) => check.outcome === 'failed').length;
+  const failing = checks.filter((check) => check.outcome !== 'passed').length;
 
   const heading = conclusion === 'passed'
     ? '### PR Test Results — ✅ all checks passed'
