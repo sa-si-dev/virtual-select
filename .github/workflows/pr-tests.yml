@@ -163,3 +163,26 @@ jobs:
           name: pr-test-results
           path: report/
           retention-days: 3
+
+      # Ordering is load-bearing: this MUST come after the upload. Failing any
+      # earlier would abort the job before the artifact exists, leaving the
+      # comment workflow with nothing and producing no PR comment at all.
+      #
+      # Without this step the report job can never fail on content — it would
+      # stay green even when the build and e2e failed, and branch protection
+      # pointed at "Report" would give no protection whatsoever.
+      - name: Fail if any check failed
+        env:
+          RESULTS_FILE: report/results.json
+        run: |
+          node -e '
+            const fs = require("node:fs");
+            const results = JSON.parse(fs.readFileSync(process.env.RESULTS_FILE, "utf8"));
+            const failed = results.checks.filter((check) => check.outcome !== "passed");
+            if (results.conclusion !== "passed") {
+              console.error(`Conclusion: ${results.conclusion}`);
+              for (const check of failed) console.error(`  ${check.label}: ${check.outcome}`);
+              process.exit(1);
+            }
+            console.log("All checks passed.");
+          '
