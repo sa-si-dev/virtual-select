@@ -43,11 +43,9 @@ function failureBlocks(checks) {
   for (const check of checks) {
     if (check.kind === 'e2e' && Array.isArray(check.specs) && check.specs.length > 0) {
       for (const spec of check.specs) {
-        // `Array.isArray`, not `?? []`. validateResults only type-checks each
-        // check's `label` and `outcome`, so `failureMessages` arrives
-        // unvalidated from an attacker-influenced artifact. `?? []` would let a
-        // number through and `for...of` would throw "42 is not iterable" —
-        // inside the TRUSTED workflow, killing the comment step entirely.
+        // Defense in depth: keep this guard even though validateResults now
+        // schema-validates nested fields. renderComment is a pure helper that
+        // may be reused directly, and malformed input must not crash reporting.
         const messages = Array.isArray(spec?.failureMessages) ? spec.failureMessages : [];
 
         for (const message of messages) {

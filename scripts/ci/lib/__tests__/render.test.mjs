@@ -119,12 +119,9 @@ test('dangerous markup in failure output stays inside a fenced block', () => {
   assert.equal(fencesBefore % 2, 1, '<script> must sit between an opening and closing fence');
 });
 
-test('unvalidated spec fields cannot crash the trusted workflow', () => {
-  // validateResults only type-checks each check's `label` and `outcome`, so
-  // `specs` and `failureMessages` reach here unvalidated from an artifact a PR
-  // author influenced. A `for...of` over a number throws, and this code runs in
-  // the workflow holding the writable token — an uncaught throw there kills the
-  // comment step, so any PR author could suppress reporting.
+test('malformed spec fields cannot crash the renderer (defense in depth)', () => {
+  // validateResults now enforces nested schema shape, but renderComment is a
+  // pure function and should still be resilient if reused with malformed input.
   const hostile = {
     kind: 'e2e',
     label: 'E2E',

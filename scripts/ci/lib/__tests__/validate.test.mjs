@@ -40,7 +40,16 @@ test('non-objects and arrays are rejected as pr payloads', () => {
 });
 
 test('a valid results payload is accepted', () => {
-  const value = { conclusion: 'failed', checks: [{ label: 'Build', outcome: 'failed' }] };
+  const value = {
+    conclusion: 'failed',
+    checks: [{
+      kind: 'step',
+      label: 'Build',
+      outcome: 'failed',
+      durationMs: 1234,
+      outputTail: 'boom',
+    }],
+  };
   assert.deepEqual(validateResults(value), value);
 });
 
@@ -53,12 +62,94 @@ test('a non-array checks field is rejected', () => {
 });
 
 test('an absurd number of checks is rejected', () => {
-  const checks = Array.from({ length: 65 }, () => ({ label: 'x', outcome: 'passed' }));
+  const checks = Array.from({
+    length: 65,
+  }, () => ({
+    kind: 'step',
+    label: 'x',
+    outcome: 'passed',
+    durationMs: 1,
+    outputTail: '',
+  }));
   assert.throws(() => validateResults({ conclusion: 'passed', checks }), /too many/);
 });
 
-test('a check entry with non-string label or outcome is rejected', () => {
-  for (const check of [{ label: 1, outcome: 'passed' }, { label: 'x', outcome: 2 }, null]) {
-    assert.throws(() => validateResults({ conclusion: 'passed', checks: [check] }), /check entry/);
+test('a malformed step check is rejected', () => {
+  for (const check of [
+    { kind: 'step', label: 1, outcome: 'passed', durationMs: 1, outputTail: '' },
+    { kind: 'step', label: 'x', outcome: 'maybe', durationMs: 1, outputTail: '' },
+    { kind: 'step', label: 'x', outcome: 'passed', durationMs: -1, outputTail: '' },
+    { kind: 'step', label: 'x', outcome: 'passed', durationMs: 1, outputTail: 42 },
+    { kind: 'unknown', label: 'x', outcome: 'passed', durationMs: 1, outputTail: '' },
+    null,
+  ]) {
+    assert.throws(() => validateResults({ conclusion: 'passed', checks: [check] }), /checks\[0\]|kind|outcome|string/);
   }
+});
+
+test('a valid e2e check with specs is accepted', () => {
+  const value = {
+    conclusion: 'failed',
+    checks: [{
+      kind: 'e2e',
+      label: 'E2E',
+      outcome: 'failed',
+      durationMs: 5000,
+      outputTail: '',
+      specs: [{
+        name: 'examples.cy.ts',
+        outcome: 'failed',
+        tests: 4,
+        passes: 3,
+        failures: 1,
+        durationMs: 2000,
+        failureMessages: ['AssertionError: expected 1 to equal 0'],
+      }],
+    }],
+  };
+
+  assert.deepEqual(validateResults(value), value);
+});
+
+test('a malformed e2e check is rejected', () => {
+  const invalidChecks = [
+    { kind: 'e2e', label: 'E2E', outcome: 'failed', durationMs: 1, outputTail: '', specs: 'nope' },
+    { kind: 'e2e', label: 'E2E', outcome: 'failed', durationMs: 1, outputTail: '', specs: [null] },
+    {
+      kind: 'e2e',
+      label: 'E2E',
+      outcome: 'failed',
+      durationMs: 1,
+      outputTail: '',
+      specs: [{
+        name: 'x.cy.ts',
+        outcome: 'failed',
+        tests: 1,
+        passes: 0,
+        failures: 1,
+        durationMs: 1,
+        failureMessages: 42,
+      }],
+    },
+    {
+      kind: 'e2e',
+      label: 'E2E',
+      outcome: 'failed',
+      durationMs: 1,
+      outputTail: '',
+      specs: [{
+        name: 'x.cy.ts',
+        outcome: 'failed',
+        tests: 1,
+        passes: 0,
+        failures: 1,
+        durationMs: 1,
+        failureMessages: [42],
+      }],
+    },
+  ];
+
+  invalidChecks.forEach((check) => {
+    assert.throws(() => validateResults({ conclusion: 'failed', checks: [check] }), /specs|failureMessages|checks\[0\]/);
+  });
 });
