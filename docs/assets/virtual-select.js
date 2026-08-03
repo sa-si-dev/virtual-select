@@ -1137,9 +1137,17 @@ class VirtualSelect {
       return;
     }
 
-    // Handle the Escape key when showing the dropdown as a popup, closing it
+    /**
+     * Escape must close the dropdown in every layout (WCAG 2.1.1 / 2.1.2).
+     * The element that contains the focused node differs by layout: with an external
+     * `dropboxWrapper` the dropbox is portalled out of $wrapper, so containment has to be
+     * tested against $dropboxWrapper. In every other case - including the default
+     * `dropboxWrapper: 'self'` on desktop - the dropbox lives inside $wrapper. Selecting
+     * $dropboxWrapper unconditionally for non-popup layouts left it `undefined` under the
+     * default config, so the branch never ran and Escape did nothing.
+     */
     if (key === 27 || e.key === 'Escape') {
-      const wrapper = this.showAsPopup ? this.$wrapper : this.$dropboxWrapper;
+      const wrapper = this.hasDropboxWrapper && !this.showAsPopup ? this.$dropboxWrapper : this.$wrapper;
       if (wrapper && (document.activeElement === wrapper || wrapper.contains(document.activeElement)) && !this.keepAlwaysOpen) {
         this.closeDropbox();
         return;
