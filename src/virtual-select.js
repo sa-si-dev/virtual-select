@@ -450,7 +450,14 @@ export class VirtualSelect {
     let searchInput = '';
 
     if (this.multiple && !this.disableSelectAll) {
-      checkboxHtml = `<span class="vscomp-toggle-all-button" tabindex="0" aria-label="${this.selectAllText}">
+      /**
+       * role="checkbox" + aria-checked so the control is announced as a checkbox and its
+       * state changes are audible. Without them it exposed as a generic element and every
+       * select/deselect was silent to assistive technology (WCAG 4.1.2 / 1.3.1).
+       * aria-checked is kept in sync by toggleAllOptionsClass().
+       */
+      checkboxHtml = `<span class="vscomp-toggle-all-button" tabindex="0" role="checkbox"
+        aria-checked="false" aria-label="${this.selectAllText}">
           <span class="checkbox-icon vscomp-toggle-all-checkbox"></span>
           <span class="vscomp-toggle-all-label">${this.selectAllText}</span>
         </span>`;
@@ -614,7 +621,13 @@ export class VirtualSelect {
       this.focusFirstVisibleOption();
     }
 
-    if (document.activeElement === this.$toggleAllButton && key === 13) {
+    /**
+     * Space is the expected activation key for role="checkbox"; Enter is kept for
+     * backwards compatibility. preventDefault stops Space from scrolling the page
+     * (the previous behaviour, since the key was unhandled here).
+     */
+    if (document.activeElement === this.$toggleAllButton && (key === 13 || key === 32)) {
+      e.preventDefault();
       this.toggleAllOptions();
       return;
     }
@@ -3193,7 +3206,15 @@ export class VirtualSelect {
       isAllVisibleSelected = this.isAllOptionsSelected(true);
     }
 
-    DomUtils.toggleClass(this.$toggleAllCheckbox, 'checked', isAllSelected || isAllVisibleSelected);
+    const isChecked = isAllSelected || isAllVisibleSelected;
+
+    DomUtils.toggleClass(this.$toggleAllCheckbox, 'checked', isChecked);
+    /**
+     * Mirror the visual checked state onto the role="checkbox" host. This is the single
+     * point every selection path funnels through (select all, deselect all, per-option
+     * clicks, group toggles, setValue, reset), so the exposed state cannot drift.
+     */
+    DomUtils.setAria(this.$toggleAllButton, 'checked', isChecked);
 
     this.isAllSelected = isAllSelected;
   }
