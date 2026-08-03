@@ -1,7 +1,6 @@
 const path = require('path');
 const webpack = require('webpack');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-// eslint-disable-next-line import/no-extraneous-dependencies
 const TerserPlugin = require('terser-webpack-plugin');
 const UnminifiedWebpackPlugin = require('unminified-webpack-plugin');
 const FileManagerPlugin = require('filemanager-webpack-plugin');
