@@ -361,8 +361,9 @@ export class VirtualSelect {
         if (disableOptionGroupCheckbox) {
           leftSection = '';
         } else if (this.multiple) {
-          const groupLabel = this.secureText(Utils.getString(d.label));
-          ariaLabel = `aria-label="${groupLabel}, ${this.secureText(this.selectAllText)}"`;
+          const groupLabel = Utils.replaceDoubleQuotesWithHTML(Utils.getString(d.label));
+          const selectAllText = Utils.replaceDoubleQuotesWithHTML(Utils.getString(this.selectAllText));
+          ariaLabel = `aria-label="${groupLabel}, ${selectAllText}"`;
         }
       }
 
