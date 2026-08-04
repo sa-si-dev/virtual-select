@@ -263,7 +263,8 @@ export class VirtualSelect {
         <div class="${dropboxClasses}">
           <div class="vscomp-search-wrapper"></div>
 
-          <div class="vscomp-options-container" role="listbox" aria-labelledby="vscomp-ele-wrapper-${this.uniqueId}" >
+          <div class="vscomp-options-container" role="listbox" aria-labelledby="vscomp-ele-wrapper-${this.uniqueId}"
+            ${this.multiple ? 'aria-multiselectable="true"' : ''}>
             <div class="vscomp-options-loader"></div>
 
             <div class="vscomp-options-list">
