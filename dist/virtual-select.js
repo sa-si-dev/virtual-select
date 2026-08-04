@@ -672,7 +672,7 @@ const nativeProps = ['autofocus', 'class', 'disabled', 'id', 'multiple', 'name',
 // the class below has been evaluated (see the assignment at the bottom of this file).
 // eslint-disable-next-line prefer-const
 let attrPropsMapping;
-const dataProps = ['additionalClasses', 'additionalDropboxClasses', 'additionalDropboxContainerClasses', 'additionalToggleButtonClasses', 'aliasKey', 'allOptionsSelectedText', 'allowNewOption', 'alwaysShowSelectedOptionsCount', 'alwaysShowSelectedOptionsLabel', 'ariaLabelledby', 'ariaLabelText', 'ariaLabelClearButtonText', 'ariaLabelTagClearButtonText', 'ariaLabelSearchClearButtonText', 'autoSelectFirstOption', 'clearButtonText', 'descriptionKey', 'disableAllOptionsSelectedText', 'disableOptionGroupCheckbox', 'disableSelectAll', 'disableValidation', 'dropboxWidth', 'dropboxWrapper', 'emptyValue', 'enableSecureText', 'focusSelectedOptionOnOpen', 'hasOptionDescription', 'hideClearButton', 'hideValueTooltipOnSelectAll', 'keepAlwaysOpen', 'labelKey', 'markSearchResults', 'maxValues', 'maxWidth', 'minValues', 'moreText', 'noOfDisplayValues', 'noOptionsText', 'noSearchResultsText', 'optionHeight', 'optionSelectedText', 'optionsCount', 'optionsSelectedText', 'popupDropboxBreakpoint', 'popupPosition', 'position', 'search', 'searchByStartsWith', 'searchDelay', 'searchFormLabel', 'searchGroup', 'searchNormalize', 'searchPlaceholderText', 'selectAllOnlyVisible', 'selectAllText', 'setValueAsArray', 'showDropboxAsPopup', 'showOptionsOnlyOnSearch', 'showSecureTextWarning', 'showSelectedOptionsFirst', 'showValueAsTags', 'silentInitialValueSet', 'textDirection', 'tooltipAlignment', 'tooltipFontSize', 'tooltipMaxWidth', 'updatePositionThrottle', 'useGroupValue', 'valueKey', 'zIndex'];
+const dataProps = ['additionalClasses', 'additionalDropboxClasses', 'additionalDropboxContainerClasses', 'additionalToggleButtonClasses', 'aliasKey', 'allOptionsSelectedText', 'allowNewOption', 'alwaysShowSelectedOptionsCount', 'alwaysShowSelectedOptionsLabel', 'ariaLabelledby', 'ariaLabelText', 'ariaLabelClearButtonText', 'ariaLabelTagClearButtonText', 'ariaLabelSearchClearButtonText', 'autoSelectFirstOption', 'clearButtonText', 'descriptionKey', 'disableAllOptionsSelectedText', 'disableOptionGroupCheckbox', 'disableSelectAll', 'disableValidation', 'dropboxWidth', 'dropboxWrapper', 'emptyValue', 'enableSecureText', 'focusSelectedOptionOnOpen', 'hasOptionDescription', 'hideClearButton', 'hideValueTooltipOnSelectAll', 'keepAlwaysOpen', 'labelKey', 'markSearchResults', 'maxValues', 'maxWidth', 'minValues', 'loadingText', 'moreText', 'noOfDisplayValues', 'noOptionsSelectedText', 'noOptionsText', 'noSearchResultsText', 'optionHeight', 'optionSelectedText', 'optionsCount', 'optionsSelectedText', 'popupDropboxBreakpoint', 'popupPosition', 'position', 'search', 'searchByStartsWith', 'searchDelay', 'searchFormLabel', 'searchGroup', 'searchNormalize', 'searchPlaceholderText', 'searchResultText', 'searchResultsText', 'selectAllOnlyVisible', 'selectAllText', 'selectedText', 'setValueAsArray', 'showDropboxAsPopup', 'showOptionsOnlyOnSearch', 'showSecureTextWarning', 'showSelectedOptionsFirst', 'showValueAsTags', 'silentInitialValueSet', 'textDirection', 'tooltipAlignment', 'tooltipFontSize', 'tooltipMaxWidth', 'updatePositionThrottle', 'useGroupValue', 'valueKey', 'zIndex'];
 
 /** Class representing VirtualSelect */
 class VirtualSelect {
@@ -763,6 +763,9 @@ class VirtualSelect {
           </div>
         </div>
 
+        <div id="vscomp-live-region-${uniqueId}" class="vscomp-live-region" role="status"
+          aria-live="polite" aria-atomic="true"></div>
+
         ${this.renderDropbox({
       wrapperClasses
     })}
@@ -782,6 +785,7 @@ class VirtualSelect {
     this.$clearButton = this.$ele.querySelector('.vscomp-clear-button');
     this.$valueText = this.$ele.querySelector('.vscomp-value');
     this.$hiddenInput = this.$ele.querySelector('.vscomp-hidden-input');
+    this.$liveRegion = this.$ele.querySelector('.vscomp-live-region');
     this.$dropbox = this.$dropboxContainer.querySelector('.vscomp-dropbox');
     this.$dropboxCloseButton = this.$dropboxContainer.querySelector('.vscomp-dropbox-close-button');
     this.$dropboxContainerBottom = this.$dropboxContainer.querySelector('.vscomp-dropbox-container-bottom');
@@ -1475,6 +1479,12 @@ class VirtualSelect {
       if (this.autofocus) {
         this.focus();
       }
+
+      /**
+       * Marks the end of construction. Live-region announcements are suppressed until
+       * here so an initial value or the first render does not speak on page load.
+       */
+      this.isInitialized = true;
     } catch (e) {
       this.destroy();
       throw e;
@@ -1536,6 +1546,9 @@ class VirtualSelect {
     this.focusOption({
       focusFirst: true
     });
+    if (!this.hasServerSearch) {
+      this.announceSearchResults();
+    }
   }
   afterSetVisibleOptionsCount() {
     this.scrollToTop();
@@ -1621,6 +1634,12 @@ class VirtualSelect {
     this.optionsSelectedText = options.optionsSelectedText;
     this.optionSelectedText = options.optionSelectedText;
     this.allOptionsSelectedText = options.allOptionsSelectedText;
+    /** live-region announcement texts (see announce/getResultsCountMessage) */
+    this.searchResultsText = options.searchResultsText;
+    this.searchResultText = options.searchResultText;
+    this.noOptionsSelectedText = options.noOptionsSelectedText;
+    this.selectedText = options.selectedText;
+    this.loadingText = options.loadingText;
     this.clearButtonText = options.clearButtonText;
     this.moreText = options.moreText;
     this.placeholder = options.placeholder;
@@ -1715,6 +1734,12 @@ class VirtualSelect {
       moreText: 'more...',
       optionsSelectedText: 'options selected',
       optionSelectedText: 'option selected',
+      /** live-region announcements (WCAG 4.1.3) - overridable for localisation */
+      searchResultsText: 'results available',
+      searchResultText: 'result available',
+      noOptionsSelectedText: 'No options selected',
+      selectedText: 'selected',
+      loadingText: 'Loading results',
       allOptionsSelectedText: 'All',
       placeholder: 'Select',
       position: 'bottom left',
@@ -2112,6 +2137,11 @@ class VirtualSelect {
     }
     this.setVisibleOptionsCount();
     DomUtils.removeClass(this.$allWrappers, 'server-searching');
+
+    /** replace the "loading" message with the outcome of the fetch */
+    if (this.isInitialized) {
+      this.announce(this.getResultsCountMessage());
+    }
   }
   setSelectedOptions() {
     this.selectedOptions = this.options.filter(d => d.isSelected);
@@ -2202,6 +2232,15 @@ class VirtualSelect {
     DomUtils.setAria(this.$clearButton, 'hidden', hasValue === false);
     if (!disableValidation) {
       this.validate();
+    }
+
+    /**
+     * Selection changes are otherwise conveyed only by the (visual) value text.
+     * Guarded on isInitialized so a value supplied at construction time is not
+     * announced before the user has interacted with anything.
+     */
+    if (this.isInitialized) {
+      this.announce(this.getSelectionMessage());
     }
     if (!disableEvent) {
       DomUtils.dispatchEvent(this.$ele, 'change', true);
@@ -2399,6 +2438,12 @@ class VirtualSelect {
       }
     }
     this.visibleOptionsCount = visibleOptionsCount;
+    /**
+     * Number of options matching the current filter. Kept separately because
+     * setVisibleOptions() overwrites visibleOptionsCount with the size of the rendered
+     * virtualisation window, which is not what a "N results available" message means.
+     */
+    this.filteredOptionsCount = visibleOptionsCount;
     this.afterSetVisibleOptionsCount();
   }
 
@@ -3672,6 +3717,9 @@ class VirtualSelect {
   serverSearch() {
     DomUtils.removeClass(this.$allWrappers, 'has-no-search-results');
     DomUtils.addClass(this.$allWrappers, 'server-searching');
+
+    /** the spinner is a visual-only cue; announce that a fetch is in flight */
+    this.announce(this.loadingText);
     this.setSelectedOptions();
     this.onServerSearch(this.searchValue, this);
   }
@@ -3817,6 +3865,67 @@ class VirtualSelect {
 
     // eslint-disable-next-line no-console
     console.warn('[virtual-select] Option text (label, value, description) and any `customData` used in ' + 'markup are rendered as HTML and are NOT escaped because `enableSecureText` is disabled ' + '(the default, kept off for performance on large datasets). If any option text can come ' + 'from untrusted input, set `enableSecureText: true` to prevent XSS. ' + 'Docs: https://sa-si-dev.github.io/virtual-select/#/properties');
+  }
+
+  /**
+   * Write a message into the instance's polite live region (WCAG 4.1.3 Status Messages).
+   *
+   * Identical consecutive messages are intentionally left alone: re-writing the same text
+   * produces no DOM mutation, so assistive technology does not repeat "No results found"
+   * on every further keystroke that still matches nothing.
+   *
+   * @param {string} message
+   */
+  announce(message) {
+    if (!this.$liveRegion) {
+      return;
+    }
+    const text = message || '';
+    if (this.$liveRegion.textContent !== text) {
+      this.$liveRegion.textContent = text;
+    }
+  }
+
+  /**
+   * Message describing how many options the current filter matched.
+   * @returns {string}
+   */
+  getResultsCountMessage() {
+    const count = this.filteredOptionsCount || 0;
+    if (count === 0) {
+      return this.noSearchResultsText;
+    }
+    return `${count} ${count === 1 ? this.searchResultText : this.searchResultsText}`;
+  }
+
+  /**
+   * Message describing the current selection.
+   * @returns {string}
+   */
+  getSelectionMessage() {
+    const count = this.selectedValues.length;
+    if (count === 0) {
+      return this.noOptionsSelectedText;
+    }
+    if (this.multiple) {
+      return `${count} ${count === 1 ? this.optionSelectedText : this.optionsSelectedText}`;
+    }
+
+    /** option flags are updated before setValue(), so the label is already current */
+    const label = this.getDisplayValue() || this.selectedValues[0];
+    return `${label} ${this.selectedText}`;
+  }
+
+  /**
+   * Announce the match count, but only while the user is actually searching.
+   * setSearchValue('') also runs on close and after a value is set; announcing there
+   * would read a stale count into the user's ear for an interaction they did not make.
+   */
+  announceSearchResults() {
+    if (!this.isInitialized || !this.isOpened() || document.activeElement !== this.$searchInput) {
+      return;
+    }
+    this.announce(this.getResultsCountMessage());
   }
   toggleRequired(isRequired) {
     this.required = Utils.convertToBoolean(isRequired);
