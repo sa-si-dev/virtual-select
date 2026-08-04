@@ -688,3 +688,19 @@
     }
   }
 }
+
+/**
+ * Users who ask the operating system to reduce motion should not get the dropbox slide.
+ *
+ * The loader spin is deliberately left alone: it is a status indicator rather than decoration,
+ * and a frozen spinner reads as a broken UI instead of "working". Screen reader users get the
+ * same information from the live region, so nothing is lost by keeping it.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .vscomp-dropbox-container,
+  .vscomp-dropbox,
+  .vscomp-wrapper .vscomp-toggle-button,
+  .vscomp-dropbox-wrapper {
+    transition-duration: 0s !important;
+  }
+}
