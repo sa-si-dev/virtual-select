@@ -1,17 +1,17 @@
 /** cSpell:ignore vscomp */
 
 /**
- * Regression test for AI-17 / [PERF-03] - INP / forced synchronous layout.
+ * Measuring whether a tag's text overflows must not thrash layout.
  *
- * willTextOverflow() created a div, read getComputedStyle twice, appended it to <body>,
- * read clientWidth and removed it again - once per selected tag. Each mutation invalidates
- * layout for the read that follows, so a render with many tags meant a burst of forced
- * synchronous layouts.
+ * The check runs once per selected tag. It used to create a div, read getComputedStyle twice,
+ * append it to <body>, read clientWidth and remove it again - and each DOM mutation
+ * invalidates layout for the read that follows, so rendering many tags produced a burst of
+ * forced synchronous layouts.
  */
 
 import { makeOptions, mountVs, unmountVs } from '../support/mount';
 
-describe('Perf: one shared text measurer (AI-17)', { testIsolation: true }, () => {
+describe('Perf: one shared text measurer', { testIsolation: true }, () => {
   const mountId = 'vs-measurer';
 
   const mount = () => {
