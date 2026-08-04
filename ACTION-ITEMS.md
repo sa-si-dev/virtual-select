@@ -12,7 +12,7 @@ Status legend: ✅ **DONE** (fixed + regression test) · ⬜ open · ✅ verifie
 
 ## ✅ Completed
 
-Each item below was fixed in its own commit, with a regression spec written first and confirmed failing against the unfixed bundle. 67 tests added; suite went from 219 to 306 tests.
+Each item below was fixed in its own commit, with a regression spec written first and confirmed failing against the unfixed bundle. 67 tests added; suite went from 219 to 306 tests, and from 3 failures to 1 (all pre-existing).
 
 | ID | Item | Commit | Spec | Standard |
 |---|---|---|---|---|
@@ -37,14 +37,20 @@ Each item below was fixed in its own commit, with a regression spec written firs
 - Up/Down in the search input now navigate the option list instead of moving the text caret (APG editable-combobox). Caret movement is Home/End and Left/Right.
 - This reverses an intentional earlier decision, and it is user-visible. It must be stated in the 1.4.0 release notes. See §3.2 of the v1.4.0 assessment.
 
-#### AI-1d · Virtualised options are transiently unclickable while scrolling — **Medium** ✅ (pre-existing)
-- **Reproduce:** open a 100k-option dropdown, `cy.click()` an option that requires scrolling the list → the click fails because the popover has set `display: none` on `.vscomp-dropbox-container` during the scroll.
-- **Evidence:** this is the cause of the long-standing `examples.cy.ts > Add image/icon > has flag icon on selected item` failure, which also fails at baseline `992f6a9`.
-- **Not caused by this work** and deliberately not papered over with `{ force: true }`, because it looks like a real interaction defect in the popover/scroll path.
+#### ~~AI-1d~~ · WITHDRAWN — was not a product defect ✅
+- Originally drafted as "virtualised options are transiently unclickable while scrolling", from the long-standing `examples.cy.ts > Add image/icon > has flag icon on selected item` failure.
+- **That reading was wrong.** The cause is `cy.open()` being a click, i.e. a toggle: the preceding case leaves the dropdown open, so `cy.open()` closed it and the option click then landed on a dropbox with `display: none`. Opening only when actually closed fixes the test, which confirms the cause.
+- No product change needed. Folded into AI-1e as test debt.
+
+#### AI-1f · Enter on a group title selects but does not deselect — **Medium** ✅ (pre-existing)
+- **Reproduce:** grouped multi-select, highlight a group title, press Enter → "3 options selected"; press Enter again → the value does **not** return to "Select".
+- **Evidence:** `examples.cy.ts > Option group > activates group select/deselect with Enter when group title is focused` fails at baseline `992f6a9` (verified by running the baseline bundle against the baseline spec) and is the **only** remaining red test on this branch.
+- **Lead, not a diagnosis:** `selectFocusedOption()` routes a highlighted group title to `onGroupTitleClick()`, which derives its direction from the `selected` class on the element — and the re-render between the two presses replaces that element. Worth checking first, but not investigated.
+- Clicking the group title toggles correctly, so this is specific to the keyboard path.
 
 #### AI-1e · `examples.cy.ts` keyboard cases are order-coupled — **Low** (test debt) ✅
 - `testIsolation: false` plus `cy.open()` being a *click* (therefore a toggle) means whether a previous case left a dropdown open silently changes how many key presses the next one needs. Several press counts had been calibrated against the AI-7 bug.
-- Partly mitigated: a known starting state per case, and one racy press replaced with a real key press. The suite now has 2 failures, both pre-existing — but the coupling itself remains. See §5.3 of the v1.4.0 assessment for three approaches already measured and rejected.
+- Partly mitigated: a known starting state per case, one racy press replaced with a real key press, and `has flag icon on selected item` now opens only when actually closed. The suite is down to 1 failure (AI-1f, pre-existing) — but the coupling itself remains. See §5.3 of the v1.4.0 assessment for four approaches already measured and rejected, so they are not retried blindly.
 - **Fix:** move these cases to `testIsolation: true`, or make every keyboard case mount its own instance the way the new specs do via `cypress/support/mount.ts`.
 
 ---
@@ -146,7 +152,8 @@ Each item below was fixed in its own commit, with a regression spec written firs
 | AI-11 | Target sizes < 24px | P1 | Med | 2.5.8 | ✅ done |
 | AI-1b | SEC-01 open in OSUI wrapper | P0 | High | OWASP A03 | ⬜ **other repo** |
 | AI-1c | Release note: Up/Down change | P1 | — | — | ⬜ open |
-| AI-1d | Options unclickable while scrolling | P2 | Med | — | ⬜ open (pre-existing) |
+| ~~AI-1d~~ | Withdrawn — mis-diagnosed, no product defect | — | — | — | ✅ n/a |
+| AI-1f | Enter on group title does not deselect | P2 | Med | — | ⬜ open (pre-existing) |
 | AI-1e | examples.cy.ts order coupling | P2 | Low | — | ⬜ partly mitigated (test debt) |
 | AI-5 | Scroll O(n)/unthrottled | P1 | High | INP | ⬜ open |
 | AI-8 | Placeholder/icon contrast | P1 | High | 1.4.3/1.4.11 | ⬜ open |
@@ -170,5 +177,6 @@ Each item below was fixed in its own commit, with a regression spec written firs
 2. **AI-8 + AI-9** — two High accessibility items, CSS-only, no behavioural risk.
 3. **AI-5** — the last High performance item.
 4. **AI-1c** — release note, required before shipping 1.4.0.
-5. **AI-18 verification** — may already be complete; cheap to confirm.
-6. Run **[ACCESSIBILITY-QA-SCRIPT.md](ACCESSIBILITY-QA-SCRIPT.md)** with a real screen reader against this branch, focusing on the new live-region wording and the changed arrow-key behaviour.
+5. **AI-1f** — the group-title Enter deselect, now the only red test.
+6. **AI-18 verification** — may already be complete; cheap to confirm.
+7. Run **[ACCESSIBILITY-QA-SCRIPT.md](ACCESSIBILITY-QA-SCRIPT.md)** with a real screen reader against this branch, focusing on the new live-region wording and the changed arrow-key behaviour.

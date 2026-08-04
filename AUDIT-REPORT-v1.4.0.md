@@ -47,7 +47,7 @@ Remaining High items are all deliberately deferred: AI-5 (scroll perf), AI-8 (co
 | `virtual-select.min.js` | 87.6 KB raw / 22.1 KB gzip | **91.0 KB raw / 23.0 KB gzip** (+3.4 KB / **+0.9 KB gzip**, +4.1%) |
 | `virtual-select.min.css` | 13.4 KB / 2.7 KB gzip | **13.7 KB / 2.8 KB gzip** (+0.1 KB gzip) |
 | `npm audit` (prod + dev) | 0 vulnerabilities | **0 vulnerabilities** |
-| E2E suite | 219 tests, 216 pass / 3 fail | **306 tests, 304 pass / 2 fail** |
+| E2E suite | 219 tests, 216 pass / 3 fail | **306 tests, 305 pass / 1 fail** |
 
 The +0.9 KB gzip is the honest cost of the live region, the validation messaging, the global-defaults resolver and the new ARIA plumbing. No perf regression was introduced on the hot paths: `renderOptions()`/`setVisibleOptions()` are unchanged apart from two static attributes in the template.
 
@@ -168,14 +168,21 @@ Each spec also pins negative controls and behaviour that must *not* change — f
 
 ### 5.2 Suite result
 
-**306 tests, 304 pass, 2 fail.** Baseline for comparison: 219 tests, 216 pass, 3 fail.
+**306 tests, 305 pass, 1 fail.** Baseline for comparison: 219 tests, 216 pass, 3 fail.
 
-**No new failures.** Both remaining failures are pre-existing and fail identically at the baseline commit `992f6a9`; one of the three baseline failures is now fixed as a side effect of this work.
+**No new failures.** The baseline was re-measured directly to settle this: `992f6a9`'s own bundle and its own `examples.cy.ts` were checked out and run, giving **216 pass / 3 fail** with these failures:
 
-1. **`Add image/icon > has flag icon on selected item`** — pre-existing. `cy.click()` on an option that requires scrolling a 100k-option list fails because the popover sets `display: none` on the dropbox container during that scroll. **This is a real, if narrow, product observation worth its own ticket** (AI-1d): virtualised options can be transiently unclickable while the list is being scrolled. Not in scope, not caused by this work, and deliberately not papered over with `{ force: true }`.
-2. **`Option group > activates group select/deselect with Enter`** — pre-existing: the second Enter does not deselect back to "Select".
+1. `Option group > activates group select/deselect with Enter when group title is focused`
+2. `Option group > keeps focus on the last option when navigating past the end of the list`
+3. `Add image/icon > has flag icon on selected item`
 
-**Fixed in passing:** `Option group > keeps focus on the last option when navigating past the end of the list` failed at baseline and now passes — the arrow keys reaching the list reliably is exactly what that case needed.
+Two of those three are now fixed; the third is the single remaining failure.
+
+**Still failing — pre-existing:** `Option group > activates group select/deselect with Enter when group title is focused`. The first Enter selects the group ("3 options selected"); the second does not deselect back to "Select". `selectFocusedOption()` routes a highlighted group title to `onGroupTitleClick()`, which derives its direction from the `selected` class on the element — and the element is replaced by the re-render between the two presses. That is a plausible cause but **was not investigated**: it fails identically at baseline, is unrelated to the eight action items, and is filed as AI-1f rather than guessed at.
+
+**Fixed in passing:**
+- `keeps focus on the last option when navigating past the end of the list` — failed at baseline; arrow keys reliably reaching the list is exactly what it needed.
+- `has flag icon on selected item` — failed at baseline. **Correction to an earlier reading of this failure:** it is *not* caused by the popover hiding during scroll. `cy.open()` is a click, i.e. a toggle, and the preceding case leaves this dropdown open — so `cy.open()` closed it and the option click then landed on a dropbox with `display: none`. Opening only when actually closed fixes it, which confirms the cause. There is no underlying product defect here, so the ticket previously drafted for one (AI-1d) has been withdrawn.
 
 ### 5.3 Honest note on `examples.cy.ts`
 
@@ -188,13 +195,15 @@ What was changed there, and why — all of it test-side, none of it loosening a 
 - **Press counts reduced by one** where the first press used to be swallowed.
 - **One racy press replaced with a real key press** (`pressKeys`, i.e. `realPress`) in `opens dropdown and selects a group child option using keyboard only`. The virtualiser replaces `.vscomp-option` nodes on every render, so chaining `.type()` onto them races the rebuild ("the page updated while this command was executing").
 - **A known starting state** (`closeDropbox()`) added before each keyboard case, since `cy.open()` toggles.
+- **`has flag icon on selected item` opens only when actually closed**, instead of calling `cy.open()` on a dropdown the preceding case left open.
 
 Three alternatives were measured and rejected as worse, and are recorded so they are not retried blindly:
 - **Opening via the API** instead of `cy.open()` leaves focus outside the component; driving keys through the wrapper from there trips the dropbox focus sentinels, whose `focus` handler closes the dropdown.
 - **Routing every press to the wrapper** broke `has proper ARIA attributes …`, where the second press stopped advancing the highlight.
 - **A minimal edit** (original suite plus only the changed press count) measured worse — 6 failures.
+- **A uniform API-open helper across all five keyboard cases** measured worse still (4 failures): `closeDropbox()` immediately before `cy.open()` races the popover's ~200ms hide, so `afterHidePopper()` can stamp the `closed` class onto a dropdown that has already been re-opened.
 
-The version kept is the best measured outcome: 2 failures, both pre-existing.
+The version kept is the best measured outcome: 1 failure, pre-existing.
 
 `a11y-search-arrow-navigation.cy.ts` opts into `testIsolation: true` for the same reason: leftover focus between cases made focus assertions flaky independently of the component. It was confirmed stable over three consecutive runs.
 
@@ -218,5 +227,5 @@ The public typings (`src/virtual-select.types.js`) and `docs/properties.md` / `d
 2. **AI-8 and AI-9** — contrast and `:focus-visible`. Both High, both CSS-only, together the cheapest remaining accessibility win.
 3. **AI-5** — move the ARIA scan off the render path, then rAF-coalesce the scroll handler. The only remaining High performance item.
 4. **Release note for 1.4.0** must state the Up/Down behaviour change (§3.2) explicitly.
-5. **New ticket** for the transient unclickability of virtualised options during scroll (§5.2, item 1).
+5. **AI-1f** — the group-title Enter deselect (§5.2). Pre-existing, cheap to reproduce, and now the only red test.
 6. **Run the human screen-reader script** before release.
