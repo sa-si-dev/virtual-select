@@ -15,7 +15,13 @@ const MIN_TARGET = 24;
 describe('A11y: pointer targets meet the 24x24 minimum (AI-11)', () => {
   const mountId = 'vs-a11y-target-size';
 
-  /** Assert both dimensions of the first match are at least 24 CSS px. */
+  /**
+   * Assert both dimensions of the first match are at least 24 CSS px.
+   *
+   * getBoundingClientRect() returns fractional values (a 24px box can measure
+   * 23.999998 under device-pixel rounding), so compare on rounded values - otherwise the
+   * assertion fails on sub-pixel noise rather than on a real target-size problem.
+   */
   const assertMinTarget = (selector: string, label: string) => {
     cy.get(`#${mountId}`)
       .find(selector)
@@ -23,8 +29,8 @@ describe('A11y: pointer targets meet the 24x24 minimum (AI-11)', () => {
       .then(($el) => {
         const rect = $el[0].getBoundingClientRect();
 
-        expect(rect.width, `${label} width`).to.be.at.least(MIN_TARGET);
-        expect(rect.height, `${label} height`).to.be.at.least(MIN_TARGET);
+        expect(Math.round(rect.width), `${label} width`).to.be.at.least(MIN_TARGET);
+        expect(Math.round(rect.height), `${label} height`).to.be.at.least(MIN_TARGET);
       });
   };
 
