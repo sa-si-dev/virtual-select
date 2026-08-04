@@ -51,6 +51,15 @@ declare namespace Cypress {
     open(id: string): Chainable<any>;
 
     /**
+     * Open from a known state - closed, no value, no highlighted option - so press counts do
+     * not depend on what the previous test left behind.
+     *
+     * @example
+     * cy.openFresh('option-group-select')
+     */
+    openFresh(id: string): Chainable<any>;
+
+    /**
      * @example
      close()
      */
