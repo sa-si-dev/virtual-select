@@ -161,10 +161,19 @@ describe('Accessibility attributes - virtualized options metadata', () => {
       .should('exist')
       .as('listboxContainer');
 
+    // aria-activedescendant belongs on the element that holds focus and has a role that
+    // supports it - here the role="combobox" wrapper. It used to be asserted on
+    // .vscomp-dropbox-container, a plain div with no role, where it is meaningless
+    // (audit A11Y-05). That container is now checked for its *absence* below.
+    cy.getVs(id)
+      .find('.vscomp-ele-wrapper')
+      .should('exist')
+      .as('activeDescendantHost');
+
     cy.getDropbox(null, id)
       .parent('.vscomp-dropbox-container')
       .should('exist')
-      .as('listboxRegion');
+      .as('roleLessContainer');
 
     // Get the combobox wrapper ID for reference
     cy.getVs(id)
@@ -195,11 +204,14 @@ describe('Accessibility attributes - virtualized options metadata', () => {
       .invoke('attr', 'id')
       .as('firstOptionId');
 
-    // Verify aria-activedescendant is set on listbox container when option is focused
+    // Verify aria-activedescendant names the focused option on the combobox
     cy.get('@firstOptionId').then((firstOptionId) => {
-      cy.get('@listboxRegion')
+      cy.get('@activeDescendantHost')
         .should('have.attr', 'aria-activedescendant', firstOptionId);
     });
+
+    // ...and is not published on the role-less container (audit A11Y-05)
+    cy.get('@roleLessContainer').should('not.have.attr', 'aria-activedescendant');
 
     // Navigate to second option using arrow key
     cy.get('@firstOption').type('{downarrow}');
@@ -219,7 +231,7 @@ describe('Accessibility attributes - virtualized options metadata', () => {
 
     // Verify aria-activedescendant updates to second option
     cy.get('@secondOptionId').then((secondOptionId) => {
-      cy.get('@listboxRegion')
+      cy.get('@activeDescendantHost')
         .should('have.attr', 'aria-activedescendant', secondOptionId);
     });
 
@@ -230,31 +242,39 @@ describe('Accessibility attributes - virtualized options metadata', () => {
 
 
 /**
- * Arrow key behavior tests for search input
- * Tests the fix that allows normal cursor movement in search input
- * while preserving option navigation when focus moves away from search
+ * Arrow key behavior tests for search input.
+ *
+ * Up/Down in the search input navigate the option list (WAI-ARIA APG editable-combobox),
+ * which is what audit finding A11Y-01 required: they used to be swallowed so that no option
+ * could ever be highlighted from the keyboard - a WCAG 2.1.1 (A) failure. Caret movement in
+ * the field is served by Left/Right and Home/End, covered by the suites below.
  */
 
 describe('Arrow key behavior in search input - cursor movement', () => {
   const idMultiple = 'multiple-select'
 
-  it('should allow cursor movement to beginning with up arrow in search input', () => {
+  it('moves the caret to the beginning with Home, and navigates options with Up arrow', () => {
     cy.open(idMultiple);
     // Type some text in search input
     cy.getVs(idMultiple).typeValue('ption 9', true);
-    // Press Up arrow - should move cursor to beginning
-    cy.getVs(idMultiple).pressKeys('ArrowUp');
+    // Home moves the caret to the beginning (Up arrow now drives the option list instead)
+    cy.getVs(idMultiple).pressKeys('Home');
     // Type 'O' at cursor position (should be at beginning)
     cy.getVs(idMultiple).typeValue('O');
     // Verify the text has 'O' at the beginning
     cy.getVs(idMultiple).checkOptionLabelExists('Option 9');
+
+    // Up/Down highlight an option without taking focus out of the field
+    cy.getVs(idMultiple).pressKeys('ArrowDown');
+    cy.getDropbox(null, idMultiple).find('.vscomp-option.focused').should('exist');
+    cy.checkActiveElementHasClass('vscomp-search-input');
   });
 
-  it('should allow cursor movement to end with down arrow in search input', () => {
-    // Clear and test Down arrow - use actual dropdown data
+  it('moves the caret to the end with End key in search input', () => {
+    // Clear and test End - use actual dropdown data
     cy.getVs(idMultiple).typeValue('Option 1', true);
-    // Press Down arrow - should move cursor to end
-    cy.getVs(idMultiple).pressKeys('ArrowDown');
+    // End moves the caret to the end (Down arrow now drives the option list instead)
+    cy.getVs(idMultiple).pressKeys('End');
     // Type '0' at cursor position (should be at end, making "Option 10")
     cy.getVs(idMultiple).typeValue('0');
     // Verify the text has '0' at the end
@@ -343,18 +363,22 @@ describe('Arrow key behavior - Home and End keys in search input', () => {
 describe('Arrow key behavior - focus management and accessibility', () => {
   const idMultiple = 'multiple-select'
 
-  it('should allow normal text editing with arrow keys in search', () => {
+  it('should allow normal text editing in search while arrows navigate the list', () => {
     cy.open(idMultiple);
     // Clear and test more text editing using realistic data
     cy.getVs(idMultiple).typeValue('tion 123', true);
-    // Use Up arrow to go to beginning
-    cy.getVs(idMultiple).pressKeys('ArrowUp');
+    // Home goes to the beginning (Up/Down are option navigation, per A11Y-01)
+    cy.getVs(idMultiple).pressKeys('Home');
     cy.getVs(idMultiple).typeValue('Op');
     cy.getVs(idMultiple).checkOptionLabelExists('Option 123');
-    // Use Down arrow to go to end
-    cy.getVs(idMultiple).pressKeys('ArrowDown');
+    // End goes back to the end
+    cy.getVs(idMultiple).pressKeys('End');
     cy.getVs(idMultiple).typeValue('44');
     cy.getVs(idMultiple).checkOptionLabelExists('Option 12344');
+
+    // Editing stays possible because navigation never moves DOM focus off the input
+    cy.getVs(idMultiple).pressKeys('ArrowDown');
+    cy.checkActiveElementHasClass('vscomp-search-input');
   });
 
   it('should close multiple-select dropdown', () => {
@@ -548,12 +572,16 @@ describe('Option group', () => {
     cy.getVs(id).then(($vs) => {
       const vs = $vs[0].virtualSelect;
       vs.reset(false, true);
+      /** cy.open() below is a click, i.e. a toggle. Start closed so the press count does
+       * not depend on whether the previous test left this dropdown open. */
+      vs.closeDropbox();
     });
     
     cy.open(id);
 
-    cy.getVs(id).find('.vscomp-wrapper').type('{downarrow}');
     cy.getVs(id).find('.vscomp-wrapper').should('not.have.class', 'closed');
+    // One press reaches the group title. This needed two before the A11Y-01 fix, because
+    // the first ArrowDown was swallowed while the search input held focus.
     cy.getVs(id).find('.vscomp-wrapper').type('{downarrow}');
 
     cy.getDropbox(null, id)
@@ -573,11 +601,14 @@ describe('Option group', () => {
     cy.getVs(id).then(($vs) => {
       const vs = $vs[0].virtualSelect;
       vs.reset(false, true);
+      /** cy.open() below is a click, i.e. a toggle. Start closed so the press count does
+       * not depend on whether the previous test left this dropdown open. */
+      vs.closeDropbox();
     });
 
     cy.open(id);
 
-    cy.getVs(id).pressKeys(['ArrowDown', 'ArrowDown']);
+    cy.getVs(id).pressKeys('ArrowDown');
     cy.getVs(id).pressKeys('Enter');
     cy.getVs(id).hasValueText('3 options selected');
     cy.getVs(id).pressKeys('Enter');
@@ -588,6 +619,9 @@ describe('Option group', () => {
     cy.getVs(id).then(($vs) => {
       const vs = $vs[0].virtualSelect;
       vs.reset(false, true);
+      /** cy.open() below is a click, i.e. a toggle. Start closed so the press count does
+       * not depend on whether the previous test left this dropdown open. */
+      vs.closeDropbox();
     });
 
     cy.open(id);
@@ -614,23 +648,24 @@ describe('Option group', () => {
     cy.getVs(id).then(($vs) => {
       const vs = $vs[0].virtualSelect;
       vs.reset(false, true);
+      /** cy.open() below is a click, i.e. a toggle. Start closed so the press count does
+       * not depend on whether the previous test left this dropdown open. */
+      vs.closeDropbox();
     });
 
     cy.open(id);
 
     cy.getVs(id).find('.vscomp-wrapper').type('{downarrow}');
-    cy.getVs(id).find('.vscomp-wrapper').type('{downarrow}');
 
-    cy.getDropbox(null, id)
-      .find('.vscomp-option.group-title')
-      .first()
-      .should('have.class', 'focused')
-      .type('{downarrow}');
+    cy.getDropbox(null, id).find('.vscomp-option.group-title').first().should('have.class', 'focused');
 
-    cy.getDropbox(null, id)
-      .find('.vscomp-option[data-value="1-1"]')
-      .should('have.class', 'focused')
-      .type('{enter}');
+    /** pressKeys() sends a real key press to the search input rather than chaining .type()
+     * onto an option node: the virtualiser replaces those nodes on every render, which
+     * fails the command with "the page updated while this command was executing". */
+    cy.getVs(id).pressKeys('ArrowDown');
+    cy.getDropbox(null, id).find('.vscomp-option[data-value="1-1"]').should('have.class', 'focused');
+
+    cy.getVs(id).pressKeys('Enter');
 
     cy.getVs(id).hasValueText('Option 1-1');
   });
@@ -639,14 +674,19 @@ describe('Option group', () => {
     cy.getVs(id).then(($vs) => {
       const vs = $vs[0].virtualSelect;
       vs.reset(false, true);
+      /** cy.open() below is a click, i.e. a toggle. Start closed so the press count does
+       * not depend on whether the previous test left this dropdown open. */
+      vs.closeDropbox();
     });
 
     cy.open(id);
 
     cy.getVs(id).find('.vscomp-wrapper').type('{downarrow}');
-    cy.getVs(id).find('.vscomp-wrapper').type('{downarrow}');
 
-    Cypress._.times(11, () => {
+    /** Deliberately more presses than there are rows: navigation clamps at the end, which
+     * is the "navigating past the end" case under test, and this avoids hard-coding a count
+     * that shifts whenever the demo's option list changes. */
+    Cypress._.times(20, () => {
       cy.getDropbox(null, id).find('.vscomp-option.focused').type('{downarrow}');
     });
 

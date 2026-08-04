@@ -854,7 +854,8 @@ class VirtualSelect {
         <div class="${dropboxClasses}">
           <div class="vscomp-search-wrapper"></div>
 
-          <div class="vscomp-options-container" role="listbox" aria-labelledby="vscomp-ele-wrapper-${this.uniqueId}"
+          <div id="vscomp-options-container-${this.uniqueId}" class="vscomp-options-container" role="listbox"
+            aria-labelledby="vscomp-ele-wrapper-${this.uniqueId}"
             ${this.multiple ? 'aria-multiselectable="true"' : ''}>
             <div class="vscomp-options-loader"></div>
 
@@ -1052,7 +1053,9 @@ class VirtualSelect {
         ${this.searchFormLabel}
       </label>
       <input type="text" class="vscomp-search-input" placeholder="${this.searchPlaceholderText}"
-        id="vscomp-search-input-${this.uniqueId}">
+        id="vscomp-search-input-${this.uniqueId}"
+        role="combobox" aria-autocomplete="list" aria-expanded="false"
+        aria-controls="vscomp-options-container-${this.uniqueId}">
       <span class="vscomp-search-clear" role="button" ${ariaLabelSearchClearBtnTxt}>&times;</span>`;
     }
     const html = `<div class="vscomp-search-container">
@@ -1223,33 +1226,34 @@ class VirtualSelect {
       this.openDropbox();
     }
   }
-  onDownArrowPress(e) {
-    // Allow default behavior (cursor movement) when search input is focused
-    if (document.activeElement === this.$searchInput) {
-      return;
-    }
+
+  /**
+   * Move the highlight without moving DOM focus.
+   *
+   * Previously both arrow handlers bailed out whenever the search input had focus, to let
+   * the caret move. But opening the dropdown focuses the search input, so in the default
+   * flow the arrows did nothing at all and no option was ever highlighted (WCAG 2.1.1).
+   * The APG editable-combobox pattern is what applies here: Up/Down drive the list while
+   * focus stays in the field, and the active option is published as aria-activedescendant.
+   *
+   * @param {KeyboardEvent} e
+   * @param {'next' | 'previous'} direction
+   */
+  navigateOptions(e, direction) {
     e.preventDefault();
     if (this.isOpened()) {
       this.focusOption({
-        direction: 'next'
+        direction
       });
     } else {
       this.openDropbox();
     }
   }
+  onDownArrowPress(e) {
+    this.navigateOptions(e, 'next');
+  }
   onUpArrowPress(e) {
-    // Allow default behavior (cursor movement) when search input is focused
-    if (document.activeElement === this.$searchInput) {
-      return;
-    }
-    e.preventDefault();
-    if (this.isOpened()) {
-      this.focusOption({
-        direction: 'previous'
-      });
-    } else {
-      this.openDropbox();
-    }
+    this.navigateOptions(e, 'previous');
   }
   onBackspaceOrDeletePress(e) {
     if (e.target === this.$wrapper) {
@@ -3073,6 +3077,8 @@ class VirtualSelect {
     } else {
       DomUtils.dispatchEvent(this.$ele, 'beforeOpen');
       DomUtils.setAria(this.$wrapper, 'expanded', true);
+      /** the search input is its own combobox over the listbox, so it needs the state too */
+      DomUtils.setAria(this.$searchInput, 'expanded', true);
     }
     this.setDropboxWrapperWidth();
     DomUtils.removeClass(this.$allWrappers, 'closed');
@@ -3132,9 +3138,9 @@ class VirtualSelect {
     } else {
       DomUtils.dispatchEvent(this.$ele, 'beforeClose');
       DomUtils.setAria(this.$wrapper, 'expanded', false);
-      DomUtils.setAria(this.$wrapper, 'activedescendant', '');
-      // Also clear aria-activedescendant on the listbox container
-      DomUtils.setAria(this.$dropboxContainer, 'activedescendant', '');
+      DomUtils.setAria(this.$searchInput, 'expanded', false);
+      /** no option is active once the list is gone */
+      this.setActiveDescendant('');
     }
     if (this.dropboxPopover && !isSilent) {
       this.dropboxPopover.hide();
@@ -4053,11 +4059,23 @@ class VirtualSelect {
     if (document.activeElement !== this.$searchInput) {
       $ele.focus();
     }
-    if (isFocused) {
-      DomUtils.setAria(this.$wrapper, 'activedescendant', $ele.id);
-      // Also set aria-activedescendant on the listbox container for better screen reader support
-      DomUtils.setAria(this.$dropboxContainer, 'activedescendant', $ele.id);
-    }
+
+    /**
+     * Publish the highlight on the elements that can carry it: the wrapper and the search
+     * input, both role="combobox". It used to also go on $dropboxContainer, a plain div
+     * with no role, where aria-activedescendant is meaningless - and never on the search
+     * input, which is the element that actually holds focus while navigating.
+     */
+    this.setActiveDescendant(isFocused ? $ele.id : '');
+  }
+
+  /**
+   * Point the combobox elements at the active option, or clear the reference.
+   * @param {string} optionId
+   */
+  setActiveDescendant(optionId) {
+    DomUtils.toggleAria(this.$wrapper, 'activedescendant', !!optionId, optionId);
+    DomUtils.toggleAria(this.$searchInput, 'activedescendant', !!optionId, optionId);
   }
 
   /** static methods - start */
