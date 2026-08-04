@@ -22,6 +22,7 @@
 - [setServerOptions()](#setserveroptions)
 - [validate()](#validate)
 - [toggleRequired()](#togglerequired)
+- [VirtualSelect.setGlobalDefaults()](#virtualselectsetglobaldefaults)
 
 ### Get selected value
 
@@ -268,3 +269,28 @@ To update required property value
 ```js
 document.querySelector('#sample-select').toggleRequired(true);
 ```
+
+### VirtualSelect.setGlobalDefaults()
+
+Set default props applied to every instance created afterwards, so a page-wide policy does not
+have to be repeated at each call site.
+
+The main use is security. Option `label`, `value` and `description` are inserted as raw HTML and
+are only escaped when `enableSecureText` is on, which is **not** the default (escaping runs per
+option and is measurable on 10k-100k+ lists). If any option text in your app can come from
+untrusted input, turn it on once during startup:
+
+```js
+VirtualSelect.setGlobalDefaults({ enableSecureText: true });
+```
+
+Notes:
+
+- These are **defaults, not overrides**. An instance that passes the prop explicitly still wins,
+  so if your wrapper forwards `enableSecureText` on every `init()` call it must stop doing so (or
+  forward `true`) for the global to take effect.
+- Only instances created **after** the call are affected. Call it before initialising dropdowns.
+- Calls **merge**, so unrelated settings can be configured separately.
+- `ele` and `options` are ignored, being inherently per-instance.
+
+Read the current values with `VirtualSelect.getGlobalDefaults()`, which returns a copy.
