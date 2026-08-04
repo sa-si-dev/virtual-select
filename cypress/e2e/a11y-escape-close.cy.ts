@@ -1,7 +1,9 @@
 /** cSpell:ignore vscomp */
 
 /**
- * Regression test for AI-2 / [A11Y-02] — WCAG 2.1.1 & 2.1.2 (Level A).
+ * Escape must dismiss the dropdown, whatever layout it is rendered in.
+ *
+ * WCAG 2.1.1 Keyboard (A) and 2.1.2 No Keyboard Trap (A).
  *
  * Escape only closed the dropdown when an external `dropboxWrapper` existed or the dropdown
  * was shown as a popup. With the default `dropboxWrapper: 'self'` on a desktop viewport the
@@ -11,7 +13,7 @@
 
 import { makeOptions, mountVs, unmountVs } from '../support/mount';
 
-describe('A11y: Escape closes the dropdown (AI-2)', () => {
+describe('A11y: Escape closes the dropdown', () => {
   const mountId = 'vs-a11y-escape';
 
   const isExpanded = (expected: boolean) =>

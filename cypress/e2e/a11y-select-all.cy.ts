@@ -1,7 +1,9 @@
 /** cSpell:ignore vscomp */
 
 /**
- * Regression test for AI-3 / [A11Y-04] — WCAG 4.1.2, 1.3.1 (Level A) and 2.1.1 (Level A).
+ * The Select All control must behave and be announced as a checkbox.
+ *
+ * WCAG 4.1.2 Name/Role/Value (A), 1.3.1 Info and Relationships (A), 2.1.1 Keyboard (A).
  *
  * "Select All" was a bare <span tabindex="0" aria-label="Select All">: exposed to assistive
  * technology as a generic element with no role and no checked state, so its state changes were
@@ -11,7 +13,7 @@
 
 import { makeOptions, mountVs, unmountVs } from '../support/mount';
 
-describe('A11y: Select All exposes checkbox semantics (AI-3)', () => {
+describe('A11y: Select All exposes checkbox semantics', () => {
   const mountId = 'vs-a11y-select-all';
 
   const toggleAll = () => cy.get(`#${mountId}`).find('.vscomp-toggle-all-button');

@@ -163,8 +163,8 @@ describe('Accessibility attributes - virtualized options metadata', () => {
 
     // aria-activedescendant belongs on the element that holds focus and has a role that
     // supports it - here the role="combobox" wrapper. It used to be asserted on
-    // .vscomp-dropbox-container, a plain div with no role, where it is meaningless
-    // (audit A11Y-05). That container is now checked for its *absence* below.
+    // .vscomp-dropbox-container, a plain div with no role, where the attribute is
+    // meaningless. That container is now checked for its *absence* below.
     cy.getVs(id)
       .find('.vscomp-ele-wrapper')
       .should('exist')
@@ -210,7 +210,7 @@ describe('Accessibility attributes - virtualized options metadata', () => {
         .should('have.attr', 'aria-activedescendant', firstOptionId);
     });
 
-    // ...and is not published on the role-less container (audit A11Y-05)
+    // ...and is not published on the role-less container, which has no role to carry it
     cy.get('@roleLessContainer').should('not.have.attr', 'aria-activedescendant');
 
     // Navigate to second option using arrow key
@@ -245,9 +245,9 @@ describe('Accessibility attributes - virtualized options metadata', () => {
  * Arrow key behavior tests for search input.
  *
  * Up/Down in the search input navigate the option list (WAI-ARIA APG editable-combobox),
- * which is what audit finding A11Y-01 required: they used to be swallowed so that no option
- * could ever be highlighted from the keyboard - a WCAG 2.1.1 (A) failure. Caret movement in
- * the field is served by Left/Right and Home/End, covered by the suites below.
+ * They used to be swallowed while the search input had focus, so no option could ever be
+ * highlighted from the keyboard - a WCAG 2.1.1 (A) failure. Caret movement in the field is
+ * served by Left/Right and Home/End, covered by the suites below.
  */
 
 describe('Arrow key behavior in search input - cursor movement', () => {
@@ -367,7 +367,7 @@ describe('Arrow key behavior - focus management and accessibility', () => {
     cy.open(idMultiple);
     // Clear and test more text editing using realistic data
     cy.getVs(idMultiple).typeValue('tion 123', true);
-    // Home goes to the beginning (Up/Down are option navigation, per A11Y-01)
+    // Home goes to the beginning; Up/Down are option navigation
     cy.getVs(idMultiple).pressKeys('Home');
     cy.getVs(idMultiple).typeValue('Op');
     cy.getVs(idMultiple).checkOptionLabelExists('Option 123');
@@ -580,8 +580,8 @@ describe('Option group', () => {
     cy.open(id);
 
     cy.getVs(id).find('.vscomp-wrapper').should('not.have.class', 'closed');
-    // One press reaches the group title. This needed two before the A11Y-01 fix, because
-    // the first ArrowDown was swallowed while the search input held focus.
+    // One press reaches the group title. This needed two while the first ArrowDown was
+    // still being swallowed by the focused search input.
     cy.getVs(id).find('.vscomp-wrapper').type('{downarrow}');
 
     cy.getDropbox(null, id)

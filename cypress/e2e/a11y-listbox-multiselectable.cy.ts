@@ -1,7 +1,9 @@
 /** cSpell:ignore vscomp multiselectable */
 
 /**
- * Regression test for AI-10 / [A11Y-06] — WCAG 4.1.2 (A).
+ * A multi-select listbox must say so, or assistive technology presents it as single-select.
+ *
+ * WCAG 4.1.2 Name, Role, Value (A).
  *
  * The options container carries role="listbox" but never advertised that more than one
  * option could be chosen, so assistive technology presented a multi-select dropdown with
@@ -10,7 +12,7 @@
 
 import { makeOptions, mountVs, unmountVs } from '../support/mount';
 
-describe('A11y: listbox advertises multi-selection (AI-10)', () => {
+describe('A11y: listbox advertises multi-selection', () => {
   const mountId = 'vs-a11y-multiselectable';
 
   const listbox = () => cy.get(`#${mountId}`).find('.vscomp-options-container');

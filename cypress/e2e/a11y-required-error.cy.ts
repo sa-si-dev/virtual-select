@@ -1,7 +1,9 @@
 /** cSpell:ignore vscomp */
 
 /**
- * Regression test for AI-4 / [A11Y-07] — WCAG 3.3.1 (A), 1.4.1 (A) and 4.1.2 (A).
+ * A required field, and a failed validation, must be perceivable without relying on colour.
+ *
+ * WCAG 3.3.1 Error Identification (A), 1.4.1 Use of Colour (A), 4.1.2 Name/Role/Value (A).
  *
  * `required` was never exposed: the wrapper carried no aria-required, and a failed
  * validate() only toggled a `has-error` class that changed the toggle button's border
@@ -11,7 +13,7 @@
 
 import { makeOptions, mountVs, unmountVs } from '../support/mount';
 
-describe('A11y: required and error state are exposed (AI-4)', () => {
+describe('A11y: required and error state are exposed', () => {
   const mountId = 'vs-a11y-required';
 
   const wrapper = () => cy.get(`#${mountId}`).find('.vscomp-wrapper');
