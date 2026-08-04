@@ -9,6 +9,24 @@ $selected-color: #eee;
 $arrow-color: #111;
 $checkbox-color: #888;
 $icon-hover-color: #333;
+/**
+ * WCAG 1.4.3 / 1.4.11 (AA). These two replace opacity-dimming, which produced effective
+ * colours below the minimum on the default white background:
+ * - placeholder was $font-color at opacity 0.5, i.e. #999 = 2.85:1 (needs 4.5:1 as text)
+ * - the clear/search-clear glyphs were #999 = 2.85:1 (needs 3:1 as non-text)
+ * #595959 is 7:1 and #767676 is 4.5:1 against #fff, so both hold even if a consumer
+ * only overrides one of them.
+ */
+$placeholder-color: #595959;
+$icon-color: #767676;
+/**
+ * The .focused row cue. $focus-color alone is 1.61:1 against an adjacent unfocused row,
+ * so it cannot carry the state on its own (1.4.11). A grey dark enough to reach 3:1 would
+ * push $font-color text under 4.5:1, so the ring carries the contrast and the background
+ * stays as the secondary cue. $font-color is 12.6:1 on #fff and 11.6:1 on $selected-color.
+ */
+$focus-ring-color: $font-color;
+$focus-ring-width: 2px;
 $overlay-bg: rgba(0, 0, 0, 0.5);
 
 $font-family: sans-serif;

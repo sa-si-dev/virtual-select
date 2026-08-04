@@ -88,7 +88,7 @@
 
   &::before,
   &::after {
-    background-color: #999;
+    background-color: v.$icon-color;
     content: '';
     height: v.$clear-icon-size;
     left: 5px;
@@ -195,8 +195,16 @@
     background-color: v.$selected-color;
   }
 
+  /**
+   * The ring, not the background, is what makes the active row identifiable at 3:1
+   * (WCAG 1.4.11) - see $focus-ring-color. outline-offset is negative so the ring is drawn
+   * inside the row: an outward ring would be clipped by the scrolling options container and
+   * would overlap the neighbouring rows.
+   */
   &.focused {
     background-color: v.$focus-color;
+    outline: v.$focus-ring-width solid v.$focus-ring-color;
+    outline-offset: -#{v.$focus-ring-width};
   }
 
   &.disabled {
@@ -306,7 +314,7 @@
 
 .vscomp-search-clear {
   align-items: center;
-  color: #999;
+  color: v.$icon-color;
   cursor: pointer;
   display: flex;
   font-size: 25px;
@@ -505,9 +513,15 @@
     }
   }
 
+  /**
+   * The placeholder is dimmed with an explicit colour rather than opacity: opacity 0.5 over
+   * #fff resolved to #999 (2.85:1), which fails 1.4.3 for normal text. Keeping it as a
+   * colour also means a consumer overriding the wrapper background does not silently change
+   * the placeholder's contrast the way a translucent colour would.
+   */
   &:not(.has-value) {
     .vscomp-value {
-      opacity: 0.5;
+      color: v.$placeholder-color;
     }
   }
 
