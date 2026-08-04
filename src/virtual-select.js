@@ -2906,7 +2906,20 @@ export class VirtualSelect {
       DomUtils.dispatchEvent(this.$ele, 'beforeClose');
       DomUtils.setAria(this.$wrapper, 'expanded', false);
       DomUtils.setAria(this.$searchInput, 'expanded', false);
-      /** no option is active once the list is gone */
+      /**
+       * No option is active once the list is gone - and the highlight has to go with it,
+       * here, synchronously.
+       *
+       * afterHidePopper() already calls removeOptionFocus(), but for popover-backed
+       * instances it only runs when the hide transition ends (~200ms later). Until then the
+       * previous highlight and `focusedOptionIndex` survived the close, so reopening within
+       * that window resumed navigation from the old position instead of the first option:
+       * the next Up/Down moved one step past where the user expected, which on a grouped
+       * multi-select meant Enter landed on the first child option instead of toggling the
+       * group title. removeOptionFocus() is a no-op when nothing is highlighted, so leaving
+       * the afterHidePopper() call in place costs nothing and still covers the silent path.
+       */
+      this.removeOptionFocus();
       this.setActiveDescendant('');
     }
 
@@ -3995,7 +4008,13 @@ export class VirtualSelect {
     DomUtils.toggleClass($ele, 'focused', isFocused);
     DomUtils.setAttr($ele, 'tabindex', isFocused ? '0' : '-1');
 
-    if (document.activeElement !== this.$searchInput) {
+    /**
+     * Only *taking* the highlight moves DOM focus. Clearing it used to focus the element it
+     * had just un-highlighted, which is either pointless (focusOption immediately focuses the
+     * new option anyway) or actively wrong: on close it pulled focus into a dropbox that is
+     * about to be hidden, fighting the wrapper refocus in closeDropbox().
+     */
+    if (isFocused && document.activeElement !== this.$searchInput) {
       $ele.focus();
     }
 
