@@ -58,6 +58,7 @@ const dataProps = [
   'maxWidth',
   'minValues',
   'loadingText',
+  'minValuesErrorText',
   'moreText',
   'noOfDisplayValues',
   'noOptionsSelectedText',
@@ -70,6 +71,7 @@ const dataProps = [
   'popupDropboxBreakpoint',
   'popupPosition',
   'position',
+  'requiredErrorText',
   'search',
   'searchByStartsWith',
   'searchDelay',
@@ -203,6 +205,8 @@ export class VirtualSelect {
         <div id="vscomp-live-region-${uniqueId}" class="vscomp-live-region" role="status"
           aria-live="polite" aria-atomic="true"></div>
 
+        <div id="vscomp-error-message-${uniqueId}" class="vscomp-error-message"></div>
+
         ${this.renderDropbox({ wrapperClasses })}
       </div>`;
 
@@ -225,6 +229,7 @@ export class VirtualSelect {
     this.$valueText = this.$ele.querySelector('.vscomp-value');
     this.$hiddenInput = this.$ele.querySelector('.vscomp-hidden-input');
     this.$liveRegion = this.$ele.querySelector('.vscomp-live-region');
+    this.$errorMessage = this.$ele.querySelector('.vscomp-error-message');
     this.$dropbox = this.$dropboxContainer.querySelector('.vscomp-dropbox');
     this.$dropboxCloseButton = this.$dropboxContainer.querySelector('.vscomp-dropbox-close-button');
     this.$dropboxContainerBottom = this.$dropboxContainer.querySelector('.vscomp-dropbox-container-bottom');
@@ -1180,6 +1185,8 @@ export class VirtualSelect {
     this.noOptionsSelectedText = options.noOptionsSelectedText;
     this.selectedText = options.selectedText;
     this.loadingText = options.loadingText;
+    this.requiredErrorText = options.requiredErrorText;
+    this.minValuesErrorText = options.minValuesErrorText;
     this.clearButtonText = options.clearButtonText;
     this.moreText = options.moreText;
     this.placeholder = options.placeholder;
@@ -1288,6 +1295,9 @@ export class VirtualSelect {
       noOptionsSelectedText: 'No options selected',
       selectedText: 'selected',
       loadingText: 'Loading results',
+      /** validation messages; {count} in minValuesErrorText is replaced with minValues */
+      requiredErrorText: 'This field is required',
+      minValuesErrorText: 'Select at least {count} options',
       allOptionsSelectedText: 'All',
       placeholder: 'Select',
       position: 'bottom left',
@@ -1346,6 +1356,8 @@ export class VirtualSelect {
     $ele.name = this.name;
     $ele.disabled = false;
     $ele.required = this.required;
+    /** expose the constraint itself, not just the failure (WCAG 3.3.1) */
+    DomUtils.toggleAria(this.$allWrappers, 'required', this.required);
     $ele.autofocus = this.autofocus;
     $ele.multiple = this.multiple;
     $ele.form = $ele.closest('form');
@@ -3634,20 +3646,53 @@ export class VirtualSelect {
     }
 
     let hasError = false;
+    let errorText = '';
     const { selectedValues, minValues } = this;
 
-    if (
-      this.required &&
-      (Utils.isEmpty(selectedValues) ||
+    if (this.required) {
+      if (Utils.isEmpty(selectedValues)) {
+        hasError = true;
+        errorText = this.requiredErrorText;
+      } else if (this.multiple && minValues && selectedValues.length < minValues) {
         /** required minium options not selected */
-        (this.multiple && minValues && selectedValues.length < minValues))
-    ) {
-      hasError = true;
+        hasError = true;
+        errorText = Utils.getString(this.minValuesErrorText).replace('{count}', minValues);
+      }
     }
 
     DomUtils.toggleClass(this.$allWrappers, 'has-error', hasError);
 
+    /**
+     * Previously the only signal was the `has-error` class recolouring the toggle button
+     * border: invisible to assistive technology and, being colour alone, a 1.4.1 failure.
+     * Expose the state (aria-invalid), give it a text message, point the combobox at that
+     * message (aria-describedby) and announce it.
+     */
+    DomUtils.toggleAria(this.$allWrappers, 'invalid', hasError);
+    this.setErrorMessage(hasError ? errorText : '');
+
     return !hasError;
+  }
+
+  /**
+   * Show or clear the validation message and its association with the combobox.
+   * An empty message removes aria-describedby rather than pointing at empty text.
+   *
+   * @param {string} message
+   */
+  setErrorMessage(message) {
+    if (!this.$errorMessage) {
+      return;
+    }
+
+    const text = message || '';
+
+    this.$errorMessage.textContent = text;
+    DomUtils.toggleAria(this.$allWrappers, 'describedby', !!text, this.$errorMessage.id);
+
+    if (text) {
+      this.announce(text);
+    }
   }
 
   /**
@@ -3841,6 +3886,14 @@ export class VirtualSelect {
   toggleRequired(isRequired) {
     this.required = Utils.convertToBoolean(isRequired);
     this.$ele.required = this.required;
+    DomUtils.toggleAria(this.$allWrappers, 'required', this.required);
+
+    /** dropping the requirement also drops any error it produced */
+    if (!this.required) {
+      DomUtils.toggleClass(this.$allWrappers, 'has-error', false);
+      DomUtils.toggleAria(this.$allWrappers, 'invalid', false);
+      this.setErrorMessage('');
+    }
   }
 
   toggleOptionSelectedState($ele, value) {

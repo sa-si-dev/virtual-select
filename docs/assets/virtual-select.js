@@ -453,6 +453,42 @@ class DomUtils {
   }
 
   /**
+   * @param {HTMLElement} $ele
+   * @param {string} name
+   */
+  static removeAttr($ele, name) {
+    if (!$ele) {
+      return;
+    }
+    $ele.removeAttribute(name);
+  }
+
+  /**
+   * Set an aria-* attribute when the state applies, remove it otherwise.
+   *
+   * Preferred over writing `aria-x="false"` for states whose absence is meaningful
+   * (aria-required, aria-invalid): a literal "false" is valid but adds noise that some
+   * screen readers still verbalise.
+   *
+   * @param {HTMLElement | NodeListOf<HTMLElement>} $ele
+   * @param {string} name
+   * @param {boolean} isSet
+   * @param {string} [value='true']
+   */
+  static toggleAria($ele, name, isSet, value = 'true') {
+    if (!$ele) {
+      return;
+    }
+    DomUtils.getElements($ele).forEach($this => {
+      if (isSet) {
+        $this.setAttribute(`aria-${name}`, value);
+      } else {
+        $this.removeAttribute(`aria-${name}`);
+      }
+    });
+  }
+
+  /**
    * @param {HTMLElement} $from
    * @param {HTMLElement} $to
    * @param {string[]} attrList
@@ -672,7 +708,7 @@ const nativeProps = ['autofocus', 'class', 'disabled', 'id', 'multiple', 'name',
 // the class below has been evaluated (see the assignment at the bottom of this file).
 // eslint-disable-next-line prefer-const
 let attrPropsMapping;
-const dataProps = ['additionalClasses', 'additionalDropboxClasses', 'additionalDropboxContainerClasses', 'additionalToggleButtonClasses', 'aliasKey', 'allOptionsSelectedText', 'allowNewOption', 'alwaysShowSelectedOptionsCount', 'alwaysShowSelectedOptionsLabel', 'ariaLabelledby', 'ariaLabelText', 'ariaLabelClearButtonText', 'ariaLabelTagClearButtonText', 'ariaLabelSearchClearButtonText', 'autoSelectFirstOption', 'clearButtonText', 'descriptionKey', 'disableAllOptionsSelectedText', 'disableOptionGroupCheckbox', 'disableSelectAll', 'disableValidation', 'dropboxWidth', 'dropboxWrapper', 'emptyValue', 'enableSecureText', 'focusSelectedOptionOnOpen', 'hasOptionDescription', 'hideClearButton', 'hideValueTooltipOnSelectAll', 'keepAlwaysOpen', 'labelKey', 'markSearchResults', 'maxValues', 'maxWidth', 'minValues', 'loadingText', 'moreText', 'noOfDisplayValues', 'noOptionsSelectedText', 'noOptionsText', 'noSearchResultsText', 'optionHeight', 'optionSelectedText', 'optionsCount', 'optionsSelectedText', 'popupDropboxBreakpoint', 'popupPosition', 'position', 'search', 'searchByStartsWith', 'searchDelay', 'searchFormLabel', 'searchGroup', 'searchNormalize', 'searchPlaceholderText', 'searchResultText', 'searchResultsText', 'selectAllOnlyVisible', 'selectAllText', 'selectedText', 'setValueAsArray', 'showDropboxAsPopup', 'showOptionsOnlyOnSearch', 'showSecureTextWarning', 'showSelectedOptionsFirst', 'showValueAsTags', 'silentInitialValueSet', 'textDirection', 'tooltipAlignment', 'tooltipFontSize', 'tooltipMaxWidth', 'updatePositionThrottle', 'useGroupValue', 'valueKey', 'zIndex'];
+const dataProps = ['additionalClasses', 'additionalDropboxClasses', 'additionalDropboxContainerClasses', 'additionalToggleButtonClasses', 'aliasKey', 'allOptionsSelectedText', 'allowNewOption', 'alwaysShowSelectedOptionsCount', 'alwaysShowSelectedOptionsLabel', 'ariaLabelledby', 'ariaLabelText', 'ariaLabelClearButtonText', 'ariaLabelTagClearButtonText', 'ariaLabelSearchClearButtonText', 'autoSelectFirstOption', 'clearButtonText', 'descriptionKey', 'disableAllOptionsSelectedText', 'disableOptionGroupCheckbox', 'disableSelectAll', 'disableValidation', 'dropboxWidth', 'dropboxWrapper', 'emptyValue', 'enableSecureText', 'focusSelectedOptionOnOpen', 'hasOptionDescription', 'hideClearButton', 'hideValueTooltipOnSelectAll', 'keepAlwaysOpen', 'labelKey', 'markSearchResults', 'maxValues', 'maxWidth', 'minValues', 'loadingText', 'minValuesErrorText', 'moreText', 'noOfDisplayValues', 'noOptionsSelectedText', 'noOptionsText', 'noSearchResultsText', 'optionHeight', 'optionSelectedText', 'optionsCount', 'optionsSelectedText', 'popupDropboxBreakpoint', 'popupPosition', 'position', 'requiredErrorText', 'search', 'searchByStartsWith', 'searchDelay', 'searchFormLabel', 'searchGroup', 'searchNormalize', 'searchPlaceholderText', 'searchResultText', 'searchResultsText', 'selectAllOnlyVisible', 'selectAllText', 'selectedText', 'setValueAsArray', 'showDropboxAsPopup', 'showOptionsOnlyOnSearch', 'showSecureTextWarning', 'showSelectedOptionsFirst', 'showValueAsTags', 'silentInitialValueSet', 'textDirection', 'tooltipAlignment', 'tooltipFontSize', 'tooltipMaxWidth', 'updatePositionThrottle', 'useGroupValue', 'valueKey', 'zIndex'];
 
 /** Class representing VirtualSelect */
 class VirtualSelect {
@@ -766,6 +802,8 @@ class VirtualSelect {
         <div id="vscomp-live-region-${uniqueId}" class="vscomp-live-region" role="status"
           aria-live="polite" aria-atomic="true"></div>
 
+        <div id="vscomp-error-message-${uniqueId}" class="vscomp-error-message"></div>
+
         ${this.renderDropbox({
       wrapperClasses
     })}
@@ -786,6 +824,7 @@ class VirtualSelect {
     this.$valueText = this.$ele.querySelector('.vscomp-value');
     this.$hiddenInput = this.$ele.querySelector('.vscomp-hidden-input');
     this.$liveRegion = this.$ele.querySelector('.vscomp-live-region');
+    this.$errorMessage = this.$ele.querySelector('.vscomp-error-message');
     this.$dropbox = this.$dropboxContainer.querySelector('.vscomp-dropbox');
     this.$dropboxCloseButton = this.$dropboxContainer.querySelector('.vscomp-dropbox-close-button');
     this.$dropboxContainerBottom = this.$dropboxContainer.querySelector('.vscomp-dropbox-container-bottom');
@@ -1640,6 +1679,8 @@ class VirtualSelect {
     this.noOptionsSelectedText = options.noOptionsSelectedText;
     this.selectedText = options.selectedText;
     this.loadingText = options.loadingText;
+    this.requiredErrorText = options.requiredErrorText;
+    this.minValuesErrorText = options.minValuesErrorText;
     this.clearButtonText = options.clearButtonText;
     this.moreText = options.moreText;
     this.placeholder = options.placeholder;
@@ -1740,6 +1781,9 @@ class VirtualSelect {
       noOptionsSelectedText: 'No options selected',
       selectedText: 'selected',
       loadingText: 'Loading results',
+      /** validation messages; {count} in minValuesErrorText is replaced with minValues */
+      requiredErrorText: 'This field is required',
+      minValuesErrorText: 'Select at least {count} options',
       allOptionsSelectedText: 'All',
       placeholder: 'Select',
       position: 'bottom left',
@@ -1793,6 +1837,8 @@ class VirtualSelect {
     $ele.name = this.name;
     $ele.disabled = false;
     $ele.required = this.required;
+    /** expose the constraint itself, not just the failure (WCAG 3.3.1) */
+    DomUtils.toggleAria(this.$allWrappers, 'required', this.required);
     $ele.autofocus = this.autofocus;
     $ele.multiple = this.multiple;
     $ele.form = $ele.closest('form');
@@ -3754,16 +3800,50 @@ class VirtualSelect {
       return true;
     }
     let hasError = false;
+    let errorText = '';
     const {
       selectedValues,
       minValues
     } = this;
-    if (this.required && (Utils.isEmpty(selectedValues) || (/** required minium options not selected */
-    this.multiple && minValues && selectedValues.length < minValues))) {
-      hasError = true;
+    if (this.required) {
+      if (Utils.isEmpty(selectedValues)) {
+        hasError = true;
+        errorText = this.requiredErrorText;
+      } else if (this.multiple && minValues && selectedValues.length < minValues) {
+        /** required minium options not selected */
+        hasError = true;
+        errorText = Utils.getString(this.minValuesErrorText).replace('{count}', minValues);
+      }
     }
     DomUtils.toggleClass(this.$allWrappers, 'has-error', hasError);
+
+    /**
+     * Previously the only signal was the `has-error` class recolouring the toggle button
+     * border: invisible to assistive technology and, being colour alone, a 1.4.1 failure.
+     * Expose the state (aria-invalid), give it a text message, point the combobox at that
+     * message (aria-describedby) and announce it.
+     */
+    DomUtils.toggleAria(this.$allWrappers, 'invalid', hasError);
+    this.setErrorMessage(hasError ? errorText : '');
     return !hasError;
+  }
+
+  /**
+   * Show or clear the validation message and its association with the combobox.
+   * An empty message removes aria-describedby rather than pointing at empty text.
+   *
+   * @param {string} message
+   */
+  setErrorMessage(message) {
+    if (!this.$errorMessage) {
+      return;
+    }
+    const text = message || '';
+    this.$errorMessage.textContent = text;
+    DomUtils.toggleAria(this.$allWrappers, 'describedby', !!text, this.$errorMessage.id);
+    if (text) {
+      this.announce(text);
+    }
   }
 
   /**
@@ -3930,6 +4010,14 @@ class VirtualSelect {
   toggleRequired(isRequired) {
     this.required = Utils.convertToBoolean(isRequired);
     this.$ele.required = this.required;
+    DomUtils.toggleAria(this.$allWrappers, 'required', this.required);
+
+    /** dropping the requirement also drops any error it produced */
+    if (!this.required) {
+      DomUtils.toggleClass(this.$allWrappers, 'has-error', false);
+      DomUtils.toggleAria(this.$allWrappers, 'invalid', false);
+      this.setErrorMessage('');
+    }
   }
   toggleOptionSelectedState($ele, value) {
     let isSelected = value;
