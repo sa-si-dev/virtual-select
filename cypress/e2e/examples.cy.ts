@@ -569,17 +569,10 @@ describe('Option group', () => {
   });
 
   it('includes group title in keyboard navigation and exposes it to assistive technologies', () => {
-    cy.getVs(id).then(($vs) => {
-      const vs = $vs[0].virtualSelect;
-      vs.reset(false, true);
-      /** cy.open() below is a click, i.e. a toggle. Start closed so the press count does
-       * not depend on whether the previous test left this dropdown open. */
-      vs.closeDropbox();
-    });
-    
-    cy.open(id);
+    /** openFresh() guarantees closed -> open with no highlight, so one press is one press
+     * regardless of what the previous test left behind. */
+    cy.openFresh(id);
 
-    cy.getVs(id).find('.vscomp-wrapper').should('not.have.class', 'closed');
     // One press reaches the group title. This needed two while the first ArrowDown was
     // still being swallowed by the focused search input.
     cy.getVs(id).find('.vscomp-wrapper').type('{downarrow}');
@@ -598,15 +591,7 @@ describe('Option group', () => {
   });
 
   it('activates group select/deselect with Enter when group title is focused', () => {
-    cy.getVs(id).then(($vs) => {
-      const vs = $vs[0].virtualSelect;
-      vs.reset(false, true);
-      /** cy.open() below is a click, i.e. a toggle. Start closed so the press count does
-       * not depend on whether the previous test left this dropdown open. */
-      vs.closeDropbox();
-    });
-
-    cy.open(id);
+    cy.openFresh(id);
 
     cy.getVs(id).pressKeys('ArrowDown');
     cy.getVs(id).pressKeys('Enter');
@@ -616,15 +601,7 @@ describe('Option group', () => {
   });
 
   it('navigates between group title and group options with arrow keys', () => {
-    cy.getVs(id).then(($vs) => {
-      const vs = $vs[0].virtualSelect;
-      vs.reset(false, true);
-      /** cy.open() below is a click, i.e. a toggle. Start closed so the press count does
-       * not depend on whether the previous test left this dropdown open. */
-      vs.closeDropbox();
-    });
-
-    cy.open(id);
+    cy.openFresh(id);
 
     cy.getVs(id).find('.vscomp-wrapper').type('{downarrow}');
 
@@ -645,15 +622,7 @@ describe('Option group', () => {
   });
 
   it('opens dropdown and selects a group child option using keyboard only', () => {
-    cy.getVs(id).then(($vs) => {
-      const vs = $vs[0].virtualSelect;
-      vs.reset(false, true);
-      /** cy.open() below is a click, i.e. a toggle. Start closed so the press count does
-       * not depend on whether the previous test left this dropdown open. */
-      vs.closeDropbox();
-    });
-
-    cy.open(id);
+    cy.openFresh(id);
 
     cy.getVs(id).find('.vscomp-wrapper').type('{downarrow}');
 
@@ -671,15 +640,7 @@ describe('Option group', () => {
   });
 
   it('keeps focus on the last option when navigating past the end of the list', () => {
-    cy.getVs(id).then(($vs) => {
-      const vs = $vs[0].virtualSelect;
-      vs.reset(false, true);
-      /** cy.open() below is a click, i.e. a toggle. Start closed so the press count does
-       * not depend on whether the previous test left this dropdown open. */
-      vs.closeDropbox();
-    });
-
-    cy.open(id);
+    cy.openFresh(id);
 
     cy.getVs(id).find('.vscomp-wrapper').type('{downarrow}');
 

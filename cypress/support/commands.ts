@@ -30,6 +30,36 @@ Cypress.Commands.add('open', (id) => {
   cy.getVs(id).wait(dropboxCloseDuration).click();
 });
 
+/**
+ * Open a dropdown from a known state, without depending on how the previous test left it.
+ *
+ * `cy.open()` is a click, i.e. a *toggle*: on an already-open dropdown it closes instead, and
+ * its fixed `wait(dropboxCloseDuration)` races the hide transition, which is what made the
+ * keyboard cases in this suite order-coupled (`testIsolation: false` keeps every instance
+ * alive across tests). This command asserts its way to the state it needs instead of waiting a
+ * fixed time for it:
+ *
+ *   1. clear the value and ask the dropbox to close;
+ *   2. wait for it to actually be closed (`closed` class), so the click below always opens;
+ *   3. click, and wait for it to actually be open;
+ *   4. assert no option carries the highlight, so a following ArrowDown always lands on the
+ *      first option and press counts stop depending on test order.
+ */
+Cypress.Commands.add('openFresh', (id) => {
+  cy.getVs(id).then(($ele) => {
+    const vs = $ele[0].virtualSelect;
+    vs.reset(false, true);
+    vs.closeDropbox();
+  });
+
+  cy.getVs(id).find('.vscomp-wrapper').should('have.class', 'closed');
+  cy.getVs(id).click();
+  cy.getVs(id).find('.vscomp-wrapper').should('not.have.class', 'closed');
+  cy.getDropbox(null, id).find('.vscomp-option.focused').should('not.exist');
+
+  cy.getVs(id);
+});
+
 Cypress.Commands.add('close', { prevSubject: true }, (vsElem) => {
   cy.get(vsElem).click();
 });
