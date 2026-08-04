@@ -1752,6 +1752,16 @@ class VirtualSelect {
    * @param {virtualSelectOptions} options
    */
   setDefaultProps(options) {
+    const globalDefaults = VirtualSelect.globalDefaults;
+
+    /**
+     * Resolve a prop across the precedence chain for the few defaults that are derived
+     * from another prop, so a page-level default still drives them.
+     * @param {string} key
+     */
+    const resolve = key => options[key] !== undefined ? options[key] : globalDefaults[key];
+    const keepAlwaysOpen = resolve('keepAlwaysOpen');
+    const hasOptionDescription = resolve('hasOptionDescription');
     const defaultOptions = {
       dropboxWrapper: 'self',
       valueKey: 'value',
@@ -1787,7 +1797,7 @@ class VirtualSelect {
       allOptionsSelectedText: 'All',
       placeholder: 'Select',
       position: 'bottom left',
-      zIndex: options.keepAlwaysOpen ? 1 : 2,
+      zIndex: keepAlwaysOpen ? 1 : 2,
       tooltipFontSize: '14px',
       tooltipAlignment: 'center',
       tooltipMaxWidth: '300px',
@@ -1809,11 +1819,17 @@ class VirtualSelect {
       showDuration: 300,
       hideDuration: 200
     };
-    if (options.hasOptionDescription) {
+    if (hasOptionDescription) {
       defaultOptions.optionsCount = 4;
       defaultOptions.optionHeight = '50px';
     }
-    return Object.assign(defaultOptions, options);
+
+    /**
+     * Precedence: per-instance options > page-level globals > built-in defaults.
+     * Globals let a host turn a policy on once (notably enableSecureText) instead of
+     * repeating it at every call site, while an instance can still opt out explicitly.
+     */
+    return Object.assign(defaultOptions, globalDefaults, options);
   }
   setPropsFromElementAttr(options) {
     const $ele = options.ele;
@@ -4044,6 +4060,53 @@ class VirtualSelect {
   }
 
   /** static methods - start */
+
+  /**
+   * Set page-level default props applied to every instance created afterwards.
+   *
+   * The motivating case is security: option text is interpolated into innerHTML and is only
+   * escaped when `enableSecureText` is on, which it is not by default (escaping costs per
+   * option, and large trusted lists should not pay for it). A host that does render
+   * untrusted option text can turn escaping on once here rather than at every call site:
+   *
+   *   VirtualSelect.setGlobalDefaults({ enableSecureText: true });
+   *
+   * These are defaults, not overrides: an instance passing the prop explicitly still wins,
+   * so a host forwarding `enableSecureText` on every init must stop doing so (or forward
+   * `true`) for this to take effect. Calls merge, so features can be configured separately.
+   * Only instances created after the call are affected.
+   *
+   * @param {Partial<virtualSelectOptions>} props
+   */
+  static setGlobalDefaults(props) {
+    if (!props || typeof props !== 'object') {
+      VirtualSelect.globalDefaults = {};
+      return;
+    }
+
+    /** `ele` and `options` are per-instance by nature and would alias state across instances */
+    const safeProps = {
+      ...props
+    };
+    delete safeProps.ele;
+    delete safeProps.options;
+    VirtualSelect.globalDefaults = {
+      ...VirtualSelect.globalDefaults,
+      ...safeProps
+    };
+  }
+
+  /**
+   * Currently active page-level defaults.
+   * A copy, so callers cannot mutate the live object.
+   *
+   * @returns {Partial<virtualSelectOptions>}
+   */
+  static getGlobalDefaults() {
+    return {
+      ...VirtualSelect.globalDefaults
+    };
+  }
   static init(options) {
     let $eleArray = options.ele;
     if (!$eleArray) {
@@ -4273,6 +4336,9 @@ VirtualSelect.lastInteractedInstance = null;
 
 // Ensures the "enableSecureText disabled" warning is logged at most once per page
 VirtualSelect.secureTextWarningShown = false;
+
+// Page-level default props, applied under per-instance options (see setGlobalDefaults)
+VirtualSelect.globalDefaults = {};
 
 /** polyfill to fix an issue in ie browser */
 if (typeof NodeList !== 'undefined' && NodeList.prototype && !NodeList.prototype.forEach) {
