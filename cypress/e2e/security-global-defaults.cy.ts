@@ -1,7 +1,9 @@
 /** cSpell:ignore vscomp */
 
 /**
- * Regression test for AI-1 / [SEC-01] — OWASP A03:2021 (Injection) / DOM XSS.
+ * A host application must be able to turn option-text escaping on for every dropdown at once.
+ *
+ * OWASP A03:2021 (Injection) / DOM XSS.
  *
  * Option label/value/description are interpolated into innerHTML, and `secureText()` is a
  * no-op unless `enableSecureText` is on — which it is not by default. A host application
@@ -14,7 +16,7 @@
 
 import { mountVs, unmountVs } from '../support/mount';
 
-describe('Security: global defaults for enableSecureText (AI-1)', () => {
+describe('Security: global defaults for enableSecureText', () => {
   const mountId = 'vs-sec-global';
   const payload = '<img src=x onerror="window.__vsGlobalXss=true">';
 

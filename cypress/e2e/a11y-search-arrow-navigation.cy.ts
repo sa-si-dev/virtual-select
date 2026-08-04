@@ -1,7 +1,10 @@
 /** cSpell:ignore vscomp activedescendant combobox autocomplete */
 
 /**
- * Regression test for AI-7 / [A11Y-01 + A11Y-05] — WCAG 2.1.1 (A) and 4.1.2 (A).
+ * The arrow keys must navigate the option list from the search input, and the highlighted
+ * option must be announced.
+ *
+ * WCAG 2.1.1 Keyboard (A) and 4.1.2 Name, Role, Value (A).
  *
  * Opening the dropdown puts focus in the search input, and both arrow handlers
  * early-returned in that state, so ArrowDown/ArrowUp did nothing at all: no option was
@@ -21,7 +24,7 @@ import { makeOptions, mountVs, unmountVs } from '../support/mount';
  * case leak across tests and make the focus assertions flaky for reasons unrelated to the
  * component, so this spec asks for a clean page per test.
  */
-describe('A11y: arrow-key navigation from the search input (AI-7)', { testIsolation: true }, () => {
+describe('A11y: arrow-key navigation from the search input', { testIsolation: true }, () => {
   const mountId = 'vs-a11y-search-arrows';
 
   const searchInput = () => cy.get(`#${mountId}`).find('.vscomp-search-input');
