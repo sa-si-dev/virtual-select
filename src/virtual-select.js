@@ -1259,6 +1259,16 @@ export class VirtualSelect {
     this.showDuration = parseInt(options.showDuration, 10);
     this.hideDuration = parseInt(options.hideDuration, 10);
 
+    /**
+     * The open/close animation is driven from JS as well as CSS, so the stylesheet's
+     * prefers-reduced-motion rule alone would still leave the popover animating for
+     * showDuration/hideDuration milliseconds. Honour the preference here too.
+     */
+    if (Utils.prefersReducedMotion()) {
+      this.showDuration = 0;
+      this.hideDuration = 0;
+    }
+
     /** @type {string[]} */
     this.selectedValues = [];
     /** @type {virtualSelectOption[]} */

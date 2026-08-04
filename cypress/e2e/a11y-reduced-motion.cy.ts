@@ -1,15 +1,16 @@
 /** cSpell:ignore vscomp */
 
 /**
- * Regression test for AI-19 / [A11Y-17] - WCAG 2.3.3 (AAA) and general motion hygiene.
+ * The dropdown must respect the user's OS-level "reduce motion" preference.
  *
- * The open/close animation is driven from both CSS and JS, so it ignored the user's
- * OS-level reduced-motion preference in both places.
+ * The open/close animation is driven from both CSS and JS, so honouring the preference in the
+ * stylesheet alone is not enough - the popover would still animate for
+ * showDuration/hideDuration milliseconds.
  */
 
 import { makeOptions, mountVs, unmountVs } from '../support/mount';
 
-describe('A11y: prefers-reduced-motion (AI-19)', { testIsolation: true }, () => {
+describe('A11y: prefers-reduced-motion', { testIsolation: true }, () => {
   const mountId = 'vs-reduced-motion';
 
   it('zeroes the JS-driven open/close durations when reduce is requested', () => {
