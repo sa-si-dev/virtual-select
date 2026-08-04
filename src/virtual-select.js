@@ -306,8 +306,16 @@ export class VirtualSelect {
   }
 
   renderOptions() {
-    // Calculate ARIA metadata before rendering to ensure it's always up to date
-    this.calculateAriaMetadata();
+    /**
+     * The ARIA scan walks every option, so running it per render made scrolling O(n) per
+     * event (~3.9 ms/call at 100k). aria-setsize/aria-posinset only change when the
+     * filtered set or its order changes, never when the virtualisation window moves, so
+     * recompute on a dirty flag instead. Everything that alters the set marks it dirty.
+     */
+    if (this.ariaMetadataDirty) {
+      this.calculateAriaMetadata();
+      this.ariaMetadataDirty = false;
+    }
 
     let html = '';
     const visibleOptions = this.getVisibleOptions();
@@ -757,8 +765,26 @@ export class VirtualSelect {
     }
   }
 
+  /**
+   * Scroll fires many times per drag and each event triggered a full re-render
+   * (~9.5 ms at 100k unthrottled, ~44 ms at 4x CPU), so the main thread stayed blocked for
+   * the whole gesture. Coalesce into at most one re-render per animation frame; the pending
+   * frame is cancelled in destroy() so it cannot run against a torn-down instance.
+   */
   onOptionsScroll() {
-    this.setVisibleOptions(true);
+    if (this.scrollAnimationFrame) {
+      return;
+    }
+
+    this.scrollAnimationFrame = requestAnimationFrame(() => {
+      this.scrollAnimationFrame = null;
+
+      if (this.isDestroyed) {
+        return;
+      }
+
+      this.setVisibleOptions(true);
+    });
   }
 
   onOptionsClick(e) {
@@ -1266,6 +1292,7 @@ export class VirtualSelect {
     this.uniqueId = this.getUniqueId();
     this.shouldFocusWrapperOnClose = true; // Initialize focus management property
     this.ariaSetSize = 0;
+    this.ariaMetadataDirty = true;
   }
 
   /**
@@ -1786,6 +1813,8 @@ export class VirtualSelect {
   }
 
   setSortedOptions() {
+    /** order drives aria-posinset */
+    this.ariaMetadataDirty = true;
     let sortedOptions = [...this.options];
 
     if (this.showSelectedOptionsFirst && this.selectedValues.length) {
@@ -2126,6 +2155,8 @@ export class VirtualSelect {
      * virtualisation window, which is not what a "N results available" message means.
      */
     this.filteredOptionsCount = visibleOptionsCount;
+    /** isVisible changed for the whole set, so positions and setsize must be recomputed */
+    this.ariaMetadataDirty = true;
 
     this.afterSetVisibleOptionsCount();
   }
@@ -2228,6 +2259,9 @@ export class VirtualSelect {
     if (!value) {
       return;
     }
+
+    /** adds a row to the filtered set */
+    this.ariaMetadataDirty = true;
 
     const newOption = this.getNewOption();
 
@@ -3488,6 +3522,8 @@ export class VirtualSelect {
     const newOption = this.getNewOption();
 
     if (newOption) {
+      /** removes a row from the filtered set */
+      this.ariaMetadataDirty = true;
       this.removeOption(newOption.index);
     }
   }
@@ -3772,6 +3808,12 @@ export class VirtualSelect {
 
     // Clear any other pending timeouts so their callbacks don't run on a destroyed instance
     this.clearManagedTimeouts();
+
+    // Drop any queued scroll re-render so it cannot touch detached DOM
+    if (this.scrollAnimationFrame) {
+      cancelAnimationFrame(this.scrollAnimationFrame);
+      this.scrollAnimationFrame = null;
+    }
 
     /** Remove all event listeners to prevent memory leaks and ensure proper cleanup */
     this.removeEvents();
