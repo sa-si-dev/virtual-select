@@ -222,6 +222,19 @@ export class Utils {
   }
 
   /**
+   * Whether the user has asked the operating system to reduce motion.
+   *
+   * Read on each call rather than cached, so a preference changed after page load is picked up
+   * by the next instance. Guarded for environments without matchMedia.
+   *
+   * @static
+   * @returns {boolean}
+   */
+  static prefersReducedMotion() {
+    return typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  }
+
+  /**
    * The shared, lazily created off-screen node used to measure text width.
    *
    * @static

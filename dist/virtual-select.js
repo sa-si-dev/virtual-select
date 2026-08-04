@@ -228,6 +228,19 @@ class Utils {
   }
 
   /**
+   * Whether the user has asked the operating system to reduce motion.
+   *
+   * Read on each call rather than cached, so a preference changed after page load is picked up
+   * by the next instance. Guarded for environments without matchMedia.
+   *
+   * @static
+   * @returns {boolean}
+   */
+  static prefersReducedMotion() {
+    return typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  }
+
+  /**
    * The shared, lazily created off-screen node used to measure text width.
    *
    * @static
@@ -1822,6 +1835,16 @@ class VirtualSelect {
     this.searchDelay = options.searchDelay;
     this.showDuration = parseInt(options.showDuration, 10);
     this.hideDuration = parseInt(options.hideDuration, 10);
+
+    /**
+     * The open/close animation is driven from JS as well as CSS, so the stylesheet's
+     * prefers-reduced-motion rule alone would still leave the popover animating for
+     * showDuration/hideDuration milliseconds. Honour the preference here too.
+     */
+    if (Utils.prefersReducedMotion()) {
+      this.showDuration = 0;
+      this.hideDuration = 0;
+    }
 
     /** @type {string[]} */
     this.selectedValues = [];
