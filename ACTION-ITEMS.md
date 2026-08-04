@@ -12,7 +12,7 @@ Status legend: ✅ **DONE** (fixed + regression test) · ⬜ open · ✅ verifie
 
 ## ✅ Completed
 
-Each item below was fixed in its own commit, with a regression spec written first and confirmed failing against the unfixed bundle. 67 tests added; suite went from 219 to 306 tests, and from 3 failures to 1 (all pre-existing).
+Each item below was fixed in its own commit, with a regression spec written first and confirmed failing against the unfixed bundle. 86 tests added; the suite went from 219 to 325 tests, and from 3 failures to 1 (pre-existing).
 
 | ID | Item | Commit | Spec | Standard |
 |---|---|---|---|---|
@@ -24,6 +24,10 @@ Each item below was fixed in its own commit, with a regression spec written firs
 | **AI-10** | [A11Y-06] `aria-multiselectable` on the listbox in multiple mode | `4e8be99` | `a11y-listbox-multiselectable.cy.ts` (3) | 4.1.2 (A) |
 | **AI-11** | [A11Y-13] Select All and tag clear button raised to 24×24 | `73c088c` | `a11y-target-size.cy.ts` (5) | 2.5.8 (AA) |
 | **AI-7** | [A11Y-01 + A11Y-05] Arrows navigate from the search input; `aria-activedescendant` on the focused combobox | (this change) | `a11y-search-arrow-navigation.cy.ts` (12) | 2.1.1 / 4.1.2 (A) |
+| **AI-5** | [PERF-01 + PERF-02] ARIA scan off the render path; scroll re-renders coalesced per frame | `72ab721` | `perf-scroll-aria.cy.ts` (6) | INP |
+| **AI-14** | [A11Y-12] Markup and quotes stripped from every aria-label | (this change) | `a11y-aria-label-and-motion.cy.ts` (6) | 4.1.2 / 1.1.1 (A) |
+| **AI-17** | [PERF-03] One shared text measurer instead of one node per tag | (this change) | `a11y-aria-label-and-motion.cy.ts` (4) | INP |
+| **AI-19** | [A11Y-17] `prefers-reduced-motion` honoured in CSS and in the JS durations | (this change) | `a11y-aria-label-and-motion.cy.ts` (3) | 2.3.3 (AAA) |
 
 ### ⚠️ Follow-ups created by the completed work
 
@@ -57,12 +61,11 @@ Each item below was fixed in its own commit, with a regression spec written firs
 
 ## P1 — Near-term (open)
 
-### ⬜ AI-5 · [PERF-02 + PERF-01] Scroll path does O(n) work per event, unthrottled — **High** ✅
+### ✅ AI-5 (DONE) · [PERF-02 + PERF-01] Scroll path does O(n) work per event, unthrottled — **High** ✅
 - **Standard:** INP / long tasks (16.7 ms frame budget).
 - **Reproduce:**
   1. Init 100k options; open dropdown.
   2. `calculateAriaMetadata()` ≈ 3.9 ms/call; a full `setVisibleOptions()` re-render ≈ **9.5 ms unthrottled / ~44 ms @ 4× CPU**, run on **every** scroll tick (no throttle/rAF).
-- **Still fully open.** Untouched by the accessibility work; `calculateAriaMetadata()` was deliberately not modified.
 - **Fix (two parts):**
   - Move the ARIA scan off the render path — recompute `aria-setsize`/`filteredIndex` only when the filtered set changes (`setVisibleOptionsCount`/`afterSetSearchValue`), and have `renderOptions()` just read cached values. Note `filteredOptionsCount` (added for AI-6) is already computed at the right moment and may serve as the hook.
   - rAF-coalesce the scroll handler:
@@ -73,7 +76,7 @@ Each item below was fixed in its own commit, with a regression spec written firs
     }
     ```
     Cancel `this._scrollRaf` in `destroy()`.
-- **Now the single highest-value open item**, and slightly more valuable than before: the live region adds one `textContent` write per search keystroke on top of the existing re-render.
+- **Done.** The scan is now guarded by a dirty flag set by everything that changes the filtered set, and scroll re-renders are coalesced to one per animation frame (cancelled in `destroy()`).
 
 ### ⬜ AI-8 · [A11Y-09] Placeholder/icon contrast below AA — **High** ✅
 - **Standard:** WCAG 1.4.3 / 1.4.11 (AA).
@@ -92,42 +95,72 @@ Each item below was fixed in its own commit, with a regression spec written firs
 
 ---
 
+## ⛔ Deferred: breaking changes, held for a major (2.0.0)
+
+**Decision:** AI-12, AI-13, AI-15, AI-16 and AI-18 are **not implemented**. Each changes a
+contract that consumers can already be relying on, and this branch is targeting a
+non-breaking 1.4.0. They stay specified below so they can be picked up together.
+
+Why they are grouped rather than shipped piecemeal: they all change *observable* behaviour
+rather than adding to it, so releasing them one at a time would mean several releases each
+carrying its own migration note. One major with a single migration guide is cheaper for
+consumers to absorb.
+
+| ID | What breaks | Who it affects |
+|---|---|---|
+| **AI-12** | Group headers stop matching `[role="option"]` and lose `aria-selected`; non-interactive headers leave the accessibility tree; `aria-setsize` values shrink | Anything selecting headers by role, and any test asserting set-size numbers |
+| **AI-13** | Removing the default `aria-label="Options list"` changes the accessible name of **every** instance that does not set `ariaLabelledby`/`ariaLabelText` — from a (poor) name to none | Every unlabelled instance; audits may newly flag "missing accessible name", which is the honest result but is still a visible change |
+| **AI-15** | Space on the closed combobox would open it instead of scrolling the page; new Home/End/PageUp/PageDown bindings | Anyone relying on Space to scroll, or with their own handlers for those keys. Note Home/End inside the **search input** must keep moving the caret — AI-7 depends on that |
+| **AI-16** | `em`/`min-height` sizing and deriving `optionHeight` from a measured probe row changes the public `optionHeight` prop's meaning and the virtualiser's row maths | Anyone setting `optionHeight`, and any layout depending on exact row pixels |
+| **AI-18** | Changing Backspace/Delete from "clear everything" to "remove the last tag" changes what a keypress destroys | Anyone relying on the current clear-all behaviour |
+
+**Note on AI-18:** the *announcement* half of it may already be satisfied — `reset()` goes
+through `setValue()`, which announces via the live region added in AI-6. Only the
+"remove last tag instead of all" half is breaking. Worth verifying before scheduling: if
+confirmed, AI-18 can be closed as done and the behaviour change dropped entirely.
+
+**Also already breaking on this branch:** AI-7 changed Up/Down in the search input from
+moving the caret to navigating the list. That shipped because it fixed a Level A failure,
+but it means 1.4.0 is not purely additive either — see AI-1c.
+
+---
+
 ## P2 — Structural / next major
 
-### ⬜ AI-12 · [A11Y-10] Group headers use `role="option"` and inflate `aria-setsize` — **Medium** ✅
+### ⛔ AI-12 (DEFERRED - breaking, see above) · [A11Y-10] Group headers use `role="option"` and inflate `aria-setsize` — **Medium** ✅
 - **Reproduce:** grouped multi-select → header announced as "…, Select All, option, 1 of 8"; setsize counts headers.
 - **Fix:** non-interactive headers `role="presentation"` (drop `aria-selected`/setsize); interactive multi-select headers `role="checkbox" aria-checked="mixed|true|false"`; exclude headers from setsize.
 - Pairs naturally with AI-3, which already established the `role="checkbox"` + synced `aria-checked` pattern for Select All — reuse it here.
 
-### ⬜ AI-13 · [A11Y-11] Generic default `aria-label="Options list"` — **Medium** ✅
+### ⛔ AI-13 (DEFERRED - breaking, see above) · [A11Y-11] Generic default `aria-label="Options list"` — **Medium** ✅
 - **Reproduce:** instance without `ariaLabelledby` announces "Options list"; closed value is a concatenated string.
 - **Fix:** remove the default `aria-label` [src/virtual-select.js:1222](src/virtual-select.js#L1222); document `ariaLabelledby` as the labeling path.
 - **Do this together with reconciling the nested combobox roles:** AI-7 gave the search input `role="combobox"` while the wrapper keeps it for the closed control. That nesting is deliberate and matches common implementations, but strict ARIA review may question it — settle both at once.
 
-### ⬜ AI-14 · [A11Y-12] Group-option `aria-label` uses raw HTML label — **Medium** 🔎
+### ✅ AI-14 (DONE) · [A11Y-12] Group-option `aria-label` uses raw HTML label — **Medium** 🔎
 - **Reproduce:** grouped option with `label:'<i class="flag"></i> France'` → `aria-label` contains tag soup / truncates at first `"`.
 - **Fix:** [src/virtual-select.js:391-393](src/virtual-select.js#L391) strip HTML first: `Utils.getString(d.label).replace(/<[^>]+>/ig,'').trim()` + `replaceDoubleQuotesWithHTML`.
 
-### ⬜ AI-15 · [A11Y-14] Missing keys: Space-to-open, Home/End/PageUp-Down, typeahead — **Medium** 🔎
+### ⛔ AI-15 (DEFERRED - breaking, see above) · [A11Y-14] Missing keys: Space-to-open, Home/End/PageUp-Down, typeahead — **Medium** 🔎
 - **Reproduce:** focus closed combobox, press Space → page scrolls; large list has no Home/End; no typeahead when `search:false`.
 - **Fix:** map `32:'onEnterPress'` on the wrapper (with `preventDefault`); implement Home/End/Page keys and first-char typeahead.
 - **Partially addressed:** AI-3 already handles Space on the Select All checkbox (with `preventDefault`). Space-to-open on the wrapper is still missing. Note Home/End in the **search input** must keep moving the caret — AI-7 depends on that.
 
-### ⬜ AI-16 · [A11Y-15] Fixed-px heights clip text at 200% zoom — **Medium** 🔎
+### ⛔ AI-16 (DEFERRED - breaking, see above) · [A11Y-15] Fixed-px heights clip text at 200% zoom — **Medium** 🔎
 - **Reproduce:** Firefox text-only zoom 200% → value row (20px) and option rows (40px) clip.
 - **Fix:** `em`/`min-height` sizing; derive `optionHeight` from a measured probe row so the virtualizer scales with zoom.
 - Note the new `.vscomp-error-message` (AI-4) already uses relative sizing and should not regress here.
 
-### ⬜ AI-17 · [PERF-03] `willTextOverflow()` forces layout per tag — **Medium** 🔎
+### ✅ AI-17 (DONE) · [PERF-03] `willTextOverflow()` forces layout per tag — **Medium** 🔎
 - **Reproduce:** `showValueAsTags` with many selected → temp element append + 2× `getComputedStyle` per tag [src/utils/utils.js:197](src/utils/utils.js#L197).
 - **Fix:** cache a single measuring element + resolved font per render; or use `scrollWidth > clientWidth` on the real node.
 
-### ⬜ AI-18 · [A11Y-16] Backspace/Delete silently clears all selections — **Low** 🔎
+### ⛔ AI-18 (DEFERRED - breaking, see above) · [A11Y-16] Backspace/Delete silently clears all selections — **Low** 🔎
 - **Reproduce:** focus closed combobox with a value, press Backspace → full reset, no announcement.
 - **Fix:** announce via the live region; consider removing only the last tag in multi/tag mode.
 - **Now cheap:** the live region exists (AI-6) and `getSelectionMessage()` already produces the right text — `reset()` goes through `setValue()`, so this may already announce. **Verify before implementing**; if it does, only the "remove last tag instead of all" part remains.
 
-### ⬜ AI-19 · [A11Y-17] No `prefers-reduced-motion` handling — **Low** 🔎
+### ✅ AI-19 (DONE) · [A11Y-17] No `prefers-reduced-motion` handling — **Low** 🔎
 - **Fix:** `@media (prefers-reduced-motion: reduce) { .vscomp-dropbox-container,.vscomp-dropbox { transition-duration:0s !important } }`; pass `showDuration:0` when it matches.
 
 ### ⬜ AI-20 · [SEC-02/03/04] Hardening: attribute `name`, map keys, escaping — **Low** 🔎
@@ -155,17 +188,17 @@ Each item below was fixed in its own commit, with a regression spec written firs
 | ~~AI-1d~~ | Withdrawn — mis-diagnosed, no product defect | — | — | — | ✅ n/a |
 | AI-1f | Enter on group title does not deselect | P2 | Med | — | ⬜ open (pre-existing) |
 | AI-1e | examples.cy.ts order coupling | P2 | Low | — | ⬜ partly mitigated (test debt) |
-| AI-5 | Scroll O(n)/unthrottled | P1 | High | INP | ⬜ open |
+| AI-5 | Scroll O(n)/unthrottled | P1 | High | INP | ✅ done |
 | AI-8 | Placeholder/icon contrast | P1 | High | 1.4.3/1.4.11 | ⬜ open |
 | AI-9 | No focus indicator | P1 | High | 2.4.7 | ⬜ open |
-| AI-12 | Group headers role=option | P2 | Med | 1.3.1/4.1.2 | ⬜ open |
-| AI-13 | Generic default label | P2 | Med | 2.4.6 | ⬜ open |
+| AI-12 | Group headers role=option | 2.0.0 | Med | 1.3.1/4.1.2 | ⛔ deferred (breaking) |
+| AI-13 | Generic default label | 2.0.0 | Med | 2.4.6 | ⛔ deferred (breaking) |
 | AI-14 | Group aria-label raw HTML | P2 | Med | 4.1.2 | ⬜ open |
-| AI-15 | Missing keys | P2 | Med | 2.1.1 | ⬜ partial |
-| AI-16 | Fixed-px heights / zoom | P2 | Med | 1.4.4/1.4.10 | ⬜ open |
-| AI-17 | willTextOverflow layout | P2 | Med | INP | ⬜ open |
-| AI-18 | Backspace wipes selection | P2 | Low | 4.1.3 | ⬜ likely partly done — verify |
-| AI-19 | No reduced-motion | P2 | Low | 2.3.3(AAA) | ⬜ open |
+| AI-15 | Missing keys | 2.0.0 | Med | 2.1.1 | ⛔ deferred (breaking) |
+| AI-16 | Fixed-px heights / zoom | 2.0.0 | Med | 1.4.4/1.4.10 | ⛔ deferred (breaking) |
+| AI-17 | willTextOverflow layout | P2 | Med | INP | ✅ done |
+| AI-18 | Backspace wipes selection | 2.0.0 | Low | 4.1.3 | ⛔ deferred (breaking half); announce half likely already done |
+| AI-19 | No reduced-motion | P2 | Low | 2.3.3(AAA) | ✅ done |
 | AI-20 | Security hardening | P2 | Low | OWASP | ⬜ open |
 | AI-21 | Docs CDN no SRI | P2 | Low | — | ⬜ open |
 

@@ -11,7 +11,7 @@
 
 ## 0. What changed since v1.3.0
 
-Eight action items, covering nine audit findings, were remediated in eight commits - one per item, each with its own regression spec written **before** the fix and confirmed failing against the unfixed bundle.
+Twelve action items, covering thirteen audit findings, were remediated - one commit per item, each with its own regression spec written **before** the fix and confirmed failing against the unfixed bundle.
 
 | Commit | Item | Finding |
 |---|---|---|
@@ -23,8 +23,20 @@ Eight action items, covering nine audit findings, were remediated in eight commi
 | `4e8be99` | AI-10 | [A11Y-06] Missing `aria-multiselectable` |
 | `73c088c` | AI-11 | [A11Y-13] Target sizes below 24×24 |
 | (this change) | AI-7 | [A11Y-01 + A11Y-05] Arrow keys dropped from search; `aria-activedescendant` misapplied |
+| `72ab721` | AI-5 | [PERF-01 + PERF-02] O(n) ARIA scan per render; unthrottled scroll |
+| `f9d37b1` | AI-14 | [A11Y-12] Raw markup and quotes in aria-labels |
+| `10cecf3` | AI-17 | [PERF-03] A measuring node created per tag |
+| `600c4f7` | AI-19 | [A11Y-17] `prefers-reduced-motion` ignored |
 
-Out of scope by instruction, therefore unchanged: **AI-5** (PERF-01/02), **AI-8** (contrast), **AI-9** (focus indicator), and all of P2.
+Out of scope by instruction, therefore unchanged: **AI-8** (contrast) and **AI-9** (focus
+indicator).
+
+**Deliberately not implemented — breaking, held for 2.0.0:** AI-12 (group header roles),
+AI-13 (default `aria-label`), AI-15 (Space-to-open and the new key bindings), AI-16
+(`em`/probe-measured sizing) and AI-18 (Backspace semantics). Each changes an observable
+contract rather than adding to it; see the deferral table in
+[ACTION-ITEMS.md](ACTION-ITEMS.md). AI-12 was implemented and fully tested before being
+reverted for exactly that reason, so the design is known to work when the major is scheduled.
 
 ---
 
@@ -34,11 +46,11 @@ Out of scope by instruction, therefore unchanged: **AI-5** (PERF-01/02), **AI-8*
 |---|---|---|---|
 | **Security** | 72 | **80** | Escaping can now be enforced page-wide instead of per call site. The insecure default is unchanged by decision, so the residual risk is unchanged in kind — but it is now controllable in one line. |
 | **Accessibility** | 62 | **83** | Six of the confirmed AA/A blockers are closed: Escape, Select All semantics, status announcements, required/error exposure, keyboard navigation from search, and multi-select semantics. Contrast and focus-indicator remain open by instruction. |
-| **Performance** | 65 | **64** | No perf work was in scope. Marginally down: the bundle grew ~0.9 KB gzip and the live region adds a small amount of work on selection/search. The O(n)-per-scroll path (AI-5) is untouched. |
+| **Performance** | 65 | **78** | The two costs on the scroll path are gone: the O(n) ARIA scan no longer runs per render, and scroll re-renders are coalesced to one per frame. The per-tag measuring node is now shared. Offset slightly by ~1 KB gzip of added code. |
 
-**Severity tally now:** Critical 0 · High **3** (was 9) · Medium **6** (was 8) · Low/Info 6.
+**Severity tally now:** Critical 0 · High **2** (was 9) · Medium **5** (was 8) · Low/Info 5.
 
-Remaining High items are all deliberately deferred: AI-5 (scroll perf), AI-8 (contrast), AI-9 (focus indicator).
+Both remaining High items are out of scope by instruction: AI-8 (contrast) and AI-9 (focus indicator). Both are CSS-only.
 
 ### Measured evidence
 
@@ -47,7 +59,7 @@ Remaining High items are all deliberately deferred: AI-5 (scroll perf), AI-8 (co
 | `virtual-select.min.js` | 87.6 KB raw / 22.1 KB gzip | **91.0 KB raw / 23.0 KB gzip** (+3.4 KB / **+0.9 KB gzip**, +4.1%) |
 | `virtual-select.min.css` | 13.4 KB / 2.7 KB gzip | **13.7 KB / 2.8 KB gzip** (+0.1 KB gzip) |
 | `npm audit` (prod + dev) | 0 vulnerabilities | **0 vulnerabilities** |
-| E2E suite | 219 tests, 216 pass / 3 fail | **306 tests, 305 pass / 1 fail** |
+| E2E suite | 219 tests, 216 pass / 3 fail | **325 tests, 324 pass / 1 fail** |
 
 The +0.9 KB gzip is the honest cost of the live region, the validation messaging, the global-defaults resolver and the new ARIA plumbing. No perf regression was introduced on the hot paths: `renderOptions()`/`setVisibleOptions()` are unchanged apart from two static attributes in the template.
 
