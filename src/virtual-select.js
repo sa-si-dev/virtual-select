@@ -378,15 +378,15 @@ export class VirtualSelect {
       }
 
       if (d.isGroupTitle) {
-        groupName = d.label;
+        /** carried into every child's aria-label below, so strip markup once here */
+        groupName = Utils.getAriaLabelText(d.label);
         optionClasses += ' group-title';
 
         if (disableOptionGroupCheckbox) {
           leftSection = '';
         } else if (this.multiple) {
-          const groupLabel = Utils.replaceDoubleQuotesWithHTML(Utils.getString(d.label));
-          const selectAllText = Utils.replaceDoubleQuotesWithHTML(Utils.getString(this.selectAllText));
-          ariaLabel = `aria-label="${groupLabel}, ${selectAllText}"`;
+          const selectAllText = Utils.getAriaLabelText(this.selectAllText);
+          ariaLabel = `aria-label="${groupName}, ${selectAllText}"`;
         }
       }
 
@@ -406,15 +406,15 @@ export class VirtualSelect {
            * is on - an XSS bypass. secureText is a no-op when enableSecureText is disabled,
            * keeping the existing behaviour for consumers that intentionally pass raw text.
            */
-          const groupNameText = this.secureText(Utils.getString(d.customData.group_name));
-          const groupDescText = this.secureText(Utils.getString(d.customData.description));
+          const groupNameText = Utils.getAriaLabelText(this.secureText(Utils.getString(d.customData.group_name)));
+          const groupDescText = Utils.getAriaLabelText(this.secureText(Utils.getString(d.customData.description)));
 
           groupName = d.customData.group_name !== undefined ? `${groupNameText}, ` : '';
           const optionDesc = d.customData.description !== undefined ? ` ${groupDescText},` : '';
 
-          ariaLabel = `aria-label="${groupName} ${d.label}, ${optionDesc}"`;
+          ariaLabel = `aria-label="${groupName} ${Utils.getAriaLabelText(d.label)}, ${optionDesc}"`;
         } else {
-          ariaLabel = `aria-label="${groupName}, ${d.label}"`;
+          ariaLabel = `aria-label="${groupName}, ${Utils.getAriaLabelText(d.label)}"`;
         }
       }
 
@@ -1974,11 +1974,13 @@ export class VirtualSelect {
           const valueTooltipForTags = Utils.willTextOverflow($valueText.parentElement, label)
             ? this.getTooltipAttrText(label, false, true) : '';
 
-          // replace is nedded to remove html tags from aria-label (ex: when there is an icon in the label)
+          /** markup in the label would otherwise land in the accessible name; a double
+           *  quote in it would break out of the attribute entirely */
           let ariaLabelClearBtnTxt = '';
           if (this.ariaLabelTagClearButtonText) {
-            const stripHtmlLabel = label.replace(/<[^>]+>/ig, '').trim();
-            ariaLabelClearBtnTxt = `aria-label="${stripHtmlLabel}, ${this.ariaLabelTagClearButtonText}"`;
+            const stripHtmlLabel = Utils.getAriaLabelText(label);
+            const clearButtonText = Utils.getAriaLabelText(this.ariaLabelTagClearButtonText);
+            ariaLabelClearBtnTxt = `aria-label="${stripHtmlLabel}, ${clearButtonText}"`;
           }
 
           const valueTagHtml = `<span class="vscomp-value-tag" data-index="${d.index}" ${valueTooltipForTags}>
