@@ -219,6 +219,28 @@ export class Utils {
   }
 
   /**
+   * Turn a label into text that is safe and sensible inside an aria-label attribute.
+   *
+   * Labels may legitimately contain markup - an icon, <b>, a <br>. Interpolated raw, that
+   * markup became tag soup in the accessible name, and a double quote in the label broke out
+   * of the attribute and truncated the name. Tags collapse to a single space so adjacent
+   * words do not run together (so "France<br>Paris" does not collapse into one word), then the
+   * remaining quotes are escaped.
+   *
+   * @static
+   * @param {string} text
+   * @returns {string}
+   */
+  static getAriaLabelText(text) {
+    const plainText = Utils.getString(text)
+      .replace(/<[^>]+>/gi, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    return Utils.replaceDoubleQuotesWithHTML(plainText);
+  }
+
+  /**
    * @static
    * @param {string} text
    * @return {boolean}
