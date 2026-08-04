@@ -98,6 +98,15 @@
  * and only one value is selected (i.e. 1 option selected)
  * @property {string} [allOptionsSelectedText=All] Text to use when displaying all values selected text
  * (i.e. All (10))
+ * @property {string} [searchResultsText='results available'] Announced in the live region after a search
+ * (i.e. 5 results available)
+ * @property {string} [searchResultText='result available'] Singular form of searchResultsText
+ * (i.e. 1 result available)
+ * @property {string} [noOptionsSelectedText='No options selected'] Announced in the live region when the
+ * selection becomes empty
+ * @property {string} [selectedText=selected] Announced in the live region after a single select choice
+ * (i.e. Option 3 selected)
+ * @property {string} [loadingText='Loading results'] Announced in the live region while a server search is in flight
  * @property {string} [clearButtonText=Clear] Tooltip text for clear button
  * @property {string} [moreText='more...'] Text to show when more than noOfDisplayValues options selected
  * (i.e + 10 more...)

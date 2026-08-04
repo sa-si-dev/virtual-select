@@ -105,6 +105,11 @@ Update below properties to change display texts.
 | optionsSelectedText            | String | options selected   | Text to use when displaying no.of values selected text (i.e. 3 options selected)                               |
 | optionSelectedText             | String | option selected    | Text to use when displaying no.of values selected text and only one value is selected (i.e. 1 option selected) |
 | allOptionsSelectedText         | String | All                | Text to use when displaying all values selected text (i.e. All (10))                                           |
+| searchResultsText              | String | results available  | Announced in the live region after a search (i.e. 5 results available)                                         |
+| searchResultText               | String | result available   | Singular form of `searchResultsText` (i.e. 1 result available)                                                 |
+| noOptionsSelectedText          | String | No options selected | Announced in the live region when the selection becomes empty                                                 |
+| selectedText                   | String | selected           | Announced in the live region after a single select choice (i.e. Option 3 selected)                             |
+| loadingText                    | String | Loading results    | Announced in the live region while a server search is in flight                                                |
 | clearButtonText                | String | Clear              | Tooltip text for clear button                                                                                  |
 | moreText                       | String | more...            | Text to show when more than noOfDisplayValues options selected (i.e + 10 more...)                              |
 
