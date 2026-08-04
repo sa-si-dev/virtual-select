@@ -133,6 +133,44 @@ export class DomUtils {
   }
 
   /**
+   * @param {HTMLElement} $ele
+   * @param {string} name
+   */
+  static removeAttr($ele, name) {
+    if (!$ele) {
+      return;
+    }
+
+    $ele.removeAttribute(name);
+  }
+
+  /**
+   * Set an aria-* attribute when the state applies, remove it otherwise.
+   *
+   * Preferred over writing `aria-x="false"` for states whose absence is meaningful
+   * (aria-required, aria-invalid): a literal "false" is valid but adds noise that some
+   * screen readers still verbalise.
+   *
+   * @param {HTMLElement | NodeListOf<HTMLElement>} $ele
+   * @param {string} name
+   * @param {boolean} isSet
+   * @param {string} [value='true']
+   */
+  static toggleAria($ele, name, isSet, value = 'true') {
+    if (!$ele) {
+      return;
+    }
+
+    DomUtils.getElements($ele).forEach(($this) => {
+      if (isSet) {
+        $this.setAttribute(`aria-${name}`, value);
+      } else {
+        $this.removeAttribute(`aria-${name}`);
+      }
+    });
+  }
+
+  /**
    * @param {HTMLElement} $from
    * @param {HTMLElement} $to
    * @param {string[]} attrList

@@ -321,6 +321,25 @@
   }
 }
 
+.vscomp-error-message {
+  align-items: flex-start;
+  color: v.$error-color;
+  display: none;
+  font-size: v.$font-size-small;
+  gap: 4px;
+  line-height: 1.4;
+  padding-top: 4px;
+  width: 100%;
+
+  /** shape cue, so the failure is not signalled by colour alone */
+  &::before {
+    content: '\26A0';
+    flex: none;
+    font-size: 1.1em;
+    line-height: 1.2;
+  }
+}
+
 .vscomp-no-options,
 .vscomp-no-search-results {
   align-items: center;
@@ -571,6 +590,14 @@
   &.has-error {
     .vscomp-toggle-button {
       border-color: v.$error-color;
+    }
+
+    /**
+     * The message is the non-colour cue required by WCAG 1.4.1: the border tint alone
+     * carried the whole meaning before. The leading glyph adds a second, shape-based cue.
+     */
+    .vscomp-error-message {
+      display: flex;
     }
   }
 
