@@ -1410,7 +1410,22 @@ describe('Add image/icon', () => {
   });
 
   it('has flag icon on selected item', () => {
-    cy.open(id).selectOption(16).hasSelectedFlagIcon();
+    /**
+     * cy.open() is a click, i.e. a toggle. The preceding case leaves this dropdown open, so
+     * clicking here closed it and the option click then landed on a dropbox with
+     * `display: none`. Open only when actually closed, and re-establish the scroll position
+     * so option 16 is rendered whether or not the preceding case ran.
+     */
+    cy.getVs(id).then(($e) => {
+      const vs = $e[0].virtualSelect;
+
+      if (!vs.isOpened()) {
+        vs.openDropbox();
+      }
+    });
+    cy.getVs(id).find('.vscomp-wrapper').should('not.have.class', 'closed');
+
+    cy.getVs(id).scrollOptions(700).selectOption(16).hasSelectedFlagIcon();
   });
 });
 
