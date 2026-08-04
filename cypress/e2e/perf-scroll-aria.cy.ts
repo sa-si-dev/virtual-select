@@ -1,7 +1,9 @@
 /** cSpell:ignore vscomp posinset setsize */
 
 /**
- * Regression test for AI-5 / [PERF-01 + PERF-02] — INP / long tasks.
+ * Scrolling a large list must not do work proportional to the whole list.
+ *
+ * Measured against INP / long tasks and a 16.7 ms frame budget.
  *
  * Two costs sat on the scroll path. `calculateAriaMetadata()` walked every option and ran
  * at the top of every `renderOptions()`, and `onOptionsScroll` was bound with no throttling,
@@ -14,7 +16,7 @@
 
 import { makeOptions, mountVs, unmountVs } from '../support/mount';
 
-describe('Perf: scroll path does no O(n) work per event (AI-5)', { testIsolation: true }, () => {
+describe('Perf: scroll path does no O(n) work per event', { testIsolation: true }, () => {
   const mountId = 'vs-perf-scroll';
 
   type Vs = {

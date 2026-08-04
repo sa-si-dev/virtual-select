@@ -1,7 +1,9 @@
 /** cSpell:ignore vscomp */
 
 /**
- * Regression test for AI-11 / [A11Y-13] — WCAG 2.5.8 Target Size (Minimum), AA.
+ * Every pointer target must be at least 24x24 CSS px.
+ *
+ * WCAG 2.5.8 Target Size (Minimum), AA.
  *
  * Two controls were smaller than the 24x24 CSS px minimum: the "Select All" checkbox
  * (measured 25x15) and the per-tag clear button (20x20). Both are pointer targets, so
@@ -12,7 +14,7 @@ import { makeOptions, mountVs, unmountVs } from '../support/mount';
 
 const MIN_TARGET = 24;
 
-describe('A11y: pointer targets meet the 24x24 minimum (AI-11)', () => {
+describe('A11y: pointer targets meet the 24x24 minimum', () => {
   const mountId = 'vs-a11y-target-size';
 
   /**

@@ -1,7 +1,9 @@
 /** cSpell:ignore vscomp */
 
 /**
- * Regression test for AI-6 / [A11Y-03] — WCAG 4.1.3 Status Messages (AA).
+ * Status changes must be announced, not shown only on screen.
+ *
+ * WCAG 4.1.3 Status Messages (AA).
  *
  * The component shipped a `.vscomp-live-region` rule in the stylesheet but no JavaScript
  * ever created the element, so there were zero live regions in the DOM. Search result
@@ -11,7 +13,7 @@
 
 import { makeOptions, mountVs, unmountVs } from '../support/mount';
 
-describe('A11y: status announcements via a live region (AI-6)', () => {
+describe('A11y: status announcements via a live region', () => {
   const mountId = 'vs-a11y-live';
 
   const liveRegion = () => cy.get(`#${mountId}`).find('.vscomp-live-region');
