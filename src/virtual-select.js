@@ -969,6 +969,8 @@ export class VirtualSelect {
     if (VirtualSelect.activeInstances.size === 0) {
       VirtualSelect.removeGlobalListeners();
       VirtualSelect.disconnectDomObserver();
+      /** the shared text measurer is the last page-level node we own */
+      Utils.removeTextMeasurer();
     }
   }
 
