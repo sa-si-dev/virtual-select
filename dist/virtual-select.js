@@ -198,17 +198,64 @@ class Utils {
    * @memberof Utils
    */
   static willTextOverflow(container, text) {
-    const tempElement = document.createElement('div');
-    tempElement.style.position = 'absolute';
-    tempElement.style.visibility = 'hidden';
-    tempElement.style.whiteSpace = 'nowrap';
-    tempElement.style.fontSize = window.getComputedStyle(container).fontSize;
-    tempElement.style.fontFamily = window.getComputedStyle(container).fontFamily;
-    tempElement.textContent = text;
-    document.body.appendChild(tempElement);
-    const textWidth = tempElement.clientWidth;
-    document.body.removeChild(tempElement);
-    return textWidth > container.clientWidth;
+    /**
+     * Called once per selected tag to decide whether that tag needs a tooltip.
+     *
+     * It used to create a div, read two separate getComputedStyle results, append it to
+     * <body>, read clientWidth and remove it again - so every tag paid an element creation
+     * plus two DOM mutations, and each mutation invalidates layout for the read that
+     * follows. Rendering many tags therefore meant a burst of forced synchronous layouts.
+     *
+     * One reusable off-screen node instead, and one getComputedStyle read for every property.
+     * The node stays out of flow and is aria-hidden, so it cannot affect layout or be
+     * announced, and it is removed once the last instance is destroyed.
+     */
+    const $measurer = Utils.getTextMeasurer();
+    const {
+      fontSize,
+      fontFamily,
+      fontWeight,
+      letterSpacing
+    } = window.getComputedStyle(container);
+    $measurer.style.fontSize = fontSize;
+    $measurer.style.fontFamily = fontFamily;
+    /** weight and tracking change advance width too, so ignoring them under-reported
+     *  overflow and could drop a tooltip that was actually needed */
+    $measurer.style.fontWeight = fontWeight;
+    $measurer.style.letterSpacing = letterSpacing;
+    $measurer.textContent = text;
+    return $measurer.clientWidth > container.clientWidth;
+  }
+
+  /**
+   * The shared, lazily created off-screen node used to measure text width.
+   *
+   * @static
+   * @returns {HTMLElement}
+   */
+  static getTextMeasurer() {
+    if (!Utils.$textMeasurer || !Utils.$textMeasurer.isConnected) {
+      const $measurer = document.createElement('div');
+      $measurer.className = 'vscomp-text-measurer';
+      $measurer.setAttribute('aria-hidden', 'true');
+      $measurer.style.cssText = 'position:absolute;top:0;left:-9999px;visibility:hidden;white-space:nowrap;pointer-events:none;';
+      document.body.appendChild($measurer);
+      Utils.$textMeasurer = $measurer;
+    }
+    return Utils.$textMeasurer;
+  }
+
+  /**
+   * Drop the shared measuring node, so nothing of ours is left in the document once the last
+   * instance has gone.
+   *
+   * @static
+   */
+  static removeTextMeasurer() {
+    if (Utils.$textMeasurer) {
+      Utils.$textMeasurer.remove();
+      Utils.$textMeasurer = null;
+    }
   }
 
   /**
@@ -227,7 +274,7 @@ class Utils {
    * Labels may legitimately contain markup - an icon, <b>, a <br>. Interpolated raw, that
    * markup became tag soup in the accessible name, and a double quote in the label broke out
    * of the attribute and truncated the name. Tags collapse to a single space so adjacent
-   * words do not run together ("France<br>Paris" must not become "FranceP(no space)"), then the
+   * words do not run together (so "France<br>Paris" does not collapse into one word), then the
    * remaining quotes are escaped.
    *
    * @static
@@ -347,6 +394,13 @@ class Utils {
     return throttled;
   }
 }
+
+/**
+ * Shared off-screen node used to measure text width, created on first use and removed when
+ * the last VirtualSelect instance is destroyed.
+ * @type {HTMLElement | null}
+ */
+Utils.$textMeasurer = null;
 ;// ./src/utils/dom-utils.js
 
 class DomUtils {
@@ -705,6 +759,9 @@ class DomUtils {
     });
   }
 }
+;// ./src/utils/index.js
+
+
 ;// ./src/virtual-select.js
 /** cSpell:ignore nocheck, Labelledby, vscomp, tabindex, combobox, haspopup, listbox, activedescendant */
 /* eslint-disable class-methods-use-this */
@@ -1500,6 +1557,8 @@ class VirtualSelect {
     if (VirtualSelect.activeInstances.size === 0) {
       VirtualSelect.removeGlobalListeners();
       VirtualSelect.disconnectDomObserver();
+      /** the shared text measurer is the last page-level node we own */
+      Utils.removeTextMeasurer();
     }
   }
 
