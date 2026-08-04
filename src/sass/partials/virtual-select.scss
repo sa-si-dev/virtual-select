@@ -446,6 +446,13 @@
       align-items: center;
       cursor: pointer;
       display: flex;
+      /**
+       * WCAG 2.5.8: the button previously collapsed to its 25x15 content box.
+       * A min-* floor grows the hit area without scaling the checkbox glyph inside it.
+       */
+      justify-content: center;
+      min-height: v.$min-target-size;
+      min-width: v.$min-target-size;
     }
 
     .vscomp-search-input,
