@@ -110,6 +110,8 @@ Update below properties to change display texts.
 | noOptionsSelectedText          | String | No options selected | Announced in the live region when the selection becomes empty                                                 |
 | selectedText                   | String | selected           | Announced in the live region after a single select choice (i.e. Option 3 selected)                             |
 | loadingText                    | String | Loading results    | Announced in the live region while a server search is in flight                                                |
+| requiredErrorText              | String | This field is required | Validation message shown and announced when a required select has no value                                 |
+| minValuesErrorText             | String | Select at least {count} options | Validation message when fewer than minValues are selected; {count} is replaced with minValues      |
 | clearButtonText                | String | Clear              | Tooltip text for clear button                                                                                  |
 | moreText                       | String | more...            | Text to show when more than noOfDisplayValues options selected (i.e + 10 more...)                              |
 

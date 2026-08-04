@@ -107,6 +107,10 @@
  * @property {string} [selectedText=selected] Announced in the live region after a single select choice
  * (i.e. Option 3 selected)
  * @property {string} [loadingText='Loading results'] Announced in the live region while a server search is in flight
+ * @property {string} [requiredErrorText='This field is required'] Validation message shown and announced when a
+ * required select has no value
+ * @property {string} [minValuesErrorText='Select at least {count} options'] Validation message when fewer than
+ * minValues options are selected; {count} is replaced with minValues
  * @property {string} [clearButtonText=Clear] Tooltip text for clear button
  * @property {string} [moreText='more...'] Text to show when more than noOfDisplayValues options selected
  * (i.e + 10 more...)
