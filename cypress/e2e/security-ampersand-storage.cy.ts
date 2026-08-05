@@ -203,16 +203,30 @@ describe('Security: option values are stored verbatim, not HTML-escaped', () => 
     cy.window().then((win) => mount(win, { search: true, allowNewOption: true }));
 
     openDropbox();
-    cy.get(`#${mountId}`).find('.vscomp-search-input').type('Smith & Sons');
 
     /**
-     * Deliberately separate from the storage assertion below.
+     * realType(), not .type(): real key events over CDP rather than Cypress's simulated typing.
      *
-     * Every keystroke re-renders the option list, and with allowNewOption it also adds and
-     * updates a "current new" row. Folding "typing works" and "the value is stored verbatim"
-     * into one case made a dropped keystroke surface as a value mismatch, which reads like a
-     * storage bug and is not one. Here the search text is asserted on its own, so a typing
-     * problem is reported as a typing problem.
+     * With `.type()` this case stalled after the first character - the input's own value stayed
+     * `'S'` for the full retry window, so the term never reached the component at all. The cause
+     * is specific to Cypress's simulated typing: real per-character keyboard input against the
+     * built bundle carries the whole term through (verified in a browser - input value,
+     * searchValueOriginal, the derived option's value and its data-value were all correct), and
+     * `security-quote-escaping` types with `.type()` successfully. The distinguishing factor here
+     * is `allowNewOption`, which adds and updates a "current new" row on every keystroke.
+     *
+     * This is the same remedy AI-1e applied to key presses, for the same reason: drive the
+     * component with real events instead of simulated ones. realType() is a parent command that
+     * types into whatever holds focus, so the input is focused first - the pattern `pressKeys()`
+     * already uses.
+     */
+    cy.get(`#${mountId}`).find('.vscomp-search-input').focus();
+    cy.realType('Smith & Sons');
+
+    /**
+     * Kept separate from the storage assertion below. Folding "typing works" and "the value is
+     * stored verbatim" into one case made a dropped keystroke surface as a value mismatch, which
+     * reads like a storage bug and is not one.
      */
     cy.get(`#${mountId}`).find('.vscomp-search-input').should('have.value', 'Smith & Sons');
     vs().should((instance) => {
