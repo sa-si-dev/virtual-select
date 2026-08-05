@@ -1211,7 +1211,20 @@ export class VirtualSelect {
     }
 
     if (!keepValue) {
-      this.reset();
+      /**
+       * reset() validates, and validation announces - so replacing the options used to speak a
+       * validation failure for an interaction the user never made. Scoped to this one call rather
+       * than the whole method, and released in a finally: a stuck flag would silently suppress
+       * every later error announcement, which is far harder to diagnose than an exception (the
+       * lesson from the isClosing guard in closeDropbox()).
+       */
+      this.isRefreshingOptions = true;
+
+      try {
+        this.reset();
+      } finally {
+        this.isRefreshingOptions = false;
+      }
     }
   }
   /** after event methods - end */
@@ -1453,7 +1466,31 @@ export class VirtualSelect {
      * Globals let a host turn a policy on once (notably enableSecureText) instead of
      * repeating it at every call site, while an instance can still opt out explicitly.
      */
-    return Object.assign(defaultOptions, globalDefaults, options);
+    /**
+     * `undefined` means "not supplied", so those keys are dropped before merging.
+     *
+     * Object.assign copies own enumerable keys *including* ones whose value is undefined, so a prop
+     * forwarded from an unset variable - `enableSecureText: wrapper.sanitizeValues`, the shape a
+     * host wrapper naturally produces - overwrote the page-level global instead of falling back to
+     * it. A host could call setGlobalDefaults({ enableSecureText: true }) and still get escaping
+     * off at every such call site, with nothing to show it had been overridden.
+     *
+     * This also makes the merge agree with the resolve() helper above, which already treats
+     * undefined as absent; the two disagreed inside the same method.
+     */
+    const supplied = (source) => {
+      const result = {};
+
+      Object.keys(source || {}).forEach((key) => {
+        if (source[key] !== undefined) {
+          result[key] = source[key];
+        }
+      });
+
+      return result;
+    };
+
+    return Object.assign(defaultOptions, supplied(globalDefaults), supplied(options));
   }
 
   setPropsFromElementAttr(options) {
@@ -3924,7 +3961,21 @@ export class VirtualSelect {
     this.$errorMessage.textContent = text;
     DomUtils.toggleAria(this.$allWrappers, 'describedby', !!text, this.$errorMessage.id);
 
-    if (text) {
+    /**
+     * The message is shown and exposed unconditionally, but only *announced* for something the
+     * user did. A live region is for status changes they caused.
+     *
+     * isInitialized keeps construction quiet: the initial setValueMethod() runs before that flag
+     * is set, so a page supplied with an invalid initial value used to load already speaking
+     * "Select at least 2 options". isRefreshingOptions keeps a programmatic data swap quiet:
+     * afterSetOptions() calls reset(), which validates, so replacing the options announced a
+     * failure for a field the user had never touched.
+     *
+     * Both are deliberately narrow. The interactive paths - the clear button, deselecting below
+     * minValues, and an explicit validate() from the application - must still announce, which is
+     * the whole point of routing validation through this region.
+     */
+    if (text && this.isInitialized && !this.isRefreshingOptions) {
       this.announce(text);
     }
   }

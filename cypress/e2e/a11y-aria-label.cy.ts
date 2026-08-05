@@ -99,6 +99,33 @@ describe('A11y: accessible names are plain text', { testIsolation: true }, () =>
     });
   });
 
+  it('names a label containing a no-break space without the entity', () => {
+    /**
+     * `secureText()` escapes exactly four characters, because that is what serialising a text node
+     * through `innerHTML` emits: `&`, `<`, `>` and U+00A0 (as `&nbsp;`). The decoder undid the first
+     * three, so a no-break space survived into the accessible name as the literal `&nbsp;`.
+     *
+     * The character is written as an escape on purpose — a raw NBSP is invisible in a diff and is
+     * easily "tidied" into an ordinary space, which would silently stop testing anything.
+     */
+    mount([{ label: 'Europe', options: [{ label: 'Item\u00A0A', value: 'nb' }] }], {
+      enableSecureText: true,
+    });
+
+    // The entity must not survive. The character itself is normalised to an ordinary space,
+    // because getPlainText() collapses whitespace and JavaScript's `\s` matches U+00A0 - which
+    // is the right outcome for a name that will be spoken.
+    option('nb')
+      .should('have.attr', 'aria-label')
+      .and('contain', 'Item A')
+      .and('not.contain', '&nbsp;');
+
+    // ...while the visible label keeps the real no-break space.
+    option('nb').find('.vscomp-option-text').should(($text) => {
+      expect($text.text()).to.contain('Item\u00A0A');
+    });
+  });
+
   it('announces an ampersand in a label as an ampersand', () => {
     // The escaped storage form must not leak into the accessible name as `&amp;`.
     mount([{ label: 'Europe', options: [{ label: 'Tom & Jerry', value: 'tj' }] }], {

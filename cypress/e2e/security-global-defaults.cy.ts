@@ -81,6 +81,35 @@ describe('Security: global defaults for enableSecureText', () => {
     });
   });
 
+  it('does not let an undefined prop defeat the global default', () => {
+    /**
+     * `Object.assign` copies own enumerable keys *including* those whose value is `undefined`, so a
+     * prop forwarded from an unset variable overwrote the global instead of falling back to it — the
+     * escaping policy was silently off while the host believed it had enabled it page-wide.
+     *
+     * This is the exact shape a wrapper uses: `enableSecureText: this.SanitizeDropdownValues`, where
+     * the wrapper property may be undefined. It also contradicts setDefaultProps()'s own `resolve()`
+     * helper, which already treats `undefined` as "not supplied".
+     */
+    cy.window().then((win) => {
+      // @ts-expect-error - bundle global
+      win.VirtualSelect.setGlobalDefaults({ enableSecureText: true });
+      mountWithPayload(win, { enableSecureText: undefined });
+    });
+
+    cy.get(`#${mountId}`).should(($ele) => {
+      expect($ele[0].virtualSelect.enableSecureText, 'the global must still win').to.equal(true);
+    });
+
+    cy.get(`#${mountId}`).find('.vscomp-toggle-button').click();
+    cy.get(`#${mountId}`).find('img[src="x"]').should('not.exist');
+
+    cy.window().then((win) => {
+      // @ts-expect-error - test marker
+      expect(win.__vsGlobalXss, 'payload must not execute').to.not.eq(true);
+    });
+  });
+
   it('lets an explicit per-instance option override the global default', () => {
     cy.window().then((win) => {
       // @ts-expect-error - bundle global

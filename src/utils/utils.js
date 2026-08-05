@@ -320,6 +320,7 @@ export class Utils {
     return Utils.getString(text)
       .replace(/&lt;/g, '<')
       .replace(/&gt;/g, '>')
+      .replace(/&nbsp;/g, '\u00A0')
       .replace(/&amp;/g, '&');
   }
 

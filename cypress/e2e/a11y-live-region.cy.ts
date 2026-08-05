@@ -148,6 +148,35 @@ describe('A11y: status announcements via a live region', () => {
     });
 
     /**
+     * The fourth character the text-node serialiser escapes, and the one the decoder first missed.
+     *
+     * `secureText()` emits `&`, `<`, `>` and U+00A0 (as `&nbsp;`) — four, not three — so a
+     * no-break space in a label was announced as the literal `&nbsp;` even after the entities
+     * above were handled.
+     */
+    it('announces a label containing a no-break space without the entity', () => {
+      cy.viewport(1280, 800);
+      cy.visit('get-started');
+      cy.window().then((win) =>
+        mountVs(win, mountId, {
+          options: [
+            { label: 'Item\u00A0A', value: 'nb' },
+            { label: 'Plain', value: 'p' },
+          ],
+          enableSecureText: true,
+        }),
+      );
+
+      cy.get(`#${mountId}`).find('.vscomp-toggle-button').click();
+      cy.get(`#${mountId}`).find('.vscomp-option[data-value="nb"]').click();
+
+      // The entity must not survive; the character is normalised to a space by the whitespace
+      // collapse in getPlainText(), which is correct for speech.
+      liveRegion().should('not.contain', '&nbsp;');
+      liveRegion().should('have.text', 'Item A selected');
+    });
+
+    /**
      * Decoding alone is not enough, which is what this case pins.
      *
      * A label can carry markup as well as escaping. Undoing the escaping turns

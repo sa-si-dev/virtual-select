@@ -200,6 +200,59 @@ describe('A11y: required and error state are exposed', () => {
   });
 
   /**
+   * The region must stay silent for anything the user did not do.
+   *
+   * `setErrorMessage()` announces unconditionally, and it is reached during construction — the
+   * initial `setValueMethod()` runs before `isInitialized` is set — and again whenever
+   * `setOptions()` replaces the data, because `afterSetOptions()` calls `reset()`, which validates.
+   * So a page could load already speaking a validation error, and a background data refresh could
+   * speak one for a field the user has never touched. A live region is for status *changes* the
+   * user caused; announcing on load is the noise the `isInitialized` guard elsewhere exists to
+   * avoid.
+   *
+   * The cases above must keep passing: the point is to silence construction and programmatic
+   * refreshes *without* silencing the interactive paths.
+   */
+  context('nothing is announced for interactions the user did not make', () => {
+    it('stays silent when an invalid initial value is supplied', () => {
+      mount({ multiple: true, required: true, minValues: 2, selectedValue: ['o1'] });
+
+      // The state is still exposed visually and to AT - it is only the announcement that waits.
+      wrapper().should('have.attr', 'aria-invalid', 'true');
+      errorMessage().should('have.text', 'Select at least 2 options');
+      liveRegion().should('have.text', '');
+    });
+
+    it('stays silent when setOptions() replaces the data', () => {
+      mount({ required: true });
+
+      liveRegion().should('have.text', '');
+
+      cy.get(`#${mountId}`).then(($e) =>
+        $e[0].setOptions?.([
+          { label: 'New 1', value: 'n1' },
+          { label: 'New 2', value: 'n2' },
+        ]),
+      );
+
+      cy.get(`#${mountId}`).find('.vscomp-option[data-value="n1"]').should('exist');
+      liveRegion().should('have.text', '');
+    });
+
+    it('still announces once the user interacts after a refresh', () => {
+      mount({ required: true });
+
+      cy.get(`#${mountId}`).then(($e) => $e[0].setOptions?.([{ label: 'New 1', value: 'n1' }]));
+      liveRegion().should('have.text', '');
+
+      // the suppression must be scoped to the refresh, not sticky
+      validate();
+
+      liveRegion().should('have.text', 'This field is required');
+    });
+  });
+
+  /**
    * A native form reset must clear the error state, not just its colour.
    *
    * reset(formReset = true) is the handler for the form's own reset event. It removed the
