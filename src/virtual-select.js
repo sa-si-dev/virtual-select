@@ -2950,11 +2950,18 @@ export class VirtualSelect {
      * that is about to be display:none - so the keyboard position ended up on <body>.
      *
      * isClosing is scoped to this one call rather than the whole method because everything
-     * above it (the wrapper refocus in particular) still needs the real state.
+     * above it (the wrapper refocus in particular) still needs the real state. The reset runs
+     * in a finally: if setSearchValue() ever threw, a stuck flag would silently stop the
+     * highlight coming back after *every* later filter clear, which is far harder to diagnose
+     * than the exception itself.
      */
     this.isClosing = true;
-    this.setSearchValue('');
-    this.isClosing = false;
+
+    try {
+      this.setSearchValue('');
+    } finally {
+      this.isClosing = false;
+    }
   }
 
   afterHidePopper() {
