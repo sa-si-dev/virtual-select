@@ -198,77 +198,17 @@ class Utils {
    * @memberof Utils
    */
   static willTextOverflow(container, text) {
-    /**
-     * Called once per selected tag to decide whether that tag needs a tooltip.
-     *
-     * It used to create a div, read two separate getComputedStyle results, append it to
-     * <body>, read clientWidth and remove it again - so every tag paid an element creation
-     * plus two DOM mutations, and each mutation invalidates layout for the read that
-     * follows. Rendering many tags therefore meant a burst of forced synchronous layouts.
-     *
-     * One reusable off-screen node instead, and one getComputedStyle read for every property.
-     * The node stays out of flow and is aria-hidden, so it cannot affect layout or be
-     * announced, and it is removed once the last instance is destroyed.
-     */
-    const $measurer = Utils.getTextMeasurer();
-    const {
-      fontSize,
-      fontFamily,
-      fontWeight,
-      letterSpacing
-    } = window.getComputedStyle(container);
-    $measurer.style.fontSize = fontSize;
-    $measurer.style.fontFamily = fontFamily;
-    /** weight and tracking change advance width too, so ignoring them under-reported
-     *  overflow and could drop a tooltip that was actually needed */
-    $measurer.style.fontWeight = fontWeight;
-    $measurer.style.letterSpacing = letterSpacing;
-    $measurer.textContent = text;
-    return $measurer.clientWidth > container.clientWidth;
-  }
-
-  /**
-   * Whether the user has asked the operating system to reduce motion.
-   *
-   * Read on each call rather than cached, so a preference changed after page load is picked up
-   * by the next instance. Guarded for environments without matchMedia.
-   *
-   * @static
-   * @returns {boolean}
-   */
-  static prefersReducedMotion() {
-    return typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  }
-
-  /**
-   * The shared, lazily created off-screen node used to measure text width.
-   *
-   * @static
-   * @returns {HTMLElement}
-   */
-  static getTextMeasurer() {
-    if (!Utils.$textMeasurer || !Utils.$textMeasurer.isConnected) {
-      const $measurer = document.createElement('div');
-      $measurer.className = 'vscomp-text-measurer';
-      $measurer.setAttribute('aria-hidden', 'true');
-      $measurer.style.cssText = 'position:absolute;top:0;left:-9999px;visibility:hidden;white-space:nowrap;pointer-events:none;';
-      document.body.appendChild($measurer);
-      Utils.$textMeasurer = $measurer;
-    }
-    return Utils.$textMeasurer;
-  }
-
-  /**
-   * Drop the shared measuring node, so nothing of ours is left in the document once the last
-   * instance has gone.
-   *
-   * @static
-   */
-  static removeTextMeasurer() {
-    if (Utils.$textMeasurer) {
-      Utils.$textMeasurer.remove();
-      Utils.$textMeasurer = null;
-    }
+    const tempElement = document.createElement('div');
+    tempElement.style.position = 'absolute';
+    tempElement.style.visibility = 'hidden';
+    tempElement.style.whiteSpace = 'nowrap';
+    tempElement.style.fontSize = window.getComputedStyle(container).fontSize;
+    tempElement.style.fontFamily = window.getComputedStyle(container).fontFamily;
+    tempElement.textContent = text;
+    document.body.appendChild(tempElement);
+    const textWidth = tempElement.clientWidth;
+    document.body.removeChild(tempElement);
+    return textWidth > container.clientWidth;
   }
 
   /**
@@ -279,45 +219,6 @@ class Utils {
    */
   static replaceDoubleQuotesWithHTML(text) {
     return text.replace(/"/g, '&quot;');
-  }
-
-  /**
-   * Escape a *raw* string for interpolation into a double-quoted HTML attribute.
-   *
-   * Use this only where the input has not already been HTML-escaped - currently the option
-   * value, which is stored verbatim because it reaches no innerHTML sink. `&` must be escaped
-   * first, otherwise the `&` introduced by the quote replacement would itself be escaped and
-   * the attribute would parse back as a literal `&quot;`.
-   *
-   * Deliberately NOT used by DomUtils.getAttributesText(), whose inputs are already-escaped
-   * label text: escaping `&` there would double it and a tooltip would show `&amp;`. That
-   * asymmetry is the reason this is a separate helper rather than a shared one.
-   *
-   * @static
-   * @param {string} text
-   * @return {string}
-   * @memberof Utils
-   */
-  static escapeAttributeValue(text) {
-    return Utils.getString(text).replace(/&/g, '&amp;').replace(/"/g, '&quot;');
-  }
-
-  /**
-   * Turn a label into text that is safe and sensible inside an aria-label attribute.
-   *
-   * Labels may legitimately contain markup - an icon, <b>, a <br>. Interpolated raw, that
-   * markup became tag soup in the accessible name, and a double quote in the label broke out
-   * of the attribute and truncated the name. Tags collapse to a single space so adjacent
-   * words do not run together (so "France<br>Paris" does not collapse into one word), then the
-   * remaining quotes are escaped.
-   *
-   * @static
-   * @param {string} text
-   * @returns {string}
-   */
-  static getAriaLabelText(text) {
-    const plainText = Utils.getString(text).replace(/<[^>]+>/gi, ' ').replace(/\s+/g, ' ').trim();
-    return Utils.replaceDoubleQuotesWithHTML(plainText);
   }
 
   /**
@@ -428,13 +329,6 @@ class Utils {
     return throttled;
   }
 }
-
-/**
- * Shared off-screen node used to measure text width, created on first use and removed when
- * the last VirtualSelect instance is destroyed.
- * @type {HTMLElement | null}
- */
-Utils.$textMeasurer = null;
 ;// ./src/utils/dom-utils.js
 
 class DomUtils {
@@ -556,42 +450,6 @@ class DomUtils {
       return;
     }
     $ele.setAttribute(name, value);
-  }
-
-  /**
-   * @param {HTMLElement} $ele
-   * @param {string} name
-   */
-  static removeAttr($ele, name) {
-    if (!$ele) {
-      return;
-    }
-    $ele.removeAttribute(name);
-  }
-
-  /**
-   * Set an aria-* attribute when the state applies, remove it otherwise.
-   *
-   * Preferred over writing `aria-x="false"` for states whose absence is meaningful
-   * (aria-required, aria-invalid): a literal "false" is valid but adds noise that some
-   * screen readers still verbalise.
-   *
-   * @param {HTMLElement | NodeListOf<HTMLElement>} $ele
-   * @param {string} name
-   * @param {boolean} isSet
-   * @param {string} [value='true']
-   */
-  static toggleAria($ele, name, isSet, value = 'true') {
-    if (!$ele) {
-      return;
-    }
-    DomUtils.getElements($ele).forEach($this => {
-      if (isSet) {
-        $this.setAttribute(`aria-${name}`, value);
-      } else {
-        $this.removeAttribute(`aria-${name}`);
-      }
-    });
   }
 
   /**
@@ -742,21 +600,7 @@ class DomUtils {
     // @ts-ignore
     Object.entries(data).forEach(([k, v]) => {
       if (v !== undefined) {
-        /**
-         * Quotes are escaped here, at the attribute boundary, because this is the only place
-         * that knows the value is about to be wrapped in double quotes.
-         *
-         * The caller that matters is getTooltipAttrText(), which passes option labels through
-         * to data-tooltip. It used to escape quotes itself but only when containsHTML(label)
-         * was true, so a payload with no tag in it - `x" data-pwned="1" z="` - went in raw and
-         * put a live attribute on the value-tag element. Escaping unconditionally here removes
-         * the condition, and the parser turns &quot; back into a quote, so the attribute still
-         * reads back as the original string.
-         *
-         * String(), not Utils.getString(): the latter maps `false` to '', and some of these
-         * attributes carry real boolean values (data-tooltip-ellipsis-only, -allow-html).
-         */
-        html += ` ${k}="${Utils.replaceDoubleQuotesWithHTML(String(v))}" `;
+        html += ` ${k}="${v}" `;
       }
     });
     return html;
@@ -807,9 +651,6 @@ class DomUtils {
     });
   }
 }
-;// ./src/utils/index.js
-
-
 ;// ./src/virtual-select.js
 /** cSpell:ignore nocheck, Labelledby, vscomp, tabindex, combobox, haspopup, listbox, activedescendant */
 /* eslint-disable class-methods-use-this */
@@ -831,7 +672,7 @@ const nativeProps = ['autofocus', 'class', 'disabled', 'id', 'multiple', 'name',
 // the class below has been evaluated (see the assignment at the bottom of this file).
 // eslint-disable-next-line prefer-const
 let attrPropsMapping;
-const dataProps = ['additionalClasses', 'additionalDropboxClasses', 'additionalDropboxContainerClasses', 'additionalToggleButtonClasses', 'aliasKey', 'allOptionsSelectedText', 'allowNewOption', 'alwaysShowSelectedOptionsCount', 'alwaysShowSelectedOptionsLabel', 'ariaLabelledby', 'ariaLabelText', 'ariaLabelClearButtonText', 'ariaLabelTagClearButtonText', 'ariaLabelSearchClearButtonText', 'autoSelectFirstOption', 'clearButtonText', 'descriptionKey', 'disableAllOptionsSelectedText', 'disableOptionGroupCheckbox', 'disableSelectAll', 'disableValidation', 'dropboxWidth', 'dropboxWrapper', 'emptyValue', 'enableSecureText', 'focusSelectedOptionOnOpen', 'hasOptionDescription', 'hideClearButton', 'hideValueTooltipOnSelectAll', 'keepAlwaysOpen', 'labelKey', 'markSearchResults', 'maxValues', 'maxWidth', 'minValues', 'loadingText', 'minValuesErrorText', 'moreText', 'noOfDisplayValues', 'noOptionsSelectedText', 'noOptionsText', 'noSearchResultsText', 'optionHeight', 'optionSelectedText', 'optionsCount', 'optionsSelectedText', 'popupDropboxBreakpoint', 'popupPosition', 'position', 'requiredErrorText', 'search', 'searchByStartsWith', 'searchDelay', 'searchFormLabel', 'searchGroup', 'searchNormalize', 'searchPlaceholderText', 'searchResultText', 'searchResultsText', 'selectAllOnlyVisible', 'selectAllText', 'selectedText', 'setValueAsArray', 'showDropboxAsPopup', 'showOptionsOnlyOnSearch', 'showSecureTextWarning', 'showSelectedOptionsFirst', 'showValueAsTags', 'silentInitialValueSet', 'textDirection', 'tooltipAlignment', 'tooltipFontSize', 'tooltipMaxWidth', 'updatePositionThrottle', 'useGroupValue', 'valueKey', 'zIndex'];
+const dataProps = ['additionalClasses', 'additionalDropboxClasses', 'additionalDropboxContainerClasses', 'additionalToggleButtonClasses', 'aliasKey', 'allOptionsSelectedText', 'allowNewOption', 'alwaysShowSelectedOptionsCount', 'alwaysShowSelectedOptionsLabel', 'ariaLabelledby', 'ariaLabelText', 'ariaLabelClearButtonText', 'ariaLabelTagClearButtonText', 'ariaLabelSearchClearButtonText', 'autoSelectFirstOption', 'clearButtonText', 'descriptionKey', 'disableAllOptionsSelectedText', 'disableOptionGroupCheckbox', 'disableSelectAll', 'disableValidation', 'dropboxWidth', 'dropboxWrapper', 'emptyValue', 'enableSecureText', 'focusSelectedOptionOnOpen', 'hasOptionDescription', 'hideClearButton', 'hideValueTooltipOnSelectAll', 'keepAlwaysOpen', 'labelKey', 'markSearchResults', 'maxValues', 'maxWidth', 'minValues', 'moreText', 'noOfDisplayValues', 'noOptionsText', 'noSearchResultsText', 'optionHeight', 'optionSelectedText', 'optionsCount', 'optionsSelectedText', 'popupDropboxBreakpoint', 'popupPosition', 'position', 'search', 'searchByStartsWith', 'searchDelay', 'searchFormLabel', 'searchGroup', 'searchNormalize', 'searchPlaceholderText', 'selectAllOnlyVisible', 'selectAllText', 'setValueAsArray', 'showDropboxAsPopup', 'showOptionsOnlyOnSearch', 'showSecureTextWarning', 'showSelectedOptionsFirst', 'showValueAsTags', 'silentInitialValueSet', 'textDirection', 'tooltipAlignment', 'tooltipFontSize', 'tooltipMaxWidth', 'updatePositionThrottle', 'useGroupValue', 'valueKey', 'zIndex'];
 
 /** Class representing VirtualSelect */
 class VirtualSelect {
@@ -867,20 +708,9 @@ class VirtualSelect {
     let toggleButtonClasses = 'vscomp-toggle-button';
     const valueTooltip = this.showValueAsTags ? '' : this.getTooltipAttrText(this.placeholder, true, true);
     const clearButtonTooltip = this.getTooltipAttrText(this.clearButtonText);
-    /**
-     * These props are developer-supplied but still reach an attribute directly, and none of them
-     * passes through secureText() - so enableSecureText never protected them. A double quote
-     * closed the attribute early: the payload after it was parsed as markup, and the accessible
-     * name kept only the prefix, which is a WCAG 4.1.2 defect as much as an injection.
-     *
-     * getAriaLabelText() for the accessible names, because it is what AI-14 already applies to
-     * option and group labels: strip markup, then escape quotes. Plain quote escaping for
-     * aria-labelledby, which is an IDREF list rather than prose - stripping tags there would hide
-     * a caller error instead of fixing it.
-     */
-    const ariaLabelledbyText = this.ariaLabelledby ? `aria-labelledby="${Utils.replaceDoubleQuotesWithHTML(Utils.getString(this.ariaLabelledby))}"` : '';
-    const ariaLabelText = this.ariaLabelText ? `aria-label="${Utils.getAriaLabelText(this.ariaLabelText)}"` : '';
-    const ariaLabelClearBtnTxt = this.ariaLabelClearButtonText ? `aria-label="${Utils.getAriaLabelText(this.ariaLabelClearButtonText)}"` : '';
+    const ariaLabelledbyText = this.ariaLabelledby ? `aria-labelledby="${this.ariaLabelledby}"` : '';
+    const ariaLabelText = this.ariaLabelText ? `aria-label="${this.ariaLabelText}"` : '';
+    const ariaLabelClearBtnTxt = this.ariaLabelClearButtonText ? `aria-label="${this.ariaLabelClearButtonText}"` : '';
     let isExpanded = false;
     if (this.additionalClasses) {
       wrapperClasses += ` ${Utils.sanitizeClassNames(this.additionalClasses)}`;
@@ -921,7 +751,7 @@ class VirtualSelect {
     const html = `<div id="vscomp-ele-wrapper-${uniqueId}" class="vscomp-ele-wrapper ${wrapperClasses}" tabindex="0"
         role="combobox" aria-haspopup="listbox" aria-controls="vscomp-dropbox-container-${uniqueId}"
         aria-expanded="${isExpanded}" ${ariaLabelledbyText} ${ariaLabelText}>
-        <input type="hidden" class="vscomp-hidden-input">
+        <input type="hidden" name="${this.name}" class="vscomp-hidden-input">
         <div class="${toggleButtonClasses}">
           <div class="vscomp-value" ${valueTooltip}>
             ${this.placeholder}
@@ -932,11 +762,6 @@ class VirtualSelect {
             <i class="vscomp-clear-icon"></i>
           </div>
         </div>
-
-        <div id="vscomp-live-region-${uniqueId}" class="vscomp-live-region" role="status"
-          aria-live="polite" aria-atomic="true"></div>
-
-        <div id="vscomp-error-message-${uniqueId}" class="vscomp-error-message"></div>
 
         ${this.renderDropbox({
       wrapperClasses
@@ -957,25 +782,6 @@ class VirtualSelect {
     this.$clearButton = this.$ele.querySelector('.vscomp-clear-button');
     this.$valueText = this.$ele.querySelector('.vscomp-value');
     this.$hiddenInput = this.$ele.querySelector('.vscomp-hidden-input');
-
-    /**
-     * The submitting field's name is set as a DOM property, not interpolated into the template.
-     *
-     * `name="${this.name}"` made the attribute an HTML sink: a double quote closed it early, so
-     * the remainder of the value was parsed as markup (real elements, an injection) while the
-     * field kept only the truncated prefix - or, when the payload also swallowed the following
-     * `class="vscomp-hidden-input"`, no field was found at all and the first setValue() threw
-     * inside the constructor. Either way the form silently stopped submitting the right name,
-     * and that included legitimate names such as `items["a"]`.
-     *
-     * A property assignment performs no HTML parsing, so there is nothing to break out of and
-     * nothing to escape - which is also why `name` no longer goes through secureText(): the
-     * escaping only ever protected this sink, and applying it here corrupted the submitted
-     * field name into `items[&quot;a&quot;]`.
-     */
-    this.$hiddenInput.name = this.name;
-    this.$liveRegion = this.$ele.querySelector('.vscomp-live-region');
-    this.$errorMessage = this.$ele.querySelector('.vscomp-error-message');
     this.$dropbox = this.$dropboxContainer.querySelector('.vscomp-dropbox');
     this.$dropboxCloseButton = this.$dropboxContainer.querySelector('.vscomp-dropbox-close-button');
     this.$dropboxContainerBottom = this.$dropboxContainer.querySelector('.vscomp-dropbox-container-bottom');
@@ -1005,9 +811,7 @@ class VirtualSelect {
         <div class="${dropboxClasses}">
           <div class="vscomp-search-wrapper"></div>
 
-          <div id="vscomp-options-container-${this.uniqueId}" class="vscomp-options-container" role="listbox"
-            aria-labelledby="vscomp-ele-wrapper-${this.uniqueId}"
-            ${this.multiple ? 'aria-multiselectable="true"' : ''}>
+          <div class="vscomp-options-container" role="listbox" aria-labelledby="vscomp-ele-wrapper-${this.uniqueId}" >
             <div class="vscomp-options-loader"></div>
 
             <div class="vscomp-options-list">
@@ -1040,16 +844,8 @@ class VirtualSelect {
     return html;
   }
   renderOptions() {
-    /**
-     * The ARIA scan walks every option, so running it per render made scrolling O(n) per
-     * event (~3.9 ms/call at 100k). aria-setsize/aria-posinset only change when the
-     * filtered set or its order changes, never when the virtualisation window moves, so
-     * recompute on a dirty flag instead. Everything that alters the set marks it dirty.
-     */
-    if (this.ariaMetadataDirty) {
-      this.calculateAriaMetadata();
-      this.ariaMetadataDirty = false;
-    }
+    // Calculate ARIA metadata before rendering to ensure it's always up to date
+    this.calculateAriaMetadata();
     let html = '';
     const visibleOptions = this.getVisibleOptions();
     let checkboxHtml = '';
@@ -1112,14 +908,14 @@ class VirtualSelect {
         ariaDisabledText = 'aria-disabled="true"';
       }
       if (d.isGroupTitle) {
-        /** carried into every child's aria-label below, so strip markup once here */
-        groupName = Utils.getAriaLabelText(d.label);
+        groupName = d.label;
         optionClasses += ' group-title';
         if (disableOptionGroupCheckbox) {
           leftSection = '';
         } else if (this.multiple) {
-          const selectAllText = Utils.getAriaLabelText(this.selectAllText);
-          ariaLabel = `aria-label="${groupName}, ${selectAllText}"`;
+          const groupLabel = Utils.replaceDoubleQuotesWithHTML(Utils.getString(d.label));
+          const selectAllText = Utils.replaceDoubleQuotesWithHTML(Utils.getString(this.selectAllText));
+          ariaLabel = `aria-label="${groupLabel}, ${selectAllText}"`;
         }
       }
       if (isSelected) {
@@ -1136,13 +932,13 @@ class VirtualSelect {
            * is on - an XSS bypass. secureText is a no-op when enableSecureText is disabled,
            * keeping the existing behaviour for consumers that intentionally pass raw text.
            */
-          const groupNameText = Utils.getAriaLabelText(this.secureText(Utils.getString(d.customData.group_name)));
-          const groupDescText = Utils.getAriaLabelText(this.secureText(Utils.getString(d.customData.description)));
+          const groupNameText = this.secureText(Utils.getString(d.customData.group_name));
+          const groupDescText = this.secureText(Utils.getString(d.customData.description));
           groupName = d.customData.group_name !== undefined ? `${groupNameText}, ` : '';
           const optionDesc = d.customData.description !== undefined ? ` ${groupDescText},` : '';
-          ariaLabel = `aria-label="${groupName} ${Utils.getAriaLabelText(d.label)}, ${optionDesc}"`;
+          ariaLabel = `aria-label="${groupName} ${d.label}, ${optionDesc}"`;
         } else {
-          ariaLabel = `aria-label="${groupName}, ${Utils.getAriaLabelText(d.label)}"`;
+          ariaLabel = `aria-label="${groupName}, ${d.label}"`;
         }
       }
       if (hasLabelRenderer) {
@@ -1168,23 +964,8 @@ class VirtualSelect {
           ariaAttrs += ` aria-posinset="${d.filteredIndex}"`;
         }
       }
-
-      /**
-       * The option value is an untrusted string going straight into an attribute, so a double
-       * quote in it closed data-value early and everything after it was parsed as markup - a
-       * value of `x" data-pwned="1" z="` put a live data-pwned attribute on the option row,
-       * whether or not enableSecureText was on.
-       *
-       * `&` is escaped here as well as `"`, because the value is now stored verbatim (it reaches
-       * no innerHTML sink, so escaping it only made the option unaddressable - see secureText).
-       * Both together keep the attribute round-tripping: the parser turns `&amp;` and `&quot;`
-       * back into `&` and `"`, and setOptionAttr() rewrites data-value through the DOM API on
-       * every render anyway.
-       */
-      const optionValueAttr = Utils.escapeAttributeValue(d.value);
       html += `<div role="option" aria-selected="${isSelected}" id="vscomp-option-${uniqueId}-${index}"
-          class="${optionClasses}" data-value="${optionValueAttr}" data-index="${index}"
-          data-visible-index="${d.visibleIndex}"
+          class="${optionClasses}" data-value="${d.value}" data-index="${index}" data-visible-index="${d.visibleIndex}"
           tabindex=${tabIndexValue} ${groupIndexText} ${ariaDisabledText} ${ariaLabel} ${ariaAttrs}
         >
           ${leftSection}
@@ -1207,40 +988,20 @@ class VirtualSelect {
     let checkboxHtml = '';
     let searchInput = '';
     if (this.multiple && !this.disableSelectAll) {
-      /**
-       * role="checkbox" + aria-checked so the control is announced as a checkbox and its
-       * state changes are audible. Without them it exposed as a generic element and every
-       * select/deselect was silent to assistive technology (WCAG 4.1.2 / 1.3.1).
-       * aria-checked is kept in sync by toggleAllOptionsClass().
-       */
-      /**
-       * selectAllText has two sinks, and only the attribute one is escaped.
-       *
-       * The visible label below is rendered as HTML and that works today - `Pick <b>all</b>`
-       * produces a real <b> - so escaping it would be a visible regression for anyone styling
-       * the Select All label. The accessible name, by contrast, was raw: a quote broke out of
-       * the attribute, and markup was announced as tag soup. getAriaLabelText() is the same
-       * treatment the group-header aria-label a few methods up already applies to this exact
-       * prop, which is why that sink was safe while this one was not.
-       */
-      checkboxHtml = `<span class="vscomp-toggle-all-button" tabindex="0" role="checkbox"
-        aria-checked="false" aria-label="${Utils.getAriaLabelText(this.selectAllText)}">
+      checkboxHtml = `<span class="vscomp-toggle-all-button" tabindex="0" aria-label="${this.selectAllText}">
           <span class="checkbox-icon vscomp-toggle-all-checkbox"></span>
           <span class="vscomp-toggle-all-label">${this.selectAllText}</span>
         </span>`;
     }
     if (this.hasSearch) {
-      const ariaLabelSearchClearBtnTxt = this.ariaLabelSearchClearButtonText ? `aria-label="${Utils.getAriaLabelText(this.ariaLabelSearchClearButtonText)}"` : '';
+      const ariaLabelSearchClearBtnTxt = this.ariaLabelSearchClearButtonText ? `aria-label="${this.ariaLabelSearchClearButtonText}"` : '';
       searchInput = `<label for="vscomp-search-input-${this.uniqueId}" class="vscomp-search-label"
         id="vscomp-search-label-${this.uniqueId}"
       >
         ${this.searchFormLabel}
       </label>
-      <input type="text" class="vscomp-search-input"
-        placeholder="${Utils.replaceDoubleQuotesWithHTML(Utils.getString(this.searchPlaceholderText))}"
-        id="vscomp-search-input-${this.uniqueId}"
-        role="combobox" aria-autocomplete="list" aria-expanded="false"
-        aria-controls="vscomp-options-container-${this.uniqueId}">
+      <input type="text" class="vscomp-search-input" placeholder="${this.searchPlaceholderText}"
+        id="vscomp-search-input-${this.uniqueId}">
       <span class="vscomp-search-clear" role="button" ${ariaLabelSearchClearBtnTxt}>&times;</span>`;
     }
     const html = `<div class="vscomp-search-container">
@@ -1371,29 +1132,14 @@ class VirtualSelect {
       e.preventDefault();
       this.focusFirstVisibleOption();
     }
-
-    /**
-     * Space is the expected activation key for role="checkbox"; Enter is kept for
-     * backwards compatibility. preventDefault stops Space from scrolling the page
-     * (the previous behaviour, since the key was unhandled here).
-     */
-    if (document.activeElement === this.$toggleAllButton && (key === 13 || key === 32)) {
-      e.preventDefault();
+    if (document.activeElement === this.$toggleAllButton && key === 13) {
       this.toggleAllOptions();
       return;
     }
 
-    /**
-     * Escape must close the dropdown in every layout (WCAG 2.1.1 / 2.1.2).
-     * The element that contains the focused node differs by layout: with an external
-     * `dropboxWrapper` the dropbox is portalled out of $wrapper, so containment has to be
-     * tested against $dropboxWrapper. In every other case - including the default
-     * `dropboxWrapper: 'self'` on desktop - the dropbox lives inside $wrapper. Selecting
-     * $dropboxWrapper unconditionally for non-popup layouts left it `undefined` under the
-     * default config, so the branch never ran and Escape did nothing.
-     */
+    // Handle the Escape key when showing the dropdown as a popup, closing it
     if (key === 27 || e.key === 'Escape') {
-      const wrapper = this.hasDropboxWrapper && !this.showAsPopup ? this.$dropboxWrapper : this.$wrapper;
+      const wrapper = this.showAsPopup ? this.$wrapper : this.$dropboxWrapper;
       if (wrapper && (document.activeElement === wrapper || wrapper.contains(document.activeElement)) && !this.keepAlwaysOpen) {
         this.closeDropbox();
         return;
@@ -1411,34 +1157,33 @@ class VirtualSelect {
       this.openDropbox();
     }
   }
-
-  /**
-   * Move the highlight without moving DOM focus.
-   *
-   * Previously both arrow handlers bailed out whenever the search input had focus, to let
-   * the caret move. But opening the dropdown focuses the search input, so in the default
-   * flow the arrows did nothing at all and no option was ever highlighted (WCAG 2.1.1).
-   * The APG editable-combobox pattern is what applies here: Up/Down drive the list while
-   * focus stays in the field, and the active option is published as aria-activedescendant.
-   *
-   * @param {KeyboardEvent} e
-   * @param {'next' | 'previous'} direction
-   */
-  navigateOptions(e, direction) {
+  onDownArrowPress(e) {
+    // Allow default behavior (cursor movement) when search input is focused
+    if (document.activeElement === this.$searchInput) {
+      return;
+    }
     e.preventDefault();
     if (this.isOpened()) {
       this.focusOption({
-        direction
+        direction: 'next'
       });
     } else {
       this.openDropbox();
     }
   }
-  onDownArrowPress(e) {
-    this.navigateOptions(e, 'next');
-  }
   onUpArrowPress(e) {
-    this.navigateOptions(e, 'previous');
+    // Allow default behavior (cursor movement) when search input is focused
+    if (document.activeElement === this.$searchInput) {
+      return;
+    }
+    e.preventDefault();
+    if (this.isOpened()) {
+      this.focusOption({
+        direction: 'previous'
+      });
+    } else {
+      this.openDropbox();
+    }
   }
   onBackspaceOrDeletePress(e) {
     if (e.target === this.$wrapper) {
@@ -1475,24 +1220,8 @@ class VirtualSelect {
       this.reset();
     }
   }
-
-  /**
-   * Scroll fires many times per drag and each event triggered a full re-render
-   * (~9.5 ms at 100k unthrottled, ~44 ms at 4x CPU), so the main thread stayed blocked for
-   * the whole gesture. Coalesce into at most one re-render per animation frame; the pending
-   * frame is cancelled in destroy() so it cannot run against a torn-down instance.
-   */
   onOptionsScroll() {
-    if (this.scrollAnimationFrame) {
-      return;
-    }
-    this.scrollAnimationFrame = requestAnimationFrame(() => {
-      this.scrollAnimationFrame = null;
-      if (this.isDestroyed) {
-        return;
-      }
-      this.setVisibleOptions(true);
-    });
+    this.setVisibleOptions(true);
   }
   onOptionsClick(e) {
     const $option = e.target.closest('.vscomp-option');
@@ -1659,8 +1388,6 @@ class VirtualSelect {
     if (VirtualSelect.activeInstances.size === 0) {
       VirtualSelect.removeGlobalListeners();
       VirtualSelect.disconnectDomObserver();
-      /** the shared text measurer is the last page-level node we own */
-      Utils.removeTextMeasurer();
     }
   }
 
@@ -1726,12 +1453,6 @@ class VirtualSelect {
       if (this.autofocus) {
         this.focus();
       }
-
-      /**
-       * Marks the end of construction. Live-region announcements are suppressed until
-       * here so an initial value or the first render does not speak on page load.
-       */
-      this.isInitialized = true;
     } catch (e) {
       this.destroy();
       throw e;
@@ -1790,16 +1511,9 @@ class VirtualSelect {
     if (this.selectAllOnlyVisible) {
       this.toggleAllOptionsClass();
     }
-
-    /** a closing dropbox must not take a highlight back - see closeDropbox() */
-    if (!this.isClosing) {
-      this.focusOption({
-        focusFirst: true
-      });
-    }
-    if (!this.hasServerSearch) {
-      this.announceSearchResults();
-    }
+    this.focusOption({
+      focusFirst: true
+    });
   }
   afterSetVisibleOptionsCount() {
     this.scrollToTop();
@@ -1885,14 +1599,6 @@ class VirtualSelect {
     this.optionsSelectedText = options.optionsSelectedText;
     this.optionSelectedText = options.optionSelectedText;
     this.allOptionsSelectedText = options.allOptionsSelectedText;
-    /** live-region announcement texts (see announce/getResultsCountMessage) */
-    this.searchResultsText = options.searchResultsText;
-    this.searchResultText = options.searchResultText;
-    this.noOptionsSelectedText = options.noOptionsSelectedText;
-    this.selectedText = options.selectedText;
-    this.loadingText = options.loadingText;
-    this.requiredErrorText = options.requiredErrorText;
-    this.minValuesErrorText = options.minValuesErrorText;
     this.clearButtonText = options.clearButtonText;
     this.moreText = options.moreText;
     this.placeholder = options.placeholder;
@@ -1907,8 +1613,7 @@ class VirtualSelect {
     this.zIndex = parseInt(options.zIndex, 10);
     this.maxValues = parseInt(options.maxValues, 10);
     this.minValues = parseInt(options.minValues, 10);
-    /** not escaped: the only sink is the hidden input's `name` *property* (see renderWrapper) */
-    this.name = options.name;
+    this.name = this.secureText(options.name);
     this.additionalClasses = options.additionalClasses;
     this.additionalDropboxClasses = options.additionalDropboxClasses;
     this.additionalDropboxContainerClasses = options.additionalDropboxContainerClasses;
@@ -1929,16 +1634,6 @@ class VirtualSelect {
     this.searchDelay = options.searchDelay;
     this.showDuration = parseInt(options.showDuration, 10);
     this.hideDuration = parseInt(options.hideDuration, 10);
-
-    /**
-     * The open/close animation is driven from JS as well as CSS, so the stylesheet's
-     * prefers-reduced-motion rule alone would still leave the popover animating for
-     * showDuration/hideDuration milliseconds. Honour the preference here too.
-     */
-    if (Utils.prefersReducedMotion()) {
-      this.showDuration = 0;
-      this.hideDuration = 0;
-    }
 
     /** @type {string[]} */
     this.selectedValues = [];
@@ -1968,25 +1663,13 @@ class VirtualSelect {
     this.optionsHeight = this.getOptionsHeight();
     this.uniqueId = this.getUniqueId();
     this.shouldFocusWrapperOnClose = true; // Initialize focus management property
-    this.isClosing = false;
     this.ariaSetSize = 0;
-    this.ariaMetadataDirty = true;
   }
 
   /**
    * @param {virtualSelectOptions} options
    */
   setDefaultProps(options) {
-    const globalDefaults = VirtualSelect.globalDefaults;
-
-    /**
-     * Resolve a prop across the precedence chain for the few defaults that are derived
-     * from another prop, so a page-level default still drives them.
-     * @param {string} key
-     */
-    const resolve = key => options[key] !== undefined ? options[key] : globalDefaults[key];
-    const keepAlwaysOpen = resolve('keepAlwaysOpen');
-    const hasOptionDescription = resolve('hasOptionDescription');
     const defaultOptions = {
       dropboxWrapper: 'self',
       valueKey: 'value',
@@ -2010,19 +1693,10 @@ class VirtualSelect {
       moreText: 'more...',
       optionsSelectedText: 'options selected',
       optionSelectedText: 'option selected',
-      /** live-region announcements (WCAG 4.1.3) - overridable for localisation */
-      searchResultsText: 'results available',
-      searchResultText: 'result available',
-      noOptionsSelectedText: 'No options selected',
-      selectedText: 'selected',
-      loadingText: 'Loading results',
-      /** validation messages; {count} in minValuesErrorText is replaced with minValues */
-      requiredErrorText: 'This field is required',
-      minValuesErrorText: 'Select at least {count} options',
       allOptionsSelectedText: 'All',
       placeholder: 'Select',
       position: 'bottom left',
-      zIndex: keepAlwaysOpen ? 1 : 2,
+      zIndex: options.keepAlwaysOpen ? 1 : 2,
       tooltipFontSize: '14px',
       tooltipAlignment: 'center',
       tooltipMaxWidth: '300px',
@@ -2044,17 +1718,11 @@ class VirtualSelect {
       showDuration: 300,
       hideDuration: 200
     };
-    if (hasOptionDescription) {
+    if (options.hasOptionDescription) {
       defaultOptions.optionsCount = 4;
       defaultOptions.optionHeight = '50px';
     }
-
-    /**
-     * Precedence: per-instance options > page-level globals > built-in defaults.
-     * Globals let a host turn a policy on once (notably enableSecureText) instead of
-     * repeating it at every call site, while an instance can still opt out explicitly.
-     */
-    return Object.assign(defaultOptions, globalDefaults, options);
+    return Object.assign(defaultOptions, options);
   }
   setPropsFromElementAttr(options) {
     const $ele = options.ele;
@@ -2078,8 +1746,6 @@ class VirtualSelect {
     $ele.name = this.name;
     $ele.disabled = false;
     $ele.required = this.required;
-    /** expose the constraint itself, not just the failure (WCAG 3.3.1) */
-    DomUtils.toggleAria(this.$allWrappers, 'required', this.required);
     $ele.autofocus = this.autofocus;
     $ele.multiple = this.multiple;
     $ele.form = $ele.closest('form');
@@ -2108,23 +1774,8 @@ class VirtualSelect {
     }
   }
   setValueMethod(newValue, silentChange) {
-    /**
-     * Option values are untrusted strings used as keys, so every value-keyed lookup in this
-     * file is built with Object.create(null) rather than `{}`.
-     *
-     * This is not about prototype pollution - `mapping['__proto__'] = true` on a plain object
-     * calls the inherited setter, which ignores a non-object value, so nothing is written and
-     * Object.prototype stays intact. The damage is to reads: `mapping['__proto__']` returns
-     * the inherited Object.prototype, which is truthy but never `=== true`, and these lookups
-     * all compare against `true`. An option whose value is `__proto__` was therefore
-     * selectable by click (that path reads data-value, not a mapping) but invisible to
-     * setValue / setDisabledOptions / setEnabledOptions, so a selection the app could read
-     * back could not be restored - and under allowNewOption it was mistaken for an unknown
-     * value and duplicated. A null prototype has no inherited members, so an arbitrary string
-     * key behaves like any other.
-     */
-    const valuesMapping = Object.create(null);
-    const valuesOrder = Object.create(null);
+    const valuesMapping = {};
+    const valuesOrder = {};
     let validValues = [];
     const isMultiSelect = this.multiple;
     // Normalize input value first
@@ -2187,7 +1838,7 @@ class VirtualSelect {
   setGroupOptionsValue(preparedValues) {
     const selectedValues = [];
     const selectedGroups = {};
-    const valuesMapping = Object.create(null);
+    const valuesMapping = {};
     preparedValues.forEach(d => {
       valuesMapping[d] = true;
     });
@@ -2248,7 +1899,7 @@ class VirtualSelect {
       }
     } else {
       disabledOptionsArr = disabledOptions.map(d => d.toString());
-      const disabledOptionsMapping = Object.create(null);
+      const disabledOptionsMapping = {};
       disabledOptionsArr.forEach(d => {
         disabledOptionsMapping[d] = true;
       });
@@ -2282,7 +1933,7 @@ class VirtualSelect {
         return d;
       });
     } else {
-      const enabledOptionsMapping = Object.create(null);
+      const enabledOptionsMapping = {};
       enabledOptions.forEach(d => {
         enabledOptionsMapping[d] = true;
       });
@@ -2317,7 +1968,7 @@ class VirtualSelect {
     const getAlias = this.getAlias.bind(this);
     let index = 0;
     let hasOptionGroup = false;
-    const disabledOptionsMapping = Object.create(null);
+    const disabledOptionsMapping = {};
     let hasEmptyValueOption = false;
     this.disabledOptions.forEach(d => {
       disabledOptionsMapping[d] = true;
@@ -2330,25 +1981,8 @@ class VirtualSelect {
           [labelKey]: d
         };
       }
-
-      /**
-       * `value` is stored verbatim; only `label` and `description` are escaped.
-       *
-       * Escaping is for HTML sinks, and the value has none: it goes into the `data-value`
-       * attribute (escaped there, at the boundary) and is otherwise only compared or used as a
-       * map key. Escaping it stored an identity the caller could not name - `a&b` became
-       * `a&amp;b`, so setValue(['a&b']) matched nothing and a value read back could not be set
-       * again.
-       *
-       * The normalised search keys derive from the *raw* text for the same reason: they are
-       * matched against what the user types into the search box, which is never HTML-escaped.
-       * Deriving them from the escaped text meant no query could match text containing `&`,
-       * `<` or `>`.
-       */
-      const rawValue = getString(d[valueKey]);
-      const rawLabel = getString(d[labelKey]);
-      const value = rawValue;
-      const label = secureText(rawLabel);
+      const value = secureText(getString(d[valueKey]));
+      const label = secureText(getString(d[labelKey]));
       const childOptions = d.options;
       const isGroupTitle = !!childOptions;
       const option = {
@@ -2356,7 +1990,7 @@ class VirtualSelect {
         value,
         valueNormalized: value.toLowerCase(),
         label,
-        labelNormalized: this.searchNormalize && rawLabel.trim() !== '' ? Utils.normalizeString(rawLabel).toLowerCase() : rawLabel.toLowerCase(),
+        labelNormalized: this.searchNormalize && label.trim() !== '' ? Utils.normalizeString(label).toLowerCase() : label.toLowerCase(),
         alias: getAlias(d[aliasKey]),
         isVisible: convertToBoolean(d.isVisible, true),
         isNew: d.isNew || false,
@@ -2374,10 +2008,9 @@ class VirtualSelect {
         option.groupIndex = d.groupIndex;
       }
       if (hasOptionDescription) {
-        const rawDescription = getString(d[descriptionKey]);
-        option.description = secureText(rawDescription);
-        /** normalised from the raw text, so a query containing `&` can match - see above */
-        option.descriptionNormalized = this.searchNormalize && rawDescription.trim() !== '' ? Utils.normalizeString(rawDescription).toLowerCase() : rawDescription.toLowerCase();
+        const description = secureText(getString(d[descriptionKey]));
+        option.description = description;
+        option.descriptionNormalized = this.searchNormalize && description.trim() !== '' ? Utils.normalizeString(description).toLowerCase() : description.toLowerCase();
       }
       if (d.customData) {
         option.customData = d.customData;
@@ -2423,7 +2056,7 @@ class VirtualSelect {
 
     /** merging already selected options details with new options */
     if (selectedOptions.length) {
-      const newOptionsValueMapping = Object.create(null);
+      const newOptionsValueMapping = {};
       optionsUpdated = true;
       newOptions.forEach(d => {
         newOptionsValueMapping[d.value] = true;
@@ -2457,18 +2090,11 @@ class VirtualSelect {
     }
     this.setVisibleOptionsCount();
     DomUtils.removeClass(this.$allWrappers, 'server-searching');
-
-    /** replace the "loading" message with the outcome of the fetch */
-    if (this.isInitialized) {
-      this.announce(this.getResultsCountMessage());
-    }
   }
   setSelectedOptions() {
     this.selectedOptions = this.options.filter(d => d.isSelected);
   }
   setSortedOptions() {
-    /** order drives aria-posinset */
-    this.ariaMetadataDirty = true;
     let sortedOptions = [...this.options];
     if (this.showSelectedOptionsFirst && this.selectedValues.length) {
       if (this.hasOptionGroup) {
@@ -2555,15 +2181,6 @@ class VirtualSelect {
     if (!disableValidation) {
       this.validate();
     }
-
-    /**
-     * Selection changes are otherwise conveyed only by the (visual) value text.
-     * Guarded on isInitialized so a value supplied at construction time is not
-     * announced before the user has interacted with anything.
-     */
-    if (this.isInitialized) {
-      this.announce(this.getSelectionMessage());
-    }
     if (!disableEvent) {
       DomUtils.dispatchEvent(this.$ele, 'change', true);
     }
@@ -2610,13 +2227,11 @@ class VirtualSelect {
           // Will cause text overflow in runtime and if so,the tooltip information is prepared
           const valueTooltipForTags = Utils.willTextOverflow($valueText.parentElement, label) ? this.getTooltipAttrText(label, false, true) : '';
 
-          /** markup in the label would otherwise land in the accessible name; a double
-           *  quote in it would break out of the attribute entirely */
+          // replace is nedded to remove html tags from aria-label (ex: when there is an icon in the label)
           let ariaLabelClearBtnTxt = '';
           if (this.ariaLabelTagClearButtonText) {
-            const stripHtmlLabel = Utils.getAriaLabelText(label);
-            const clearButtonText = Utils.getAriaLabelText(this.ariaLabelTagClearButtonText);
-            ariaLabelClearBtnTxt = `aria-label="${stripHtmlLabel}, ${clearButtonText}"`;
+            const stripHtmlLabel = label.replace(/<[^>]+>/ig, '').trim();
+            ariaLabelClearBtnTxt = `aria-label="${stripHtmlLabel}, ${this.ariaLabelTagClearButtonText}"`;
           }
           const valueTagHtml = `<span class="vscomp-value-tag" data-index="${d.index}" ${valueTooltipForTags}>
                   <span class="vscomp-value-tag-content">${label}</span>
@@ -2762,14 +2377,6 @@ class VirtualSelect {
       }
     }
     this.visibleOptionsCount = visibleOptionsCount;
-    /**
-     * Number of options matching the current filter. Kept separately because
-     * setVisibleOptions() overwrites visibleOptionsCount with the size of the rendered
-     * virtualisation window, which is not what a "N results available" message means.
-     */
-    this.filteredOptionsCount = visibleOptionsCount;
-    /** isVisible changed for the whole set, so positions and setsize must be recomputed */
-    this.ariaMetadataDirty = true;
     this.afterSetVisibleOptionsCount();
   }
 
@@ -2858,15 +2465,10 @@ class VirtualSelect {
     if (!value) {
       return;
     }
-
-    /** adds a row to the filtered set */
-    this.ariaMetadataDirty = true;
     const newOption = this.getNewOption();
     if (newOption) {
       const newIndex = newOption.index;
-
-      /** value verbatim, label escaped - the label is the only one rendered as HTML */
-      this.setOptionProp(newIndex, 'value', value);
+      this.setOptionProp(newIndex, 'value', this.secureText(value));
       this.setOptionProp(newIndex, 'label', this.secureText(value));
     } else {
       const data = {
@@ -2883,7 +2485,7 @@ class VirtualSelect {
     }
   }
   setSelectedProp() {
-    const valuesMapping = Object.create(null);
+    const valuesMapping = {};
     this.selectedValues.forEach(d => {
       valuesMapping[d] = true;
     });
@@ -2899,7 +2501,7 @@ class VirtualSelect {
       return;
     }
     const setNewOption = this.setNewOption.bind(this);
-    const availableValuesMapping = Object.create(null);
+    const availableValuesMapping = {};
     this.options.forEach(d => {
       availableValuesMapping[d.value] = true;
     });
@@ -2994,7 +2596,7 @@ class VirtualSelect {
     if (this.showSelectedOptionsFirst || !this.focusSelectedOptionOnOpen || selectedValues.length === 0) {
       return;
     }
-    const valuesMapping = Object.create(null);
+    const valuesMapping = {};
     let selectedOptionIndex;
     selectedValues.forEach(d => {
       valuesMapping[d] = true;
@@ -3069,11 +2671,9 @@ class VirtualSelect {
     return startIndex;
   }
   getTooltipAttrText(text, ellipsisOnly = false, allowHtml = false) {
-    /** quotes are escaped unconditionally by getAttributesText(); escaping again here would
-     *  leave a literal &quot; in the tooltip, and the old containsHTML() condition is what
-     *  let a tag-free payload through in the first place */
+    const tootltipText = Utils.containsHTML(text) ? Utils.replaceDoubleQuotesWithHTML(text) : text;
     const data = {
-      'data-tooltip': text || '',
+      'data-tooltip': tootltipText || '',
       'data-tooltip-enter-delay': this.tooltipEnterDelay,
       'data-tooltip-z-index': this.zIndex,
       'data-tooltip-font-size': this.tooltipFontSize,
@@ -3097,18 +2697,17 @@ class VirtualSelect {
       getString
     } = Utils;
     const secureText = this.secureText.bind(this);
-    /** value stored verbatim, search keys derived from the raw text - see setOptions() */
-    const rawValue = getString(data.value);
-    const rawLabel = getString(data.label);
-    const rawDescription = getString(data.description);
+    const value = secureText(getString(data.value));
+    const label = secureText(getString(data.label));
+    const description = secureText(getString(data.description));
     return {
       index: data.index,
-      value: rawValue,
-      valueNormalized: rawValue.toLowerCase(),
-      label: secureText(rawLabel),
-      labelNormalized: this.searchNormalize && rawLabel.trim() !== '' ? Utils.normalizeString(rawLabel).toLowerCase() : rawLabel.toLowerCase(),
-      description: secureText(rawDescription),
-      descriptionNormalized: this.searchNormalize && rawDescription.trim() !== '' ? Utils.normalizeString(rawDescription).toLowerCase() : rawDescription.toLowerCase(),
+      value,
+      valueNormalized: value.toLowerCase(),
+      label,
+      labelNormalized: this.searchNormalize && label.trim() !== '' ? Utils.normalizeString(label).toLowerCase() : label.toLowerCase(),
+      description,
+      descriptionNormalized: this.searchNormalize && description.trim() !== '' ? Utils.normalizeString(description).toLowerCase() : description.toLowerCase(),
       alias: this.getAlias(data.alias),
       isCurrentNew: data.isCurrentNew || false,
       isNew: data.isNew || false,
@@ -3134,7 +2733,7 @@ class VirtualSelect {
     return index;
   }
   getNewValue() {
-    const valuesMapping = Object.create(null);
+    const valuesMapping = {};
     this.newValues.forEach(d => {
       valuesMapping[d] = true;
     });
@@ -3192,7 +2791,7 @@ class VirtualSelect {
       }
     });
     if (keepSelectionOrder) {
-      const valuesOrder = Object.create(null);
+      const valuesOrder = {};
       selectedValues.forEach((d, i) => {
         valuesOrder[d] = i;
       });
@@ -3206,7 +2805,7 @@ class VirtualSelect {
       labelKey,
       disabledOptions
     } = this;
-    const disabledOptionsValueMapping = Object.create(null);
+    const disabledOptionsValueMapping = {};
     const result = [];
     disabledOptions.forEach(value => {
       disabledOptionsValueMapping[value] = true;
@@ -3344,8 +2943,6 @@ class VirtualSelect {
     } else {
       DomUtils.dispatchEvent(this.$ele, 'beforeOpen');
       DomUtils.setAria(this.$wrapper, 'expanded', true);
-      /** the search input is its own combobox over the listbox, so it needs the state too */
-      DomUtils.setAria(this.$searchInput, 'expanded', true);
     }
     this.setDropboxWrapperWidth();
     DomUtils.removeClass(this.$allWrappers, 'closed');
@@ -3405,22 +3002,9 @@ class VirtualSelect {
     } else {
       DomUtils.dispatchEvent(this.$ele, 'beforeClose');
       DomUtils.setAria(this.$wrapper, 'expanded', false);
-      DomUtils.setAria(this.$searchInput, 'expanded', false);
-      /**
-       * No option is active once the list is gone - and the highlight has to go with it,
-       * here, synchronously.
-       *
-       * afterHidePopper() already calls removeOptionFocus(), but for popover-backed
-       * instances it only runs when the hide transition ends (~200ms later). Until then the
-       * previous highlight and `focusedOptionIndex` survived the close, so reopening within
-       * that window resumed navigation from the old position instead of the first option:
-       * the next Up/Down moved one step past where the user expected, which on a grouped
-       * multi-select meant Enter landed on the first child option instead of toggling the
-       * group title. removeOptionFocus() is a no-op when nothing is highlighted, so leaving
-       * the afterHidePopper() call in place costs nothing and still covers the silent path.
-       */
-      this.removeOptionFocus();
-      this.setActiveDescendant('');
+      DomUtils.setAria(this.$wrapper, 'activedescendant', '');
+      // Also clear aria-activedescendant on the listbox container
+      DomUtils.setAria(this.$dropboxContainer, 'activedescendant', '');
     }
     if (this.dropboxPopover && !isSilent) {
       this.dropboxPopover.hide();
@@ -3433,26 +3017,7 @@ class VirtualSelect {
     } else {
       this.afterHidePopper();
     }
-
-    /**
-     * Clearing the filter runs afterSetSearchValue(), which highlights the first visible
-     * option again. That undid the removeOptionFocus() above whenever the user had typed
-     * something: the highlight and aria-activedescendant came straight back on a combobox
-     * already marked aria-expanded="false", and focusOption() pulled DOM focus onto an option
-     * that is about to be display:none - so the keyboard position ended up on <body>.
-     *
-     * isClosing is scoped to this one call rather than the whole method because everything
-     * above it (the wrapper refocus in particular) still needs the real state. The reset runs
-     * in a finally: if setSearchValue() ever threw, a stuck flag would silently stop the
-     * highlight coming back after *every* later filter clear, which is far harder to diagnose
-     * than the exception itself.
-     */
-    this.isClosing = true;
-    try {
-      this.setSearchValue('');
-    } finally {
-      this.isClosing = false;
-    }
+    this.setSearchValue('');
   }
   afterHidePopper() {
     const isSilent = this.isSilentClose;
@@ -3807,14 +3372,7 @@ class VirtualSelect {
     if (!isAllSelected && this.selectAllOnlyVisible && this.searchValue !== '' && (this.visibleOptionsCount > 0 || this.searchValue === '')) {
       isAllVisibleSelected = this.isAllOptionsSelected(true);
     }
-    const isChecked = isAllSelected || isAllVisibleSelected;
-    DomUtils.toggleClass(this.$toggleAllCheckbox, 'checked', isChecked);
-    /**
-     * Mirror the visual checked state onto the role="checkbox" host. This is the single
-     * point every selection path funnels through (select all, deselect all, per-option
-     * clicks, group toggles, setValue, reset), so the exposed state cannot drift.
-     */
-    DomUtils.setAria(this.$toggleAllButton, 'checked', isChecked);
+    DomUtils.toggleClass(this.$toggleAllCheckbox, 'checked', isAllSelected || isAllVisibleSelected);
     this.isAllSelected = isAllSelected;
   }
   isAllOptionsSelected(visibleOnly) {
@@ -3862,7 +3420,7 @@ class VirtualSelect {
       selectedValues,
       selectAllOnlyVisible
     } = this;
-    const valuesMapping = Object.create(null);
+    const valuesMapping = {};
     const {
       removeItemFromArray
     } = Utils;
@@ -3907,15 +3465,7 @@ class VirtualSelect {
     this.toggleOptionSelectedState($ele, isSelected);
   }
   toggleFocusedProp(index, isFocused = false) {
-    /**
-     * Explicitly against null, not truthiness. focusedOptionIndex comes from
-     * DomUtils.getData($ele, 'index') with no type, so today it is the *string* "0" and a
-     * truthiness test happens to pass for the first option. Normalise it to a number anywhere
-     * and index 0 would stop being cleared, so its `isFocused` prop would survive - and
-     * renderOptions() re-applies `.focused` and tabindex="0" from that prop, bringing the
-     * stale highlight back through the data path on the next render.
-     */
-    if (this.focusedOptionIndex !== null && this.focusedOptionIndex !== undefined) {
+    if (this.focusedOptionIndex) {
       this.setOptionProp(this.focusedOptionIndex, 'isFocused', false);
     }
     this.setOptionProp(index, 'isFocused', isFocused);
@@ -3974,8 +3524,6 @@ class VirtualSelect {
   removeNewOption() {
     const newOption = this.getNewOption();
     if (newOption) {
-      /** removes a row from the filtered set */
-      this.ariaMetadataDirty = true;
       this.removeOption(newOption.index);
     }
   }
@@ -4095,9 +3643,6 @@ class VirtualSelect {
   serverSearch() {
     DomUtils.removeClass(this.$allWrappers, 'has-no-search-results');
     DomUtils.addClass(this.$allWrappers, 'server-searching');
-
-    /** the spinner is a visual-only cue; announce that a fetch is in flight */
-    this.announce(this.loadingText);
     this.setSelectedOptions();
     this.onServerSearch(this.searchValue, this);
   }
@@ -4132,50 +3677,16 @@ class VirtualSelect {
       return true;
     }
     let hasError = false;
-    let errorText = '';
     const {
       selectedValues,
       minValues
     } = this;
-    if (this.required) {
-      if (Utils.isEmpty(selectedValues)) {
-        hasError = true;
-        errorText = this.requiredErrorText;
-      } else if (this.multiple && minValues && selectedValues.length < minValues) {
-        /** required minium options not selected */
-        hasError = true;
-        errorText = Utils.getString(this.minValuesErrorText).replace('{count}', minValues);
-      }
+    if (this.required && (Utils.isEmpty(selectedValues) || (/** required minium options not selected */
+    this.multiple && minValues && selectedValues.length < minValues))) {
+      hasError = true;
     }
     DomUtils.toggleClass(this.$allWrappers, 'has-error', hasError);
-
-    /**
-     * Previously the only signal was the `has-error` class recolouring the toggle button
-     * border: invisible to assistive technology and, being colour alone, a 1.4.1 failure.
-     * Expose the state (aria-invalid), give it a text message, point the combobox at that
-     * message (aria-describedby) and announce it.
-     */
-    DomUtils.toggleAria(this.$allWrappers, 'invalid', hasError);
-    this.setErrorMessage(hasError ? errorText : '');
     return !hasError;
-  }
-
-  /**
-   * Show or clear the validation message and its association with the combobox.
-   * An empty message removes aria-describedby rather than pointing at empty text.
-   *
-   * @param {string} message
-   */
-  setErrorMessage(message) {
-    if (!this.$errorMessage) {
-      return;
-    }
-    const text = message || '';
-    this.$errorMessage.textContent = text;
-    DomUtils.toggleAria(this.$allWrappers, 'describedby', !!text, this.$errorMessage.id);
-    if (text) {
-      this.announce(text);
-    }
   }
 
   /**
@@ -4228,12 +3739,6 @@ class VirtualSelect {
     // Clear any other pending timeouts so their callbacks don't run on a destroyed instance
     this.clearManagedTimeouts();
 
-    // Drop any queued scroll re-render so it cannot touch detached DOM
-    if (this.scrollAnimationFrame) {
-      cancelAnimationFrame(this.scrollAnimationFrame);
-      this.scrollAnimationFrame = null;
-    }
-
     /** Remove all event listeners to prevent memory leaks and ensure proper cleanup */
     this.removeEvents();
     if (this.hasDropboxWrapper) {
@@ -4262,20 +3767,8 @@ class VirtualSelect {
     if (!text || !this.enableSecureText) {
       return text;
     }
-
-    /**
-     * escape potentially harmful markup so label/value/description cannot trigger XSS.
-     *
-     * Quotes are deliberately *not* rewritten here. They were, and the text node's innerHTML
-     * then escaped the `&` that introduced - so `The "City" of Light` used to be stored as
-     * `The &amp;quot;City&amp;quot; of Light`, shown to the user as `The &quot;City&quot; of
-     * Light`, and made unsearchable, because labelNormalized derives from the stored text.
-     * Quotes only need escaping inside an attribute, and that now happens at each attribute
-     * boundary instead (data-value in renderOptions, DomUtils.getAttributesText) - which also
-     * covers the sinks this pre-escaping never reached, such as an attribute written while
-     * enableSecureText is off.
-     */
-    this.$secureText.nodeValue = text;
+    /** escape potentially harmful JavaScript so, label and value fields cannot trigger XSS */
+    this.$secureText.nodeValue = Utils.replaceDoubleQuotesWithHTML(text);
     return this.$secureDiv.innerHTML;
   }
 
@@ -4296,78 +3789,9 @@ class VirtualSelect {
     // eslint-disable-next-line no-console
     console.warn('[virtual-select] Option text (label, value, description) and any `customData` used in ' + 'markup are rendered as HTML and are NOT escaped because `enableSecureText` is disabled ' + '(the default, kept off for performance on large datasets). If any option text can come ' + 'from untrusted input, set `enableSecureText: true` to prevent XSS. ' + 'Docs: https://sa-si-dev.github.io/virtual-select/#/properties');
   }
-
-  /**
-   * Write a message into the instance's polite live region (WCAG 4.1.3 Status Messages).
-   *
-   * Identical consecutive messages are intentionally left alone: re-writing the same text
-   * produces no DOM mutation, so assistive technology does not repeat "No results found"
-   * on every further keystroke that still matches nothing.
-   *
-   * @param {string} message
-   */
-  announce(message) {
-    if (!this.$liveRegion) {
-      return;
-    }
-    const text = message || '';
-    if (this.$liveRegion.textContent !== text) {
-      this.$liveRegion.textContent = text;
-    }
-  }
-
-  /**
-   * Message describing how many options the current filter matched.
-   * @returns {string}
-   */
-  getResultsCountMessage() {
-    const count = this.filteredOptionsCount || 0;
-    if (count === 0) {
-      return this.noSearchResultsText;
-    }
-    return `${count} ${count === 1 ? this.searchResultText : this.searchResultsText}`;
-  }
-
-  /**
-   * Message describing the current selection.
-   * @returns {string}
-   */
-  getSelectionMessage() {
-    const count = this.selectedValues.length;
-    if (count === 0) {
-      return this.noOptionsSelectedText;
-    }
-    if (this.multiple) {
-      return `${count} ${count === 1 ? this.optionSelectedText : this.optionsSelectedText}`;
-    }
-
-    /** option flags are updated before setValue(), so the label is already current */
-    const label = this.getDisplayValue() || this.selectedValues[0];
-    return `${label} ${this.selectedText}`;
-  }
-
-  /**
-   * Announce the match count, but only while the user is actually searching.
-   * setSearchValue('') also runs on close and after a value is set; announcing there
-   * would read a stale count into the user's ear for an interaction they did not make.
-   */
-  announceSearchResults() {
-    if (!this.isInitialized || !this.isOpened() || document.activeElement !== this.$searchInput) {
-      return;
-    }
-    this.announce(this.getResultsCountMessage());
-  }
   toggleRequired(isRequired) {
     this.required = Utils.convertToBoolean(isRequired);
     this.$ele.required = this.required;
-    DomUtils.toggleAria(this.$allWrappers, 'required', this.required);
-
-    /** dropping the requirement also drops any error it produced */
-    if (!this.required) {
-      DomUtils.toggleClass(this.$allWrappers, 'has-error', false);
-      DomUtils.toggleAria(this.$allWrappers, 'invalid', false);
-      this.setErrorMessage('');
-    }
   }
   toggleOptionSelectedState($ele, value) {
     let isSelected = value;
@@ -4383,83 +3807,17 @@ class VirtualSelect {
     }
     DomUtils.toggleClass($ele, 'focused', isFocused);
     DomUtils.setAttr($ele, 'tabindex', isFocused ? '0' : '-1');
-
-    /**
-     * Only *taking* the highlight moves DOM focus. Clearing it used to focus the element it
-     * had just un-highlighted, which is either pointless (focusOption immediately focuses the
-     * new option anyway) or actively wrong: on close it pulled focus into a dropbox that is
-     * about to be hidden, fighting the wrapper refocus in closeDropbox().
-     */
-    if (isFocused && document.activeElement !== this.$searchInput) {
+    if (document.activeElement !== this.$searchInput) {
       $ele.focus();
     }
-
-    /**
-     * Publish the highlight on the elements that can carry it: the wrapper and the search
-     * input, both role="combobox". It used to also go on $dropboxContainer, a plain div
-     * with no role, where aria-activedescendant is meaningless - and never on the search
-     * input, which is the element that actually holds focus while navigating.
-     */
-    this.setActiveDescendant(isFocused ? $ele.id : '');
-  }
-
-  /**
-   * Point the combobox elements at the active option, or clear the reference.
-   * @param {string} optionId
-   */
-  setActiveDescendant(optionId) {
-    DomUtils.toggleAria(this.$wrapper, 'activedescendant', !!optionId, optionId);
-    DomUtils.toggleAria(this.$searchInput, 'activedescendant', !!optionId, optionId);
+    if (isFocused) {
+      DomUtils.setAria(this.$wrapper, 'activedescendant', $ele.id);
+      // Also set aria-activedescendant on the listbox container for better screen reader support
+      DomUtils.setAria(this.$dropboxContainer, 'activedescendant', $ele.id);
+    }
   }
 
   /** static methods - start */
-
-  /**
-   * Set page-level default props applied to every instance created afterwards.
-   *
-   * The motivating case is security: option text is interpolated into innerHTML and is only
-   * escaped when `enableSecureText` is on, which it is not by default (escaping costs per
-   * option, and large trusted lists should not pay for it). A host that does render
-   * untrusted option text can turn escaping on once here rather than at every call site:
-   *
-   *   VirtualSelect.setGlobalDefaults({ enableSecureText: true });
-   *
-   * These are defaults, not overrides: an instance passing the prop explicitly still wins,
-   * so a host forwarding `enableSecureText` on every init must stop doing so (or forward
-   * `true`) for this to take effect. Calls merge, so features can be configured separately.
-   * Only instances created after the call are affected.
-   *
-   * @param {Partial<virtualSelectOptions>} props
-   */
-  static setGlobalDefaults(props) {
-    if (!props || typeof props !== 'object') {
-      VirtualSelect.globalDefaults = {};
-      return;
-    }
-
-    /** `ele` and `options` are per-instance by nature and would alias state across instances */
-    const safeProps = {
-      ...props
-    };
-    delete safeProps.ele;
-    delete safeProps.options;
-    VirtualSelect.globalDefaults = {
-      ...VirtualSelect.globalDefaults,
-      ...safeProps
-    };
-  }
-
-  /**
-   * Currently active page-level defaults.
-   * A copy, so callers cannot mutate the live object.
-   *
-   * @returns {Partial<virtualSelectOptions>}
-   */
-  static getGlobalDefaults() {
-    return {
-      ...VirtualSelect.globalDefaults
-    };
-  }
   static init(options) {
     let $eleArray = options.ele;
     if (!$eleArray) {
@@ -4689,9 +4047,6 @@ VirtualSelect.lastInteractedInstance = null;
 
 // Ensures the "enableSecureText disabled" warning is logged at most once per page
 VirtualSelect.secureTextWarningShown = false;
-
-// Page-level default props, applied under per-instance options (see setGlobalDefaults)
-VirtualSelect.globalDefaults = {};
 
 /** polyfill to fix an issue in ie browser */
 if (typeof NodeList !== 'undefined' && NodeList.prototype && !NodeList.prototype.forEach) {
