@@ -190,7 +190,7 @@ export class VirtualSelect {
       `<div id="vscomp-ele-wrapper-${uniqueId}" class="vscomp-ele-wrapper ${wrapperClasses}" tabindex="0"
         role="combobox" aria-haspopup="listbox" aria-controls="vscomp-dropbox-container-${uniqueId}"
         aria-expanded="${isExpanded}" ${ariaLabelledbyText} ${ariaLabelText}>
-        <input type="hidden" name="${this.name}" class="vscomp-hidden-input">
+        <input type="hidden" class="vscomp-hidden-input">
         <div class="${toggleButtonClasses}">
           <div class="vscomp-value" ${valueTooltip}>
             ${this.placeholder}
@@ -228,6 +228,23 @@ export class VirtualSelect {
     this.$clearButton = this.$ele.querySelector('.vscomp-clear-button');
     this.$valueText = this.$ele.querySelector('.vscomp-value');
     this.$hiddenInput = this.$ele.querySelector('.vscomp-hidden-input');
+
+    /**
+     * The submitting field's name is set as a DOM property, not interpolated into the template.
+     *
+     * `name="${this.name}"` made the attribute an HTML sink: a double quote closed it early, so
+     * the remainder of the value was parsed as markup (real elements, an injection) while the
+     * field kept only the truncated prefix - or, when the payload also swallowed the following
+     * `class="vscomp-hidden-input"`, no field was found at all and the first setValue() threw
+     * inside the constructor. Either way the form silently stopped submitting the right name,
+     * and that included legitimate names such as `items["a"]`.
+     *
+     * A property assignment performs no HTML parsing, so there is nothing to break out of and
+     * nothing to escape - which is also why `name` no longer goes through secureText(): the
+     * escaping only ever protected this sink, and applying it here corrupted the submitted
+     * field name into `items[&quot;a&quot;]`.
+     */
+    this.$hiddenInput.name = this.name;
     this.$liveRegion = this.$ele.querySelector('.vscomp-live-region');
     this.$errorMessage = this.$ele.querySelector('.vscomp-error-message');
     this.$dropbox = this.$dropboxContainer.querySelector('.vscomp-dropbox');
@@ -444,8 +461,20 @@ export class VirtualSelect {
         }
       }
 
+      /**
+       * The option value is an untrusted string going straight into an attribute, so a double
+       * quote in it closed data-value early and everything after it was parsed as markup - a
+       * value of `x" data-pwned="1" z="` put a live data-pwned attribute on the option row,
+       * whether or not enableSecureText was on.
+       *
+       * Escaping cannot break reading the value back: the parser turns &quot; into a quote, and
+       * setOptionAttr() rewrites data-value through the DOM API on every render anyway.
+       */
+      const optionValueAttr = Utils.replaceDoubleQuotesWithHTML(Utils.getString(d.value));
+
       html += `<div role="option" aria-selected="${isSelected}" id="vscomp-option-${uniqueId}-${index}"
-          class="${optionClasses}" data-value="${d.value}" data-index="${index}" data-visible-index="${d.visibleIndex}"
+          class="${optionClasses}" data-value="${optionValueAttr}" data-index="${index}"
+          data-visible-index="${d.visibleIndex}"
           tabindex=${tabIndexValue} ${groupIndexText} ${ariaDisabledText} ${ariaLabel} ${ariaAttrs}
         >
           ${leftSection}
@@ -1238,7 +1267,8 @@ export class VirtualSelect {
     this.zIndex = parseInt(options.zIndex, 10);
     this.maxValues = parseInt(options.maxValues, 10);
     this.minValues = parseInt(options.minValues, 10);
-    this.name = this.secureText(options.name);
+    /** not escaped: the only sink is the hidden input's `name` *property* (see renderWrapper) */
+    this.name = options.name;
     this.additionalClasses = options.additionalClasses;
     this.additionalDropboxClasses = options.additionalDropboxClasses;
     this.additionalDropboxContainerClasses = options.additionalDropboxContainerClasses;
@@ -1454,8 +1484,23 @@ export class VirtualSelect {
   }
 
   setValueMethod(newValue, silentChange) {
-    const valuesMapping = {};
-    const valuesOrder = {};
+    /**
+     * Option values are untrusted strings used as keys, so every value-keyed lookup in this
+     * file is built with Object.create(null) rather than `{}`.
+     *
+     * This is not about prototype pollution - `mapping['__proto__'] = true` on a plain object
+     * calls the inherited setter, which ignores a non-object value, so nothing is written and
+     * Object.prototype stays intact. The damage is to reads: `mapping['__proto__']` returns
+     * the inherited Object.prototype, which is truthy but never `=== true`, and these lookups
+     * all compare against `true`. An option whose value is `__proto__` was therefore
+     * selectable by click (that path reads data-value, not a mapping) but invisible to
+     * setValue / setDisabledOptions / setEnabledOptions, so a selection the app could read
+     * back could not be restored - and under allowNewOption it was mistaken for an unknown
+     * value and duplicated. A null prototype has no inherited members, so an arbitrary string
+     * key behaves like any other.
+     */
+    const valuesMapping = Object.create(null);
+    const valuesOrder = Object.create(null);
     let validValues = [];
     const isMultiSelect = this.multiple;
     // Normalize input value first
@@ -1524,7 +1569,7 @@ export class VirtualSelect {
   setGroupOptionsValue(preparedValues) {
     const selectedValues = [];
     const selectedGroups = {};
-    const valuesMapping = {};
+    const valuesMapping = Object.create(null);
 
     preparedValues.forEach((d) => {
       valuesMapping[d] = true;
@@ -1598,7 +1643,7 @@ export class VirtualSelect {
       }
     } else {
       disabledOptionsArr = disabledOptions.map((d) => d.toString());
-      const disabledOptionsMapping = {};
+      const disabledOptionsMapping = Object.create(null);
 
       disabledOptionsArr.forEach((d) => {
         disabledOptionsMapping[d] = true;
@@ -1643,7 +1688,7 @@ export class VirtualSelect {
         return d;
       });
     } else {
-      const enabledOptionsMapping = {};
+      const enabledOptionsMapping = Object.create(null);
 
       enabledOptions.forEach((d) => {
         enabledOptionsMapping[d] = true;
@@ -1675,7 +1720,7 @@ export class VirtualSelect {
     const getAlias = this.getAlias.bind(this);
     let index = 0;
     let hasOptionGroup = false;
-    const disabledOptionsMapping = {};
+    const disabledOptionsMapping = Object.create(null);
     let hasEmptyValueOption = false;
 
     this.disabledOptions.forEach((d) => {
@@ -1776,7 +1821,7 @@ export class VirtualSelect {
 
     /** merging already selected options details with new options */
     if (selectedOptions.length) {
-      const newOptionsValueMapping = {};
+      const newOptionsValueMapping = Object.create(null);
       optionsUpdated = true;
 
       newOptions.forEach((d) => {
@@ -2306,7 +2351,7 @@ export class VirtualSelect {
   }
 
   setSelectedProp() {
-    const valuesMapping = {};
+    const valuesMapping = Object.create(null);
 
     this.selectedValues.forEach((d) => {
       valuesMapping[d] = true;
@@ -2326,7 +2371,7 @@ export class VirtualSelect {
     }
 
     const setNewOption = this.setNewOption.bind(this);
-    const availableValuesMapping = {};
+    const availableValuesMapping = Object.create(null);
 
     this.options.forEach((d) => {
       availableValuesMapping[d.value] = true;
@@ -2423,7 +2468,7 @@ export class VirtualSelect {
       return;
     }
 
-    const valuesMapping = {};
+    const valuesMapping = Object.create(null);
     let selectedOptionIndex;
 
     selectedValues.forEach((d) => {
@@ -2516,9 +2561,11 @@ export class VirtualSelect {
   }
 
   getTooltipAttrText(text, ellipsisOnly = false, allowHtml = false) {
-    const tootltipText = Utils.containsHTML(text) ? Utils.replaceDoubleQuotesWithHTML(text) : text;
+    /** quotes are escaped unconditionally by getAttributesText(); escaping again here would
+     *  leave a literal &quot; in the tooltip, and the old containsHTML() condition is what
+     *  let a tag-free payload through in the first place */
     const data = {
-      'data-tooltip': tootltipText || '',
+      'data-tooltip': text || '',
       'data-tooltip-enter-delay': this.tooltipEnterDelay,
       'data-tooltip-z-index': this.zIndex,
       'data-tooltip-font-size': this.tooltipFontSize,
@@ -2592,7 +2639,7 @@ export class VirtualSelect {
   }
 
   getNewValue() {
-    const valuesMapping = {};
+    const valuesMapping = Object.create(null);
 
     this.newValues.forEach((d) => {
       valuesMapping[d] = true;
@@ -2659,7 +2706,7 @@ export class VirtualSelect {
     });
 
     if (keepSelectionOrder) {
-      const valuesOrder = {};
+      const valuesOrder = Object.create(null);
 
       selectedValues.forEach((d, i) => {
         valuesOrder[d] = i;
@@ -2673,7 +2720,7 @@ export class VirtualSelect {
 
   getDisabledOptions() {
     const { valueKey, labelKey, disabledOptions } = this;
-    const disabledOptionsValueMapping = {};
+    const disabledOptionsValueMapping = Object.create(null);
     const result = [];
 
     disabledOptions.forEach((value) => {
@@ -3449,7 +3496,7 @@ export class VirtualSelect {
 
     const groupIndex = DomUtils.getData($ele, 'index', 'number');
     const { selectedValues, selectAllOnlyVisible } = this;
-    const valuesMapping = {};
+    const valuesMapping = Object.create(null);
     const { removeItemFromArray } = Utils;
 
     selectedValues.forEach((d) => {
@@ -3907,8 +3954,20 @@ export class VirtualSelect {
     if (!text || !this.enableSecureText) {
       return text;
     }
-    /** escape potentially harmful JavaScript so, label and value fields cannot trigger XSS */
-    this.$secureText.nodeValue = Utils.replaceDoubleQuotesWithHTML(text);
+
+    /**
+     * escape potentially harmful markup so label/value/description cannot trigger XSS.
+     *
+     * Quotes are deliberately *not* rewritten here. They were, and the text node's innerHTML
+     * then escaped the `&` that introduced - so `The "City" of Light` used to be stored as
+     * `The &amp;quot;City&amp;quot; of Light`, shown to the user as `The &quot;City&quot; of
+     * Light`, and made unsearchable, because labelNormalized derives from the stored text.
+     * Quotes only need escaping inside an attribute, and that now happens at each attribute
+     * boundary instead (data-value in renderOptions, DomUtils.getAttributesText) - which also
+     * covers the sinks this pre-escaping never reached, such as an attribute written while
+     * enableSecureText is off.
+     */
+    this.$secureText.nodeValue = text;
 
     return this.$secureDiv.innerHTML;
   }
