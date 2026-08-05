@@ -18,17 +18,40 @@ import { mountVs, unmountVs } from '../support/mount';
 
 describe('Security: global defaults for enableSecureText', () => {
   const mountId = 'vs-sec-global';
-  const payload = '<img src=x onerror="window.__vsGlobalXss=true">';
+
+  /**
+   * Every test detonates into its own marker, because the payload here is genuinely live.
+   *
+   * Test isolation is off and `cy.visit()` only changes the hash, so all of these tests share a
+   * single window that is never reloaded — this file already depends on that (see the
+   * `secureTextWarningShown` reset in the last test). The insecure-by-default test creates a real
+   * `<img src=x>`, and an image error event is asynchronous: measured against the built bundle it
+   * fires 7 ms after the "the element exists" assertion has already passed, and *again* at 313 ms,
+   * because the dropbox re-renders when its 300 ms open animation finishes and so produces a
+   * second live image.
+   *
+   * With one page-wide marker, that second detonation landed two tests later — after the
+   * `beforeEach` that had reset it — and failed whichever test was running at the time while the
+   * component under test was behaving perfectly. A marker per test removes the cross-talk instead
+   * of papering over it with a wait.
+   */
+  let markerSeq = 0;
+  const newMarker = () => `__vsGlobalXss${(markerSeq += 1)}`;
+  const payloadFor = (marker: string) => `<img src=x onerror="window.${marker}=true">`;
+  const markerValue = (win: Window, marker: string) => (win as unknown as Record<string, unknown>)[marker];
 
   const resetGlobals = (win: Window) => {
+    /**
+     * `setGlobalDefaults()` merges, so `{}` cannot clear a key an earlier test set, and nothing
+     * reloads the page to do it for us. Supplying `undefined` is exactly what the merge treats as
+     * "not supplied", so the built-in defaults are back in force.
+     */
     // @ts-expect-error - VirtualSelect is attached to window by the bundle
-    win.VirtualSelect.setGlobalDefaults({});
-    // @ts-expect-error - test marker
-    win.__vsGlobalXss = undefined;
+    win.VirtualSelect.setGlobalDefaults({ enableSecureText: undefined, placeholder: undefined });
   };
 
-  const mountWithPayload = (win: Window, extra: Record<string, unknown> = {}) =>
-    mountVs(win, mountId, { options: [{ label: payload, value: 'p1' }], ...extra });
+  const mountWithPayload = (win: Window, marker: string, extra: Record<string, unknown> = {}) =>
+    mountVs(win, mountId, { options: [{ label: payloadFor(marker), value: 'p1' }], ...extra });
 
   beforeEach(() => {
     cy.viewport(1280, 800);
@@ -53,19 +76,32 @@ describe('Security: global defaults for enableSecureText', () => {
   });
 
   it('still renders option text as raw HTML by default, so behaviour is unchanged', () => {
-    cy.window().then((win) => mountWithPayload(win));
+    const marker = newMarker();
+
+    cy.window().then((win) => mountWithPayload(win, marker));
 
     cy.get(`#${mountId}`).find('.vscomp-toggle-button').click();
 
     // The documented, insecure-by-default behaviour: a real element is created.
     cy.get(`#${mountId}`).find('.vscomp-option[data-value="p1"] img[src="x"]').should('exist');
+
+    /**
+     * And it is not inert. Asserting the detonation rather than only the element proves the
+     * default really does execute attacker-controlled markup, which is the whole reason
+     * setGlobalDefaults() exists; `should` retries, and the first error event lands within ~10 ms.
+     */
+    cy.window().should((win) => {
+      expect(markerValue(win, marker), 'the insecure default really does execute the payload').to.eq(true);
+    });
   });
 
   it('escapes option text for instances created after a global default is set', () => {
+    const marker = newMarker();
+
     cy.window().then((win) => {
       // @ts-expect-error - bundle global
       win.VirtualSelect.setGlobalDefaults({ enableSecureText: true });
-      mountWithPayload(win);
+      mountWithPayload(win, marker);
     });
 
     cy.get(`#${mountId}`).find('.vscomp-toggle-button').click();
@@ -76,8 +112,7 @@ describe('Security: global defaults for enableSecureText', () => {
     cy.get(`#${mountId}`).find('.vscomp-option[data-value="p1"] .vscomp-option-text').should('contain', 'img');
 
     cy.window().then((win) => {
-      // @ts-expect-error - test marker
-      expect(win.__vsGlobalXss, 'payload must not execute').to.not.eq(true);
+      expect(markerValue(win, marker), 'payload must not execute').to.not.eq(true);
     });
   });
 
@@ -91,10 +126,12 @@ describe('Security: global defaults for enableSecureText', () => {
      * the wrapper property may be undefined. It also contradicts setDefaultProps()'s own `resolve()`
      * helper, which already treats `undefined` as "not supplied".
      */
+    const marker = newMarker();
+
     cy.window().then((win) => {
       // @ts-expect-error - bundle global
       win.VirtualSelect.setGlobalDefaults({ enableSecureText: true });
-      mountWithPayload(win, { enableSecureText: undefined });
+      mountWithPayload(win, marker, { enableSecureText: undefined });
     });
 
     cy.get(`#${mountId}`).should(($ele) => {
@@ -102,20 +139,25 @@ describe('Security: global defaults for enableSecureText', () => {
     });
 
     cy.get(`#${mountId}`).find('.vscomp-toggle-button').click();
+
+    // Assert the option rendered *first*: `img` never existing is also true of a list that never
+    // rendered at all, so on its own that check can pass for the wrong reason.
+    cy.get(`#${mountId}`).find('.vscomp-option[data-value="p1"] .vscomp-option-text').should('contain', 'img');
     cy.get(`#${mountId}`).find('img[src="x"]').should('not.exist');
 
     cy.window().then((win) => {
-      // @ts-expect-error - test marker
-      expect(win.__vsGlobalXss, 'payload must not execute').to.not.eq(true);
+      expect(markerValue(win, marker), 'payload must not execute').to.not.eq(true);
     });
   });
 
   it('lets an explicit per-instance option override the global default', () => {
+    const marker = newMarker();
+
     cy.window().then((win) => {
       // @ts-expect-error - bundle global
       win.VirtualSelect.setGlobalDefaults({ enableSecureText: true });
       // Opting back out for a trusted, HTML-rendering list.
-      mountWithPayload(win, { enableSecureText: false });
+      mountWithPayload(win, marker, { enableSecureText: false });
     });
 
     cy.get(`#${mountId}`).find('.vscomp-toggle-button').click();
@@ -161,6 +203,8 @@ describe('Security: global defaults for enableSecureText', () => {
   });
 
   it('suppresses the insecure-by-default console warning when the global default is on', () => {
+    const marker = newMarker();
+
     cy.window().then((win) => {
       // @ts-expect-error - internal flag reset so the once-per-page guard does not hide the result
       win.VirtualSelect.secureTextWarningShown = false;
@@ -168,7 +212,7 @@ describe('Security: global defaults for enableSecureText', () => {
 
       // @ts-expect-error - bundle global
       win.VirtualSelect.setGlobalDefaults({ enableSecureText: true });
-      mountWithPayload(win);
+      mountWithPayload(win, marker);
     });
 
     cy.get('@consoleWarn').should((spy: any) => {
