@@ -135,9 +135,24 @@ export class VirtualSelect {
     let toggleButtonClasses = 'vscomp-toggle-button';
     const valueTooltip = this.showValueAsTags ? '' : this.getTooltipAttrText(this.placeholder, true, true);
     const clearButtonTooltip = this.getTooltipAttrText(this.clearButtonText);
-    const ariaLabelledbyText = this.ariaLabelledby ? `aria-labelledby="${this.ariaLabelledby}"` : '';
-    const ariaLabelText = this.ariaLabelText ? `aria-label="${this.ariaLabelText}"` : '';
-    const ariaLabelClearBtnTxt = this.ariaLabelClearButtonText ? `aria-label="${this.ariaLabelClearButtonText}"` : '';
+    /**
+     * These props are developer-supplied but still reach an attribute directly, and none of them
+     * passes through secureText() - so enableSecureText never protected them. A double quote
+     * closed the attribute early: the payload after it was parsed as markup, and the accessible
+     * name kept only the prefix, which is a WCAG 4.1.2 defect as much as an injection.
+     *
+     * getAriaLabelText() for the accessible names, because it is what AI-14 already applies to
+     * option and group labels: strip markup, then escape quotes. Plain quote escaping for
+     * aria-labelledby, which is an IDREF list rather than prose - stripping tags there would hide
+     * a caller error instead of fixing it.
+     */
+    const ariaLabelledbyText = this.ariaLabelledby
+      ? `aria-labelledby="${Utils.replaceDoubleQuotesWithHTML(Utils.getString(this.ariaLabelledby))}"`
+      : '';
+    const ariaLabelText = this.ariaLabelText ? `aria-label="${Utils.getAriaLabelText(this.ariaLabelText)}"` : '';
+    const ariaLabelClearBtnTxt = this.ariaLabelClearButtonText
+      ? `aria-label="${Utils.getAriaLabelText(this.ariaLabelClearButtonText)}"`
+      : '';
     let isExpanded = false;
 
     if (this.additionalClasses) {
@@ -512,8 +527,18 @@ export class VirtualSelect {
        * select/deselect was silent to assistive technology (WCAG 4.1.2 / 1.3.1).
        * aria-checked is kept in sync by toggleAllOptionsClass().
        */
+      /**
+       * selectAllText has two sinks, and only the attribute one is escaped.
+       *
+       * The visible label below is rendered as HTML and that works today - `Pick <b>all</b>`
+       * produces a real <b> - so escaping it would be a visible regression for anyone styling
+       * the Select All label. The accessible name, by contrast, was raw: a quote broke out of
+       * the attribute, and markup was announced as tag soup. getAriaLabelText() is the same
+       * treatment the group-header aria-label a few methods up already applies to this exact
+       * prop, which is why that sink was safe while this one was not.
+       */
       checkboxHtml = `<span class="vscomp-toggle-all-button" tabindex="0" role="checkbox"
-        aria-checked="false" aria-label="${this.selectAllText}">
+        aria-checked="false" aria-label="${Utils.getAriaLabelText(this.selectAllText)}">
           <span class="checkbox-icon vscomp-toggle-all-checkbox"></span>
           <span class="vscomp-toggle-all-label">${this.selectAllText}</span>
         </span>`;
@@ -521,7 +546,7 @@ export class VirtualSelect {
 
     if (this.hasSearch) {
       const ariaLabelSearchClearBtnTxt = this.ariaLabelSearchClearButtonText
-        ? `aria-label="${this.ariaLabelSearchClearButtonText}"`
+        ? `aria-label="${Utils.getAriaLabelText(this.ariaLabelSearchClearButtonText)}"`
         : '';
 
       searchInput = `<label for="vscomp-search-input-${this.uniqueId}" class="vscomp-search-label"
@@ -529,7 +554,8 @@ export class VirtualSelect {
       >
         ${this.searchFormLabel}
       </label>
-      <input type="text" class="vscomp-search-input" placeholder="${this.searchPlaceholderText}"
+      <input type="text" class="vscomp-search-input"
+        placeholder="${Utils.replaceDoubleQuotesWithHTML(Utils.getString(this.searchPlaceholderText))}"
         id="vscomp-search-input-${this.uniqueId}"
         role="combobox" aria-autocomplete="list" aria-expanded="false"
         aria-controls="vscomp-options-container-${this.uniqueId}">
