@@ -119,6 +119,61 @@ describe('A11y: status announcements via a live region', () => {
       liveRegion().should('have.text', 'Option 3 selected');
     });
 
+    /**
+     * The announcement is read as text, so it must carry human-readable text.
+     *
+     * A single select announces the chosen label, and with `enableSecureText: true` the stored
+     * label is HTML-escaped by design (it is rendered as HTML elsewhere). Announcing it verbatim
+     * put the escape sequence into the region: `Tom &amp; Jerry selected`, which a screen reader
+     * reads out as the entity rather than as "Tom and Jerry". The region is written with
+     * textContent, so the escaping buys nothing here and costs intelligibility.
+     */
+    it('announces an ampersand in a label as an ampersand', () => {
+      cy.viewport(1280, 800);
+      cy.visit('get-started');
+      cy.window().then((win) =>
+        mountVs(win, mountId, {
+          options: [
+            { label: 'Tom & Jerry', value: 'tj' },
+            { label: 'Plain', value: 'p' },
+          ],
+          enableSecureText: true,
+        }),
+      );
+
+      cy.get(`#${mountId}`).find('.vscomp-toggle-button').click();
+      cy.get(`#${mountId}`).find('.vscomp-option[data-value="tj"]').click();
+
+      liveRegion().should('have.text', 'Tom & Jerry selected');
+    });
+
+    /**
+     * Decoding alone is not enough, which is what this case pins.
+     *
+     * A label can carry markup as well as escaping. Undoing the escaping turns
+     * `&lt;i class="flag"&gt;&lt;/i&gt; France` into `<i class="flag"></i> France` — still not
+     * speech, just a different kind of noise. The region is reduced to plain text, the same
+     * treatment accessible names get.
+     */
+    it('announces a label containing markup as words, not as tags', () => {
+      cy.viewport(1280, 800);
+      cy.visit('get-started');
+      cy.window().then((win) =>
+        mountVs(win, mountId, {
+          options: [
+            { label: '<i class="flag"></i> France', value: 'fr' },
+            { label: 'Plain', value: 'p' },
+          ],
+          enableSecureText: true,
+        }),
+      );
+
+      cy.get(`#${mountId}`).find('.vscomp-toggle-button').click();
+      cy.get(`#${mountId}`).find('.vscomp-option[data-value="fr"]').click();
+
+      liveRegion().should('have.text', 'France selected');
+    });
+
     it('announces when the selection is cleared', () => {
       mount({ multiple: true });
 

@@ -2022,16 +2022,26 @@ export class VirtualSelect {
     DomUtils.setAttr(this.$clearButton, 'tabindex', hasValue ? '0' : '-1');
     DomUtils.setAria(this.$clearButton, 'hidden', hasValue === false);
 
+    let isValid = true;
+
     if (!disableValidation) {
-      this.validate();
+      isValid = this.validate();
     }
 
     /**
      * Selection changes are otherwise conveyed only by the (visual) value text.
      * Guarded on isInitialized so a value supplied at construction time is not
      * announced before the user has interacted with anything.
+     *
+     * Skipped when validation just failed. validate() announces its message through the same
+     * polite region, and a polite region is read from its *final* content - so announcing the
+     * selection summary here overwrote the validation message in the same tick and the user
+     * never heard it. That silenced every interactive path (the clear button, deselecting below
+     * minValues) while still setting aria-invalid and showing the message on screen, which is
+     * the 3.3.1 failure this region exists to fix. The error is the more urgent of the two, and
+     * it already implies the selection state.
      */
-    if (this.isInitialized) {
+    if (this.isInitialized && isValid) {
       this.announce(this.getSelectionMessage());
     }
 
@@ -3635,7 +3645,18 @@ export class VirtualSelect {
     this.afterValueSet();
 
     if (formReset) {
+      /**
+       * A native form reset clears the error state, not just the colour that showed it.
+       *
+       * Removing `has-error` alone left aria-invalid="true" on the combobox and
+       * aria-describedby pointing at an error element that still held its text - so the control
+       * stayed announced as invalid, describing a message the user could no longer see, with no
+       * interaction able to clear it. setErrorMessage('') empties the text and drops
+       * aria-describedby, and does not announce (it only announces a non-empty message).
+       */
       DomUtils.removeClass(this.$allWrappers, 'has-error');
+      DomUtils.toggleAria(this.$allWrappers, 'invalid', false);
+      this.setErrorMessage('');
     }
 
     DomUtils.dispatchEvent(this.$ele, 'reset');
@@ -4059,7 +4080,15 @@ export class VirtualSelect {
       return;
     }
 
-    const text = message || '';
+    /**
+     * Reduced to plain text because the region is written with textContent, so whatever is put
+     * there is read out literally. A single select announces the chosen label, and a label can
+     * carry both escaping and markup: with enableSecureText on the region said
+     * "Tom &amp; Jerry selected", and decoding alone would only have turned that into
+     * "<i class="flag"></i> France selected". Neither is speech. Messages the component composes
+     * itself contain no markup, so this is a no-op for them.
+     */
+    const text = Utils.getPlainText(message || '');
 
     if (this.$liveRegion.textContent !== text) {
       this.$liveRegion.textContent = text;

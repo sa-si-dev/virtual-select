@@ -301,25 +301,65 @@ export class Utils {
   }
 
   /**
+   * Undo the escaping secureText() applies, recovering the text a human should read.
+   *
+   * Option label and description are stored HTML-escaped when enableSecureText is on, because
+   * they are inserted as HTML. Anywhere that text is consumed as *text* instead - an accessible
+   * name, a live-region announcement - the escape sequences have to come back off, or the user
+   * is read `&amp;` and `&lt;i class=...`.
+   *
+   * `&amp;` is decoded last: doing it first would turn a literal `&amp;lt;` into `&lt;` and then
+   * into `<`, inventing markup the consumer never wrote.
+   *
+   * @static
+   * @param {string} text
+   * @return {string}
+   * @memberof Utils
+   */
+  static decodeSecureText(text) {
+    return Utils.getString(text)
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&amp;/g, '&');
+  }
+
+  /**
+   * Reduce label text to the words a human should hear or read.
+   *
+   * Labels may legitimately contain markup - an icon, <b>, a <br>. Wherever that text is
+   * consumed as text (an accessible name, a live-region announcement) the markup is meaningless
+   * and is read out as tag soup. Tags collapse to a single space so adjacent words do not run
+   * together, so "France<br>Paris" does not become one word.
+   *
+   * The escaping is undone first. With enableSecureText on the label arrives already escaped, so
+   * the tag pattern found no `<` to match and the markup passed through verbatim - the strip was
+   * a no-op in exactly the mode escaping is enabled in.
+   *
+   * @static
+   * @param {string} text
+   * @return {string}
+   * @memberof Utils
+   */
+  static getPlainText(text) {
+    return Utils.decodeSecureText(text)
+      .replace(/<[^>]+>/gi, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  /**
    * Turn a label into text that is safe and sensible inside an aria-label attribute.
    *
-   * Labels may legitimately contain markup - an icon, <b>, a <br>. Interpolated raw, that
-   * markup became tag soup in the accessible name, and a double quote in the label broke out
-   * of the attribute and truncated the name. Tags collapse to a single space so adjacent
-   * words do not run together (so "France<br>Paris" does not collapse into one word), then the
-   * remaining quotes are escaped.
+   * Plain text, then escaped for the attribute - covering `&` as well as `"`, so a bare
+   * ampersand in a label is a valid character reference rather than raw markup, and a double
+   * quote can no longer close the attribute early and truncate the name.
    *
    * @static
    * @param {string} text
    * @returns {string}
    */
   static getAriaLabelText(text) {
-    const plainText = Utils.getString(text)
-      .replace(/<[^>]+>/gi, ' ')
-      .replace(/\s+/g, ' ')
-      .trim();
-
-    return Utils.replaceDoubleQuotesWithHTML(plainText);
+    return Utils.escapeAttributeValue(Utils.getPlainText(text));
   }
 
   /**

@@ -148,4 +148,80 @@ describe('A11y: required and error state are exposed', () => {
       errorMessage().should('not.be.visible');
     });
   });
+
+  /**
+   * The message has to survive the interaction that produced it.
+   *
+   * setValue() validates and then announces the selection summary, both in the same tick. A
+   * polite live region is read from its *final* content, so the summary silently replaced the
+   * validation message: the region said "No options selected" while aria-invalid was true and
+   * the visible message said "This field is required". On every interactive path - the clear
+   * button, or deselecting below minValues - the error was therefore shown but never spoken,
+   * which is the 3.3.1 failure this work set out to fix.
+   *
+   * Only the direct validate() call was covered before, and that path announces correctly.
+   */
+  context('the announcement survives the interaction', () => {
+    it('keeps the required message after the clear button empties the field', () => {
+      mount({ required: true });
+
+      cy.get(`#${mountId}`).then(($e) => $e[0].setValue?.(['o1']));
+      cy.get(`#${mountId}`).find('.vscomp-clear-button').click();
+
+      wrapper().should('have.attr', 'aria-invalid', 'true');
+      errorMessage().should('have.text', 'This field is required');
+      liveRegion().should('have.text', 'This field is required');
+    });
+
+    it('keeps the minValues message after deselecting below the minimum', () => {
+      mount({ multiple: true, required: true, minValues: 2 });
+
+      cy.get(`#${mountId}`).find('.vscomp-toggle-button').click();
+      cy.get(`#${mountId}`).find('.vscomp-option[data-value="o1"]').click();
+      cy.get(`#${mountId}`).find('.vscomp-option[data-value="o2"]').click();
+      wrapper().should('not.have.attr', 'aria-invalid');
+
+      // back under the minimum: the message appears, and must also be the thing announced
+      cy.get(`#${mountId}`).find('.vscomp-option[data-value="o2"]').click();
+
+      wrapper().should('have.attr', 'aria-invalid', 'true');
+      liveRegion().should('have.text', 'Select at least 2 options');
+    });
+
+    it('still announces the selection summary when validation passes', () => {
+      mount({ required: true });
+
+      cy.get(`#${mountId}`).find('.vscomp-toggle-button').click();
+      cy.get(`#${mountId}`).find('.vscomp-option[data-value="o1"]').click();
+
+      wrapper().should('not.have.attr', 'aria-invalid');
+      liveRegion().should('have.text', 'Option 1 selected');
+    });
+  });
+
+  /**
+   * A native form reset must clear the error state, not just its colour.
+   *
+   * reset(formReset = true) is the handler for the form's own reset event. It removed the
+   * `has-error` class but left aria-invalid="true" and aria-describedby pointing at an error
+   * element that still held its text - so the control stayed announced as invalid, describing a
+   * message the user could no longer see, with no way to clear it. toggleRequired(false) was
+   * updated for this; reset() was not.
+   */
+  context('form reset clears the whole error state', () => {
+    it('drops aria-invalid, aria-describedby and the message text', () => {
+      mount({ required: true });
+
+      validate();
+      wrapper().should('have.attr', 'aria-invalid', 'true');
+      wrapper().should('have.attr', 'aria-describedby');
+
+      cy.get(`#${mountId}`).then(($e) => $e[0].reset?.(true));
+
+      wrapper().should('not.have.class', 'has-error');
+      wrapper().should('not.have.attr', 'aria-invalid');
+      wrapper().should('not.have.attr', 'aria-describedby');
+      errorMessage().should('have.text', '');
+    });
+  });
 });

@@ -75,6 +75,39 @@ describe('A11y: accessible names are plain text', { testIsolation: true }, () =>
       .and('not.contain', '<i');
   });
 
+  /**
+   * The stripping must also work when `enableSecureText` is on — which is the mode this release
+   * actively promotes, via setGlobalDefaults() and the OutSystems wrapper default.
+   *
+   * With escaping on, the label reaches getAriaLabelText() *already escaped*, so its
+   * `/<[^>]+>/gi` tag pattern finds no `<` to match: the markup passed straight through and the
+   * accessible name became the literal tag soup `<i class="flag"></i> France`. Same option, same
+   * code path, opposite outcome depending on a security flag — so the fix was a no-op exactly
+   * where the escaping it depends on is enabled.
+   */
+  [false, true].forEach((enableSecureText) => {
+    it(`strips markup regardless of enableSecureText (${enableSecureText})`, () => {
+      mount([{ label: 'Europe', options: [{ label: '<i class="flag"></i> France', value: 'fr' }] }], {
+        enableSecureText,
+      });
+
+      option('fr')
+        .should('have.attr', 'aria-label')
+        .and('contain', 'France')
+        .and('not.contain', '<i')
+        .and('not.contain', 'class=');
+    });
+  });
+
+  it('announces an ampersand in a label as an ampersand', () => {
+    // The escaped storage form must not leak into the accessible name as `&amp;`.
+    mount([{ label: 'Europe', options: [{ label: 'Tom & Jerry', value: 'tj' }] }], {
+      enableSecureText: true,
+    });
+
+    option('tj').should('have.attr', 'aria-label').and('contain', 'Tom & Jerry').and('not.contain', '&amp;');
+  });
+
   it('strips markup from the tag clear button name', () => {
     mount([{ label: '<i class="flag"></i> France', value: 'fr' }], {
       multiple: true,
