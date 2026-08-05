@@ -153,7 +153,13 @@ describe('Accessibility attributes - virtualized options metadata', () => {
   });
 
   it('has proper ARIA attributes on listbox and options container for screen reader navigation', () => {
-    cy.open(id);
+    /**
+     * openFresh() rather than cy.open(): this case reads options by DOM position
+     * (`.first()`, `.eq(1)`), and on a virtualised list of 100k those positions depend on
+     * `scrollTop`. openFresh pins the scroll position and asserts no option is already
+     * highlighted, so "one press reaches the first option" holds regardless of test order.
+     */
+    cy.openFresh(id);
 
     // Cache references to relevant elements for repeated assertions
     cy.getDropbox(null, id)
@@ -188,9 +194,12 @@ describe('Accessibility attributes - virtualized options metadata', () => {
         .should('have.attr', 'aria-labelledby', comboboxId);
     });
 
-    // Navigate to first option using keyboard (Down arrow from combobox)
-    cy.getVs(id).find('.vscomp-ele-wrapper').type('{downarrow}');
-    cy.wait(100); // Wait for focus to update
+    /**
+     * pressKeys() sends a real key press to the search input rather than chaining .type()
+     * onto a node. The fixed cy.wait() it replaces was redundant anyway - the .should()
+     * below retries - and a fixed wait cannot fix the underlying race.
+     */
+    cy.getVs(id).pressKeys('ArrowDown');
 
     // Get first option and verify it's focused
     cy.getDropbox(null, id)
@@ -213,9 +222,15 @@ describe('Accessibility attributes - virtualized options metadata', () => {
     // ...and is not published on the role-less container, which has no role to carry it
     cy.get('@roleLessContainer').should('not.have.attr', 'aria-activedescendant');
 
-    // Navigate to second option using arrow key
-    cy.get('@firstOption').type('{downarrow}');
-    cy.wait(100); // Wait for focus to update
+    /**
+     * This is the press that made the case flaky. It used to be `cy.get('@firstOption')
+     * .type('{downarrow}')` - chained onto the option node aliased above, which the
+     * virtualiser replaces on every render. By the time .type() ran, that node could already
+     * be detached, so the keydown never reached a handler, the highlight never advanced, and
+     * the assertion below timed out with "expected <div.vscomp-option> to have class focused".
+     * Observed failing about 1 run in 5, more often under CPU load.
+     */
+    cy.getVs(id).pressKeys('ArrowDown');
 
     // Get second option
     cy.getDropbox(null, id)
