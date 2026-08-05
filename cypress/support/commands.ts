@@ -39,16 +39,31 @@ Cypress.Commands.add('open', (id) => {
  * alive across tests). This command asserts its way to the state it needs instead of waiting a
  * fixed time for it:
  *
- *   1. clear the value and ask the dropbox to close;
+ *   1. clear the value, the filter and the scroll position, and ask the dropbox to close;
  *   2. wait for it to actually be closed (`closed` class), so the click below always opens;
  *   3. click, and wait for it to actually be open;
  *   4. assert no option carries the highlight, so a following ArrowDown always lands on the
  *      first option and press counts stop depending on test order.
+ *
+ * All four inputs a press count can depend on are pinned, not three. `scrollTop` is one of
+ * them because `focusOption()` resolves "the first option" through
+ * `getFirstVisibleOptionIndex()`, i.e. `scrollTop / optionHeight` - and opening does not reset
+ * it (`setScrollTop()` returns early with no selection, and `scrollToTop()` only runs under
+ * `showSelectedOptionsFirst`). The filter is cleared explicitly rather than relying on
+ * `closeDropbox()` doing it, because `closeDropbox()` returns early when already closed and
+ * `reset()` never touches the search value.
  */
 Cypress.Commands.add('openFresh', (id) => {
   cy.getVs(id).then(($ele) => {
     const vs = $ele[0].virtualSelect;
     vs.reset(false, true);
+
+    /** guarded: instances built with search: false have no $searchInput to write to */
+    if (vs.$searchInput) {
+      vs.setSearchValue('');
+    }
+
+    vs.$optionsContainer.scrollTop = 0;
     vs.closeDropbox();
   });
 
@@ -56,6 +71,13 @@ Cypress.Commands.add('openFresh', (id) => {
   cy.getVs(id).click();
   cy.getVs(id).find('.vscomp-wrapper').should('not.have.class', 'closed');
   cy.getDropbox(null, id).find('.vscomp-option.focused').should('not.exist');
+
+  cy.getVs(id).should(($ele) => {
+    const vs = $ele[0].virtualSelect;
+
+    expect(vs.searchValue, 'search value').to.equal('');
+    expect(vs.$optionsContainer.scrollTop, 'options scrollTop').to.equal(0);
+  });
 
   cy.getVs(id);
 });
