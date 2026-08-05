@@ -71,18 +71,60 @@ describe('A11y: closing the dropbox clears option navigation state', { testIsola
     cy.get(`#${mountId}`).find('.vscomp-wrapper').should('not.have.attr', 'aria-activedescendant');
   });
 
-  it('starts navigation at the first option again after a close and reopen', () => {
+  /**
+   * Reopened in the *same tick* as the close, deliberately. Waiting for the `closed` class
+   * first would wait out `afterHidePopper()`, which clears the highlight on its own - so the
+   * case could never observe the bug it exists for. This is the user-visible symptom: reopen
+   * before the hide transition finishes and navigation must still start at the top.
+   */
+  it('starts navigation at the first option again when reopened mid hide-transition', () => {
     mount();
     openAndHighlightFirst();
+    cy.get(`#${mountId}`).pressKeys('ArrowDown');
+    cy.get(`#${mountId}`).find('.vscomp-option.focused').should('have.attr', 'data-index', '1');
 
-    cy.get(`#${mountId}`).then(($ele) => $ele[0].virtualSelect.closeDropbox());
-    cy.get(`#${mountId}`).find('.vscomp-wrapper').should('have.class', 'closed');
+    cy.get(`#${mountId}`).then(($ele) => {
+      const vs = $ele[0].virtualSelect;
 
-    cy.get(`#${mountId}`).find('.vscomp-toggle-button').click();
+      vs.closeDropbox();
+      expect(vs.isOpened(), 'still mid hide-transition').to.equal(true);
+      vs.openDropbox();
+    });
+
     cy.get(`#${mountId}`).pressKeys('ArrowDown');
 
-    // data-index 1 here would mean the pre-close highlight was carried over.
+    // data-index 2 here would mean the pre-close highlight was carried over.
     cy.get(`#${mountId}`).find('.vscomp-option.focused').should('have.attr', 'data-index', '0');
+  });
+
+  /**
+   * The same close, with a filter typed. Clearing the filter is the last thing closeDropbox()
+   * does, and it used to re-highlight the first visible option - undoing the clear above and
+   * pulling DOM focus onto an option that is about to be hidden.
+   */
+  it('keeps the highlight cleared when a search value has to be cleared too', () => {
+    mount({ search: true });
+
+    cy.get(`#${mountId}`).find('.vscomp-toggle-button').click();
+    cy.get(`#${mountId}`).find('.vscomp-search-input').type('Option');
+    cy.get(`#${mountId}`).pressKeys('ArrowDown');
+    cy.get(`#${mountId}`).find('.vscomp-option.focused').should('exist');
+
+    cy.get(`#${mountId}`).then(($ele) => {
+      const vs = $ele[0].virtualSelect;
+
+      vs.closeDropbox();
+
+      expect(vs.isOpened(), 'still mid hide-transition').to.equal(true);
+      expect(vs.searchValue, 'search value').to.equal('');
+      expect(vs.$dropboxContainer.querySelector('.vscomp-option.focused'), 'highlighted option').to.equal(null);
+      expect(vs.focusedOptionIndex, 'focusedOptionIndex').to.equal(null);
+      expect(vs.$wrapper.getAttribute('aria-activedescendant'), 'aria-activedescendant').to.equal(null);
+    });
+
+    // Focus must not have been dragged into the dropbox that is being hidden.
+    cy.get(`#${mountId}`).find('.vscomp-wrapper').should('have.class', 'closed');
+    cy.focused().should('have.class', 'vscomp-wrapper');
   });
 
   it('toggles a whole group on and off with Enter on its group title', () => {
@@ -115,6 +157,25 @@ describe('A11y: closing the dropbox clears option navigation state', { testIsola
   it('still returns focus to the combobox when Escape closes the dropbox', () => {
     mount();
     openAndHighlightFirst();
+
+    cy.get(`#${mountId}`).find('.vscomp-wrapper').trigger('keydown', { key: 'Escape', keyCode: 27, which: 27 });
+
+    cy.get(`#${mountId}`).find('.vscomp-wrapper').should('have.class', 'closed');
+    cy.focused().should('have.class', 'vscomp-wrapper');
+  });
+
+  /**
+   * Same control on the layout where it actually bites. showAsPopup skips initDropboxPopover(),
+   * so closeDropbox() runs afterHidePopper() synchronously - i.e. right after the wrapper
+   * refocus and while the options are still visible and therefore still focusable. That is the
+   * path where clearing the highlight used to steal focus for real.
+   */
+  it('still returns focus to the combobox when a popup layout closes', () => {
+    mount({ showAsPopup: true });
+
+    cy.get(`#${mountId}`).find('.vscomp-toggle-button').click();
+    cy.get(`#${mountId}`).pressKeys('ArrowDown');
+    cy.get(`#${mountId}`).find('.vscomp-option.focused').should('exist');
 
     cy.get(`#${mountId}`).find('.vscomp-wrapper').trigger('keydown', { key: 'Escape', keyCode: 27, which: 27 });
 

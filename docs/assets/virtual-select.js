@@ -1701,9 +1701,13 @@ class VirtualSelect {
     if (this.selectAllOnlyVisible) {
       this.toggleAllOptionsClass();
     }
-    this.focusOption({
-      focusFirst: true
-    });
+
+    /** a closing dropbox must not take a highlight back - see closeDropbox() */
+    if (!this.isClosing) {
+      this.focusOption({
+        focusFirst: true
+      });
+    }
     if (!this.hasServerSearch) {
       this.announceSearchResults();
     }
@@ -1874,6 +1878,7 @@ class VirtualSelect {
     this.optionsHeight = this.getOptionsHeight();
     this.uniqueId = this.getUniqueId();
     this.shouldFocusWrapperOnClose = true; // Initialize focus management property
+    this.isClosing = false;
     this.ariaSetSize = 0;
     this.ariaMetadataDirty = true;
   }
@@ -3300,7 +3305,20 @@ class VirtualSelect {
     } else {
       this.afterHidePopper();
     }
+
+    /**
+     * Clearing the filter runs afterSetSearchValue(), which highlights the first visible
+     * option again. That undid the removeOptionFocus() above whenever the user had typed
+     * something: the highlight and aria-activedescendant came straight back on a combobox
+     * already marked aria-expanded="false", and focusOption() pulled DOM focus onto an option
+     * that is about to be display:none - so the keyboard position ended up on <body>.
+     *
+     * isClosing is scoped to this one call rather than the whole method because everything
+     * above it (the wrapper refocus in particular) still needs the real state.
+     */
+    this.isClosing = true;
     this.setSearchValue('');
+    this.isClosing = false;
   }
   afterHidePopper() {
     const isSilent = this.isSilentClose;
@@ -3755,7 +3773,15 @@ class VirtualSelect {
     this.toggleOptionSelectedState($ele, isSelected);
   }
   toggleFocusedProp(index, isFocused = false) {
-    if (this.focusedOptionIndex) {
+    /**
+     * Explicitly against null, not truthiness. focusedOptionIndex comes from
+     * DomUtils.getData($ele, 'index') with no type, so today it is the *string* "0" and a
+     * truthiness test happens to pass for the first option. Normalise it to a number anywhere
+     * and index 0 would stop being cleared, so its `isFocused` prop would survive - and
+     * renderOptions() re-applies `.focused` and tabindex="0" from that prop, bringing the
+     * stale highlight back through the data path on the next render.
+     */
+    if (this.focusedOptionIndex !== null && this.focusedOptionIndex !== undefined) {
       this.setOptionProp(this.focusedOptionIndex, 'isFocused', false);
     }
     this.setOptionProp(index, 'isFocused', isFocused);
