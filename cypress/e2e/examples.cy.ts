@@ -62,7 +62,12 @@ describe('Accessibility attributes - virtualized options metadata', () => {
   const id = 'single-select';
 
   it('exposes total list size and sequential positions without search', () => {
-    cy.open(id);
+    /**
+     * openFresh() because this case reads `.first()` with no search to reset the scroll
+     * offset, and on a virtualised 100k list the first *rendered* option is whatever
+     * `scrollTop` happens to be pointing at.
+     */
+    cy.openFresh(id);
 
     cy.getDropbox(null, id)
       .find('[role="option"][aria-setsize]')
@@ -269,7 +274,9 @@ describe('Arrow key behavior in search input - cursor movement', () => {
   const idMultiple = 'multiple-select'
 
   it('moves the caret to the beginning with Home, and navigates options with Up arrow', () => {
-    cy.open(idMultiple);
+    /** openFresh(): this suite drives the caret and the option highlight by key press, so it
+     * must start from a known open state with nothing already highlighted. */
+    cy.openFresh(idMultiple);
     // Type some text in search input
     cy.getVs(idMultiple).typeValue('ption 9', true);
     // Home moves the caret to the beginning (Up arrow now drives the option list instead)
@@ -324,7 +331,9 @@ describe('Arrow key behavior - no option navigation when search input focused', 
   const searchInputSelector = '.vscomp-search-input';
 
   it('should not navigate options when arrow keys used in search input', () => {
-    cy.open(idMultiple);
+    /** openFresh(): this suite drives the caret and the option highlight by key press, so it
+     * must start from a known open state with nothing already highlighted. */
+    cy.openFresh(idMultiple);
     // Type in search input - use text that will filter to a few options
     cy.getVs(idMultiple).typeValue('Option 1', true);
     // Wait for filtering to complete
@@ -351,7 +360,9 @@ describe('Arrow key behavior - Home and End keys in search input', () => {
   const idMultiple = 'multiple-select'
 
   it('should work correctly with Home and End keys in search input', () => {
-    cy.open(idMultiple);
+    /** openFresh(): this suite drives the caret and the option highlight by key press, so it
+     * must start from a known open state with nothing already highlighted. */
+    cy.openFresh(idMultiple);
     // Type some text using search to ensure dropdown is properly opened
     cy.getVs(idMultiple).typeValue('ption 55', true);
     // Press Home to go to beginning
@@ -379,7 +390,9 @@ describe('Arrow key behavior - focus management and accessibility', () => {
   const idMultiple = 'multiple-select'
 
   it('should allow normal text editing in search while arrows navigate the list', () => {
-    cy.open(idMultiple);
+    /** openFresh(): this suite drives the caret and the option highlight by key press, so it
+     * must start from a known open state with nothing already highlighted. */
+    cy.openFresh(idMultiple);
     // Clear and test more text editing using realistic data
     cy.getVs(idMultiple).typeValue('tion 123', true);
     // Home goes to the beginning; Up/Down are option navigation
@@ -844,7 +857,9 @@ describe('Label with description', () => {
   });
 
   it('has description on load', () => {
-    cy.open(id).checkFirstOption('Option 1 Description 1');
+    /** openFresh() pins scrollTop: checkFirstOption() reads `.first()`, and there is no search
+     * here to scroll the list back to the top. */
+    cy.openFresh(id).checkFirstOption('Option 1 Description 1');
   });
 
   it('has description on scroll', () => {
