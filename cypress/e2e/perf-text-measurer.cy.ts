@@ -71,14 +71,27 @@ describe('Perf: one shared text measurer', { testIsolation: true }, () => {
 
     cy.window().then((win) => unmountVs(win, mountId));
 
-    // The docs page hosts other instances, so only assert removal once none remain.
+    /**
+     * The docs page hosts its own instances, so unmounting ours does not reach the state this
+     * case is named for. It used to *test* for that state — `if (remaining === 0)` — which is
+     * false on every run, so its only assertion was skipped every time: the case reported green
+     * while verifying nothing, and `Utils.removeTextMeasurer()` was never exercised.
+     *
+     * Create the state instead of waiting for it. Safe to tear the page down here: this describe
+     * runs with `testIsolation: true`, so the next case gets a fresh page, and this is the last
+     * case in the file either way.
+     */
     cy.window().then((win) => {
       // @ts-expect-error - bundle global
-      const remaining = win.VirtualSelect.activeInstances?.size ?? 0;
+      const instances = Array.from(win.VirtualSelect.activeInstances) as Array<{ destroy: () => void }>;
 
-      if (remaining === 0) {
-        cy.get('.vscomp-text-measurer').should('not.exist');
-      }
+      expect(instances, 'the docs page has instances to destroy').to.have.length.greaterThan(0);
+      instances.forEach((vs) => vs.destroy());
+
+      // @ts-expect-error - bundle global
+      expect(win.VirtualSelect.activeInstances.size, 'no instances left').to.equal(0);
     });
+
+    cy.get('.vscomp-text-measurer').should('not.exist');
   });
 });

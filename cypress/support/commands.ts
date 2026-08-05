@@ -4,13 +4,18 @@ import 'cypress-real-events';
 const dropboxCloseDuration = 200;
 const optionsScrollDuration = 300;
 
-type SpecialKey = 'Tab' | 'Enter' | 'Escape' | 'ArrowUp' | 'ArrowDown' | 'ArrowLeft' | 'ArrowRight' | 'Home' | 'End';
+/**
+ * The one source of truth for pressKeys(): the type, the guard and the error message are all
+ * derived from it, so they cannot drift out of step with each other.
+ */
+const SPECIAL_KEYS = [
+  'Tab', 'Enter', 'Escape', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Home', 'End',
+] as const;
+
+type SpecialKey = (typeof SPECIAL_KEYS)[number];
 
 // Type guard function
-const isValidKey = (key: string): key is SpecialKey => {
-  const specialKeys = ['Tab', 'Enter', 'Escape', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Home', 'End'];
-  return specialKeys.includes(key);
-};
+const isValidKey = (key: string): key is SpecialKey => (SPECIAL_KEYS as readonly string[]).includes(key);
 
 Cypress.Commands.add('goToSection', (title) => {
   cy.get('a').contains(title).click({force: true});
@@ -173,18 +178,32 @@ Cypress.Commands.add('typeValue', { prevSubject: true }, (vsElem, value, clearTe
 });
 
 Cypress.Commands.add('pressKeys', { prevSubject: true }, (vsElem, keys) => {
-  const searchInput = cy.getDropbox(vsElem).find('.vscomp-search-input');
-  searchInput.focus();
+  /**
+   * Focus the search input when there is one and the wrapper otherwise.
+   *
+   * This used to resolve `.vscomp-search-input` unconditionally, so any `search: false` instance
+   * failed with an opaque "expected to find element" - the very case `cy.openFresh()` guards
+   * above. The wrapper is the right fallback rather than a workaround: it carries
+   * `role="combobox"` and `tabindex="0"`, and it is where `onKeyDown` is actually bound
+   * (`$allWrappers`, src/virtual-select.js:589), which is how a keystroke in the search input
+   * reaches the handler in the first place - by bubbling up to it.
+   */
+  cy.get(vsElem).then(($ele) => {
+    const vs = $ele[0].virtualSelect;
+
+    cy.wrap(vs.$searchInput || vs.$wrapper).focus();
+  });
 
   const keysToPress = Array.isArray(keys) ? keys : [keys];
-  
+
   keysToPress.forEach(key => {
     if (isValidKey(key)) {
       // TypeScript now knows this is a valid key type
       cy.realPress(key);
     } else {
-      // Log an error or fail the test if an invalid key is passed
-      throw new Error(`Invalid key provided: "${key}". Must be one of: ${keysToPress.join(', ')}`);
+      /** the *valid* set - this used to interpolate the caller's own keys, so an invalid key
+       * produced `Invalid key provided: "Foo". Must be one of: Foo` */
+      throw new Error(`Invalid key provided: "${key}". Must be one of: ${SPECIAL_KEYS.join(', ')}`);
     }
   });
   cy.get(vsElem);

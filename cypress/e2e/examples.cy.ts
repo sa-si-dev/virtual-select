@@ -326,28 +326,73 @@ describe('Arrow key behavior in search input - cursor movement', () => {
   });
 });
 
-describe('Arrow key behavior - no option navigation when search input focused', () => {
+describe('Arrow key behavior - option navigation from the search input keeps focus in the field', () => {
   const idMultiple = 'multiple-select'
-  const searchInputSelector = '.vscomp-search-input';
 
-  it('should not navigate options when arrow keys used in search input', () => {
+  /**
+   * This branch deliberately made Up/Down navigate options *from* the search input
+   * (`04abbe9`, `navigateOptions()`), and the other suites were updated for it - this one was not.
+   * It was called "no option navigation when search input focused" and asserted only that DOM
+   * focus stayed put, which is still true, so it passed while documenting the contract that had
+   * been removed on purpose. It also could not tell "navigates without stealing focus" from
+   * "does nothing at all".
+   *
+   * What is pinned now, all three measured against the built bundle:
+   *   - the highlight moves on Down and moves back on Up;
+   *   - DOM focus never leaves the field, so it stays typeable;
+   *   - `aria-activedescendant` follows the highlight, which is what makes the navigation
+   *     perceivable to a screen reader while focus stays in the input (WCAG 4.1.2).
+   *
+   * `cy.realPress()` rather than `cy.pressKeys()`: the latter focuses the field before pressing,
+   * which would make the focus assertion self-fulfilling. Focus is already in the field here,
+   * left there by `typeValue()`.
+   */
+  it('navigates options with the arrow keys without moving focus out of the search input', () => {
     /** openFresh(): this suite drives the caret and the option highlight by key press, so it
      * must start from a known open state with nothing already highlighted. */
     cy.openFresh(idMultiple);
-    // Type in search input - use text that will filter to a few options
+    // Text that filters to more than one option, so there is somewhere to navigate to.
     cy.getVs(idMultiple).typeValue('Option 1', true);
-    // Wait for filtering to complete
-    cy.wait(100);
-    // Verify search input is focused
+    // The filter is applied synchronously on input, so the field's value is the gate to wait on.
+    cy.getDropbox(null, idMultiple).find('.vscomp-search-input').should('have.value', 'Option 1');
+    cy.getDropbox(null, idMultiple).find('.vscomp-option').should('have.length.greaterThan', 1);
     cy.checkActiveElementHasClass('vscomp-search-input');
-    // Press Down arrow while focused on search input
-    cy.getVs(idMultiple).pressKeys('ArrowDown');
-    // Search input should still be focused (arrow key should move cursor, not navigate options)
+
+    cy.realPress('ArrowDown');
+
+    // Focus stays in the field - and an option is now highlighted, which is the half the old
+    // version of this case never checked.
     cy.checkActiveElementHasClass('vscomp-search-input');
-    // Press Up arrow while focused on search input
-    cy.getVs(idMultiple).pressKeys('ArrowUp');
-    // Search input should still be focused
-    cy.checkActiveElementHasClass('vscomp-search-input');
+    cy.getVs(idMultiple).should(($ele) => {
+      const vs = $ele[0].virtualSelect;
+      const $focused = vs.$dropbox.querySelector('.vscomp-option.focused');
+
+      expect($focused, 'an option is highlighted').to.not.equal(null);
+      expect(
+        vs.$searchInput.getAttribute('aria-activedescendant'),
+        'aria-activedescendant follows the highlight',
+      ).to.equal($focused.id);
+    });
+
+    // Down moves on, Up comes back: neither key is a no-op, and neither takes focus with it.
+    cy.getDropbox(null, idMultiple)
+      .find('.vscomp-option.focused')
+      .invoke('attr', 'id')
+      .then((afterFirstDown) => {
+        cy.realPress('ArrowDown');
+        cy.getDropbox(null, idMultiple)
+          .find('.vscomp-option.focused')
+          .invoke('attr', 'id')
+          .should('not.equal', afterFirstDown);
+
+        cy.realPress('ArrowUp');
+        cy.getDropbox(null, idMultiple)
+          .find('.vscomp-option.focused')
+          .invoke('attr', 'id')
+          .should('equal', afterFirstDown);
+
+        cy.checkActiveElementHasClass('vscomp-search-input');
+      });
   });
 
   it('should close multiple-select dropdown', () => {
@@ -636,17 +681,18 @@ describe('Option group', () => {
     cy.getDropbox(null, id)
       .find('.vscomp-option.group-title')
       .first()
-      .as('groupTitle')
       .should('have.class', 'focused')
-      .should('have.attr', 'tabindex', '0')
-      .type('{downarrow}');
+      .should('have.attr', 'tabindex', '0');
 
-    cy.getDropbox(null, id)
-      .find('.vscomp-option.focused')
-      .should('have.class', 'group-option')
-      .type('{uparrow}');
+    /** pressKeys() and a fresh query per assertion, never .type() chained onto an option node
+     * or an alias for one: the virtualiser replaces those nodes on every render, so the
+     * keystroke can hit a node that is no longer in the document - and a detached node keeps
+     * its classes, so the assertion that follows would pass without proving anything. */
+    cy.getVs(id).pressKeys('ArrowDown');
+    cy.getDropbox(null, id).find('.vscomp-option.focused').should('have.class', 'group-option');
 
-    cy.get('@groupTitle').should('have.class', 'focused');
+    cy.getVs(id).pressKeys('ArrowUp');
+    cy.getDropbox(null, id).find('.vscomp-option.group-title').first().should('have.class', 'focused');
   });
 
   it('opens dropdown and selects a group child option using keyboard only', () => {
@@ -674,19 +720,22 @@ describe('Option group', () => {
 
     /** Deliberately more presses than there are rows: navigation clamps at the end, which
      * is the "navigating past the end" case under test, and this avoids hard-coding a count
-     * that shifts whenever the demo's option list changes. */
+     * that shifts whenever the demo's option list changes.
+     *
+     * pressKeys() rather than .type() on `.focused`: that chained the keystroke onto a
+     * virtualised node re-queried a moment earlier, giving the virtualiser 20 chances per run to
+     * replace it in between - the pattern removed from four other cases in `9d7d35c`. */
     Cypress._.times(20, () => {
-      cy.getDropbox(null, id).find('.vscomp-option.focused').type('{downarrow}');
+      cy.getVs(id).pressKeys('ArrowDown');
     });
 
-    cy.getDropbox(null, id)
-      .find('.vscomp-option.group-option')
-      .last()
-      .as('lastOption')
-      .should('have.class', 'focused');
+    cy.getDropbox(null, id).find('.vscomp-option.group-option').last().should('have.class', 'focused');
 
-    cy.get('@lastOption').type('{downarrow}');
-    cy.get('@lastOption').should('have.class', 'focused');
+    /** re-queried instead of aliased, for the same reason: an alias captured before the press
+     * can point at a node the virtualiser has since replaced, and a detached node still carries
+     * `focused` - so the clamp would look verified when nothing had been checked. */
+    cy.getVs(id).pressKeys('ArrowDown');
+    cy.getDropbox(null, id).find('.vscomp-option.group-option').last().should('have.class', 'focused');
   });
 });
 
