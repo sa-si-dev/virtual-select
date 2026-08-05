@@ -280,6 +280,27 @@ export class Utils {
   }
 
   /**
+   * Escape a *raw* string for interpolation into a double-quoted HTML attribute.
+   *
+   * Use this only where the input has not already been HTML-escaped - currently the option
+   * value, which is stored verbatim because it reaches no innerHTML sink. `&` must be escaped
+   * first, otherwise the `&` introduced by the quote replacement would itself be escaped and
+   * the attribute would parse back as a literal `&quot;`.
+   *
+   * Deliberately NOT used by DomUtils.getAttributesText(), whose inputs are already-escaped
+   * label text: escaping `&` there would double it and a tooltip would show `&amp;`. That
+   * asymmetry is the reason this is a separate helper rather than a shared one.
+   *
+   * @static
+   * @param {string} text
+   * @return {string}
+   * @memberof Utils
+   */
+  static escapeAttributeValue(text) {
+    return Utils.getString(text).replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+  }
+
+  /**
    * Turn a label into text that is safe and sensible inside an aria-label attribute.
    *
    * Labels may legitimately contain markup - an icon, <b>, a <br>. Interpolated raw, that

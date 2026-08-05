@@ -467,10 +467,13 @@ export class VirtualSelect {
        * value of `x" data-pwned="1" z="` put a live data-pwned attribute on the option row,
        * whether or not enableSecureText was on.
        *
-       * Escaping cannot break reading the value back: the parser turns &quot; into a quote, and
-       * setOptionAttr() rewrites data-value through the DOM API on every render anyway.
+       * `&` is escaped here as well as `"`, because the value is now stored verbatim (it reaches
+       * no innerHTML sink, so escaping it only made the option unaddressable - see secureText).
+       * Both together keep the attribute round-tripping: the parser turns `&amp;` and `&quot;`
+       * back into `&` and `"`, and setOptionAttr() rewrites data-value through the DOM API on
+       * every render anyway.
        */
-      const optionValueAttr = Utils.replaceDoubleQuotesWithHTML(Utils.getString(d.value));
+      const optionValueAttr = Utils.escapeAttributeValue(d.value);
 
       html += `<div role="option" aria-selected="${isSelected}" id="vscomp-option-${uniqueId}-${index}"
           class="${optionClasses}" data-value="${optionValueAttr}" data-index="${index}"
@@ -1733,8 +1736,24 @@ export class VirtualSelect {
         d = { [valueKey]: d, [labelKey]: d };
       }
 
-      const value = secureText(getString(d[valueKey]));
-      const label = secureText(getString(d[labelKey]));
+      /**
+       * `value` is stored verbatim; only `label` and `description` are escaped.
+       *
+       * Escaping is for HTML sinks, and the value has none: it goes into the `data-value`
+       * attribute (escaped there, at the boundary) and is otherwise only compared or used as a
+       * map key. Escaping it stored an identity the caller could not name - `a&b` became
+       * `a&amp;b`, so setValue(['a&b']) matched nothing and a value read back could not be set
+       * again.
+       *
+       * The normalised search keys derive from the *raw* text for the same reason: they are
+       * matched against what the user types into the search box, which is never HTML-escaped.
+       * Deriving them from the escaped text meant no query could match text containing `&`,
+       * `<` or `>`.
+       */
+      const rawValue = getString(d[valueKey]);
+      const rawLabel = getString(d[labelKey]);
+      const value = rawValue;
+      const label = secureText(rawLabel);
       const childOptions = d.options;
       const isGroupTitle = !!childOptions;
       const option = {
@@ -1742,9 +1761,9 @@ export class VirtualSelect {
         value,
         valueNormalized: value.toLowerCase(),
         label,
-        labelNormalized: this.searchNormalize && label.trim() !== ''
-          ? Utils.normalizeString(label).toLowerCase()
-          : label.toLowerCase(),
+        labelNormalized: this.searchNormalize && rawLabel.trim() !== ''
+          ? Utils.normalizeString(rawLabel).toLowerCase()
+          : rawLabel.toLowerCase(),
         alias: getAlias(d[aliasKey]),
         isVisible: convertToBoolean(d.isVisible, true),
         isNew: d.isNew || false,
@@ -1766,11 +1785,12 @@ export class VirtualSelect {
       }
 
       if (hasOptionDescription) {
-        const description = secureText(getString(d[descriptionKey]));
-        option.description = description;
-        option.descriptionNormalized = this.searchNormalize && description.trim() !== ''
-          ? Utils.normalizeString(description).toLowerCase()
-          : description.toLowerCase();
+        const rawDescription = getString(d[descriptionKey]);
+        option.description = secureText(rawDescription);
+        /** normalised from the raw text, so a query containing `&` can match - see above */
+        option.descriptionNormalized = this.searchNormalize && rawDescription.trim() !== ''
+          ? Utils.normalizeString(rawDescription).toLowerCase()
+          : rawDescription.toLowerCase();
       }
 
       if (d.customData) {
@@ -2331,7 +2351,8 @@ export class VirtualSelect {
     if (newOption) {
       const newIndex = newOption.index;
 
-      this.setOptionProp(newIndex, 'value', this.secureText(value));
+      /** value verbatim, label escaped - the label is the only one rendered as HTML */
+      this.setOptionProp(newIndex, 'value', value);
       this.setOptionProp(newIndex, 'label', this.secureText(value));
     } else {
       const data = {
@@ -2589,22 +2610,23 @@ export class VirtualSelect {
 
     const { getString } = Utils;
     const secureText = this.secureText.bind(this);
-    const value = secureText(getString(data.value));
-    const label = secureText(getString(data.label));
-    const description = secureText(getString(data.description));
+    /** value stored verbatim, search keys derived from the raw text - see setOptions() */
+    const rawValue = getString(data.value);
+    const rawLabel = getString(data.label);
+    const rawDescription = getString(data.description);
 
     return {
       index: data.index,
-      value,
-      valueNormalized: value.toLowerCase(),
-      label,
-      labelNormalized: this.searchNormalize && label.trim() !== ''
-        ? Utils.normalizeString(label).toLowerCase()
-        : label.toLowerCase(),
-      description,
-      descriptionNormalized: this.searchNormalize && description.trim() !== ''
-        ? Utils.normalizeString(description).toLowerCase()
-        : description.toLowerCase(),
+      value: rawValue,
+      valueNormalized: rawValue.toLowerCase(),
+      label: secureText(rawLabel),
+      labelNormalized: this.searchNormalize && rawLabel.trim() !== ''
+        ? Utils.normalizeString(rawLabel).toLowerCase()
+        : rawLabel.toLowerCase(),
+      description: secureText(rawDescription),
+      descriptionNormalized: this.searchNormalize && rawDescription.trim() !== ''
+        ? Utils.normalizeString(rawDescription).toLowerCase()
+        : rawDescription.toLowerCase(),
       alias: this.getAlias(data.alias),
       isCurrentNew: data.isCurrentNew || false,
       isNew: data.isNew || false,
