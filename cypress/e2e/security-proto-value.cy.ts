@@ -55,15 +55,37 @@ describe('Security: option values that collide with Object.prototype members', (
 
   it('does not pollute Object.prototype', () => {
     cy.window().then((win) => {
+      /**
+       * The probe must be built in the *application's* realm.
+       *
+       * Spec code runs in the Cypress runner frame; `cy.window()` returns the application
+       * iframe's window. Those are separate realms with separate intrinsics, so an object
+       * literal written here has the runner frame's `Object.prototype` on its chain and can
+       * never `equal` `win.Object.prototype` — that comparison fails whether or not anything
+       * was polluted, which is exactly how this case first went wrong.
+       *
+       * So: snapshot the application realm's own `Object.prototype` members, run the
+       * operations, and compare. A pollution would show up as a new member, and a prototype
+       * swap as a fresh object no longer inheriting from it.
+       */
+      const appObject = (win as unknown as { Object: ObjectConstructor }).Object;
+      const membersBefore = Object.getOwnPropertyNames(appObject.prototype).sort().join(',');
+
       mount(win);
       const $ele = win.document.getElementById(mountId) as HTMLElement;
 
       $ele.setValue?.(['__proto__']);
       $ele.setDisabledOptions?.(['__proto__']);
+      $ele.setEnabledOptions?.(['__proto__']);
 
-      // @ts-expect-error - deliberately probing the prototype chain
-      expect(({}).__proto__, 'Object.prototype must be intact').to.equal(win.Object.prototype);
-      expect(Object.getPrototypeOf({}), 'no prototype swap').to.equal(win.Object.prototype);
+      expect(
+        Object.getOwnPropertyNames(appObject.prototype).sort().join(','),
+        'Object.prototype must not gain a member',
+      ).to.equal(membersBefore);
+
+      const probe = new appObject();
+      expect(Object.getPrototypeOf(probe), 'a fresh object still inherits from it').to.equal(appObject.prototype);
+      expect(typeof appObject.prototype, 'it is still an object, not a replaced value').to.equal('object');
     });
   });
 

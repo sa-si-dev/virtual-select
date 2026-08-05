@@ -199,12 +199,49 @@ describe('Security: option values are stored verbatim, not HTML-escaped', () => 
     });
   });
 
-  it('stores a typed new option value verbatim', () => {
+  it('receives the whole typed term, ampersand included', () => {
     cy.window().then((win) => mount(win, { search: true, allowNewOption: true }));
 
     openDropbox();
     cy.get(`#${mountId}`).find('.vscomp-search-input').type('Smith & Sons');
-    dropbox().find('.vscomp-option.current-new').click();
+
+    /**
+     * Deliberately separate from the storage assertion below.
+     *
+     * Every keystroke re-renders the option list, and with allowNewOption it also adds and
+     * updates a "current new" row. Folding "typing works" and "the value is stored verbatim"
+     * into one case made a dropped keystroke surface as a value mismatch, which reads like a
+     * storage bug and is not one. Here the search text is asserted on its own, so a typing
+     * problem is reported as a typing problem.
+     */
+    cy.get(`#${mountId}`).find('.vscomp-search-input').should('have.value', 'Smith & Sons');
+    vs().should((instance) => {
+      expect(instance.searchValueOriginal, 'the component saw the whole term').to.equal('Smith & Sons');
+    });
+  });
+
+  it('stores a typed new option value verbatim', () => {
+    cy.window().then((win) => mount(win, { search: true, allowNewOption: true }));
+
+    openDropbox();
+    /**
+     * setSearchValue() is the entry point onSearch() calls for a keystroke, so this covers the
+     * same code path without depending on per-character typing into a list that re-renders on
+     * every input event - the coupling AI-1e removed elsewhere in this suite.
+     */
+    cy.get(`#${mountId}`).then(($ele) => $ele[0].virtualSelect.setSearchValue('Smith & Sons'));
+
+    // the option the component derives from the search text, before anything is clicked
+    vs().should((instance) => {
+      const created = instance.options.find((d: any) => d.isCurrentNew);
+
+      expect(created, 'a new option is offered').to.not.equal(undefined);
+      expect(created.value, 'value stored verbatim').to.equal('Smith & Sons');
+    });
+
+    // Scoped by data-value so the retry lands on the row that carries the full term, rather
+    // than whichever node the virtualiser happened to have rendered a moment earlier.
+    dropbox().find('.vscomp-option.current-new[data-value="Smith & Sons"]').click();
 
     vs().should((instance) => {
       expect(instance.selectedValues).to.deep.equal(['Smith & Sons']);
