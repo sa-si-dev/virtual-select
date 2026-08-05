@@ -449,8 +449,9 @@
       /**
        * WCAG 2.5.8: the button previously collapsed to its 25x15 content box.
        * A min-* floor grows the hit area without scaling the checkbox glyph inside it.
+       * No justify-content override: the checkbox must stay left-aligned with the
+       * option checkboxes below it, not centered in the button's full width.
        */
-      justify-content: center;
       min-height: v.$min-target-size;
       min-width: v.$min-target-size;
     }
