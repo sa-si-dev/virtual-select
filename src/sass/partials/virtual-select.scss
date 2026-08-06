@@ -603,8 +603,11 @@
     /**
      * The message is the non-colour cue required by WCAG 1.4.1: the border tint alone
      * carried the whole meaning before. The leading glyph adds a second, shape-based cue.
+     *
+     * A sibling selector because the message lives *outside* the wrapper: inside it, the
+     * text would join the combobox's name-from-contents computation (see renderWrapper).
      */
-    .vscomp-error-message {
+    ~ .vscomp-error-message {
       display: flex;
     }
   }

@@ -292,5 +292,8 @@ Notes:
 - Only instances created **after** the call are affected. Call it before initialising dropdowns.
 - Calls **merge**, so unrelated settings can be configured separately.
 - `ele` and `options` are ignored, being inherently per-instance.
+- A non-object argument (e.g. an accidentally-unset variable) is **ignored**, so a page-wide
+  policy cannot be wiped by mistake. To clear a single key, pass it with the value `undefined`;
+  to clear everything, call `VirtualSelect.resetGlobalDefaults()`.
 
 Read the current values with `VirtualSelect.getGlobalDefaults()`, which returns a copy.

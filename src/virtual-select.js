@@ -217,13 +217,13 @@ export class VirtualSelect {
           </div>
         </div>
 
-        <div id="vscomp-live-region-${uniqueId}" class="vscomp-live-region" role="status"
-          aria-live="polite" aria-atomic="true"></div>
-
-        <div id="vscomp-error-message-${uniqueId}" class="vscomp-error-message"></div>
-
         ${this.renderDropbox({ wrapperClasses })}
-      </div>`;
+      </div>
+
+      <div id="vscomp-live-region-${uniqueId}" class="vscomp-live-region" role="status"
+        aria-live="polite" aria-atomic="true"></div>
+
+      <div id="vscomp-error-message-${uniqueId}" class="vscomp-error-message"></div>`;
 
     this.$ele.innerHTML = html;
     this.$body = document.querySelector('body');
@@ -260,6 +260,14 @@ export class VirtualSelect {
      * field name into `items[&quot;a&quot;]`.
      */
     this.$hiddenInput.name = this.name;
+
+    /**
+     * Both live outside the wrapper, as siblings, because the wrapper is the combobox: for an
+     * instance mounted without ariaLabelText/ariaLabelledby the combobox takes its accessible
+     * name from its contents, and visually-hidden text still joins that computation - so a
+     * status update or validation message inside it would be read as part of the field's *name*.
+     * A sibling can be announced (live region) or associated (aria-describedby) without that.
+     */
     this.$liveRegion = this.$ele.querySelector('.vscomp-live-region');
     this.$errorMessage = this.$ele.querySelector('.vscomp-error-message');
     this.$dropbox = this.$dropboxContainer.querySelector('.vscomp-dropbox');
@@ -557,7 +565,7 @@ export class VirtualSelect {
       <input type="text" class="vscomp-search-input"
         placeholder="${Utils.replaceDoubleQuotesWithHTML(Utils.getString(this.searchPlaceholderText))}"
         id="vscomp-search-input-${this.uniqueId}"
-        role="combobox" aria-autocomplete="list" aria-expanded="false"
+        aria-autocomplete="list"
         aria-controls="vscomp-options-container-${this.uniqueId}">
       <span class="vscomp-search-clear" role="button" ${ariaLabelSearchClearBtnTxt}>&times;</span>`;
     }
@@ -2971,9 +2979,14 @@ export class VirtualSelect {
       DomUtils.setStyle(this.$dropboxContainer, 'display', 'inline-flex');
     } else {
       DomUtils.dispatchEvent(this.$ele, 'beforeOpen');
+      /**
+       * The wrapper is the one combobox and the one carrier of aria-expanded. The search
+       * input deliberately is not a second combobox: nesting one combobox inside another is
+       * a structure screen readers disagree on, and aria-expanded is not a supported state
+       * of the input's implicit textbox role - which does support the wiring the input
+       * needs (aria-autocomplete, aria-controls, aria-activedescendant).
+       */
       DomUtils.setAria(this.$wrapper, 'expanded', true);
-      /** the search input is its own combobox over the listbox, so it needs the state too */
-      DomUtils.setAria(this.$searchInput, 'expanded', true);
     }
 
     this.setDropboxWrapperWidth();
@@ -3051,7 +3064,6 @@ export class VirtualSelect {
     } else {
       DomUtils.dispatchEvent(this.$ele, 'beforeClose');
       DomUtils.setAria(this.$wrapper, 'expanded', false);
-      DomUtils.setAria(this.$searchInput, 'expanded', false);
       /**
        * No option is active once the list is gone - and the highlight has to go with it,
        * here, synchronously.
@@ -4237,16 +4249,18 @@ export class VirtualSelect {
     }
 
     /**
-     * Publish the highlight on the elements that can carry it: the wrapper and the search
-     * input, both role="combobox". It used to also go on $dropboxContainer, a plain div
-     * with no role, where aria-activedescendant is meaningless - and never on the search
-     * input, which is the element that actually holds focus while navigating.
+     * Publish the highlight on the elements that can carry it: the wrapper (the combobox)
+     * and the search input (a textbox, which also supports aria-activedescendant). It used
+     * to also go on $dropboxContainer, a plain div with no role, where aria-activedescendant
+     * is meaningless - and never on the search input, which is the element that actually
+     * holds focus while navigating.
      */
     this.setActiveDescendant(isFocused ? $ele.id : '');
   }
 
   /**
-   * Point the combobox elements at the active option, or clear the reference.
+   * Point the combobox wrapper and the search input at the active option, or clear the
+   * reference.
    * @param {string} optionId
    */
   setActiveDescendant(optionId) {
@@ -4274,8 +4288,14 @@ export class VirtualSelect {
    * @param {Partial<virtualSelectOptions>} props
    */
   static setGlobalDefaults(props) {
+    /**
+     * A non-object is ignored, not treated as "clear": a host forwarding an accidentally
+     * unset config variable would otherwise silently turn a page-wide security policy off.
+     * Clearing is an explicit act - resetGlobalDefaults(). A key can still be cleared
+     * individually by passing it with the value `undefined`, which setDefaultProps()
+     * treats as "not supplied".
+     */
     if (!props || typeof props !== 'object') {
-      VirtualSelect.globalDefaults = {};
       return;
     }
 
@@ -4285,6 +4305,14 @@ export class VirtualSelect {
     delete safeProps.options;
 
     VirtualSelect.globalDefaults = { ...VirtualSelect.globalDefaults, ...safeProps };
+  }
+
+  /**
+   * Drop every page-level default, restoring the built-in ones for instances created
+   * afterwards. The explicit counterpart to setGlobalDefaults(), which only ever merges.
+   */
+  static resetGlobalDefaults() {
+    VirtualSelect.globalDefaults = {};
   }
 
   /**

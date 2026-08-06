@@ -49,6 +49,13 @@ describe('A11y: status announcements via a live region', () => {
     it('starts empty so nothing is announced on page load', () => {
       liveRegion().should('have.text', '');
     });
+
+    it('sits outside the combobox element, so it cannot leak into its accessible name', () => {
+      // Visually-hidden text inside a combobox that has no aria-label still joins the
+      // combobox's name-from-contents computation; a sibling of the combobox cannot.
+      liveRegion().should('have.length', 1);
+      cy.get(`#${mountId}`).find('[role="combobox"] .vscomp-live-region').should('not.exist');
+    });
   });
 
   context('search results', () => {

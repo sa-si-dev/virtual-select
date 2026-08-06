@@ -43,11 +43,10 @@ describe('Security: global defaults for enableSecureText', () => {
   const resetGlobals = (win: Window) => {
     /**
      * `setGlobalDefaults()` merges, so `{}` cannot clear a key an earlier test set, and nothing
-     * reloads the page to do it for us. Supplying `undefined` is exactly what the merge treats as
-     * "not supplied", so the built-in defaults are back in force.
+     * reloads the page to do it for us. resetGlobalDefaults() is the explicit clearing API.
      */
     // @ts-expect-error - VirtualSelect is attached to window by the bundle
-    win.VirtualSelect.setGlobalDefaults({ enableSecureText: undefined, placeholder: undefined });
+    win.VirtualSelect.resetGlobalDefaults();
   };
 
   const mountWithPayload = (win: Window, marker: string, extra: Record<string, unknown> = {}) =>
@@ -199,6 +198,38 @@ describe('Security: global defaults for enableSecureText', () => {
 
       // @ts-expect-error - bundle global
       expect(win.VirtualSelect.getGlobalDefaults().enableSecureText).to.eq(true);
+    });
+  });
+
+  it('ignores a non-object argument instead of wiping the configured policy', () => {
+    cy.window().then((win) => {
+      // @ts-expect-error - bundle global
+      win.VirtualSelect.setGlobalDefaults({ enableSecureText: true });
+
+      // A host accidentally forwarding an unset config variable must not silently turn
+      // page-wide escaping off; clearing is an explicit act (resetGlobalDefaults).
+      // @ts-expect-error - bundle global, deliberately wrong argument
+      win.VirtualSelect.setGlobalDefaults(undefined);
+      // @ts-expect-error - bundle global, deliberately wrong argument
+      win.VirtualSelect.setGlobalDefaults(null);
+      // @ts-expect-error - bundle global, deliberately wrong argument
+      win.VirtualSelect.setGlobalDefaults('enableSecureText');
+
+      // @ts-expect-error - bundle global
+      expect(win.VirtualSelect.getGlobalDefaults().enableSecureText).to.eq(true);
+    });
+  });
+
+  it('clears every configured default only through the explicit resetGlobalDefaults()', () => {
+    cy.window().then((win) => {
+      // @ts-expect-error - bundle global
+      win.VirtualSelect.setGlobalDefaults({ enableSecureText: true, placeholder: 'Pick one' });
+
+      // @ts-expect-error - bundle global
+      win.VirtualSelect.resetGlobalDefaults();
+
+      // @ts-expect-error - bundle global
+      expect(win.VirtualSelect.getGlobalDefaults()).to.deep.equal({});
     });
   });
 

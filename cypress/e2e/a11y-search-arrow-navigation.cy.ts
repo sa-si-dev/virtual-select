@@ -28,6 +28,7 @@ describe('A11y: arrow-key navigation from the search input', { testIsolation: tr
   const mountId = 'vs-a11y-search-arrows';
 
   const searchInput = () => cy.get(`#${mountId}`).find('.vscomp-search-input');
+  const wrapper = () => cy.get(`#${mountId}`).find('.vscomp-wrapper');
   const listbox = () => cy.get(`#${mountId}`).find('.vscomp-options-container');
   const focusedOption = () => cy.get(`#${mountId}`).find('.vscomp-option.focused');
 
@@ -62,8 +63,12 @@ describe('A11y: arrow-key navigation from the search input', { testIsolation: tr
       open();
     });
 
-    it('is a combobox controlling the listbox', () => {
-      searchInput().should('have.attr', 'role', 'combobox');
+    it('drives the listbox as a plain textbox, not a second combobox', () => {
+      // The wrapper is already the combobox; a combobox nested inside a combobox is the
+      // kind of structure screen readers disagree on. The input keeps the wiring —
+      // aria-autocomplete, aria-controls, aria-activedescendant — on its implicit
+      // textbox role, which supports all three.
+      searchInput().should('not.have.attr', 'role');
       searchInput().should('have.attr', 'aria-autocomplete', 'list');
 
       listbox()
@@ -74,12 +79,16 @@ describe('A11y: arrow-key navigation from the search input', { testIsolation: tr
         });
     });
 
-    it('reports the expanded state', () => {
-      searchInput().should('have.attr', 'aria-expanded', 'true');
+    it('leaves the expanded state to the combobox wrapper', () => {
+      // aria-expanded is not a supported property of a textbox; the wrapper combobox
+      // is the single element that reports it.
+      searchInput().should('not.have.attr', 'aria-expanded');
+      wrapper().should('have.attr', 'aria-expanded', 'true');
 
       searchInput().type('{esc}');
 
-      searchInput().should('have.attr', 'aria-expanded', 'false');
+      wrapper().should('have.attr', 'aria-expanded', 'false');
+      searchInput().should('not.have.attr', 'aria-expanded');
     });
 
     it('does not publish the highlight on the role-less dropbox container', () => {
@@ -87,6 +96,24 @@ describe('A11y: arrow-key navigation from the search input', { testIsolation: tr
 
       // aria-activedescendant on an element with no listbox/combobox role is meaningless.
       cy.get(`#${mountId}`).find('.vscomp-dropbox-container').should('not.have.attr', 'aria-activedescendant');
+    });
+  });
+
+  context('keepAlwaysOpen', () => {
+    /**
+     * The second combobox could not keep its state in sync in this layout: `aria-expanded` was
+     * rendered hard-coded as `false` on the input and only ever updated inside the non-silent
+     * branches of openDropbox()/closeDropbox(), neither of which runs when the dropbox is always
+     * open. The input therefore reported the listbox collapsed while it was visible and
+     * navigable, contradicting the wrapper on the same listbox (WCAG 4.1.2).
+     *
+     * Having one carrier of the state removes the class of bug rather than re-syncing it.
+     */
+    it('reports one expanded state for the listbox, on the wrapper alone', () => {
+      mount({ keepAlwaysOpen: true });
+
+      wrapper().should('have.attr', 'aria-expanded', 'true');
+      searchInput().should('not.have.attr', 'aria-expanded');
     });
   });
 
@@ -193,7 +220,7 @@ describe('A11y: arrow-key navigation from the search input', { testIsolation: tr
       cy.get(`#${mountId}`).then(($e) => {
         expect($e[0].virtualSelect.selectedValues).to.have.members(['o1', 'o2']);
       });
-      searchInput().should('have.attr', 'aria-expanded', 'true');
+      wrapper().should('have.attr', 'aria-expanded', 'true');
     });
   });
 

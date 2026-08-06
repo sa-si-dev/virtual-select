@@ -74,6 +74,16 @@ describe('A11y: required and error state are exposed', () => {
       errorMessage().should('have.text', 'This field is required');
     });
 
+    it('renders the message outside the combobox element, so it cannot leak into its accessible name', () => {
+      // aria-describedby is the association; the text itself must not also sit inside the
+      // combobox, where it would join a name-from-contents computation for instances
+      // mounted without an aria-label.
+      validate();
+
+      errorMessage().should('be.visible');
+      cy.get(`#${mountId}`).find('[role="combobox"] .vscomp-error-message').should('not.exist');
+    });
+
     it('associates the message with the combobox via aria-describedby', () => {
       validate();
 
