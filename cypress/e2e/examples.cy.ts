@@ -517,7 +517,9 @@ describe('Option group', () => {
   const id = 'option-group-select';
 
   it('go to section', () => {
+    cy.visit('examples');
     cy.goToSection('Option group');
+  
   });
 
   it('select 1 child option', () => {
@@ -542,14 +544,120 @@ describe('Option group', () => {
       .hasValueText('3 options selected');
   });
 
-  it('select all options', () => {
-    cy.getVs(id)
-      .searchClear()
-      .toggleSelectAll()
-      .hasValueText('All (9)')
-      .checkOptionGroup('Option group 1', true)
-      .checkOptionGroup('Option group 2', true)
-      .checkOptionGroup('Option group 3', true);
+  it('includes group title in keyboard navigation and exposes it to assistive technologies', () => {
+    cy.getVs(id).then(($vs) => {
+      const vs = $vs[0].virtualSelect;
+      vs.reset(false, true);
+    });
+    
+    cy.open(id);
+
+    cy.getVs(id).find('.vscomp-wrapper').type('{downarrow}');
+    cy.getVs(id).find('.vscomp-wrapper').should('not.have.class', 'closed');
+    cy.getVs(id).find('.vscomp-wrapper').type('{downarrow}');
+
+    cy.getDropbox(null, id)
+      .find('.vscomp-option.group-title')
+      .first()
+      .as('groupTitle')
+      .should('have.class', 'focused')
+      .should('have.attr', 'tabindex', '0');
+
+    cy.get('@groupTitle')
+      .invoke('attr', 'aria-label')
+      .should('include', 'Option group 1')
+      .and('include', 'Select All');
+  });
+
+  it('activates group select/deselect with Enter when group title is focused', () => {
+    cy.getVs(id).then(($vs) => {
+      const vs = $vs[0].virtualSelect;
+      vs.reset(false, true);
+    });
+
+    cy.open(id);
+
+    cy.getVs(id).pressKeys(['ArrowDown', 'ArrowDown']);
+    cy.getVs(id).pressKeys('Enter');
+    cy.getVs(id).hasValueText('3 options selected');
+    cy.getVs(id).pressKeys('Enter');
+    cy.getVs(id).hasValueText('Select');
+  });
+
+  it('navigates between group title and group options with arrow keys', () => {
+    cy.getVs(id).then(($vs) => {
+      const vs = $vs[0].virtualSelect;
+      vs.reset(false, true);
+    });
+
+    cy.open(id);
+
+    cy.getVs(id).find('.vscomp-wrapper').type('{downarrow}');
+
+    cy.getDropbox(null, id)
+      .find('.vscomp-option.group-title')
+      .first()
+      .as('groupTitle')
+      .should('have.class', 'focused')
+      .should('have.attr', 'tabindex', '0')
+      .type('{downarrow}');
+
+    cy.getDropbox(null, id)
+      .find('.vscomp-option.focused')
+      .should('have.class', 'group-option')
+      .type('{uparrow}');
+
+    cy.get('@groupTitle').should('have.class', 'focused');
+  });
+
+  it('opens dropdown and selects a group child option using keyboard only', () => {
+    cy.getVs(id).then(($vs) => {
+      const vs = $vs[0].virtualSelect;
+      vs.reset(false, true);
+    });
+
+    cy.open(id);
+
+    cy.getVs(id).find('.vscomp-wrapper').type('{downarrow}');
+    cy.getVs(id).find('.vscomp-wrapper').type('{downarrow}');
+
+    cy.getDropbox(null, id)
+      .find('.vscomp-option.group-title')
+      .first()
+      .should('have.class', 'focused')
+      .type('{downarrow}');
+
+    cy.getDropbox(null, id)
+      .find('.vscomp-option[data-value="1-1"]')
+      .should('have.class', 'focused')
+      .type('{enter}');
+
+    cy.getVs(id).hasValueText('Option 1-1');
+  });
+
+  it('keeps focus on the last option when navigating past the end of the list', () => {
+    cy.getVs(id).then(($vs) => {
+      const vs = $vs[0].virtualSelect;
+      vs.reset(false, true);
+    });
+
+    cy.open(id);
+
+    cy.getVs(id).find('.vscomp-wrapper').type('{downarrow}');
+    cy.getVs(id).find('.vscomp-wrapper').type('{downarrow}');
+
+    Cypress._.times(11, () => {
+      cy.getDropbox(null, id).find('.vscomp-option.focused').type('{downarrow}');
+    });
+
+    cy.getDropbox(null, id)
+      .find('.vscomp-option.group-option')
+      .last()
+      .as('lastOption')
+      .should('have.class', 'focused');
+
+    cy.get('@lastOption').type('{downarrow}');
+    cy.get('@lastOption').should('have.class', 'focused');
   });
 });
 

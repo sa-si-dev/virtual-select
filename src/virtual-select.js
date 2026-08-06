@@ -16,6 +16,9 @@ const keyDownMethodMapping = {
 
 const valueLessProps = ['autofocus', 'disabled', 'multiple', 'required'];
 const nativeProps = ['autofocus', 'class', 'disabled', 'id', 'multiple', 'name', 'placeholder', 'required'];
+// Deferred: the value comes from VirtualSelect.getAttrProps(), so it cannot be assigned until
+// the class below has been evaluated (see the assignment at the bottom of this file).
+// eslint-disable-next-line prefer-const
 let attrPropsMapping;
 
 const dataProps = [
@@ -176,8 +179,6 @@ export class VirtualSelect {
     if (this.popupPosition) {
       wrapperClasses += ` popup-position-${this.popupPosition.toLowerCase()}`;
     }
-
-    // eslint-disable-next-line no-trailing-spaces
     const html =
       `<div id="vscomp-ele-wrapper-${uniqueId}" class="vscomp-ele-wrapper ${wrapperClasses}" tabindex="0"
         role="combobox" aria-haspopup="listbox" aria-controls="vscomp-dropbox-container-${uniqueId}"
@@ -242,8 +243,6 @@ export class VirtualSelect {
     if (this.additionalDropboxContainerClasses) {
       dropboxContainerClasses += ` ${Utils.sanitizeClassNames(this.additionalDropboxContainerClasses)}`;
     }
-
-    // eslint-disable-next-line no-trailing-spaces
     const html =
       `<div id="vscomp-dropbox-container-${this.uniqueId}" class="${dropboxContainerClasses}">
         <div class="vscomp-dropbox-container-top" aria-hidden="true" tabindex="-1">&nbsp;</div>
@@ -360,6 +359,10 @@ export class VirtualSelect {
 
         if (disableOptionGroupCheckbox) {
           leftSection = '';
+        } else if (this.multiple) {
+          const groupLabel = Utils.replaceDoubleQuotesWithHTML(Utils.getString(d.label));
+          const selectAllText = Utils.replaceDoubleQuotesWithHTML(Utils.getString(this.selectAllText));
+          ariaLabel = `aria-label="${groupLabel}, ${selectAllText}"`;
         }
       }
 
@@ -368,8 +371,6 @@ export class VirtualSelect {
       }
 
       if (d.isGroupOption) {
-        let optionDesc = '';
-
         optionClasses += ' group-option';
         groupIndexText = `data-group-index="${d.groupIndex}"`;
 
@@ -385,7 +386,7 @@ export class VirtualSelect {
           const groupDescText = this.secureText(Utils.getString(d.customData.description));
 
           groupName = d.customData.group_name !== undefined ? `${groupNameText}, ` : '';
-          optionDesc = d.customData.description !== undefined ? ` ${groupDescText},` : '';
+          const optionDesc = d.customData.description !== undefined ? ` ${groupDescText},` : '';
 
           ariaLabel = `aria-label="${groupName} ${d.label}, ${optionDesc}"`;
         } else {
@@ -756,7 +757,7 @@ export class VirtualSelect {
     const $ele = e.target.closest('.vscomp-option');
 
     if ($ele && this.isOpened()) {
-      if (DomUtils.hasClass($ele, 'disabled') || DomUtils.hasClass($ele, 'group-title')) {
+      if (this.shouldSkipOptionInNavigation($ele)) {
         this.removeOptionFocus();
       } else {
         this.focusOption({ $option: $ele });
@@ -1143,10 +1144,10 @@ export class VirtualSelect {
     this.tooltipAlignment = options.tooltipAlignment;
     this.tooltipMaxWidth = options.tooltipMaxWidth;
     this.updatePositionThrottle = options.updatePositionThrottle;
-    this.noOfDisplayValues = parseInt(options.noOfDisplayValues);
-    this.zIndex = parseInt(options.zIndex);
-    this.maxValues = parseInt(options.maxValues);
-    this.minValues = parseInt(options.minValues);
+    this.noOfDisplayValues = parseInt(options.noOfDisplayValues, 10);
+    this.zIndex = parseInt(options.zIndex, 10);
+    this.maxValues = parseInt(options.maxValues, 10);
+    this.minValues = parseInt(options.minValues, 10);
     this.name = this.secureText(options.name);
     this.additionalClasses = options.additionalClasses;
     this.additionalDropboxClasses = options.additionalDropboxClasses;
@@ -1168,8 +1169,8 @@ export class VirtualSelect {
     this.maxWidth = options.maxWidth;
     this.searchDelay = options.searchDelay;
 
-    this.showDuration = parseInt(options.showDuration);
-    this.hideDuration = parseInt(options.hideDuration);
+    this.showDuration = parseInt(options.showDuration, 10);
+    this.hideDuration = parseInt(options.hideDuration, 10);
 
     /** @type {string[]} */
     this.selectedValues = [];
@@ -1745,7 +1746,7 @@ export class VirtualSelect {
 
   setOptionsPosition(startIndex) {
     // We use the parseInt to fix a Chrome issue when dealing with decimal pixels in translate3d
-    const top = parseInt((startIndex || this.getVisibleStartIndex()) * this.optionHeight);
+    const top = parseInt((startIndex || this.getVisibleStartIndex()) * this.optionHeight, 10);
     this.$options.style.transform = `translate3d(0, ${top}px, 0)`;
     DomUtils.setData(this.$options, 'top', top);
   }
@@ -2070,10 +2071,8 @@ export class VirtualSelect {
       if (newOption && newOption.isVisible === true) {
         filteredPosition += 1;
         ariaSetSize += 1;
-        // eslint-disable-next-line no-param-reassign
         newOption.filteredIndex = filteredPosition;
       } else if (newOption) {
-        // eslint-disable-next-line no-param-reassign
         newOption.filteredIndex = undefined;
       }
     }
@@ -2560,7 +2559,7 @@ export class VirtualSelect {
 
       result = Math.floor(availableHeight / this.optionHeight);
     } else {
-      result = parseInt(count);
+      result = parseInt(count, 10);
     }
 
     return result;
@@ -2568,6 +2567,22 @@ export class VirtualSelect {
 
   getOptionsHeight() {
     return `${this.optionsCount * this.optionHeight}px`;
+  }
+
+  isSelectableGroupTitle($ele) {
+    return $ele && DomUtils.hasClass($ele, 'group-title') && this.multiple && !this.disableOptionGroupCheckbox;
+  }
+
+  shouldSkipOptionInNavigation($ele) {
+    if (!$ele) {
+      return false;
+    }
+
+    if (DomUtils.hasClass($ele, 'disabled')) {
+      return true;
+    }
+
+    return DomUtils.hasClass($ele, 'group-title') && !this.isSelectableGroupTitle($ele);
   }
 
   /** getting next/prev valid option element */
@@ -2579,7 +2594,7 @@ export class VirtualSelect {
       if ($sibling) {
         $sibling = $sibling[propName];
       }
-    } while (DomUtils.hasClass($sibling, 'disabled') || DomUtils.hasClass($sibling, 'group-title'));
+    } while (this.shouldSkipOptionInNavigation($sibling));
 
     return $sibling;
   }
@@ -2862,16 +2877,18 @@ export class VirtualSelect {
     let $focusableEle = this.$optionsContainer.querySelector(`[data-index='${this.getFirstVisibleOptionIndex()}']`);
 
     if ($focusableEle) {
-      if (DomUtils.hasClass($focusableEle, 'group-title')) {
+      if (this.shouldSkipOptionInNavigation($focusableEle)) {
         $focusableEle = this.getSibling($focusableEle, 'next');
       }
 
-      DomUtils.setAttr($focusableEle, 'tabindex', '0');
-      this.$optionsContainer.scrollTop = this.optionHeight * this.getFirstVisibleOptionIndex();
-      this.focusOption({
-        focusFirst: true,
-      });
-      $focusableEle.focus();
+      if ($focusableEle) {
+        DomUtils.setAttr($focusableEle, 'tabindex', '0');
+        this.$optionsContainer.scrollTop = this.optionHeight * this.getFirstVisibleOptionIndex();
+        this.focusOption({
+          focusFirst: true,
+        });
+        $focusableEle.focus();
+      }
     } else {
       $focusableEle = this.$dropbox.querySelector('[tabindex="0"]');
       if ($focusableEle) {
@@ -2893,7 +2910,7 @@ export class VirtualSelect {
         `.vscomp-option[data-visible-index="${firstVisibleOptionIndex}"]`,
       );
 
-      if (DomUtils.hasClass($newFocusedEle, 'disabled') || DomUtils.hasClass($newFocusedEle, 'group-title')) {
+      if (this.shouldSkipOptionInNavigation($newFocusedEle)) {
         $newFocusedEle = this.getSibling($newFocusedEle, 'next');
       }
     } else {
@@ -3031,7 +3048,18 @@ export class VirtualSelect {
   }
 
   selectFocusedOption() {
-    this.selectOption(this.$dropboxContainer.querySelector('.vscomp-option.focused'));
+    const $focusedEle = this.$dropboxContainer.querySelector('.vscomp-option.focused');
+
+    if (!$focusedEle) {
+      return;
+    }
+
+    if (this.isSelectableGroupTitle($focusedEle)) {
+      this.onGroupTitleClick($focusedEle);
+      return;
+    }
+
+    this.selectOption($focusedEle);
   }
 
   selectRangeOptions(lastSelectedOptionIndex, selectedIndex) {
@@ -3084,7 +3112,7 @@ export class VirtualSelect {
       const toggleGroupTitleProp = this.toggleGroupTitleProp.bind(this);
 
       groupIndexes.forEach((i) => {
-        toggleGroupTitleProp(parseInt(i));
+        toggleGroupTitleProp(parseInt(i, 10));
       });
     }
 
@@ -3198,7 +3226,7 @@ export class VirtualSelect {
     let groupIndex = DomUtils.getData($option, 'groupIndex');
 
     if (groupIndex !== undefined) {
-      groupIndex = parseInt(groupIndex);
+      groupIndex = parseInt(groupIndex, 10);
     }
 
     const $group = this.$options.querySelector(`.vscomp-option[data-index="${groupIndex}"]`);

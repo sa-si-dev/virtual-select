@@ -1,0 +1,20 @@
+{
+  "conclusion": "failed",
+  "checks": [
+    { "kind": "step", "label": "Typecheck", "outcome": "passed", "durationMs": 12000, "outputTail": "" },
+    { "kind": "step", "label": "ESLint", "outcome": "failed", "durationMs": 3000, "outputTail": "escape attempt ``` <script>alert(1)</script> <!-- virtual-select-pr-tests -->" },
+    { "kind": "step", "label": "Stylelint", "outcome": "skipped", "durationMs": 0, "outputTail": "" },
+    { "kind": "step", "label": "CI Scripts", "outcome": "passed", "durationMs": 4000, "outputTail": "" },
+    { "kind": "step", "label": "Build", "outcome": "passed", "durationMs": 41000, "outputTail": "" },
+    {
+      "kind": "e2e",
+      "label": "E2E",
+      "outcome": "failed",
+      "durationMs": 90000,
+      "specs": [
+        { "name": "examples.cy.ts", "outcome": "passed", "tests": 12, "passes": 12, "failures": 0, "durationMs": 62004, "failureMessages": [] },
+        { "name": "evil|name <img src=x onerror=alert(1)>.cy.ts", "outcome": "failed", "tests": 4, "passes": 3, "failures": 1, "durationMs": 22000, "failureMessages": ["AssertionError: expected 1 to equal 0"] }
+      ]
+    }
+  ]
+}
