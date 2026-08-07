@@ -1172,6 +1172,15 @@ export class VirtualSelect {
     if (this.hasServerSearch) {
       clearTimeout(this.serverSearchTimeout);
 
+      /**
+       * A search the user types is never silent, whatever state a previous close left behind.
+       * The other half of the lifecycle lives in closeDropbox()/openDropbox(): closing marks
+       * the instance silent *after* its own setSearchValue('') runs, so it does not matter
+       * what this assignment does during the close - but it must not matter, which is why
+       * this is unconditional rather than `= this.isClosing`.
+       */
+      this.isSilentServerSearch = false;
+
       this.serverSearchTimeout = setTimeout(() => {
         this.serverSearch();
       }, this.searchDelay);
@@ -1387,6 +1396,8 @@ export class VirtualSelect {
     this.uniqueId = this.getUniqueId();
     this.shouldFocusWrapperOnClose = true; // Initialize focus management property
     this.isClosing = false;
+    /** true from closeDropbox() until the next openDropbox() - see closeDropbox() */
+    this.isSilentServerSearch = false;
     this.ariaSetSize = 0;
     this.ariaMetadataDirty = true;
   }
@@ -1954,8 +1965,22 @@ export class VirtualSelect {
     this.setVisibleOptionsCount();
     DomUtils.removeClass(this.$allWrappers, 'server-searching');
 
-    /** replace the "loading" message with the outcome of the fetch */
-    if (this.isInitialized) {
+    /**
+     * Replace the "loading" message with the outcome of the fetch - for an open dropdown.
+     *
+     * isOpened() alone is not enough: the `closed` class arrives with the hide transition,
+     * so a response landing just after Escape still saw an "open" dropdown. The silent flag
+     * (see closeDropbox) covers that window and the whole closed period; opening lifts it.
+     *
+     * The count always describes the list as rendered *now*, not the fetch that triggered it.
+     * setServerOptions() carries no request identity, so responses cannot be matched to
+     * searches - when a stale response overwrites the list of an open dropdown, what is
+     * announced is exactly what the user sees, and the newer response re-announces when it
+     * lands. The local path announces the currently visible matches on the same principle
+     * (announceSearchResults additionally requires focus in the search input, which a
+     * response arriving whenever the host answers cannot demand).
+     */
+    if (this.isInitialized && !this.isSilentServerSearch && this.isOpened()) {
       this.announce(this.getResultsCountMessage());
     }
   }
@@ -2966,6 +2991,15 @@ export class VirtualSelect {
     // Add to open instances
     VirtualSelect.openInstances.add(this);
 
+    /**
+     * The silence a close imposed (see closeDropbox) must not outlive the closed state:
+     * from now on the list is visible, so a fetch that fires or resolves against this open
+     * dropdown describes what the user is looking at and has to be announced - including a
+     * host push refreshing the options, and the close-time reset when it lands only after
+     * the user has already reopened.
+     */
+    this.isSilentServerSearch = false;
+
     DomUtils.setAttr(this.$dropboxWrapper, 'tabindex', '0');
     DomUtils.setAria(this.$dropboxWrapper, 'hidden', false);
 
@@ -3115,6 +3149,28 @@ export class VirtualSelect {
       this.setSearchValue('');
     } finally {
       this.isClosing = false;
+    }
+
+    /**
+     * From here until the next open, no server-search announcement may reach the live region:
+     * the dropdown the messages would describe is gone. Closing spoke twice for an interaction
+     * the user never made - the reset above schedules a fetch of its own, which said
+     * loadingText one searchDelay after the dropbox had closed and then the result count when
+     * the host responded. The local path already refuses to announce a reset it performed
+     * itself (announceSearchResults); this flag is the same rule for the server path.
+     *
+     * A flag set for the whole closed period, rather than one latched onto the scheduled
+     * fetch, because the close cannot see everything that is still going to speak:
+     * setSearchValue('') early-returns when the user already emptied the box (leaving *their*
+     * pending fetch to fire after the close), and a response to an earlier search can land
+     * mid hide-transition, while isOpened() is still true. openDropbox() lifts the silence,
+     * so it cannot leak into the next open either.
+     *
+     * The reset fetch itself is deliberately left running - it is what restores the
+     * unfiltered list for the next open, since opening does not search.
+     */
+    if (this.hasServerSearch) {
+      this.isSilentServerSearch = true;
     }
   }
 
@@ -3885,8 +3941,16 @@ export class VirtualSelect {
     DomUtils.removeClass(this.$allWrappers, 'has-no-search-results');
     DomUtils.addClass(this.$allWrappers, 'server-searching');
 
-    /** the spinner is a visual-only cue; announce that a fetch is in flight */
-    this.announce(this.loadingText);
+    /**
+     * The spinner is a visual-only cue; announce that a fetch is in flight - but only for a
+     * dropdown the user can see. The silent flag covers the closed period (see closeDropbox);
+     * isOpened() covers fetches the component issued on its own while closed, such as the
+     * search reset showOptionsOnlyOnSearch forces during construction, which otherwise spoke
+     * loadingText on a page the user had not touched yet.
+     */
+    if (this.isInitialized && !this.isSilentServerSearch && this.isOpened()) {
+      this.announce(this.loadingText);
+    }
 
     this.setSelectedOptions();
     this.onServerSearch(this.searchValue, this);
