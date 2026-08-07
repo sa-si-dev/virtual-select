@@ -296,6 +296,24 @@ Notes:
 - `ele` and `options` are ignored, being inherently per-instance.
 - A non-object argument (e.g. an accidentally-unset variable) is **ignored**, so a page-wide
   policy cannot be wiped by mistake. To clear a single key, pass it with the value `undefined`;
-  to clear everything, call `VirtualSelect.resetGlobalDefaults()`.
+  to clear everything, call [`VirtualSelect.resetGlobalDefaults()`](#virtualselectresetglobaldefaults).
 
-Read the current values with `VirtualSelect.getGlobalDefaults()`, which returns a copy.
+### VirtualSelect.resetGlobalDefaults()
+
+Drop every global default, so instances created afterwards fall back to the library's own
+defaults. Clearing is deliberately a separate method: `setGlobalDefaults()` only ever merges, so
+passing it `{}` does nothing.
+
+```js
+VirtualSelect.resetGlobalDefaults();
+```
+
+### VirtualSelect.getGlobalDefaults()
+
+Read the global defaults currently in force, as set by
+[`setGlobalDefaults()`](#virtualselectsetglobaldefaults). Returns a shallow copy, so writing to
+the returned object does not change what later instances get.
+
+```js
+VirtualSelect.getGlobalDefaults();
+```
