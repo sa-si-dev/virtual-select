@@ -195,17 +195,78 @@ export class Utils {
    * @memberof Utils
    */
   static willTextOverflow(container, text) {
-    const tempElement = document.createElement('div');
-    tempElement.style.position = 'absolute';
-    tempElement.style.visibility = 'hidden';
-    tempElement.style.whiteSpace = 'nowrap';
-    tempElement.style.fontSize = window.getComputedStyle(container).fontSize;
-    tempElement.style.fontFamily = window.getComputedStyle(container).fontFamily;
-    tempElement.textContent = text;
-    document.body.appendChild(tempElement);
-    const textWidth = tempElement.clientWidth;
-    document.body.removeChild(tempElement);
-    return textWidth > container.clientWidth;
+    /**
+     * Called once per selected tag to decide whether that tag needs a tooltip.
+     *
+     * It used to create a div, read two separate getComputedStyle results, append it to
+     * <body>, read clientWidth and remove it again - so every tag paid an element creation
+     * plus two DOM mutations, and each mutation invalidates layout for the read that
+     * follows. Rendering many tags therefore meant a burst of forced synchronous layouts.
+     *
+     * One reusable off-screen node instead, and one getComputedStyle read for every property.
+     * The node stays out of flow and is aria-hidden, so it cannot affect layout or be
+     * announced, and it is removed once the last instance is destroyed.
+     */
+    const $measurer = Utils.getTextMeasurer();
+    const { fontSize, fontFamily, fontWeight, letterSpacing } = window.getComputedStyle(container);
+
+    $measurer.style.fontSize = fontSize;
+    $measurer.style.fontFamily = fontFamily;
+    /** weight and tracking change advance width too, so ignoring them under-reported
+     *  overflow and could drop a tooltip that was actually needed */
+    $measurer.style.fontWeight = fontWeight;
+    $measurer.style.letterSpacing = letterSpacing;
+    $measurer.textContent = text;
+
+    return $measurer.clientWidth > container.clientWidth;
+  }
+
+  /**
+   * Whether the user has asked the operating system to reduce motion.
+   *
+   * Read on each call rather than cached, so a preference changed after page load is picked up
+   * by the next instance. Guarded for environments without matchMedia.
+   *
+   * @static
+   * @returns {boolean}
+   */
+  static prefersReducedMotion() {
+    return typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  }
+
+  /**
+   * The shared, lazily created off-screen node used to measure text width.
+   *
+   * @static
+   * @returns {HTMLElement}
+   */
+  static getTextMeasurer() {
+    if (!Utils.$textMeasurer || !Utils.$textMeasurer.isConnected) {
+      const $measurer = document.createElement('div');
+
+      $measurer.className = 'vscomp-text-measurer';
+      $measurer.setAttribute('aria-hidden', 'true');
+      $measurer.style.cssText =
+        'position:absolute;top:0;left:-9999px;visibility:hidden;white-space:nowrap;pointer-events:none;';
+
+      document.body.appendChild($measurer);
+      Utils.$textMeasurer = $measurer;
+    }
+
+    return Utils.$textMeasurer;
+  }
+
+  /**
+   * Drop the shared measuring node, so nothing of ours is left in the document once the last
+   * instance has gone.
+   *
+   * @static
+   */
+  static removeTextMeasurer() {
+    if (Utils.$textMeasurer) {
+      Utils.$textMeasurer.remove();
+      Utils.$textMeasurer = null;
+    }
   }
 
   /**
@@ -216,6 +277,90 @@ export class Utils {
    */
   static replaceDoubleQuotesWithHTML(text) {
     return text.replace(/"/g, '&quot;');
+  }
+
+  /**
+   * Escape a *raw* string for interpolation into a double-quoted HTML attribute.
+   *
+   * Use this only where the input has not already been HTML-escaped - currently the option
+   * value, which is stored verbatim because it reaches no innerHTML sink. `&` must be escaped
+   * first, otherwise the `&` introduced by the quote replacement would itself be escaped and
+   * the attribute would parse back as a literal `&quot;`.
+   *
+   * Deliberately NOT used by DomUtils.getAttributesText(), whose inputs are already-escaped
+   * label text: escaping `&` there would double it and a tooltip would show `&amp;`. That
+   * asymmetry is the reason this is a separate helper rather than a shared one.
+   *
+   * @static
+   * @param {string} text
+   * @return {string}
+   * @memberof Utils
+   */
+  static escapeAttributeValue(text) {
+    return Utils.getString(text).replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+  }
+
+  /**
+   * Undo the escaping secureText() applies, recovering the text a human should read.
+   *
+   * Option label and description are stored HTML-escaped when enableSecureText is on, because
+   * they are inserted as HTML. Anywhere that text is consumed as *text* instead - an accessible
+   * name, a live-region announcement - the escape sequences have to come back off, or the user
+   * is read `&amp;` and `&lt;i class=...`.
+   *
+   * `&amp;` is decoded last: doing it first would turn a literal `&amp;lt;` into `&lt;` and then
+   * into `<`, inventing markup the consumer never wrote.
+   *
+   * @static
+   * @param {string} text
+   * @return {string}
+   * @memberof Utils
+   */
+  static decodeSecureText(text) {
+    return Utils.getString(text)
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&nbsp;/g, '\u00A0')
+      .replace(/&amp;/g, '&');
+  }
+
+  /**
+   * Reduce label text to the words a human should hear or read.
+   *
+   * Labels may legitimately contain markup - an icon, <b>, a <br>. Wherever that text is
+   * consumed as text (an accessible name, a live-region announcement) the markup is meaningless
+   * and is read out as tag soup. Tags collapse to a single space so adjacent words do not run
+   * together, so "France<br>Paris" does not become one word.
+   *
+   * The escaping is undone first. With enableSecureText on the label arrives already escaped, so
+   * the tag pattern found no `<` to match and the markup passed through verbatim - the strip was
+   * a no-op in exactly the mode escaping is enabled in.
+   *
+   * @static
+   * @param {string} text
+   * @return {string}
+   * @memberof Utils
+   */
+  static getPlainText(text) {
+    return Utils.decodeSecureText(text)
+      .replace(/<[^>]+>/gi, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  /**
+   * Turn a label into text that is safe and sensible inside an aria-label attribute.
+   *
+   * Plain text, then escaped for the attribute - covering `&` as well as `"`, so a bare
+   * ampersand in a label is a valid character reference rather than raw markup, and a double
+   * quote can no longer close the attribute early and truncate the name.
+   *
+   * @static
+   * @param {string} text
+   * @returns {string}
+   */
+  static getAriaLabelText(text) {
+    return Utils.escapeAttributeValue(Utils.getPlainText(text));
   }
 
   /**
@@ -328,3 +473,10 @@ export class Utils {
     return throttled;
   }
 }
+
+/**
+ * Shared off-screen node used to measure text width, created on first use and removed when
+ * the last VirtualSelect instance is destroyed.
+ * @type {HTMLElement | null}
+ */
+Utils.$textMeasurer = null;

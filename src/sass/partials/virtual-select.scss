@@ -321,6 +321,25 @@
   }
 }
 
+.vscomp-error-message {
+  align-items: flex-start;
+  color: v.$error-color;
+  display: none;
+  font-size: v.$font-size-small;
+  gap: 4px;
+  line-height: 1.4;
+  padding-top: 4px;
+  width: 100%;
+
+  /** shape cue, so the failure is not signalled by colour alone */
+  &::before {
+    content: '\26A0';
+    flex: none;
+    font-size: 1.1em;
+    line-height: 1.2;
+  }
+}
+
 .vscomp-no-options,
 .vscomp-no-search-results {
   align-items: center;
@@ -427,6 +446,14 @@
       align-items: center;
       cursor: pointer;
       display: flex;
+      /**
+       * WCAG 2.5.8: the button previously collapsed to its 25x15 content box.
+       * A min-* floor grows the hit area without scaling the checkbox glyph inside it.
+       * No justify-content override: the checkbox must stay left-aligned with the
+       * option checkboxes below it, not centered in the button's full width.
+       */
+      min-height: v.$min-target-size;
+      min-width: v.$min-target-size;
     }
 
     .vscomp-search-input,
@@ -572,6 +599,17 @@
     .vscomp-toggle-button {
       border-color: v.$error-color;
     }
+
+    /**
+     * The message is the non-colour cue required by WCAG 1.4.1: the border tint alone
+     * carried the whole meaning before. The leading glyph adds a second, shape-based cue.
+     *
+     * A sibling selector because the message lives *outside* the wrapper: inside it, the
+     * text would join the combobox's name-from-contents computation (see renderWrapper).
+     */
+    ~ .vscomp-error-message {
+      display: flex;
+    }
   }
 
   &.show-value-as-tags {
@@ -652,5 +690,21 @@
         padding-bottom: 3px;
       }
     }
+  }
+}
+
+/**
+ * Users who ask the operating system to reduce motion should not get the dropbox slide.
+ *
+ * The loader spin is deliberately left alone: it is a status indicator rather than decoration,
+ * and a frozen spinner reads as a broken UI instead of "working". Screen reader users get the
+ * same information from the live region, so nothing is lost by keeping it.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .vscomp-dropbox-container,
+  .vscomp-dropbox,
+  .vscomp-wrapper .vscomp-toggle-button,
+  .vscomp-dropbox-wrapper {
+    transition-duration: 0s !important;
   }
 }

@@ -133,6 +133,44 @@ export class DomUtils {
   }
 
   /**
+   * @param {HTMLElement} $ele
+   * @param {string} name
+   */
+  static removeAttr($ele, name) {
+    if (!$ele) {
+      return;
+    }
+
+    $ele.removeAttribute(name);
+  }
+
+  /**
+   * Set an aria-* attribute when the state applies, remove it otherwise.
+   *
+   * Preferred over writing `aria-x="false"` for states whose absence is meaningful
+   * (aria-required, aria-invalid): a literal "false" is valid but adds noise that some
+   * screen readers still verbalise.
+   *
+   * @param {HTMLElement | NodeListOf<HTMLElement>} $ele
+   * @param {string} name
+   * @param {boolean} isSet
+   * @param {string} [value='true']
+   */
+  static toggleAria($ele, name, isSet, value = 'true') {
+    if (!$ele) {
+      return;
+    }
+
+    DomUtils.getElements($ele).forEach(($this) => {
+      if (isSet) {
+        $this.setAttribute(`aria-${name}`, value);
+      } else {
+        $this.removeAttribute(`aria-${name}`);
+      }
+    });
+  }
+
+  /**
    * @param {HTMLElement} $from
    * @param {HTMLElement} $to
    * @param {string[]} attrList
@@ -290,7 +328,21 @@ export class DomUtils {
     // @ts-ignore
     Object.entries(data).forEach(([k, v]) => {
       if (v !== undefined) {
-        html += ` ${k}="${v}" `;
+        /**
+         * Quotes are escaped here, at the attribute boundary, because this is the only place
+         * that knows the value is about to be wrapped in double quotes.
+         *
+         * The caller that matters is getTooltipAttrText(), which passes option labels through
+         * to data-tooltip. It used to escape quotes itself but only when containsHTML(label)
+         * was true, so a payload with no tag in it - `x" data-pwned="1" z="` - went in raw and
+         * put a live attribute on the value-tag element. Escaping unconditionally here removes
+         * the condition, and the parser turns &quot; back into a quote, so the attribute still
+         * reads back as the original string.
+         *
+         * String(), not Utils.getString(): the latter maps `false` to '', and some of these
+         * attributes carry real boolean values (data-tooltip-ellipsis-only, -allow-html).
+         */
+        html += ` ${k}="${Utils.replaceDoubleQuotesWithHTML(String(v))}" `;
       }
     });
 
