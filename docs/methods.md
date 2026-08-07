@@ -275,10 +275,12 @@ document.querySelector('#sample-select').toggleRequired(true);
 Set default props applied to every instance created afterwards, so a page-wide policy does not
 have to be repeated at each call site.
 
-The main use is security. Option `label`, `value` and `description` are inserted as raw HTML and
-are only escaped when `enableSecureText` is on, which is **not** the default (escaping runs per
-option and is measurable on 10k-100k+ lists). If any option text in your app can come from
-untrusted input, turn it on once during startup:
+The main use is security. Option `label` and `description` are inserted as raw HTML and are only
+escaped when `enableSecureText` is on, which is **not** the default (escaping runs per option and
+is measurable on 10k-100k+ lists). `value` is never rendered as HTML - it is only compared and
+written to a `data-value` attribute, which is escaped at that boundary - so it stays exactly as
+you supplied it. If any option text in your app can come from untrusted input, turn escaping on
+once during startup:
 
 ```js
 VirtualSelect.setGlobalDefaults({ enableSecureText: true });
