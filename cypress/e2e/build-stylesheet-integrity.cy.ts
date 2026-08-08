@@ -19,8 +19,36 @@
  * regresses, not merely if the source does.
  */
 
-/** Rules whose absence would be invisible to a behavioural test. */
-const REQUIRED_KEYFRAMES = 'vscomp-animation-spin';
+/** The stylesheet under test, as the docs site loads it. */
+const STYLESHEET = 'virtual-select.min.css';
+
+/** Our own sheet only - the docs page also loads fonts and vue.css. */
+const ownStyleSheet = (win: Window): CSSStyleSheet => {
+  const sheet = Array.from(win.document.styleSheets).find((s) => s.href?.includes(STYLESHEET));
+
+  expect(sheet, `${STYLESHEET} is loaded by the page`).to.not.equal(undefined);
+
+  return sheet as CSSStyleSheet;
+};
+
+/**
+ * Fetch the stylesheet's source through the **browser**, using the `href` the page actually loaded.
+ *
+ * Not `cy.request('assets/…')`: `baseUrl` ends in `#/`, so a relative path resolves to the document
+ * root and the server answers with `index.html`. An earlier version of this spec did that and its
+ * assertions were green against a build carrying a BOM - they were inspecting the docs homepage, not
+ * the stylesheet. Reading `sheet.href` cannot drift from what is under test.
+ */
+const fetchOwnStyleSheetText = (win: Window) =>
+  cy.wrap(
+    win
+      .fetch(ownStyleSheet(win).href as string)
+      .then((response) => {
+        expect(response.ok, `${STYLESHEET} fetched`).to.equal(true);
+        return response.text();
+      }),
+    { log: false },
+  ) as unknown as Cypress.Chainable<string>;
 
 describe('Build: the shipped stylesheet parses', { testIsolation: true }, () => {
   beforeEach(() => {
@@ -28,53 +56,91 @@ describe('Build: the shipped stylesheet parses', { testIsolation: true }, () => 
     cy.visit('properties');
   });
 
-  /** The reference and its target must both exist - a dangling animation-name is silent. */
-  it('keeps the loader keyframes reachable from the rule that uses it', () => {
+  /**
+   * Compares the file against the CSSOM instead of naming a rule. A mid-file BOM destroys
+   * **whichever** rule follows the banner, so hard-coding today's first rule would stop guarding
+   * anything the moment the partials are reordered. If the parser's first rule is not the file's
+   * first rule, something was swallowed.
+   */
+  it('accepts the first rule in the file as its first rule', () => {
     cy.window().then((win) => {
-      const keyframeNames: string[] = [];
+      fetchOwnStyleSheetText(win).then((css) => {
+        const afterBanner = css.slice(css.indexOf('*/') + 2);
+        // No trim(): JS counts U+FEFF as whitespace, so trimming would discard the very
+        // character that causes the defect.
+        const fileFirstHead = afterBanner.slice(0, afterBanner.indexOf('{')).replace(/^[\s]+/, '').trim();
 
-      Array.from(win.document.styleSheets).forEach((sheet) => {
-        let rules: CSSRuleList;
+        const firstRule = ownStyleSheet(win).cssRules[0];
+        const parsedFirstHead = firstRule.cssText.slice(0, firstRule.cssText.indexOf('{')).trim();
 
-        try {
-          rules = sheet.cssRules;
-        } catch {
-          // cross-origin sheet (fonts CDN) - not ours
-          return;
-        }
+        // Normalised: the CSSOM re-serialises `@keyframes` and spacing in its own style.
+        const normalise = (s: string) => s.replace(/\s+/g, ' ').toLowerCase();
 
-        Array.from(rules).forEach((rule) => {
-          if (rule.type === CSSRule.KEYFRAMES_RULE) {
-            keyframeNames.push((rule as CSSKeyframesRule).name);
-          }
-        });
+        expect(normalise(parsedFirstHead), 'the parser kept the file first rule').to.equal(
+          normalise(fileFirstHead),
+        );
       });
-
-      expect(keyframeNames, `@keyframes ${REQUIRED_KEYFRAMES} survived parsing`).to.include(
-        REQUIRED_KEYFRAMES,
-      );
-
-      const $loader = win.document.createElement('div');
-      $loader.className = 'vscomp-options-loader';
-      win.document.body.appendChild($loader);
-
-      const animationName = win.getComputedStyle($loader, '::before').animationName;
-      $loader.remove();
-
-      expect(animationName, 'the loader still references it').to.equal(REQUIRED_KEYFRAMES);
     });
   });
 
   /**
-   * The byte-level guards on the *cause* - no BOM, ASCII-only - deliberately live in
-   * `scripts/ci/__tests__/stylesheet-bytes.test.mjs` instead of here. Written as `cy.request()`
-   * they passed against a bundle that genuinely carried a BOM: the HTTP layer decodes the response
-   * and strips it on the way through, including with `encoding: 'binary'`. That was verified, not
-   * assumed - they were green against a known-bad build. Reading the built file from disk in the
-   * Node suite is the only place those bytes are observable.
+   * The consequence check, derived from the file rather than hard-coded: every animation the
+   * stylesheet references must resolve to a `@keyframes` the parser kept. A dangling
+   * `animation-name` is silent at runtime - the element simply never animates - which is what made
+   * the original defect invisible.
+   */
+  it('resolves every animation it references to a surviving keyframes rule', () => {
+    cy.window().then((win) => {
+      fetchOwnStyleSheetText(win).then((css) => {
+        const referenced = new Set(
+          [...css.matchAll(/animation(?:-name)?:([^;}]+)/g)]
+            .flatMap((m) => m[1].split(/[\s,]+/))
+            .filter((token) => new RegExp(`@(?:-\\w+-)?keyframes\\s+${token}\\b`).test(css)),
+        );
+
+        expect(referenced.size, 'the stylesheet references at least one animation').to.be.greaterThan(0);
+
+        const survived = Array.from(ownStyleSheet(win).cssRules)
+          .filter((rule) => rule.type === CSSRule.KEYFRAMES_RULE)
+          .map((rule) => (rule as CSSKeyframesRule).name);
+
+        referenced.forEach((name) => {
+          expect(survived, `@keyframes ${name} survived parsing`).to.include(name);
+        });
+      });
+    });
+  });
+
+  /** And the animation is actually applied - the CSSOM having the rule is necessary, not enough. */
+  it('applies a surviving animation to the element that asks for it', () => {
+    cy.window().then((win) => {
+      const $loader = win.document.createElement('div');
+      $loader.className = 'vscomp-options-loader';
+      win.document.body.appendChild($loader);
+
+      const { animationName, animationDuration } = win.getComputedStyle($loader, '::before');
+      $loader.remove();
+
+      expect(animationName, 'the loader names an animation').to.not.be.oneOf(['none', '']);
+      expect(animationDuration, 'and it has a non-zero duration').to.not.equal('0s');
+
+      const survived = Array.from(ownStyleSheet(win).cssRules)
+        .filter((rule) => rule.type === CSSRule.KEYFRAMES_RULE)
+        .map((rule) => (rule as CSSKeyframesRule).name);
+
+      expect(survived, `the loader's animation "${animationName}" exists`).to.include(animationName);
+    });
+  });
+
+  /**
+   * The byte-level guards on the *cause* - no BOM, ASCII-only - live in
+   * `scripts/build-checks/__tests__/stylesheet-bytes.test.mjs`, run by `npm run test:build`
+   * immediately after the build. They read the artefact from disk, with no server or HTTP layer in
+   * between, which is the most direct place to assert about bytes.
    *
-   * What remains here is the half that only a browser can answer: whether the rule survives
-   * parsing, and whether the cue still reaches the page.
+   * What stays here is the half only a browser can answer: whether the rules survive *parsing*, and
+   * whether the cue reaches the page. A file can be byte-perfect and still parse wrongly, and the
+   * CSSOM is the only witness to that.
    */
 
   /** The cue itself must still reach the page - an ASCII escape the CSS parser decodes. */
