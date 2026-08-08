@@ -110,6 +110,13 @@ jobs:
       - name: Build
         run: node scripts/ci/run-step.mjs Build npm run build
 
+      # Byte-level assertions on the artefacts the build just produced (no BOM, ASCII-only,
+      # keyframes intact). This has to live in *this* job rather than in `static`: those checks
+      # read dist/, `static` never builds, and the committed dist/ is deliberately stale — so
+      # there they passed against a bundle predating the rule they exist to protect.
+      - name: Build output checks
+        run: node scripts/ci/run-step.mjs "Build Output" npm run test:build
+
       # Deliberately not `if: always()` — if the build failed there is nothing
       # meaningful to test, and the missing fragment renders as "E2E skipped".
       - name: E2E

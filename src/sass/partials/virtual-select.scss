@@ -1,4 +1,5 @@
 @use 'sass:math';
+@use 'sass:string';
 @use './variable' as v;
 @use './mixins' as m;
 
@@ -331,9 +332,19 @@
   padding-top: 4px;
   width: 100%;
 
-  /** shape cue, so the failure is not signalled by colour alone */
+  /**
+   * Shape cue, so the failure is not signalled by colour alone.
+   *
+   * The escape is kept intact in the output rather than written as a literal warning sign:
+   * Sass resolves `'\26A0'` to the character itself, and a single non-ASCII character makes Sass
+   * emit an encoding hint - a U+FEFF BOM in compressed output - which BannerPlugin then pushes
+   * into the middle of the file, where it destroys the rule that follows. `charset: false` in
+   * webpack.config.js stops the hint being emitted at all; keeping the stylesheet ASCII means
+   * there is nothing to declare in the first place, so the glyph does not depend on the consuming
+   * page's encoding either.
+   */
   &::before {
-    content: '\26A0';
+    content: string.unquote('"\\26A0"');
     flex: none;
     font-size: 1.1em;
     line-height: 1.2;
