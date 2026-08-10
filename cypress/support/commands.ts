@@ -4,13 +4,18 @@ import 'cypress-real-events';
 const dropboxCloseDuration = 200;
 const optionsScrollDuration = 300;
 
-type SpecialKey = 'Tab' | 'Enter' | 'Escape' | 'ArrowUp' | 'ArrowDown' | 'ArrowLeft' | 'ArrowRight' | 'Home' | 'End';
+/**
+ * The one source of truth for pressKeys(): the type, the guard and the error message are all
+ * derived from it, so they cannot drift out of step with each other.
+ */
+const SPECIAL_KEYS = [
+  'Tab', 'Enter', 'Escape', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Home', 'End',
+] as const;
+
+type SpecialKey = (typeof SPECIAL_KEYS)[number];
 
 // Type guard function
-const isValidKey = (key: string): key is SpecialKey => {
-  const specialKeys = ['Tab', 'Enter', 'Escape', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Home', 'End'];
-  return specialKeys.includes(key);
-};
+const isValidKey = (key: string): key is SpecialKey => (SPECIAL_KEYS as readonly string[]).includes(key);
 
 Cypress.Commands.add('goToSection', (title) => {
   cy.get('a').contains(title).click({force: true});
@@ -28,6 +33,58 @@ Cypress.Commands.add('getDropbox', (vsElem, id) => {
 
 Cypress.Commands.add('open', (id) => {
   cy.getVs(id).wait(dropboxCloseDuration).click();
+});
+
+/**
+ * Open a dropdown from a known state, without depending on how the previous test left it.
+ *
+ * `cy.open()` is a click, i.e. a *toggle*: on an already-open dropdown it closes instead, and
+ * its fixed `wait(dropboxCloseDuration)` races the hide transition, which is what made the
+ * keyboard cases in this suite order-coupled (`testIsolation: false` keeps every instance
+ * alive across tests). This command asserts its way to the state it needs instead of waiting a
+ * fixed time for it:
+ *
+ *   1. clear the value, the filter and the scroll position, and ask the dropbox to close;
+ *   2. wait for it to actually be closed (`closed` class), so the click below always opens;
+ *   3. click, and wait for it to actually be open;
+ *   4. assert no option carries the highlight, so a following ArrowDown always lands on the
+ *      first option and press counts stop depending on test order.
+ *
+ * All four inputs a press count can depend on are pinned, not three. `scrollTop` is one of
+ * them because `focusOption()` resolves "the first option" through
+ * `getFirstVisibleOptionIndex()`, i.e. `scrollTop / optionHeight` - and opening does not reset
+ * it (`setScrollTop()` returns early with no selection, and `scrollToTop()` only runs under
+ * `showSelectedOptionsFirst`). The filter is cleared explicitly rather than relying on
+ * `closeDropbox()` doing it, because `closeDropbox()` returns early when already closed and
+ * `reset()` never touches the search value.
+ */
+Cypress.Commands.add('openFresh', (id) => {
+  cy.getVs(id).then(($ele) => {
+    const vs = $ele[0].virtualSelect;
+    vs.reset(false, true);
+
+    /** guarded: instances built with search: false have no $searchInput to write to */
+    if (vs.$searchInput) {
+      vs.setSearchValue('');
+    }
+
+    vs.$optionsContainer.scrollTop = 0;
+    vs.closeDropbox();
+  });
+
+  cy.getVs(id).find('.vscomp-wrapper').should('have.class', 'closed');
+  cy.getVs(id).click();
+  cy.getVs(id).find('.vscomp-wrapper').should('not.have.class', 'closed');
+  cy.getDropbox(null, id).find('.vscomp-option.focused').should('not.exist');
+
+  cy.getVs(id).should(($ele) => {
+    const vs = $ele[0].virtualSelect;
+
+    expect(vs.searchValue, 'search value').to.equal('');
+    expect(vs.$optionsContainer.scrollTop, 'options scrollTop').to.equal(0);
+  });
+
+  cy.getVs(id);
 });
 
 Cypress.Commands.add('close', { prevSubject: true }, (vsElem) => {
@@ -121,18 +178,32 @@ Cypress.Commands.add('typeValue', { prevSubject: true }, (vsElem, value, clearTe
 });
 
 Cypress.Commands.add('pressKeys', { prevSubject: true }, (vsElem, keys) => {
-  const searchInput = cy.getDropbox(vsElem).find('.vscomp-search-input');
-  searchInput.focus();
+  /**
+   * Focus the search input when there is one and the wrapper otherwise.
+   *
+   * This used to resolve `.vscomp-search-input` unconditionally, so any `search: false` instance
+   * failed with an opaque "expected to find element" - the very case `cy.openFresh()` guards
+   * above. The wrapper is the right fallback rather than a workaround: it carries
+   * `role="combobox"` and `tabindex="0"`, and it is where `onKeyDown` is actually bound
+   * (`$allWrappers`, src/virtual-select.js:589), which is how a keystroke in the search input
+   * reaches the handler in the first place - by bubbling up to it.
+   */
+  cy.get(vsElem).then(($ele) => {
+    const vs = $ele[0].virtualSelect;
+
+    cy.wrap(vs.$searchInput || vs.$wrapper).focus();
+  });
 
   const keysToPress = Array.isArray(keys) ? keys : [keys];
-  
+
   keysToPress.forEach(key => {
     if (isValidKey(key)) {
       // TypeScript now knows this is a valid key type
       cy.realPress(key);
     } else {
-      // Log an error or fail the test if an invalid key is passed
-      throw new Error(`Invalid key provided: "${key}". Must be one of: ${keysToPress.join(', ')}`);
+      /** the *valid* set - this used to interpolate the caller's own keys, so an invalid key
+       * produced `Invalid key provided: "Foo". Must be one of: Foo` */
+      throw new Error(`Invalid key provided: "${key}". Must be one of: ${SPECIAL_KEYS.join(', ')}`);
     }
   });
   cy.get(vsElem);

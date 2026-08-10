@@ -1,5 +1,26 @@
+/**
+ * VirtualSelect.setEleProps() attaches the instance and its public API directly onto the
+ * host element, so specs can drive a component through the same surface consumers use.
+ */
 interface HTMLElement {
   virtualSelect?: any;
+  reset?: (formReset?: boolean, disableChangeEvent?: boolean) => void;
+  setValue?: (value: any, options?: any) => void;
+  setOptions?: (options: any[], keepValue?: boolean) => void;
+  setDisabledOptions?: (disabledOptions: any[], keepValue?: boolean) => void;
+  setEnabledOptions?: (enabledOptions: any[], keepValue?: boolean) => void;
+  toggleSelectAll?: (isSelectAll?: boolean) => void;
+  isAllSelected?: () => boolean;
+  addOption?: (data: any, rerender?: boolean) => void;
+  getNewValue?: () => any;
+  getDisplayValue?: () => any;
+  getSelectedOptions?: (options?: any) => any;
+  getDisabledOptions?: () => any;
+  open?: () => void;
+  close?: () => void;
+  destroy?: () => void;
+  validate?: () => boolean;
+  toggleRequired?: (isRequired: boolean) => void;
 }
 
 declare namespace Cypress {
@@ -28,6 +49,15 @@ declare namespace Cypress {
      * cy.open('single-select')
      */
     open(id: string): Chainable<any>;
+
+    /**
+     * Open from a known state - closed, no value, no highlighted option - so press counts do
+     * not depend on what the previous test left behind.
+     *
+     * @example
+     * cy.openFresh('option-group-select')
+     */
+    openFresh(id: string): Chainable<any>;
 
     /**
      * @example
