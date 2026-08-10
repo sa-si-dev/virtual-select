@@ -5,5 +5,6 @@ export default defineConfig({
     testIsolation: false,
     baseUrl: 'http://localhost:3001/#/',
     screenshotOnRunFailure: true,
+    video: false,
   },
 });
