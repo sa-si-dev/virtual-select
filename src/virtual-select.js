@@ -1035,8 +1035,6 @@ export class VirtualSelect {
     if (VirtualSelect.activeInstances.size === 0) {
       VirtualSelect.removeGlobalListeners();
       VirtualSelect.disconnectDomObserver();
-      /** the shared text measurer is the last page-level node we own */
-      Utils.removeTextMeasurer();
     }
   }
 
@@ -2157,9 +2155,26 @@ export class VirtualSelect {
         selectedValuesCount += 1;
 
         if (showValueAsTags) {
-          // Will cause text overflow in runtime and if so,the tooltip information is prepared
-          const valueTooltipForTags = Utils.willTextOverflow($valueText.parentElement, label)
-            ? this.getTooltipAttrText(label, false, true) : '';
+          /**
+           * The tooltip is attached to the tag's *content* span, with ellipsisOnly, so the
+           * tooltip plugin runs `scrollWidth > offsetWidth` on the real box at hover time.
+           *
+           * This used to be decided here, before the tag existed, by measuring the label
+           * off-screen against `.vscomp-toggle-button` - an element ~73px wider than the space
+           * the tag text actually gets, at that element's 14px rather than the tag's 12px. Both
+           * errors are gone by construction once the rendered box is the measurement (#487).
+           *
+           * The content span rather than `.vscomp-value-tag`: the tag is `inline-flex` and its
+           * content span carries `width: calc(100% - 24px)`, so the span clips while the tag
+           * never reports an overflow of its own - measured, a clipped tag reads
+           * scrollWidth 260 / offsetWidth 262.
+           *
+           * Deferring to hover also means no layout work at render, and a correct answer after
+           * a resize or when the control is first rendered inside a hidden container - none of
+           * which a render-time measurement can give. It matches how the non-tag value text has
+           * always worked (see getToggleButtonHtml).
+           */
+          const valueTagTooltip = this.getTooltipAttrText(label, true, true);
 
           /** markup in the label would otherwise land in the accessible name; a double
            *  quote in it would break out of the attribute entirely */
@@ -2170,8 +2185,8 @@ export class VirtualSelect {
             ariaLabelClearBtnTxt = `aria-label="${stripHtmlLabel}, ${clearButtonText}"`;
           }
 
-          const valueTagHtml = `<span class="vscomp-value-tag" data-index="${d.index}" ${valueTooltipForTags}>
-                  <span class="vscomp-value-tag-content">${label}</span>
+          const valueTagHtml = `<span class="vscomp-value-tag" data-index="${d.index}">
+                  <span class="vscomp-value-tag-content" ${valueTagTooltip}>${label}</span>
                   <span 
                     class="vscomp-value-tag-clear-button" 
                     role="button" 

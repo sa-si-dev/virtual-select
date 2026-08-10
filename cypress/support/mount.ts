@@ -27,13 +27,27 @@ export function unmountVs(win: Window, mountId: string): void {
 /**
  * Create a fresh host element and initialise a VirtualSelect on it.
  *
+ * `hostStyle` is applied to the host **before** `init()`, so the instance is built at the
+ * geometry the test intends. Note `.vscomp-ele` ships `max-width: 250px`, so a test that wants a
+ * wider host has to set `maxWidth` as well as `width` — setting `width` alone is silently capped.
+ *
  * @returns the host element the instance was mounted on
  */
-export function mountVs(win: Window, mountId: string, options: VsOptions): HTMLElement {
+export function mountVs(
+  win: Window,
+  mountId: string,
+  options: VsOptions,
+  hostStyle?: Partial<CSSStyleDeclaration>,
+): HTMLElement {
   unmountVs(win, mountId);
 
   const $ele = win.document.createElement('div');
   $ele.id = mountId;
+
+  if (hostStyle) {
+    Object.assign($ele.style, hostStyle);
+  }
+
   win.document.body.appendChild($ele);
 
   // @ts-expect-error - VirtualSelect is attached to window by the bundle

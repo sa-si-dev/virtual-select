@@ -16,7 +16,8 @@
  *   1. `data-value="${d.value}"` in `renderOptions()`, always;
  *   2. `data-tooltip="${label}"` via `getTooltipAttrText()` in the value-tag path, whose own
  *      escaping was conditional on `containsHTML(label)` - so a payload with no tag at all
- *      went in raw and put a live attribute on the tag element.
+ *      went in raw and put a live attribute on the tag element. (#487 later moved these
+ *      attributes onto `.vscomp-value-tag-content`; the sink and its escaping are the same.)
  *
  * Sink 2 was a real breakout whenever escaping was off, and sink 1 whether it was on or off.
  * Pre-escaping the stored text only ever masked sink 2, and only in the escaping-on case.
@@ -154,9 +155,14 @@ describe('Security: quotes are escaped at the attribute, not in the stored text'
       });
 
       cy.get(`#${mountId}`).find('[data-pwned]').should('not.exist');
-      cy.get(`#${mountId}`).find('.vscomp-value-tag').should(($tag) => {
-        expect($tag.attr('data-tooltip'), 'tooltip round-trip').to.equal(longAttrPayload);
-      });
+      /** the attributes moved from `.vscomp-value-tag` to its content span in #487, so that
+       *  tooltip-plugin evaluates ellipsis on the box that actually clips; the escaping path
+       *  (`getAttributesText()`) and therefore this guarantee are unchanged */
+      cy.get(`#${mountId}`)
+        .find('.vscomp-value-tag .vscomp-value-tag-content')
+        .should(($content) => {
+          expect($content.attr('data-tooltip'), 'tooltip round-trip').to.equal(longAttrPayload);
+        });
     });
   });
 
