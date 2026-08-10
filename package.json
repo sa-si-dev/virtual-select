@@ -10,6 +10,7 @@
     "lint:js": "eslint src",
     "lint:css": "stylelint src/sass/**/*.scss",
     "test:scripts": "node --test \"scripts/ci/**/*.test.mjs\"",
+    "test:build": "node --test \"scripts/build-checks/**/*.test.mjs\"",
     "docs": "docsify serve docs",
     "t": "docsify serve docs -p 3001 | cypress open --e2e -b chrome",
     "test": "node scripts/ci/run-e2e.mjs"

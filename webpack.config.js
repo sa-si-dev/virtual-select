@@ -70,7 +70,37 @@ module.exports = (env, options) => {
         {
           test: /\.scss$/,
           exclude: /(node_modules)/,
-          use: [MiniCssExtractPlugin.loader, 'css-loader', 'postcss-loader', 'sass-loader'],
+          use: [
+            MiniCssExtractPlugin.loader,
+            'css-loader',
+            'postcss-loader',
+            {
+              loader: 'sass-loader',
+              options: {
+                sassOptions: {
+                  /**
+                   * Dart Sass prepends an encoding hint whenever the output contains a non-ASCII
+                   * character - `@charset "UTF-8";` in expanded output, and a U+FEFF BOM in the
+                   * compressed output we ship. BannerPlugin then prepends the licence banner in
+                   * front of it, so the BOM lands mid-file, where U+FEFF is a valid CSS ident
+                   * code point rather than an ignorable mark: the parser reads it as the start of
+                   * a selector, swallows the rule that follows and drops the pair.
+                   *
+                   * That silently deleted `@keyframes vscomp-animation-spin` - the first rule
+                   * after the banner - while `.vscomp-options-loader::before` kept referencing it,
+                   * so the options loader rendered frozen. Any first rule is vulnerable; the
+                   * spinner was only the one that happened to be there.
+                   *
+                   * The stylesheet is ASCII (the `\26A0` cue is emitted as an escape, see
+                   * virtual-select.scss), so there is no encoding to declare and nothing is lost
+                   * by suppressing the hint. Kept as a rule rather than relying on the source
+                   * staying ASCII, so a future non-ASCII character cannot resurrect the BOM.
+                   */
+                  charset: false,
+                },
+              },
+            },
+          ],
         },
         {
           test: /\.css$/,

@@ -22,6 +22,7 @@
 - [setServerOptions()](#setserveroptions)
 - [validate()](#validate)
 - [toggleRequired()](#togglerequired)
+- [VirtualSelect.setGlobalDefaults()](#virtualselectsetglobaldefaults)
 
 ### Get selected value
 
@@ -267,4 +268,52 @@ To update required property value
 
 ```js
 document.querySelector('#sample-select').toggleRequired(true);
+```
+
+### VirtualSelect.setGlobalDefaults()
+
+Set default props applied to every instance created afterwards, so a page-wide policy does not
+have to be repeated at each call site.
+
+The main use is security. Option `label` and `description` are inserted as raw HTML and are only
+escaped when `enableSecureText` is on, which is **not** the default (escaping runs per option and
+is measurable on 10k-100k+ lists). `value` is never rendered as HTML - it is only compared and
+written to a `data-value` attribute, which is escaped at that boundary - so it stays exactly as
+you supplied it. If any option text in your app can come from untrusted input, turn escaping on
+once during startup:
+
+```js
+VirtualSelect.setGlobalDefaults({ enableSecureText: true });
+```
+
+Notes:
+
+- These are **defaults, not overrides**. An instance that passes the prop explicitly still wins,
+  so if your wrapper forwards `enableSecureText` on every `init()` call it must stop doing so (or
+  forward `true`) for the global to take effect.
+- Only instances created **after** the call are affected. Call it before initialising dropdowns.
+- Calls **merge**, so unrelated settings can be configured separately.
+- `ele` and `options` are ignored, being inherently per-instance.
+- A non-object argument (e.g. an accidentally-unset variable) is **ignored**, so a page-wide
+  policy cannot be wiped by mistake. To clear a single key, pass it with the value `undefined`;
+  to clear everything, call [`VirtualSelect.resetGlobalDefaults()`](#virtualselectresetglobaldefaults).
+
+### VirtualSelect.resetGlobalDefaults()
+
+Drop every global default, so instances created afterwards fall back to the library's own
+defaults. Clearing is deliberately a separate method: `setGlobalDefaults()` only ever merges, so
+passing it `{}` does nothing.
+
+```js
+VirtualSelect.resetGlobalDefaults();
+```
+
+### VirtualSelect.getGlobalDefaults()
+
+Read the global defaults currently in force, as set by
+[`setGlobalDefaults()`](#virtualselectsetglobaldefaults). Returns a shallow copy, so writing to
+the returned object does not change what later instances get.
+
+```js
+VirtualSelect.getGlobalDefaults();
 ```

@@ -19,7 +19,9 @@ $search-height: 40px;
 $checkbox-full-width: 25px;
 $new-option-icon-width: 30px;
 $search-clear-width: 30px;
-$value-tag-clear-width: 20px;
+/** WCAG 2.5.8 Target Size (Minimum), AA - floor for pointer targets */
+$min-target-size: 24px;
+$value-tag-clear-width: $min-target-size;
 $option-height: 40px;
 $arrow-width: 30px;
 $arrow-size: 8px;
