@@ -21,6 +21,15 @@
  *      still pulls in programmatically is released at hide-end (releaseFocusFromDropbox).
  *
  * WCAG 4.1.2 Name, Role, Value (A), 1.3.1 Info and Relationships (A), 2.4.3 Focus Order (A).
+ *
+ * Deliberately not covered: the deferred re-focus in afterRenderOptions(), which fires ~20ms after
+ * a render and focuses whatever still carries `.focused`. It looks like a third way in, and a case
+ * for it lived here briefly - but it could not fail. Once the dropbox is closed the `closed` class
+ * makes it `display: none`, so focus() on an option inside it is a no-op; before that, aria-hidden
+ * has not been applied yet. A fire-time guard there would be unreachable code, and the case that
+ * pretended to pin it passed whatever afterRenderOptions() did. Removed rather than left as false
+ * assurance. If the `closed` rule ever stops hiding the subtree, this becomes reachable and the
+ * guard becomes real.
  */
 
 import { mountVs, unmountVs, makeOptions } from '../support/mount';
@@ -421,97 +430,47 @@ describe('A11y: aria-hidden is never applied over the focused element', { testIs
   });
 
   /**
-   * A hide that lost a race with a reopen still lands. A characterisation guard, not a
-   * red-then-green regression case - it passes on the code that preceded it, and pins two
-   * things a plausible "fix" in this area would break.
+   * An open arriving mid-fade is queued behind the running hide (see
+   * reopen-during-hide-transition.cy.ts for the reopen behaviour itself). This is the a11y half
+   * of that path: the queue must hold the pointer gate up for the rest of the fade, so the list
+   * cannot take DOM focus back while the hide is still on its way to marking the subtree hidden.
    *
-   * `open()` during the fade does not cancel the popover's pending hide: its `show()`
-   * early-returns while `pop-comp-active` is still set, so the popper's hide timer is never
-   * cleared and afterHidePopper() runs ~200ms later against an instance that is back in
-   * `openInstances` (see AI-33 in ACTION-ITEMS.md - the reopen is silently lost). Reopening
-   * also lifts the pointer gate, so the still-rendered list can take DOM focus again in
-   * between.
-   *
-   *   1. No aria-hidden violation on that path. It holds today only because the popover
-   *      applies display:none *before* calling back, so the browser has already moved focus
-   *      out - an ordering this component does not control, which is exactly why it is
-   *      pinned rather than assumed.
-   *   2. The dropdown stays reopenable. The stale hide has to *complete* rather than stand
-   *      down: skipping it (e.g. gating afterHidePopper on `openInstances`) leaves the
-   *      wrapper without its `closed` class while the popover has already gone invisible, so
-   *      every later toggle sees `isOpened() === true` and closes a dropdown that is not
-   *      there. Confirmed by building that variant - these last assertions are what failed.
+   * Worth pinning separately because the obvious way to write the queue - run openDropbox()
+   * eagerly and repair afterwards - lifts `isClosingTransition` and hands the fading list back
+   * to the pointer, which is exactly how focus used to end up inside an aria-hidden subtree.
    */
-  it('releases focus when a hide that lost a race with a reopen finally lands', () => {
+  it('keeps the pointer gate up while an open waits behind the hide transition', () => {
     mount();
     open();
     waitForSearchFocus();
 
     cy.window().then((win) => {
-      const vs = win.document.getElementById(mountId)!.virtualSelect;
+      const $ele = win.document.getElementById(mountId)!;
+      const vs = $ele.virtualSelect;
 
       vs.closeDropbox();
-      win.document.getElementById(mountId)!.open?.();
+      expect(vs.isOpened(), 'still mid hide-transition when the reopen arrives').to.equal(true);
 
-      /** precondition: the reopen registered, and the pointer gate is back off */
-      expect((win as any).VirtualSelect.openInstances.has(vs), 'reopened instance tracked').to.equal(true);
-      expect(vs.isClosingTransition, 'pointer gate lifted by the reopen').to.equal(false);
+      $ele.open?.();
+
+      expect(vs.isClosingTransition, 'pointer gate held while the open waits').to.equal(true);
 
       hoverOptionNow(vs, 3);
 
-      /** precondition: the hover genuinely put DOM focus back inside the fading dropbox */
-      expect(
-        vs.$dropboxContainer.contains(win.document.activeElement),
-        'focus back inside after the reopen',
-      ).to.equal(true);
+      expect(vs.$dropboxContainer.querySelector('.vscomp-option.focused'), 'highlight after hover').to.equal(null);
+      expect(vs.$dropboxContainer.contains(win.document.activeElement), 'focus after hover').to.equal(false);
     });
 
     assertNoViolations();
 
-    cy.window().then((win) => {
-      const vs = win.document.getElementById(mountId)!.virtualSelect;
-
-      expect(vs.$dropboxWrapper.contains(win.document.activeElement), 'focus left in the hidden dropbox')
-        .to.equal(false);
-    });
-
-    /** the stale hide must leave the component closed, so the next open still works */
-    cy.get(`#${mountId}`).find('.vscomp-wrapper').should('have.class', 'closed');
-    cy.get(`#${mountId}`).find('.vscomp-toggle-button').click();
+    /** and the queued open still lands, on a dropbox that was never marked hidden underneath it */
     cy.get(`#${mountId}`).find('.vscomp-wrapper').should('not.have.class', 'closed');
     cy.get(`#${mountId}`).should(($ele) => {
-      expect($ele[0].virtualSelect.$dropboxContainer.getBoundingClientRect().height, 'reopened dropbox height')
-        .to.be.greaterThan(0);
-    });
-  });
-
-  /**
-   * afterRenderOptions() re-focuses the highlighted option on a timer. The dropbox can close
-   * inside that delay, so the decision has to hold when the timer fires, not when it was
-   * scheduled.
-   */
-  it('does not pull focus back into a closed dropbox from a deferred re-render', () => {
-    mount({ search: false });
-    open();
-
-    cy.get(`#${mountId}`).pressKeys('ArrowDown');
-    dropbox().find('.vscomp-option.focused').should('exist');
-
-    cy.get(`#${mountId}`).then(($ele) => {
       const vs = $ele[0].virtualSelect;
 
-      /** schedule the deferred focus, then close before it fires */
-      vs.renderOptions();
-      vs.closeDropbox();
-    });
-
-    cy.get(`#${mountId}`).find('.vscomp-wrapper').should('have.class', 'closed');
-    assertNoViolations();
-
-    cy.window().then((win) => {
-      const active = win.document.activeElement;
-
-      expect(active && active.classList.contains('vscomp-option'), 'focus on an option').to.not.equal(true);
+      expect(vs.$dropboxWrapper.getAttribute('aria-hidden'), 'aria-hidden on the reopened dropbox').to.not.equal('true');
+      expect(vs.$dropboxContainer.getBoundingClientRect().height, 'reopened dropbox height').to.be.greaterThan(0);
     });
   });
+
 });
