@@ -72,10 +72,16 @@ describe('A11y: closing the dropbox clears option navigation state', { testIsola
   });
 
   /**
-   * Reopened in the *same tick* as the close, deliberately. Waiting for the `closed` class
-   * first would wait out `afterHidePopper()`, which clears the highlight on its own - so the
-   * case could never observe the bug it exists for. This is the user-visible symptom: reopen
-   * before the hide transition finishes and navigation must still start at the top.
+   * `openDropbox()` is called in the *same tick* as the close, deliberately. Waiting for the
+   * `closed` class first would wait out `afterHidePopper()`, which clears the highlight on its
+   * own - so the case could never observe the bug it exists for.
+   *
+   * The call itself now queues rather than reopening synchronously (a reopen mid-fade waits for
+   * the running hide to finish - see reopen-during-hide-transition.cy.ts), but that does not
+   * weaken what this pins: `isOpened()` stays true for the whole hide transition regardless, so
+   * the ArrowDown below reaches `focusOption()` either way, on a dropbox whose highlight
+   * `closeDropbox()` already cleared. What is under test is that clearing, not whether the
+   * queued open has landed by the time the key is pressed.
    */
   it('starts navigation at the first option again when reopened mid hide-transition', () => {
     mount();
