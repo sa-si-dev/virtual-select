@@ -753,9 +753,13 @@ export class VirtualSelect {
   onEnterPress(e) {
     e.preventDefault();
 
+    if (this.$ele.disabled) {
+      return;
+    }
+
     if (this.isOpened()) {
       this.selectFocusedOption();
-    } else if (this.$ele.disabled === false) {
+    } else {
       this.openDropbox();
     }
   }
