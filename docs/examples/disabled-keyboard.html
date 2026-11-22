@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Disable an open Virtual Select</title>
+  <link rel="stylesheet" href="../assets/virtual-select.min.css">
+</head>
+<body>
+  <h1>Disable an open Virtual Select</h1>
+  <p>Click "Disable in 3 seconds", open Fruit, and highlight Orange with Arrow Down.
+    After the status says "Disabled", press Enter. Apple must stay selected and the change count must stay zero.</p>
+  <button id="disable" type="button">Disable in 3 seconds</button>
+  <button id="enable" type="button">Enable</button>
+  <label id="fruit-label">Fruit</label>
+  <div id="fruit"></div>
+  <p id="status" role="status">Enabled</p>
+  <p>Change count <output id="changes">0</output></p>
+  <script src="../assets/virtual-select.js"></script>
+  <script>
+    const fruit = document.getElementById('fruit');
+    const status = document.getElementById('status');
+    const changes = document.getElementById('changes');
+    let timer;
+    VirtualSelect.init({
+      ele: fruit,
+      ariaLabelledby: 'fruit-label',
+      search: true,
+      selectedValue: 'apple',
+      options: [{label: 'Apple', value: 'apple'}, {label: 'Orange', value: 'orange'}]
+    });
+    fruit.addEventListener('change', () => {
+      changes.value = String(Number(changes.value) + 1);
+    });
+    document.getElementById('disable').addEventListener('click', () => {
+      clearTimeout(timer);
+      changes.value = '0';
+      status.textContent = 'Disabling in 3 seconds';
+      timer = setTimeout(() => {
+        fruit.disable();
+        status.textContent = 'Disabled';
+      }, 3000);
+    });
+    document.getElementById('enable').addEventListener('click', () => {
+      clearTimeout(timer);
+      fruit.enable();
+      status.textContent = 'Enabled';
+    });
+  </script>
+</body>
+</html>

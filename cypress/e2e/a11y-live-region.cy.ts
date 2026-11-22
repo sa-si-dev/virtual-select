@@ -13,7 +13,7 @@
 
 import { makeOptions, mountVs, unmountVs } from '../support/mount';
 
-describe('A11y: status announcements via a live region', () => {
+describe('A11y: status announcements via a live region', { testIsolation: true }, () => {
   const mountId = 'vs-a11y-live';
 
   const liveRegion = () => cy.get(`#${mountId}`).find('.vscomp-live-region');
@@ -70,7 +70,7 @@ describe('A11y: status announcements via a live region', () => {
 
     it('uses the singular form for a single match', () => {
       cy.get(`#${mountId}`).find('.vscomp-toggle-button').click();
-      cy.get(`#${mountId}`).find('.vscomp-search-input').focus().type('Option 3');
+      cy.get(`#${mountId}`).find('.vscomp-search-input').focus().type('Option 3').should('have.value', 'Option 3').and('be.focused');
 
       liveRegion().should('have.text', '1 result available');
     });
