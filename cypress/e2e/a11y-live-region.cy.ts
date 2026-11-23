@@ -68,9 +68,21 @@ describe('A11y: status announcements via a live region', { testIsolation: true }
       liveRegion().should('have.text', '5 results available');
     });
 
+    /**
+     * The term is entered in one input event rather than typed key by key. Only the full term
+     * "Option 3" narrows the list to one match - "Opt", "Option" and "Option " all match five -
+     * so this is the one search case where a lost keystroke changes the outcome. In CI the run
+     * ended with "Opt" in the box and "5 results available" in the region: the component
+     * announced correctly for what it received, the rest of the keys went elsewhere. Waiting for
+     * the component to move focus into the input itself (the last step of opening) and then
+     * setting the value in one step leaves nothing to lose, and still goes through the real
+     * input handler and its focus check.
+     */
     it('uses the singular form for a single match', () => {
       cy.get(`#${mountId}`).find('.vscomp-toggle-button').click();
-      cy.get(`#${mountId}`).find('.vscomp-search-input').focus().type('Option 3').should('have.value', 'Option 3').and('be.focused');
+      cy.get(`#${mountId}`).find('.vscomp-search-input').should('have.focus');
+      cy.get(`#${mountId}`).find('.vscomp-search-input').invoke('val', 'Option 3').trigger('input');
+      cy.get(`#${mountId}`).find('.vscomp-search-input').should('have.value', 'Option 3').and('have.focus');
 
       liveRegion().should('have.text', '1 result available');
     });

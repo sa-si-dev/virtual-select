@@ -74,7 +74,22 @@ export default [
       '@stylistic/linebreak-style': ['error', 'unix'],
       '@stylistic/max-len': ['error', { code: 120 }],
       '@stylistic/no-trailing-spaces': 'error',
-      '@stylistic/object-curly-newline': ['error', { ObjectPattern: { multiline: true } }],
+      // Successor of the deprecated object-curly-newline. list-style covers every bracketed list by default,
+      // which would fight Prettier (e.g. argument hugging), so it is scoped to destructuring patterns only:
+      // a pattern is either fully on one line or has every property on its own line.
+      '@stylistic/list-style': [
+        'error',
+        {
+          overrides: {
+            '()': 'off',
+            '[]': 'off',
+            '{}': 'off',
+            '<>': 'off',
+            // Must restate the spacing: the plugin's '{}' default (spacing: always) is dropped once '{}' is off.
+            ObjectPattern: { singleLine: { spacing: 'always' } },
+          },
+        },
+      ],
       '@stylistic/operator-linebreak': ['error', 'after', { overrides: { '?': 'before', ':': 'before' } }],
       '@stylistic/quote-props': ['error', 'consistent'],
     },

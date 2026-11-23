@@ -1,9 +1,9 @@
 {
   "compilerOptions": {
-    "baseUrl": ".",
     "target": "ESNext",
     "module": "ESNext",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
+    "rootDir": ".",
     "outDir": "ts-types",
     "allowJs": true,
     "checkJs": true,
