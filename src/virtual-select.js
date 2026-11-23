@@ -1058,6 +1058,17 @@ export class VirtualSelect {
       // when dropdown close resets search, so re-add as a persisted new option.
       this.setNewOption(selectedValue);
       this.toggleSelectedProp(this.lastOptionIndex, true);
+
+      /**
+       * The close that removed the temporary option also recomputed the visible count, the
+       * list height and `has-no-options` without it, and nothing after this point recomputes
+       * them: setNewOption() re-adds through addOption() with no rerender, and the deferred
+       * setSearchValue('') below is a no-op because the close already emptied the search.
+       * So the list came back one row short - 0px on an empty list, with the "no options"
+       * message still showing - until some later filter change happened to recount.
+       * Recount now that the option is a regular one; the count includes it from here on.
+       */
+      this.setVisibleOptionsCount();
     }
 
     /** using setTimeout to fix the issue of dropbox getting closed on select */
