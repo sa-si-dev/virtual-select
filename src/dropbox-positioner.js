@@ -68,11 +68,22 @@ export class DropboxPositioner {
     this.state = 'showing';
     DomUtils.addClass(this.$floating, 'pop-comp-disable-events');
     DomUtils.setStyles(this.$floating, { display: 'inline-flex', transitionDuration: '0ms', transform: 'none' });
-    this.place(this.$floating.getBoundingClientRect());
+    const rect = this.$floating.getBoundingClientRect();
+
+    this.place(rect);
     DomUtils.setStyle(this.$floating, 'transform', translate(this.fromX, this.fromY));
 
-    // INTENTIONAL forced reflow: commits the from-translate so the next writes transition from it.
-    this.$floating.getBoundingClientRect();
+    /*
+     * INTENTIONAL forced reflow: commits the from-translate so the next writes transition from it.
+     * The same read checks that the translate moved the box the way the per-axis scales say. Under
+     * a rotated or skewed ancestor it does not, and no per-axis scale can undo the translate, so
+     * repositions then measure with transform: none instead.
+     */
+    const moved = this.$floating.getBoundingClientRect();
+    const offX = moved.left - rect.left - this.fromX * this.sx;
+    const offY = moved.top - rect.top - this.fromY * this.sy;
+
+    this.remeasure = Math.abs(offX) + Math.abs(offY) > 1;
 
     DomUtils.setStyles(this.$floating, {
       transitionDuration: `${this.showDuration}ms`,
@@ -120,11 +131,18 @@ export class DropboxPositioner {
      * of 'none' parses to the identity matrix.
      *
      * place() takes the translate off per axis, scaled the way an ancestor scales it, so it runs
-     * on the same viewport-pixel origin that show() measures with transform: none.
+     * on the same viewport-pixel origin that show() measures with transform: none. Under a rotated
+     * or skewed ancestor (see show()) that cannot work, so the box is measured untransformed.
      */
-    const { m41, m42 } = new DOMMatrix(getComputedStyle(this.$floating).transform);
+    if (this.remeasure) {
+      DomUtils.setStyles(this.$floating, { transitionDuration: '0ms', transform: 'none' });
+      this.place(this.$floating.getBoundingClientRect());
+    } else {
+      const { m41, m42 } = new DOMMatrix(getComputedStyle(this.$floating).transform);
 
-    this.place(this.$floating.getBoundingClientRect(), m41, m42);
+      this.place(this.$floating.getBoundingClientRect(), m41, m42);
+    }
+
     DomUtils.setStyles(this.$floating, { transitionDuration: '0ms', transform: translate(this.x, this.y) });
   }
 
@@ -240,7 +258,7 @@ export class DropboxPositioner {
 
     // The placement is in viewport pixels; the translate is in the element's own, which a scaled
     // ancestor scales again.
-    Object.assign(this, { side, x: x / sx, y: y / sy, fromX: fromX / sx, fromY: fromY / sy });
+    Object.assign(this, { side, sx, sy, x: x / sx, y: y / sy, fromX: fromX / sx, fromY: fromY / sy });
     DomUtils.removeClass(this.$floating, POSITION_CLASSES);
     DomUtils.addClass(this.$floating, `position-${this.side}`);
   }

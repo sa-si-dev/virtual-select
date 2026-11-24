@@ -16,5 +16,10 @@ declare module './dropbox-positioner' {
     y: number;
     fromX: number;
     fromY: number;
+    /** the ancestor scale on each axis that place() last used */
+    sx: number;
+    sy: number;
+    /** set by show() under a rotated or skewed ancestor: repositions measure with transform: none */
+    remeasure: boolean;
   }
 }
