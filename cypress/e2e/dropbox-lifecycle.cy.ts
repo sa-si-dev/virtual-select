@@ -218,8 +218,15 @@ describe('Dropbox lifecycle characterization', () => {
 
       let before = 0;
 
-      getHost().then(($host) => {
-        before = ($host[0] as Host).virtualSelect.$dropboxContainer.getBoundingClientRect().top;
+      // afterOpen can land while the slide is still finishing (the transition starts a frame after
+      // the show timer); measure only once it has, or `before` is off by the remaining pixel or so.
+      getHost().should(($host) => {
+        const container = ($host[0] as Host).virtualSelect.$dropboxContainer;
+
+        const view = container.ownerDocument.defaultView as Window;
+
+        expect(view.getComputedStyle(container).opacity, 'fade-in finished').to.equal('1');
+        before = container.getBoundingClientRect().top;
       });
 
       scrollBoxBy(60);
