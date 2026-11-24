@@ -9,7 +9,7 @@
     "typecheck": "tsc",
     "lint:js": "eslint src",
     "lint:css": "stylelint src/sass/**/*.scss",
-    "test:scripts": "node --test \"scripts/ci/**/*.test.mjs\"",
+    "test:scripts": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test \"scripts/ci/**/*.test.mjs\" \"scripts/unit/**/*.test.mjs\"",
     "test:build": "node --test \"scripts/build-checks/**/*.test.mjs\"",
     "docs": "docsify serve docs",
     "t": "docsify serve docs -p 3001 | cypress open --e2e -b chrome",
