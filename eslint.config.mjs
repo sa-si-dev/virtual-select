@@ -28,7 +28,6 @@ export default [
       globals: {
         ...globals.browser,
         VirtualSelect: 'readonly',
-        PopoverComponent: 'readonly',
       },
     },
 

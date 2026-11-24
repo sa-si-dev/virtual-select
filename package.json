@@ -51,7 +51,6 @@
     "filemanager-webpack-plugin": "10.0.1",
     "globals": "17.14.0",
     "mini-css-extract-plugin": "2.10.2",
-    "popover-plugin": "1.0.13",
     "postcss-loader": "8.2.1",
     "sass": "1.108.2",
     "sass-loader": "17.1.1",

@@ -1,4 +1,4 @@
 {
-  "virtual-select.min.js": { "baselineGzip": 23207, "maxGzip": 23207 },
+  "virtual-select.min.js": { "baselineGzip": 23207, "maxGzip": 19707 },
   "virtual-select.min.css": { "baselineGzip": 2803, "maxGzip": 2803 }
 }
