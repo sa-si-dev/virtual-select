@@ -616,6 +616,65 @@ describe('Dropbox lifecycle', () => {
     });
 
     /**
+     * A rotation or skew is not a per-axis scale: the dropbox is not claimed to sit against the
+     * host's edge there (popover-plugin did not either), only to stay put across repositions.
+     */
+    (
+      [
+        ['a rotated ancestor', 'rotate(90deg)'],
+        ['a skewed ancestor', 'skewX(20deg)'],
+      ] as const
+    ).forEach(([ancestor, transform]) => {
+      it(`dropboxWrapper self does not drift inside ${ancestor}`, () => {
+        cy.window().then((win) => {
+          const box = win.document.createElement('div');
+          box.id = `${MOUNT_ID}-box`;
+          Object.assign(box.style, {
+            position: 'fixed',
+            left: '500px',
+            top: '100px',
+            transform,
+            transformOrigin: '0 0',
+          });
+
+          const host = win.document.createElement('div');
+          host.id = MOUNT_ID;
+          Object.assign(host.style, { width: '240px', maxWidth: '240px' });
+
+          box.append(host);
+          win.document.body.appendChild(box);
+
+          // @ts-expect-error - VirtualSelect is attached to window by the bundle
+          win.VirtualSelect.init({ ele: host, ...baseOptions, dropboxWrapper: 'self' });
+          events = recordEvents(win, MOUNT_ID);
+        });
+        cy.window().then((win) => hostIn(win).open());
+        expectLog(['beforeOpen', 'afterOpen']);
+
+        let before: [number, number] = [0, 0];
+
+        getHost().should(($host) => {
+          const container = ($host[0] as Host).virtualSelect.$dropboxContainer;
+          const view = container.ownerDocument.defaultView as Window;
+
+          expect(view.getComputedStyle(container).opacity, 'fade-in finished').to.equal('1');
+          before = snapshotDropbox(view, MOUNT_ID).transform;
+        });
+
+        cy.window().then((win) => {
+          for (let i = 0; i < 7; i += 1) {
+            hostIn(win).virtualSelect.updatePosition();
+          }
+
+          const after = snapshotDropbox(win, MOUNT_ID).transform;
+
+          expect(after[0], 'translate x after seven repositions').to.be.closeTo(before[0], 1);
+          expect(after[1], 'translate y after seven repositions').to.be.closeTo(before[1], 1);
+        });
+      });
+    });
+
+    /**
      * Scroll events do not leave a shadow root, and `document.contains()` does not look into one,
      * so a host inside a shadow root needs listeners on that root as well as on the document.
      */
