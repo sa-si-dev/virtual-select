@@ -13,7 +13,7 @@
  */
 
 import { makeOptions, mountVs, unmountVs } from '../support/mount';
-import { blockTooltipPlugin, recordEvents, snapshotDropbox } from '../support/dropbox-probe';
+import { recordEvents, snapshotDropbox } from '../support/dropbox-probe';
 
 type Instance = {
   open: () => void;
@@ -192,7 +192,6 @@ let shadowHost: Host | undefined;
 
 describe('Dropbox lifecycle', () => {
   beforeEach(() => {
-    blockTooltipPlugin();
     cy.viewport(1280, 800);
     cy.visit('get-started');
   });

@@ -135,20 +135,37 @@ describe('Tooltip add-on', { testIsolation: true }, () => {
     assertNotShown();
   });
 
-  it('renders the text as text, not markup, unless allow-html is true', () => {
+  /** A trigger inside the instance whose tooltip is `<b>x</b>`, with the given allow-html value. */
+  const addMarkupTrigger = (allowHtml: 'true' | 'false') => {
     cy.get(`#${mountId} .vscomp-wrapper`).then(($wrapper) => {
       const $span = $wrapper[0].ownerDocument.createElement('span');
       $span.id = `${mountId}-markup`;
       $span.textContent = 'markup';
       $span.setAttribute('data-tooltip', '<b>x</b>');
-      $span.setAttribute('data-tooltip-allow-html', 'false');
+      $span.setAttribute('data-tooltip-allow-html', allowHtml);
       $wrapper[0].appendChild($span);
     });
+  };
+
+  it('renders the text as text, not markup, unless allow-html is true', () => {
+    addMarkupTrigger('false');
 
     cy.get(`#${mountId}-markup`).then(hover);
     cy.get('.tooltip-comp .tooltip-comp-content').should(($content) => {
       expect($content[0].textContent).to.equal('<b>x</b>');
       expect($content[0].querySelector('b'), 'no <b> element').to.equal(null);
+    });
+  });
+
+  it('renders the markup when allow-html is true', () => {
+    addMarkupTrigger('true');
+
+    cy.get(`#${mountId}-markup`).then(hover);
+    cy.get('.tooltip-comp .tooltip-comp-content').should(($content) => {
+      const $bold = $content[0].querySelector('b');
+
+      expect($bold, 'a <b> element').not.to.equal(null);
+      expect($bold?.textContent, 'its text').to.equal('x');
     });
   });
 

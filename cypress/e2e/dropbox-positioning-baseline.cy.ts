@@ -12,7 +12,7 @@
  */
 
 import { makeOptions, mountVs, unmountVs } from '../support/mount';
-import { blockTooltipPlugin, DropboxSnapshot, recordEvents, snapshotDropbox } from '../support/dropbox-probe';
+import { DropboxSnapshot, recordEvents, snapshotDropbox } from '../support/dropbox-probe';
 
 type Wrapper = 'self' | 'body';
 
@@ -271,7 +271,6 @@ describe('Dropbox positioning baseline', () => {
       const [width, height] = scenario.viewport ?? [1280, 800];
       cy.viewport(width, height);
 
-      blockTooltipPlugin();
       cy.visit('get-started');
 
       let events: string[] = [];

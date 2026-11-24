@@ -43,7 +43,7 @@ Tooltip would be used to show selected values and options text, if text is long 
 <script src="path/to/virtual-select-tooltip.min.js">
 ```
 
-> **Upgrading from 1.4.x:** `tooltip-plugin` is no longer installed with Virtual Select. If you load `node_modules/tooltip-plugin/dist/tooltip.min.js`, either switch to the two `virtual-select-tooltip` files above or add `tooltip-plugin` to your own dependencies. Both keep working; do not load them together expecting two tooltips, the add-on steps aside when `tooltip-plugin` is present.
+> **Upgrading from 1.4.x:** `tooltip-plugin` is no longer installed with Virtual Select. If you load `node_modules/tooltip-plugin/dist/tooltip.min.js`, either switch to the two `virtual-select-tooltip` files above or add `tooltip-plugin` to your own dependencies. Both keep working; do not load them together expecting two tooltips, the add-on steps aside when `tooltip-plugin` is present. The add-on only shows tooltips for elements inside a Virtual Select instance; if your page also uses `tooltip-plugin` for its own elements, keep loading `tooltip-plugin` instead.
 
 ## Install from NPM
 

@@ -89,13 +89,3 @@ export function recordEvents(win: Window, mountId: string): string[] {
 
   return events;
 }
-
-/**
- * The docs page no longer loads the external tooltip-plugin (the tooltip add-on replaced it).
- * This guard keeps it from being served from docs/assets, so a stray copy can never interfere with
- * the dropbox positioner under test.
- * Call before every cy.visit().
- */
-export function blockTooltipPlugin(): void {
-  cy.intercept('GET', '**/assets/tooltip.min.js', { body: '' });
-}
