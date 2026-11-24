@@ -30,6 +30,9 @@ async function listDist() {
 
 test('dist contains exactly the shipped files', async () => {
   assert.deepEqual(await listDist(), [
+    'virtual-select-tooltip.js',
+    'virtual-select-tooltip.min.css',
+    'virtual-select-tooltip.min.js',
     'virtual-select.js',
     'virtual-select.min.css',
     'virtual-select.min.js',

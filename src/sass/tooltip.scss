@@ -1,0 +1,95 @@
+/**
+ * Styles for the tooltip add-on (virtual-select-tooltip.min.css).
+ * Ported from tooltip-plugin 1.0.16 (its variables and rules in one file), with the same
+ * selectors so existing custom CSS keeps applying. Its -webkit- prefix mixin is gone: autoprefixer
+ * strips those prefixes for this package's browserslist anyway.
+ */
+@use 'sass:math';
+
+$primary-bg: #212121;
+$font-color: #fff;
+$arrow-size: 16px;
+$arrow-half-size: math.div($arrow-size, 2);
+
+.tooltip-comp {
+  background-color: $primary-bg;
+  border-radius: 2px;
+  color: $font-color;
+  font-family: sans-serif;
+  font-size: 14px;
+  left: 0;
+  line-height: 20px;
+  max-width: 300px;
+  opacity: 0;
+  padding: 5px 10px;
+  pointer-events: none;
+  position: absolute;
+  text-align: left;
+  top: 0;
+  word-break: break-word;
+}
+
+.tooltip-comp-arrow {
+  height: $arrow-size;
+  overflow: hidden;
+  position: absolute;
+  width: $arrow-size;
+  z-index: 1;
+
+  &::before {
+    background-color: $primary-bg;
+    content: '';
+    height: $arrow-size;
+    left: $arrow-half-size;
+    position: absolute;
+    top: $arrow-half-size;
+    transform: rotate(45deg);
+    transform-origin: left top;
+    width: $arrow-size;
+  }
+}
+
+.tooltip-comp-content {
+  position: relative;
+  z-index: 2;
+}
+
+.tooltip-comp {
+  &.hide-arrow-icon {
+    .tooltip-comp-arrow {
+      display: none;
+    }
+  }
+
+  &.position-bottom {
+    .tooltip-comp-arrow {
+      left: 0;
+      margin-left: -$arrow-half-size;
+      top: -($arrow-size - 1px);
+    }
+  }
+
+  &.position-top {
+    .tooltip-comp-arrow {
+      bottom: -($arrow-size - 1px);
+      left: 0;
+      margin-left: -$arrow-half-size;
+    }
+  }
+
+  &.position-right {
+    .tooltip-comp-arrow {
+      left: -($arrow-size - 1px);
+      margin-top: -$arrow-half-size;
+      top: 0;
+    }
+  }
+
+  &.position-left {
+    .tooltip-comp-arrow {
+      margin-top: -$arrow-half-size;
+      right: -($arrow-size - 1px);
+      top: 0;
+    }
+  }
+}

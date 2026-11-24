@@ -23,6 +23,8 @@ module.exports = (env, options) => {
     entry: {
       'styles': ['./src/styles.js'],
       'virtual-select': ['./src/virtual-select.js'],
+      'virtual-select-tooltip': ['./src/tooltip.js'],
+      'tooltip-styles': ['./src/tooltip-styles.js'],
     },
 
     output: {
@@ -33,7 +35,8 @@ module.exports = (env, options) => {
 
     plugins: [
       new MiniCssExtractPlugin({
-        filename: 'virtual-select.min.css',
+        filename: ({ chunk }) =>
+          chunk.name === 'tooltip-styles' ? 'virtual-select-tooltip.min.css' : 'virtual-select.min.css',
       }),
 
       new webpack.BannerPlugin(banner),
@@ -42,12 +45,26 @@ module.exports = (env, options) => {
         events: {
           onStart: onStartEventOptions,
           onEnd: {
-            delete: ['dist/styles.min.js', 'dist/styles.js', 'dist/virtual-select.css'],
+            delete: [
+              'dist/styles.min.js',
+              'dist/styles.js',
+              'dist/virtual-select.css',
+              'dist/tooltip-styles.min.js',
+              'dist/tooltip-styles.js',
+              'dist/virtual-select-tooltip.css',
+            ],
             copy: [
-              { source: 'node_modules/tooltip-plugin/dist', destination: 'docs/assets' },
               { source: 'dist', destination: 'docs/assets' },
               { source: 'dist/virtual-select.min.js', destination: `dist-archive/virtual-select-${version}.min.js` },
               { source: 'dist/virtual-select.min.css', destination: `dist-archive/virtual-select-${version}.min.css` },
+              {
+                source: 'dist/virtual-select-tooltip.min.js',
+                destination: `dist-archive/virtual-select-tooltip-${version}.min.js`,
+              },
+              {
+                source: 'dist/virtual-select-tooltip.min.css',
+                destination: `dist-archive/virtual-select-tooltip-${version}.min.css`,
+              },
             ],
           },
         },
