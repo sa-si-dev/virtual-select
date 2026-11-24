@@ -27,6 +27,7 @@ type Scenario = {
   /** Skip opening: the scenario only characterizes the never-opened state. */
   closedOnly?: boolean;
   showAsPopup?: boolean;
+  dropboxWidth?: string;
   setup?: (win: Window) => void;
   mount?: (win: Window, mountId: string, options: Record<string, unknown>, style: Partial<CSSStyleDeclaration>) => void;
   afterMount?: () => void;
@@ -154,6 +155,35 @@ const buildScenarios = (): Scenario[] => {
     });
   });
 
+  // By default the dropbox is as wide as the host, which makes left/right alignment and rtl
+  // indistinguishable. A wider dropbox makes them visible.
+  ['top left', 'top right', 'bottom left', 'bottom right'].forEach((position) => {
+    ['middle', 'left-edge', 'right-edge'].forEach((anchorName) => {
+      WRAPPERS.forEach((wrapper) => {
+        scenarios.push({
+          id: `wide|${position}|${anchorName}|${wrapper}`,
+          position,
+          wrapper,
+          hostStyle: baseHostStyle(ANCHORS[anchorName]),
+          dropboxWidth: '400px',
+        });
+      });
+    });
+  });
+
+  WRAPPERS.forEach((wrapper) => {
+    scenarios.push({
+      id: `wide|rtl|${wrapper}`,
+      position: 'bottom left',
+      wrapper,
+      hostStyle: baseHostStyle(ANCHORS.middle),
+      dropboxWidth: '400px',
+      setup: (win) => {
+        win.document.documentElement.dir = 'rtl';
+      },
+    });
+  });
+
   scenarios.push({
     id: 'popup-layout',
     position: 'bottom left',
@@ -252,6 +282,7 @@ describe('Dropbox positioning baseline', () => {
           hideDuration: 50,
           position: scenario.position,
           dropboxWrapper: scenario.wrapper,
+          ...(scenario.dropboxWidth ? { dropboxWidth: scenario.dropboxWidth } : {}),
           ...(scenario.showAsPopup ? { showDropboxAsPopup: true } : {}),
         };
 
