@@ -236,6 +236,36 @@ describe('Tooltip add-on', { testIsolation: true }, () => {
     assertNotShown();
   });
 
+  it('follows a trigger re-rendered under a still pointer', () => {
+    tagContent().first().then(hover);
+    assertShown(labels[0]);
+
+    // No mouseout reaches the document for a removed node; the next mouseover lands on the clone.
+    cy.get('.tooltip-comp').then(($old) => {
+      tagContent()
+        .first()
+        .then(($trigger) => {
+          const clone = $trigger[0].cloneNode(true) as HTMLElement;
+
+          $trigger[0].replaceWith(clone);
+          mouse($trigger[0].ownerDocument.defaultView as Window, clone, 'mouseover');
+        });
+
+      cy.get('.tooltip-comp').should(($tooltip) => {
+        expect($tooltip[0], 'a new tooltip for the clone').to.not.equal($old[0]);
+        expect($tooltip[0].style.opacity, 'shown').to.equal('1');
+      });
+    });
+  });
+
+  it('hides on a key press', () => {
+    tagContent().first().then(hover);
+    assertShown(labels[0]);
+
+    cy.get('body').trigger('keydown', { key: 'Escape' });
+    assertNotShown();
+  });
+
   it('keeps a single tooltip node in the document', () => {
     tagContent().first().then(hover);
     assertShown(labels[0]);

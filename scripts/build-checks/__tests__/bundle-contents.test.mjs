@@ -42,8 +42,12 @@ test('dist contains exactly the shipped files', async () => {
 test('every shipped file is within its gzip budget', async () => {
   const budgets = JSON.parse(await readFile(BUDGETS_PATH, 'utf8'));
 
-  for (const [name, { baselineGzip, maxGzip }] of Object.entries(budgets)) {
-    assert.ok(maxGzip <= baselineGzip, `${name}: maxGzip ${maxGzip} exceeds baselineGzip ${baselineGzip}`);
+  for (const [name, { baselineGzip, maxGzip, aboveBaseline }] of Object.entries(budgets)) {
+    // A budget above what the file replaced must say why, in `aboveBaseline`.
+    assert.ok(
+      maxGzip <= baselineGzip || aboveBaseline,
+      `${name}: maxGzip ${maxGzip} exceeds baselineGzip ${baselineGzip} without an aboveBaseline reason`,
+    );
     const size = await gzipSize(path.join(DIST, name));
     assert.ok(size <= maxGzip, `${name}: ${size} bytes gzip, budget ${maxGzip}`);
   }

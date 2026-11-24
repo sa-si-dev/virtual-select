@@ -130,6 +130,12 @@ if (!window.virtualSelectTooltipInitiated) {
   window.virtualSelectTooltipInitiated = true;
 
   document.addEventListener('mouseover', (event) => {
+    // A trigger re-rendered away under a still pointer never gets its mouseout. With no trigger,
+    // hide() has nothing to do.
+    if (!trigger?.isConnected) {
+      hide();
+    }
+
     if (trigger || window.tooltipComponentInitiated) {
       return;
     }
@@ -154,6 +160,8 @@ if (!window.virtualSelectTooltipInitiated) {
     }
   });
 
+  // A key press can close the dropdown (Escape, Enter) under a pointer that has not moved.
+  document.addEventListener('keydown', hide);
   document.addEventListener('click', hide);
   document.addEventListener('touchmove', hide);
 

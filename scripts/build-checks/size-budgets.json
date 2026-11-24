@@ -1,6 +1,10 @@
 {
   "virtual-select.min.js": { "baselineGzip": 23207, "maxGzip": 19750 },
   "virtual-select.min.css": { "baselineGzip": 2803, "maxGzip": 2803 },
-  "virtual-select-tooltip.min.js": { "baselineGzip": 1650, "maxGzip": 1650 },
-  "virtual-select-tooltip.min.css": { "baselineGzip": 520, "maxGzip": 520 }
+  "virtual-select-tooltip.min.js": { "baselineGzip": 3961, "maxGzip": 1660 },
+  "virtual-select-tooltip.min.css": {
+    "baselineGzip": 507,
+    "maxGzip": 520,
+    "aboveBaseline": "longer licence banner than tooltip.min.css; user decision 2026-11-24"
+  }
 }
