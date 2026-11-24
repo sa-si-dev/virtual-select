@@ -216,6 +216,9 @@ describe('Dropbox positioning baseline', () => {
       unmountVs(win, MOUNT_ID);
       win.document.getElementById(`${MOUNT_ID}-box`)?.remove();
       win.document.documentElement.dir = '';
+      // The page is not reloaded between scenarios: undo the page-scrolled ones' height and scroll.
+      win.document.body.style.minHeight = '';
+      win.scrollTo(0, 0);
     });
 
     if (this.currentTest?.state === 'failed') {
