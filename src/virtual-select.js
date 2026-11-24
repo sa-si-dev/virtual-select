@@ -717,7 +717,14 @@ export class VirtualSelect {
   onDocumentKeyDown(e) {
     const key = e.which || e.keyCode;
 
-    if ((key === 27 || e.key === 'Escape') && this.dropboxPopover && this.isOpened()) {
+    // An Escape another widget already handled, or one cancelling an IME composition, is not ours.
+    if (
+      (key === 27 || e.key === 'Escape') &&
+      !e.defaultPrevented &&
+      !e.isComposing &&
+      this.dropboxPopover &&
+      this.isOpened()
+    ) {
       this.closeDropbox();
     }
   }
@@ -3165,6 +3172,8 @@ export class VirtualSelect {
         this.dropboxPopover.reset();
       }
 
+      // No events on the silent path, but the combobox must not stay announced as expanded.
+      DomUtils.setAria(this.$wrapper, 'expanded', false);
       DomUtils.setStyle(this.$dropboxContainer, 'display', '');
     } else {
       DomUtils.dispatchEvent(this.$ele, 'beforeClose');

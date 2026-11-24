@@ -119,24 +119,12 @@ export class DropboxPositioner {
      * read has already flushed layout, so the computed style costs no extra layout; a transform
      * of 'none' parses to the identity matrix.
      *
-     * The rect is in viewport pixels, the translate in the element's own: under a scaled ancestor
-     * the translate moves the box by translate * scale, so that is what comes off, per axis. Each
-     * scale is the rect size over the layout size (offsetWidth / offsetHeight, already laid out by
-     * the rect read); a gap under one pixel is their rounding, not a scale. The placement then runs
-     * on the same viewport-pixel origin that show() measures with transform: none, so a reposition
-     * writes what show() wrote, as popover-plugin did.
+     * place() takes the translate off per axis, scaled the way an ancestor scales it, so it runs
+     * on the same viewport-pixel origin that show() measures with transform: none.
      */
-    const rect = this.$floating.getBoundingClientRect();
     const { m41, m42 } = new DOMMatrix(getComputedStyle(this.$floating).transform);
-    const scale = (/** @type {number} */ size, /** @type {number} */ layout) =>
-      layout && Math.abs(size - layout) >= 1 ? size / layout : 1;
 
-    this.place({
-      left: rect.left - m41 * scale(rect.width, this.$floating.offsetWidth),
-      top: rect.top - m42 * scale(rect.height, this.$floating.offsetHeight),
-      width: rect.width,
-      height: rect.height,
-    });
+    this.place(this.$floating.getBoundingClientRect(), m41, m42);
     DomUtils.setStyles(this.$floating, { transitionDuration: '0ms', transform: translate(this.x, this.y) });
   }
 
@@ -225,23 +213,34 @@ export class DropboxPositioner {
   }
 
   /**
-   * Compute the placement for `floating` (viewport box without transform) and apply the side class.
-   * @param {{ left: number, top: number, width: number, height: number }} floating
+   * Compute the placement from the dropbox's viewport rect and the translate currently applied to
+   * it, and apply the side class.
+   *
+   * The rect is in viewport pixels, the translate in the element's own, which a scaled ancestor
+   * scales. Each scale is the rect size over the layout size (offsetWidth / offsetHeight, already
+   * laid out by the rect read); a gap under one pixel is their rounding, not a scale.
+   * @param {DOMRect} rect
+   * @param {number} [m41] translate x applied now
+   * @param {number} [m42] translate y applied now
    */
-  place(floating) {
-    // Sets this.side, this.x, this.y, this.fromX and this.fromY.
-    Object.assign(
-      this,
-      computePlacement({
-        trigger: this.$trigger.getBoundingClientRect(),
-        floating,
-        viewport: { width: window.innerWidth, height: window.innerHeight },
-        position: this.position,
-        margin: MARGIN,
-        offset: OFFSET,
-        distance: DISTANCE,
-      }),
-    );
+  place(rect, m41 = 0, m42 = 0) {
+    const scale = (/** @type {number} */ size, /** @type {number} */ layout) =>
+      layout && Math.abs(size - layout) >= 1 ? size / layout : 1;
+    const sx = scale(rect.width, this.$floating.offsetWidth);
+    const sy = scale(rect.height, this.$floating.offsetHeight);
+    const { side, x, y, fromX, fromY } = computePlacement({
+      trigger: this.$trigger.getBoundingClientRect(),
+      floating: { left: rect.left - m41 * sx, top: rect.top - m42 * sy, width: rect.width, height: rect.height },
+      viewport: { width: window.innerWidth, height: window.innerHeight },
+      position: this.position,
+      margin: MARGIN,
+      offset: OFFSET,
+      distance: DISTANCE,
+    });
+
+    // The placement is in viewport pixels; the translate is in the element's own, which a scaled
+    // ancestor scales again.
+    Object.assign(this, { side, x: x / sx, y: y / sy, fromX: fromX / sx, fromY: fromY / sy });
     DomUtils.removeClass(this.$floating, POSITION_CLASSES);
     DomUtils.addClass(this.$floating, `position-${this.side}`);
   }

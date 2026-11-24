@@ -250,6 +250,20 @@ describe('Dropbox lifecycle', () => {
       getHost().find('.vscomp-wrapper').should('have.attr', 'aria-expanded', 'false');
     });
 
+    it('Escape already handled elsewhere on the page leaves the dropdown open', () => {
+      cy.window().then((win) => {
+        const { KeyboardEvent: Keyboard } = win as Window & typeof globalThis;
+        const escape = new Keyboard('keydown', { key: 'Escape', bubbles: true, cancelable: true });
+
+        escape.preventDefault();
+        win.document.body.dispatchEvent(escape);
+      });
+      cy.wait(SETTLE_MS);
+
+      expectLog([]);
+      getHost().find('.vscomp-wrapper').should('not.have.class', 'closed');
+    });
+
     it('closing twice in one tick fires the close events once', () => {
       cy.window().then((win) => {
         const host = hostIn(win);
@@ -384,6 +398,7 @@ describe('Dropbox lifecycle', () => {
 
       expectLog([]);
       getHost().should('not.have.class', 'pop-comp-active');
+      getHost().find('.vscomp-wrapper').should('have.attr', 'aria-expanded', 'false');
 
       cy.window().then((win) => {
         hostIn(win).open();
@@ -573,6 +588,13 @@ describe('Dropbox lifecycle', () => {
 
           expect(view.getComputedStyle(container).opacity, 'fade-in finished').to.equal('1');
           before = snapshotDropbox(view, MOUNT_ID).transform;
+
+          // Opens against the host's edge: the placement is in viewport pixels, the translate in scaled ones.
+          const hostRect = $host[0].getBoundingClientRect();
+          const rect = container.getBoundingClientRect();
+
+          expect(rect.left, 'container left = host left').to.be.closeTo(hostRect.left, 1);
+          expect(rect.top, 'container top = host bottom + margin').to.be.closeTo(hostRect.bottom + 4, 1);
         });
 
         // 'self' attaches no scroll or resize listener; its repositions come from updatePosition(),
