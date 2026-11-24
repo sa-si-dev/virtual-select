@@ -37,6 +37,22 @@ const assertNotShown = () => {
 const mouse = (win: Window, $el: Element, type: string, relatedTarget: EventTarget | null = null) =>
   $el.dispatchEvent(new (win as Window & typeof globalThis).MouseEvent(type, { bubbles: true, relatedTarget }));
 
+const optionText = () =>
+  cy.get(`#${mountId} .vscomp-option[data-index="0"] .vscomp-option-text`).should(($text) => {
+    expect(isClipped($text[0]), 'precondition: the option text is clipped').to.equal(true);
+  });
+
+/** Opens the dropdown and waits for afterOpen, which re-renders the options (selected first). */
+const openSettled = () => {
+  cy.get(`#${mountId}`).then(($host) => $host[0].open?.());
+  cy.get(`#${mountId} .vscomp-wrapper`).should('have.class', 'focused');
+};
+
+const scrollOptions = () =>
+  cy.get(`#${mountId} .vscomp-options-container`).then(($container) => {
+    $container[0].dispatchEvent(new Event('scroll'));
+  });
+
 function visitAndMount() {
   cy.viewport(1280, 800);
   cy.visit('properties');
@@ -145,21 +161,52 @@ describe('Tooltip add-on', { testIsolation: true }, () => {
   });
 
   it('hides when the options container holding the trigger scrolls', () => {
-    cy.get(`#${mountId}`).then(($host) => $host[0].open?.());
-    // afterOpen re-renders the options (selected first); hovering before that would leave the
-    // tooltip on a detached option, which no scroll of the container contains.
-    cy.get(`#${mountId} .vscomp-wrapper`).should('have.class', 'focused');
-
-    cy.get(`#${mountId} .vscomp-option[data-index="0"] .vscomp-option-text`)
-      .should(($text) => {
-        expect(isClipped($text[0]), 'precondition: the option text is clipped').to.equal(true);
-      })
-      .then(hover);
+    openSettled();
+    optionText().then(hover);
     assertShown(labels[0]);
 
-    cy.get(`#${mountId} .vscomp-options-container`).then(($container) => {
-      $container[0].dispatchEvent(new Event('scroll'));
+    scrollOptions();
+    assertNotShown();
+  });
+
+  /**
+   * The core re-renders the options after every open (selected first). A trigger replaced during
+   * the enter delay would measure as a 0x0 box, pinning the tooltip to the viewport's corner.
+   */
+  it('shows nothing for a trigger replaced during the enter delay, then follows the new one', () => {
+    openSettled();
+    optionText().then(($text) => {
+      const win = $text[0].ownerDocument.defaultView as Window;
+
+      mouse(win, $text[0], 'mouseover');
+      $text[0].replaceWith($text[0].cloneNode(true));
     });
+    assertNotShown();
+
+    optionText().then(hover);
+    assertShown(labels[0]);
+    optionText().then(($text) => {
+      const option = $text[0].getBoundingClientRect();
+
+      cy.get('.tooltip-comp').should(($tooltip) => {
+        const tooltip = $tooltip[0].getBoundingClientRect();
+        const gap = tooltip.top >= option.bottom ? tooltip.top - option.bottom : option.top - tooltip.bottom;
+
+        expect(gap, '8px from the new option once the show transition ends').to.be.within(7, 9);
+        expect(tooltip.right > option.left && tooltip.left < option.right, 'horizontally over the option').to.equal(
+          true,
+        );
+      });
+    });
+  });
+
+  it('hides on scroll once its shown trigger has been replaced', () => {
+    openSettled();
+    optionText().then(hover);
+    assertShown(labels[0]);
+
+    optionText().then(($text) => $text[0].replaceWith($text[0].cloneNode(true)));
+    scrollOptions();
     assertNotShown();
   });
 

@@ -51,6 +51,14 @@ function animate($node, transform, opacity, ms) {
 /** Builds the node for the current trigger, places it, and animates it in. */
 function show() {
   const $trigger = /** @type {HTMLElement} */ (trigger);
+
+  // Re-rendered away during the enter delay (the core re-renders options after every open): it
+  // would measure as a 0x0 box at the viewport's corner. Clearing it lets its replacement hover.
+  if (!$trigger.isConnected) {
+    hide();
+    return;
+  }
+
   const data = $trigger.dataset;
   const $node = document.createElement('div');
 
@@ -154,7 +162,9 @@ if (!window.virtualSelectTooltipInitiated) {
     (event) => {
       const target = /** @type {Node} */ (event.target);
 
-      if (trigger && (target === document || target.contains(trigger))) {
+      // `document` contains every connected trigger. One no longer in the DOM is contained by
+      // nothing, so any scroll hides its tooltip.
+      if (trigger && (target.contains(trigger) || !trigger.isConnected)) {
         hide();
       }
     },
