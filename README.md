@@ -25,6 +25,6 @@ npm install --save virtual-select-plugin
 <script src="node_modules/virtual-select-plugin/dist/virtual-select.min.js"></script>
 
 <!-- optional -->
-<link rel="stylesheet" href="node_modules/tooltip-plugin/dist/tooltip.min.css">
-<script src="node_modules/tooltip-plugin/dist/tooltip.min.js"></script>
+<link rel="stylesheet" href="node_modules/virtual-select-plugin/dist/virtual-select-tooltip.min.css">
+<script src="node_modules/virtual-select-plugin/dist/virtual-select-tooltip.min.js"></script>
 ```

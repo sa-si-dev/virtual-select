@@ -91,8 +91,9 @@ export function recordEvents(win: Window, mountId: string): string[] {
 }
 
 /**
- * The docs page loads tooltip-plugin, which overwrites window.PopperComponent with an older
- * engine that yields fractional coordinates. Block it so the bundled engine is always used.
+ * The docs page no longer loads the external tooltip-plugin (the tooltip add-on replaced it).
+ * This guard keeps it from being served from docs/assets, so a stray copy can never interfere with
+ * the dropbox positioner under test.
  * Call before every cy.visit().
  */
 export function blockTooltipPlugin(): void {

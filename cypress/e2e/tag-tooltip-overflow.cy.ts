@@ -10,7 +10,7 @@
  * tags that fit could get one.
  *
  * The tooltip now sits on `.vscomp-value-tag-content` with `data-tooltip-ellipsis-only`, so
- * tooltip-plugin runs `scrollWidth > offsetWidth` on the real box at hover time.
+ * the tooltip add-on runs `scrollWidth > offsetWidth` on the real box at hover time.
  *
  * These cases assert what the user experiences — whether a tooltip *appears on hover* — rather
  * than the presence of an attribute, so they hold regardless of which side computes the overflow.
@@ -25,7 +25,7 @@ const host = (width: string) => ({ width, maxWidth: width });
 
 const tagContent = () => cy.get(`#${mountId} .vscomp-value-tag[data-index] .vscomp-value-tag-content`);
 
-/** tooltip-plugin listens for delegated `mouseover`, so a real bubbling event is what shows it. */
+/** the tooltip add-on listens for delegated `mouseover`, so a real bubbling event is what shows it. */
 const hover = ($el: JQuery<HTMLElement>) => cy.wrap($el).trigger('mouseover', { force: true });
 const unhover = ($el: JQuery<HTMLElement>) => cy.wrap($el).trigger('mouseout', { force: true });
 
@@ -37,8 +37,8 @@ const assertTooltipShows = (text: string) =>
  *
  * - `tooltipEnterDelay` is 200ms, so "no tooltip" has to outlast it — asserting straight after the
  *   hover would pass before the tooltip had any chance to appear.
- * - hiding is `display: none`, not removal (tooltip-plugin only removes the node when the *next*
- *   tooltip is built), so once any tooltip has been shown the node stays in the DOM. Absence has
+ * - hiding is `display: none`, not removal (the tooltip add-on keeps one tooltip node and only
+ *   hides it), so once any tooltip has been shown the node stays in the DOM. Absence has
  *   to be asserted on visibility, not existence.
  */
 const TOOLTIP_ENTER_DELAY = 200;

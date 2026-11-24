@@ -20,9 +20,9 @@ OR from below direct links
 
 [virtual-select.min.js](https://raw.githubusercontent.com/{{repo}}/master/dist/virtual-select.min.js)
 
-[tooltip.min.css](https://raw.githubusercontent.com/sa-si-dev/tooltip/master/dist/tooltip.min.css)
+[virtual-select-tooltip.min.css](https://raw.githubusercontent.com/{{repo}}/master/dist/virtual-select-tooltip.min.css)
 
-[tooltip.min.js](https://raw.githubusercontent.com/sa-si-dev/tooltip/master/dist/tooltip.min.js)
+[virtual-select-tooltip.min.js](https://raw.githubusercontent.com/{{repo}}/master/dist/virtual-select-tooltip.min.js)
 
 
 ## Import files
@@ -35,15 +35,15 @@ Import downloaded files (`virtual-select.min.css` and `virtual-select.min.js`) i
 <script src="path/to/virtual-select.min.js">
 ```
 
-Import below files to enable optional tooltip plugin.\
+Import below files to enable the optional tooltip add-on.\
 Tooltip would be used to show selected values and options text, if text is long and hidden by ellipsis.
 ```html
-<link rel="stylesheet" href="path/to/tooltip.min.css">
+<link rel="stylesheet" href="path/to/virtual-select-tooltip.min.css">
 
-<script src="path/to/tooltip.min.js">
+<script src="path/to/virtual-select-tooltip.min.js">
 ```
 
-If you want to use tooltip plug-in in your project, refer [Tooltip Documentation](https://sa-si-dev.github.io/tooltip)
+> **Upgrading from 1.4.x:** `tooltip-plugin` is no longer installed with Virtual Select. If you load `node_modules/tooltip-plugin/dist/tooltip.min.js`, either switch to the two `virtual-select-tooltip` files above or add `tooltip-plugin` to your own dependencies. Both keep working; do not load them together expecting two tooltips, the add-on steps aside when `tooltip-plugin` is present.
 
 ## Install from NPM
 
@@ -60,8 +60,8 @@ npm install --save virtual-select-plugin
 <script src="node_modules/virtual-select-plugin/dist/virtual-select.min.js"></script>
 
 <!-- optional -->
-<link rel="stylesheet" href="node_modules/tooltip-plugin/dist/tooltip.min.css">
-<script src="node_modules/tooltip-plugin/dist/tooltip.min.js"></script>
+<link rel="stylesheet" href="node_modules/virtual-select-plugin/dist/virtual-select-tooltip.min.css">
+<script src="node_modules/virtual-select-plugin/dist/virtual-select-tooltip.min.js"></script>
 ```
 
 ## Initialize plugin

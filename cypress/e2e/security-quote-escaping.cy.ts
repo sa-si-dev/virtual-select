@@ -156,7 +156,7 @@ describe('Security: quotes are escaped at the attribute, not in the stored text'
 
       cy.get(`#${mountId}`).find('[data-pwned]').should('not.exist');
       /** the attributes moved from `.vscomp-value-tag` to its content span in #487, so that
-       *  tooltip-plugin evaluates ellipsis on the box that actually clips; the escaping path
+       *  the tooltip add-on evaluates ellipsis on the box that actually clips; the escaping path
        *  (`getAttributesText()`) and therefore this guarantee are unchanged */
       cy.get(`#${mountId}`)
         .find('.vscomp-value-tag .vscomp-value-tag-content')
