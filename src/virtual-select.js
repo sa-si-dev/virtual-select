@@ -2,6 +2,7 @@
 /* eslint-disable class-methods-use-this */
 // @ts-nocheck
 import { Utils, DomUtils } from './utils';
+import { DropboxPositioner } from './dropbox-positioner';
 
 const dropboxCloseButtonFullHeight = 48;
 const searchHeight = 40;
@@ -594,6 +595,7 @@ export class VirtualSelect {
   /** dom event methods - start */
   addEvents() {
     this.addEvent(document, 'click', 'onDocumentClick', true);
+    this.addEvent(document, 'keydown', 'onDocumentKeyDown');
     this.addEvent(this.$allWrappers, 'keydown', 'onKeyDown');
     this.addEvent(this.$toggleButton, 'click keydown', 'onToggleButtonPress');
     this.addEvent(this.$clearButton, 'click keydown', 'onClearButtonClick');
@@ -634,6 +636,7 @@ export class VirtualSelect {
      * VirtualSelect instance + detached DOM it closes over) leaks on every destroy/re-render.
      */
     this.removeEvent(document, 'click', 'onDocumentClick', true);
+    this.removeEvent(document, 'keydown', 'onDocumentKeyDown');
     this.removeEvent(this.$allWrappers, 'keydown', 'onKeyDown');
     this.removeEvent(this.$toggleButton, 'click keydown', 'onToggleButtonPress');
     this.removeEvent(this.$clearButton, 'click keydown', 'onClearButtonClick');
@@ -700,6 +703,21 @@ export class VirtualSelect {
     if (clickedInstance && clickedInstance !== this && this.isOpened() && !this.keepAlwaysOpen) {
       // Don't focus when closing due to another dropdown being opened
       this.shouldFocusWrapperOnClose = false;
+      this.closeDropbox();
+    }
+  }
+
+  /**
+   * Escape anywhere on the page closes an open positioner-backed dropdown. popover-plugin used
+   * to do this behind the component's back: it hid the dropbox without beforeClose and left
+   * aria-expanded "true". Now it is a real close. Registered in the bubble phase, so with focus
+   * inside the component onKeyDown() has already closed it and the hiding guard in
+   * closeDropbox() makes this call a no-op. The popup layout is deliberately not included.
+   */
+  onDocumentKeyDown(e) {
+    const key = e.which || e.keyCode;
+
+    if ((key === 27 || e.key === 'Escape') && this.dropboxPopover && this.isOpened()) {
       this.closeDropbox();
     }
   }
@@ -2985,24 +3003,18 @@ export class VirtualSelect {
   /** get methods - end */
 
   initDropboxPopover() {
-    const data = {
-      ele: this.$ele,
-      target: this.$dropboxContainer,
+    this.dropboxPopover = new DropboxPositioner({
+      $trigger: this.$ele,
+      $floating: this.$dropboxContainer,
       position: this.position,
       zIndex: this.zIndex,
-      margin: 4,
-      transitionDistance: 30,
-      hideArrowIcon: true,
-      disableManualAction: true,
-      disableUpdatePosition: !this.hasDropboxWrapper,
-      updatePositionThrottle: this.updatePositionThrottle,
       showDuration: this.showDuration,
       hideDuration: this.hideDuration,
-      afterShow: this.afterShowPopper.bind(this),
-      afterHide: this.afterHidePopper.bind(this),
-    };
-
-    this.dropboxPopover = new PopoverComponent(data);
+      throttle: this.updatePositionThrottle,
+      reposition: this.hasDropboxWrapper,
+      onShown: this.afterShowPopper.bind(this),
+      onHidden: this.afterHidePopper.bind(this),
+    });
   }
 
   openDropbox(isSilent) {
@@ -3104,6 +3116,16 @@ export class VirtualSelect {
   }
 
   closeDropbox(isSilent) {
+    /**
+     * One beforeClose and one afterClose per close. popover-plugin started a second hide timer
+     * for every extra close during the hide transition (an outside click or Escape reached both
+     * this component and the plugin), so afterClose fired twice. Checked before isSilentClose is
+     * written, so the close already running keeps its own silentness.
+     */
+    if (this.dropboxPopover && this.dropboxPopover.isHiding()) {
+      return;
+    }
+
     this.isSilentClose = isSilent;
 
     // Remove from open instances
@@ -3134,6 +3156,15 @@ export class VirtualSelect {
     }
 
     if (isSilent) {
+      /**
+       * A silent close never told popover-plugin, which kept pop-comp-active and its listeners
+       * and then ignored the next open until its own outside-click handler hid it. Reset the
+       * positioner so the next open shows and animates normally.
+       */
+      if (this.dropboxPopover) {
+        this.dropboxPopover.reset();
+      }
+
       DomUtils.setStyle(this.$dropboxContainer, 'display', '');
     } else {
       DomUtils.dispatchEvent(this.$ele, 'beforeClose');
@@ -3274,7 +3305,7 @@ export class VirtualSelect {
       return;
     }
 
-    this.$ele.updatePosition();
+    this.dropboxPopover.updatePosition();
   }
 
   isOpened() {
