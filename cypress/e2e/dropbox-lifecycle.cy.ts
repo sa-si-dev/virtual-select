@@ -13,7 +13,7 @@
  */
 
 import { makeOptions, mountVs, unmountVs } from '../support/mount';
-import { blockTooltipPlugin, recordEvents } from '../support/dropbox-probe';
+import { blockTooltipPlugin, recordEvents, snapshotDropbox } from '../support/dropbox-probe';
 
 type Instance = {
   open: () => void;
@@ -523,6 +523,56 @@ describe('Dropbox lifecycle', () => {
         const after = ($host[0] as Host).virtualSelect.$dropboxContainer.style.transform;
 
         expect(after, 'inline transform').to.equal(before);
+      });
+    });
+
+    it('dropboxWrapper self stays in place inside a scaled ancestor', () => {
+      cy.window().then((win) => {
+        const box = win.document.createElement('div');
+        box.id = `${MOUNT_ID}-box`;
+        Object.assign(box.style, {
+          position: 'fixed',
+          left: '100px',
+          top: '100px',
+          transform: 'scale(0.8)',
+          transformOrigin: '0 0',
+        });
+
+        const host = win.document.createElement('div');
+        host.id = MOUNT_ID;
+        Object.assign(host.style, { width: '240px', maxWidth: '240px' });
+
+        box.append(host);
+        win.document.body.appendChild(box);
+
+        // @ts-expect-error - VirtualSelect is attached to window by the bundle
+        win.VirtualSelect.init({ ele: host, ...baseOptions, dropboxWrapper: 'self' });
+        events = recordEvents(win, MOUNT_ID);
+      });
+      openAndClear();
+
+      let before: [number, number] = [0, 0];
+
+      getHost().should(($host) => {
+        const container = ($host[0] as Host).virtualSelect.$dropboxContainer;
+        const view = container.ownerDocument.defaultView as Window;
+
+        expect(view.getComputedStyle(container).opacity, 'fade-in finished').to.equal('1');
+        before = snapshotDropbox(view, MOUNT_ID).transform;
+      });
+
+      // 'self' attaches no scroll or resize listener; its repositions come from updatePosition(),
+      // which the component calls when the list changes size (a search, for one).
+      cy.window().then((win) => {
+        for (let i = 0; i < 7; i += 1) {
+          hostIn(win).virtualSelect.updatePosition();
+        }
+
+        const after = snapshotDropbox(win, MOUNT_ID).transform;
+
+        expect(before[1], 'a translate was written').not.to.equal(0);
+        expect(after[0], 'translate x after seven repositions').to.be.closeTo(before[0], 1);
+        expect(after[1], 'translate y after seven repositions').to.be.closeTo(before[1], 1);
       });
     });
 

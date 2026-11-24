@@ -113,11 +113,20 @@ export class DropboxPositioner {
      * translate applied right now, which mid-transition is not the one last written. The rect
      * read has already flushed layout, so the computed style costs no extra layout; a transform
      * of 'none' parses to the identity matrix.
+     *
+     * The rect is in viewport pixels, the translate in the element's own: under a scaled ancestor
+     * the translate moves the box by translate * scale, so that is what comes off. The scale is the
+     * rect width over the layout width (offsetWidth, already laid out by the rect read); a gap under
+     * one pixel is offsetWidth's rounding, not a scale. The placement then runs on the same
+     * viewport-pixel origin that show() measures with transform: none, so a reposition writes what
+     * show() wrote, as popover-plugin did.
      */
     const rect = this.$floating.getBoundingClientRect();
     const { m41, m42 } = new DOMMatrix(getComputedStyle(this.$floating).transform);
+    const width = this.$floating.offsetWidth;
+    const scale = width && Math.abs(rect.width - width) >= 1 ? rect.width / width : 1;
 
-    this.place({ left: rect.left - m41, top: rect.top - m42, width: rect.width, height: rect.height });
+    this.place({ left: rect.left - m41 * scale, top: rect.top - m42 * scale, width: rect.width, height: rect.height });
     DomUtils.setStyles(this.$floating, { transitionDuration: '0ms', transform: translate(this.x, this.y) });
   }
 
