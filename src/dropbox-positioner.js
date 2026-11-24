@@ -43,6 +43,11 @@ export class DropboxPositioner {
     // fromY are written before they are first read; clearing an unset timer is a no-op.
     Object.assign(this, options);
 
+    // popover-plugin read an empty position as 'auto'; computePlacement() throws on an unknown side.
+    if (!/^(auto|top|bottom|left|right)( |$)/i.test(this.position)) {
+      this.position = 'auto';
+    }
+
     /** @type {State} */
     this.state = 'hidden';
     // Initialised here because the type checker infers `any` from the method-only writes.
@@ -115,18 +120,23 @@ export class DropboxPositioner {
      * of 'none' parses to the identity matrix.
      *
      * The rect is in viewport pixels, the translate in the element's own: under a scaled ancestor
-     * the translate moves the box by translate * scale, so that is what comes off. The scale is the
-     * rect width over the layout width (offsetWidth, already laid out by the rect read); a gap under
-     * one pixel is offsetWidth's rounding, not a scale. The placement then runs on the same
-     * viewport-pixel origin that show() measures with transform: none, so a reposition writes what
-     * show() wrote, as popover-plugin did.
+     * the translate moves the box by translate * scale, so that is what comes off, per axis. Each
+     * scale is the rect size over the layout size (offsetWidth / offsetHeight, already laid out by
+     * the rect read); a gap under one pixel is their rounding, not a scale. The placement then runs
+     * on the same viewport-pixel origin that show() measures with transform: none, so a reposition
+     * writes what show() wrote, as popover-plugin did.
      */
     const rect = this.$floating.getBoundingClientRect();
     const { m41, m42 } = new DOMMatrix(getComputedStyle(this.$floating).transform);
-    const width = this.$floating.offsetWidth;
-    const scale = width && Math.abs(rect.width - width) >= 1 ? rect.width / width : 1;
+    const scale = (/** @type {number} */ size, /** @type {number} */ layout) =>
+      layout && Math.abs(size - layout) >= 1 ? size / layout : 1;
 
-    this.place({ left: rect.left - m41 * scale, top: rect.top - m42 * scale, width: rect.width, height: rect.height });
+    this.place({
+      left: rect.left - m41 * scale(rect.width, this.$floating.offsetWidth),
+      top: rect.top - m42 * scale(rect.height, this.$floating.offsetHeight),
+      width: rect.width,
+      height: rect.height,
+    });
     DomUtils.setStyles(this.$floating, { transitionDuration: '0ms', transform: translate(this.x, this.y) });
   }
 
@@ -150,7 +160,18 @@ export class DropboxPositioner {
     DomUtils.removeClass(this.$floating, 'pop-comp-disable-events');
 
     if (this.reposition) {
-      document.addEventListener('scroll', this.onScroll, { capture: true, passive: true });
+      // Scroll events do not leave a shadow root: listen on every root from the host's up to the document.
+      this.roots = /** @type {Node[]} */ ([]);
+
+      for (
+        let root = /** @type {Node | undefined} */ (this.$trigger.getRootNode());
+        root;
+        root = /** @type {ShadowRoot} */ (root).host?.getRootNode()
+      ) {
+        this.roots.push(root);
+        root.addEventListener('scroll', this.onScroll, { capture: true, passive: true });
+      }
+
       window.addEventListener('resize', this.requestUpdate);
     }
 
@@ -165,7 +186,8 @@ export class DropboxPositioner {
   }
 
   removeListeners() {
-    document.removeEventListener('scroll', this.onScroll, true);
+    this.roots?.forEach((root) => root.removeEventListener('scroll', this.onScroll, true));
+    this.roots = undefined;
     window.removeEventListener('resize', this.requestUpdate);
     this.requestUpdate.cancel();
     cancelAnimationFrame(this.frame);
@@ -173,12 +195,20 @@ export class DropboxPositioner {
   }
 
   /**
-   * Only a scroll of the document or of an ancestor of the host moves the host.
+   * Only a scroll of the document or of an ancestor of the host moves the host. The walk goes up
+   * through shadow hosts, where Node.contains() stops.
    * @param {Event} event
    */
   onScroll(event) {
-    if (/** @type {Node} */ (event.target).contains(this.$trigger)) {
-      this.requestUpdate();
+    for (
+      let node = /** @type {Node | null | undefined} */ (this.$trigger);
+      node;
+      node = node.parentNode || /** @type {ShadowRoot} */ (node).host
+    ) {
+      if (node === event.target) {
+        this.requestUpdate();
+        return;
+      }
     }
   }
 

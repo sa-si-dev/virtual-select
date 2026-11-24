@@ -8,6 +8,8 @@ import type { DropboxPositionerOptions } from './dropbox-positioner';
 declare module './dropbox-positioner' {
   interface DropboxPositioner extends Omit<DropboxPositionerOptions, 'zIndex' | 'throttle'> {
     timer: ReturnType<typeof setTimeout> | undefined;
+    /** the document and any shadow roots holding scroll listeners while shown (set by afterShow()) */
+    roots: Node[] | undefined;
     /** the last placement computed (set by place()): side, final translate and from-translate */
     side: string;
     x: number;

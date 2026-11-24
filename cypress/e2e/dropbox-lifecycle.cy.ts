@@ -187,6 +187,9 @@ const trackScrollAndResizeListeners = (win: Window) => {
 /** Undoes the matchMedia stub of the reduced-motion test; the page is not reloaded between tests. */
 let restoreMatchMedia: (() => void) | undefined;
 
+/** A host mounted inside a shadow root, which unmountVs() cannot find by id. */
+let shadowHost: Host | undefined;
+
 describe('Dropbox lifecycle', () => {
   beforeEach(() => {
     blockTooltipPlugin();
@@ -200,6 +203,8 @@ describe('Dropbox lifecycle', () => {
       untrackListeners = undefined;
       restoreMatchMedia?.();
       restoreMatchMedia = undefined;
+      shadowHost?.destroy();
+      shadowHost = undefined;
       unmountVs(win, MOUNT_ID);
       unmountVs(win, MOUNT_ID_B);
       win.document.getElementById(`${MOUNT_ID}-box`)?.remove();
@@ -348,7 +353,10 @@ describe('Dropbox lifecycle', () => {
         expect(listeners.live(), 'listeners left after destroy').to.equal(0);
 
         styleWrites = watchStyleWrites(win, container);
-        expect(countFrameRequests(win, () => scrollAndResize(win)), 'frames requested').to.equal(0);
+        expect(
+          countFrameRequests(win, () => scrollAndResize(win)),
+          'frames requested',
+        ).to.equal(0);
       });
       cy.window().then((win) => waitFrames(win, 2));
 
@@ -526,53 +534,122 @@ describe('Dropbox lifecycle', () => {
       });
     });
 
-    it('dropboxWrapper self stays in place inside a scaled ancestor', () => {
-      cy.window().then((win) => {
-        const box = win.document.createElement('div');
-        box.id = `${MOUNT_ID}-box`;
-        Object.assign(box.style, {
-          position: 'fixed',
-          left: '100px',
-          top: '100px',
-          transform: 'scale(0.8)',
-          transformOrigin: '0 0',
+    (
+      [
+        ['a scaled ancestor', 'scale(0.8)'],
+        ['an ancestor scaled on one axis only', 'scale(1, 0.8)'],
+      ] as const
+    ).forEach(([ancestor, transform]) => {
+      it(`dropboxWrapper self stays in place inside ${ancestor}`, () => {
+        cy.window().then((win) => {
+          const box = win.document.createElement('div');
+          box.id = `${MOUNT_ID}-box`;
+          Object.assign(box.style, {
+            position: 'fixed',
+            left: '100px',
+            top: '100px',
+            transform,
+            transformOrigin: '0 0',
+          });
+
+          const host = win.document.createElement('div');
+          host.id = MOUNT_ID;
+          Object.assign(host.style, { width: '240px', maxWidth: '240px' });
+
+          box.append(host);
+          win.document.body.appendChild(box);
+
+          // @ts-expect-error - VirtualSelect is attached to window by the bundle
+          win.VirtualSelect.init({ ele: host, ...baseOptions, dropboxWrapper: 'self' });
+          events = recordEvents(win, MOUNT_ID);
+        });
+        openAndClear();
+
+        let before: [number, number] = [0, 0];
+
+        getHost().should(($host) => {
+          const container = ($host[0] as Host).virtualSelect.$dropboxContainer;
+          const view = container.ownerDocument.defaultView as Window;
+
+          expect(view.getComputedStyle(container).opacity, 'fade-in finished').to.equal('1');
+          before = snapshotDropbox(view, MOUNT_ID).transform;
         });
 
-        const host = win.document.createElement('div');
-        host.id = MOUNT_ID;
+        // 'self' attaches no scroll or resize listener; its repositions come from updatePosition(),
+        // which the component calls when the list changes size (a search, for one).
+        cy.window().then((win) => {
+          for (let i = 0; i < 7; i += 1) {
+            hostIn(win).virtualSelect.updatePosition();
+          }
+
+          const after = snapshotDropbox(win, MOUNT_ID).transform;
+
+          expect(before[1], 'a translate was written').not.to.equal(0);
+          expect(after[0], 'translate x after seven repositions').to.be.closeTo(before[0], 1);
+          expect(after[1], 'translate y after seven repositions').to.be.closeTo(before[1], 1);
+        });
+      });
+    });
+
+    /**
+     * Scroll events do not leave a shadow root, and `document.contains()` does not look into one,
+     * so a host inside a shadow root needs listeners on that root as well as on the document.
+     */
+    it('dropboxWrapper body follows a host inside a shadow root when its scroll box scrolls', () => {
+      let box: HTMLElement;
+      const opened: string[] = [];
+
+      cy.window().then((win) => {
+        const outer = win.document.createElement('div');
+        outer.id = `${MOUNT_ID}-box`;
+        Object.assign(outer.style, { position: 'fixed', left: '400px', top: '100px' });
+
+        box = win.document.createElement('div');
+        Object.assign(box.style, { width: '500px', height: '300px', overflow: 'auto' });
+
+        const before = win.document.createElement('div');
+        before.style.height = '100px';
+
+        const after = win.document.createElement('div');
+        after.style.height = '1200px';
+
+        const host = win.document.createElement('div') as unknown as Host;
         Object.assign(host.style, { width: '240px', maxWidth: '240px' });
 
-        box.append(host);
-        win.document.body.appendChild(box);
+        box.append(before, host, after);
+        outer.attachShadow({ mode: 'open' }).append(box);
+        win.document.body.appendChild(outer);
 
         // @ts-expect-error - VirtualSelect is attached to window by the bundle
-        win.VirtualSelect.init({ ele: host, ...baseOptions, dropboxWrapper: 'self' });
-        events = recordEvents(win, MOUNT_ID);
+        win.VirtualSelect.init({ ele: host, ...baseOptions, dropboxWrapper: 'body' });
+        shadowHost = host;
+        host.addEventListener('afterOpen', () => opened.push('afterOpen'));
+        host.open();
       });
-      openAndClear();
 
-      let before: [number, number] = [0, 0];
+      cy.wrap(null).should(() => {
+        expect(opened, 'opened').to.include('afterOpen');
+      });
 
-      getHost().should(($host) => {
-        const container = ($host[0] as Host).virtualSelect.$dropboxContainer;
+      let before = 0;
+
+      cy.wrap(null).should(() => {
+        const container = (shadowHost as Host).virtualSelect.$dropboxContainer;
         const view = container.ownerDocument.defaultView as Window;
 
         expect(view.getComputedStyle(container).opacity, 'fade-in finished').to.equal('1');
-        before = snapshotDropbox(view, MOUNT_ID).transform;
+        before = container.getBoundingClientRect().top;
       });
 
-      // 'self' attaches no scroll or resize listener; its repositions come from updatePosition(),
-      // which the component calls when the list changes size (a search, for one).
-      cy.window().then((win) => {
-        for (let i = 0; i < 7; i += 1) {
-          hostIn(win).virtualSelect.updatePosition();
-        }
+      cy.then(() => {
+        box.scrollTop = 60;
+        expect(box.scrollTop, 'box scrolled by the full delta').to.equal(60);
+      });
 
-        const after = snapshotDropbox(win, MOUNT_ID).transform;
+      cy.wrap(null).should(() => {
+        const after = (shadowHost as Host).virtualSelect.$dropboxContainer.getBoundingClientRect().top;
 
-        expect(before[1], 'a translate was written').not.to.equal(0);
-        expect(after[0], 'translate x after seven repositions').to.be.closeTo(before[0], 1);
-        expect(after[1], 'translate y after seven repositions').to.be.closeTo(before[1], 1);
+        expect(before - after, 'container moved up with the host').to.be.closeTo(60, 1);
       });
     });
 
@@ -641,7 +718,31 @@ describe('Dropbox lifecycle', () => {
           expect(listeners.added(), 'listeners added while open').to.be.at.least(2);
           expect(listeners.live(), 'listeners left after close').to.equal(0);
           // A leaked listener would request a frame before updatePosition() ignores it.
-          expect(countFrameRequests(win, () => scrollAndResize(win)), 'frames requested').to.equal(0);
+          expect(
+            countFrameRequests(win, () => scrollAndResize(win)),
+            'frames requested',
+          ).to.equal(0);
+        });
+      });
+    });
+  });
+
+  context('position option', () => {
+    /** popover-plugin read an empty position as 'auto'; an unknown side used to throw on open. */
+    (
+      [
+        ['empty', ''],
+        ['null', null],
+        ['an unknown side', 'center'],
+      ] as const
+    ).forEach(([name, position]) => {
+      it(`opens with auto placement when position is ${name}`, () => {
+        mount({ ...baseOptions, position });
+        cy.window().then((win) => hostIn(win).open());
+        expectLog(['beforeOpen', 'afterOpen']);
+
+        cy.window().then((win) => {
+          expect(['top', 'bottom'], 'auto picks top or bottom').to.include(snapshotDropbox(win, MOUNT_ID).side);
         });
       });
     });
