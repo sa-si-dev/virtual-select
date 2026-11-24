@@ -59,6 +59,9 @@ const openAndClear = () => {
   });
 };
 
+/** Undoes the matchMedia stub of the reduced-motion test; the page is not reloaded between tests. */
+let restoreMatchMedia: (() => void) | undefined;
+
 describe('Dropbox lifecycle characterization', () => {
   beforeEach(() => {
     blockTooltipPlugin();
@@ -68,6 +71,8 @@ describe('Dropbox lifecycle characterization', () => {
 
   afterEach(() => {
     cy.window().then((win) => {
+      restoreMatchMedia?.();
+      restoreMatchMedia = undefined;
       unmountVs(win, MOUNT_ID);
       unmountVs(win, MOUNT_ID_B);
       win.document.getElementById(`${MOUNT_ID}-box`)?.remove();
@@ -287,8 +292,12 @@ describe('Dropbox lifecycle characterization', () => {
   context('reduced motion', () => {
     it('still fires the four events in order', () => {
       cy.window().then((win) => {
-        const originalMatchMedia = win.matchMedia.bind(win);
+        const unboundMatchMedia = win.matchMedia;
+        const originalMatchMedia = unboundMatchMedia.bind(win);
 
+        restoreMatchMedia = () => {
+          win.matchMedia = unboundMatchMedia;
+        };
         win.matchMedia = ((query: string) =>
           query.includes('prefers-reduced-motion')
             ? ({
@@ -316,6 +325,15 @@ describe('Dropbox lifecycle characterization', () => {
   context('class timing', () => {
     it('toggles pop-comp-active and pop-comp-disable-events across open and close', () => {
       mount({ ...baseOptions, showDuration: 300, hideDuration: 300 });
+
+      // The reduced-motion test above stubs matchMedia; a leaked stub would zero the durations.
+      cy.window().then((win) => {
+        const instance = (win.document.getElementById(MOUNT_ID) as Host).virtualSelect as Instance & {
+          hideDuration: number;
+        };
+
+        expect(instance.hideDuration, 'hide duration').to.equal(300);
+      });
 
       const reads: { active: boolean; disableEvents: boolean }[] = [];
 
