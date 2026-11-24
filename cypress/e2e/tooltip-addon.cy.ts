@@ -42,10 +42,17 @@ const optionText = () =>
     expect(isClipped($text[0]), 'precondition: the option text is clipped').to.equal(true);
   });
 
-/** Opens the dropdown and waits for afterOpen, which re-renders the options (selected first). */
+/**
+ * Opens the dropdown and waits for afterOpen, which re-renders the options (selected first), and
+ * for the show transition to end: a tooltip is placed when it shows and does not follow a dropbox
+ * that is still sliding in.
+ */
 const openSettled = () => {
   cy.get(`#${mountId}`).then(($host) => $host[0].open?.());
   cy.get(`#${mountId} .vscomp-wrapper`).should('have.class', 'focused');
+  cy.get(`#${mountId} .vscomp-dropbox-container`).should(($container) => {
+    expect(getComputedStyle($container[0]).opacity, 'show transition ended').to.equal('1');
+  });
 };
 
 const scrollOptions = () =>
@@ -202,18 +209,20 @@ describe('Tooltip add-on', { testIsolation: true }, () => {
 
     optionText().then(hover);
     assertShown(labels[0]);
-    optionText().then(($text) => {
-      const option = $text[0].getBoundingClientRect();
+    // Both boxes are measured afresh on every retry, so neither can be a stale reading.
+    cy.get('.tooltip-comp').should(($tooltip) => {
+      const $option = $tooltip[0].ownerDocument.querySelector(
+        `#${mountId} .vscomp-option[data-index="0"] .vscomp-option-text`,
+      );
 
-      cy.get('.tooltip-comp').should(($tooltip) => {
-        const tooltip = $tooltip[0].getBoundingClientRect();
-        const gap = tooltip.top >= option.bottom ? tooltip.top - option.bottom : option.top - tooltip.bottom;
+      expect($option, 'the new option').to.not.equal(null);
 
-        expect(gap, '8px from the new option once the show transition ends').to.be.within(7, 9);
-        expect(tooltip.right > option.left && tooltip.left < option.right, 'horizontally over the option').to.equal(
-          true,
-        );
-      });
+      const option = ($option as Element).getBoundingClientRect();
+      const tooltip = $tooltip[0].getBoundingClientRect();
+      const gap = tooltip.top >= option.bottom ? tooltip.top - option.bottom : option.top - tooltip.bottom;
+
+      expect(gap, '8px from the new option once the show transition ends').to.be.within(7, 9);
+      expect(tooltip.right > option.left && tooltip.left < option.right, 'horizontally over the option').to.equal(true);
     });
   });
 
