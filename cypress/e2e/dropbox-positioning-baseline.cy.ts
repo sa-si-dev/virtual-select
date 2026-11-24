@@ -8,6 +8,7 @@
  * the positioning engine was replaced. The same spec must keep passing unchanged afterwards.
  *
  * Record:  npx cypress run --expose RECORD_BASELINE=1 --spec cypress/e2e/dropbox-positioning-baseline.cy.ts
+ * Recording is refused unless the popover-plugin engine is loaded, so only this PR's code can do it.
  * On a mismatch the full actual set is written to ci-results/dropbox-baseline.actual.json.
  */
 
@@ -204,7 +205,18 @@ describe('Dropbox positioning baseline', () => {
   let mismatch = false;
 
   before(() => {
-    if (!recordMode) {
+    if (recordMode) {
+      // Recorded on the replacement engine, the fixture would pin what it is meant to check.
+      blockTooltipPlugin();
+      cy.visit('get-started');
+      cy.window().then((win) => {
+        if (!('PopoverComponent' in win)) {
+          throw new Error(
+            'RECORD_BASELINE refused: record only on the popover-plugin engine (window.PopoverComponent).',
+          );
+        }
+      });
+    } else {
       cy.fixture('dropbox-baseline').then((data) => {
         fixture = data;
       });
@@ -227,7 +239,8 @@ describe('Dropbox positioning baseline', () => {
   });
 
   after(() => {
-    if (recordMode) {
+    // A refused recording still runs this hook, with nothing recorded: keep the fixture.
+    if (recordMode && Object.keys(actualSet).length) {
       cy.writeFile(FIXTURE_PATH, actualSet);
     } else if (mismatch) {
       cy.writeFile(ACTUAL_PATH, actualSet);

@@ -251,6 +251,8 @@ describe('Dropbox lifecycle characterization', () => {
 
       getHost().then(($host) => {
         before = ($host[0] as Host).virtualSelect.$dropboxContainer.style.transform;
+        // Two empty strings would compare equal without characterizing anything.
+        expect(before, 'a translate was written on open').to.match(/^translate3d\(/);
       });
 
       scrollBoxBy(60);
