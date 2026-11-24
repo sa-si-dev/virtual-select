@@ -105,6 +105,79 @@ const scrollAndResize = (win: Window) => {
   win.dispatchEvent(new (win as Window & typeof globalThis).Event('resize'));
 };
 
+/** How many requestAnimationFrame calls `act` makes synchronously. */
+const countFrameRequests = (win: Window, act: () => void) => {
+  const original = win.requestAnimationFrame;
+  let count = 0;
+
+  win.requestAnimationFrame = (callback) => {
+    count += 1;
+
+    return original.call(win, callback);
+  };
+
+  try {
+    act();
+  } finally {
+    win.requestAnimationFrame = original;
+  }
+
+  return count;
+};
+
+type Registration = { target: EventTarget; type: string; listener: unknown; capture: boolean };
+
+const captureOf = (options?: boolean | EventListenerOptions) =>
+  typeof options === 'boolean' ? options : !!options?.capture;
+
+/** Undoes the patch made by trackScrollAndResizeListeners(); the page is not reloaded between tests. */
+let untrackListeners: (() => void) | undefined;
+
+/**
+ * Record `scroll` and `resize` listeners added to and removed from the window and the document
+ * from now on. `live()` counts the ones added and not removed since.
+ */
+const trackScrollAndResizeListeners = (win: Window) => {
+  const live: Registration[] = [];
+  let added = 0;
+  const targets: EventTarget[] = [win, win.document];
+
+  targets.forEach((target) => {
+    const { addEventListener: add, removeEventListener: remove } = target;
+
+    target.addEventListener = (type, listener, options) => {
+      if (type === 'scroll' || type === 'resize') {
+        added += 1;
+        live.push({ target, type, listener, capture: captureOf(options) });
+      }
+
+      add.call(target, type, listener, options);
+    };
+
+    target.removeEventListener = (type, listener, options) => {
+      const capture = captureOf(options);
+      const index = live.findIndex(
+        (r) => r.target === target && r.type === type && r.listener === listener && r.capture === capture,
+      );
+
+      if (index !== -1) {
+        live.splice(index, 1);
+      }
+
+      remove.call(target, type, listener, options);
+    };
+  });
+
+  untrackListeners = () => {
+    targets.forEach((target) => {
+      Reflect.deleteProperty(target, 'addEventListener');
+      Reflect.deleteProperty(target, 'removeEventListener');
+    });
+  };
+
+  return { added: () => added, live: () => live.length };
+};
+
 describe('Dropbox lifecycle', () => {
   beforeEach(() => {
     blockTooltipPlugin();
@@ -114,10 +187,13 @@ describe('Dropbox lifecycle', () => {
 
   afterEach(() => {
     cy.window().then((win) => {
+      untrackListeners?.();
+      untrackListeners = undefined;
       unmountVs(win, MOUNT_ID);
       unmountVs(win, MOUNT_ID_B);
       win.document.getElementById(`${MOUNT_ID}-box`)?.remove();
       win.document.getElementById(`${MOUNT_ID}-external`)?.remove();
+      win.document.getElementById(`${MOUNT_ID}-style`)?.remove();
     });
   });
 
@@ -172,37 +248,64 @@ describe('Dropbox lifecycle', () => {
   });
 
   context('destroy', () => {
-    it('destroy during the hide transition fires no afterClose and leaves no listeners', () => {
-      // dropboxWrapper 'body' is the configuration that attaches scroll and resize listeners.
-      mount({ ...baseOptions, hideDuration: 200, dropboxWrapper: 'body' });
-      openAndClear();
+    // dropboxWrapper 'body' is the configuration that attaches scroll and resize listeners.
+    const withListeners = { ...baseOptions, dropboxWrapper: 'body', updatePositionThrottle: 0 };
 
-      let container: HTMLElement;
-      let styleWrites: () => number;
+    it('destroy during the hide transition fires no afterClose and leaves no listeners', () => {
+      mount({ ...withListeners, hideDuration: 200 });
+
+      let listeners: ReturnType<typeof trackScrollAndResizeListeners>;
+
+      cy.window().then((win) => {
+        listeners = trackScrollAndResizeListeners(win);
+      });
+      openAndClear();
 
       cy.window().then((win) => {
         const host = hostIn(win);
-        container = host.virtualSelect.$dropboxContainer;
 
         host.close();
         host.destroy();
+
+        expect(() => scrollAndResize(win), 'scroll and resize after destroy').not.to.throw();
       });
       cy.wait(400);
 
       cy.then(() => {
         expect(events, 'close events after destroy').not.to.include('afterClose');
+        expect(listeners.added(), 'listeners added while open').to.be.at.least(2);
+        expect(listeners.live(), 'listeners left after destroy').to.equal(0);
       });
+    });
+
+    it('destroy while shown removes the listeners', () => {
+      mount(withListeners);
+
+      let listeners: ReturnType<typeof trackScrollAndResizeListeners>;
+      let container: HTMLElement;
+      let styleWrites: () => number;
 
       cy.window().then((win) => {
-        styleWrites = watchStyleWrites(win, container);
+        listeners = trackScrollAndResizeListeners(win);
+      });
+      openAndClear();
 
-        expect(() => scrollAndResize(win), 'scroll and resize after destroy').not.to.throw();
+      cy.window().then((win) => {
+        const host = hostIn(win);
+        container = host.virtualSelect.$dropboxContainer;
+
+        host.destroy();
+
+        expect(listeners.added(), 'listeners added while open').to.be.at.least(2);
+        expect(listeners.live(), 'listeners left after destroy').to.equal(0);
+
+        styleWrites = watchStyleWrites(win, container);
+        expect(countFrameRequests(win, () => scrollAndResize(win)), 'frames requested').to.equal(0);
       });
       cy.window().then((win) => waitFrames(win, 2));
-      cy.wait(SETTLE_MS);
 
       cy.then(() => {
-        expect(styleWrites(), 'style writes after destroy').to.equal(0);
+        expect(styleWrites(), 'style writes on the detached container').to.equal(0);
       });
     });
   });
@@ -258,7 +361,7 @@ describe('Dropbox lifecycle', () => {
 
   context('repositioning', () => {
     /** A scrollable box holding the host, so an ancestor can be scrolled. */
-    const mountInScrollBox = (wrapper: 'self' | 'body') => {
+    const mountInScrollBox = (wrapper: 'self' | 'body', options: Record<string, unknown> = {}) => {
       cy.window().then((win) => {
         const box = win.document.createElement('div');
         box.id = `${MOUNT_ID}-box`;
@@ -286,7 +389,7 @@ describe('Dropbox lifecycle', () => {
         win.document.body.appendChild(box);
 
         // @ts-expect-error - VirtualSelect is attached to window by the bundle
-        win.VirtualSelect.init({ ele: host, ...baseOptions, dropboxWrapper: wrapper });
+        win.VirtualSelect.init({ ele: host, ...baseOptions, ...options, dropboxWrapper: wrapper });
         events = recordEvents(win, MOUNT_ID);
       });
     };
@@ -307,8 +410,15 @@ describe('Dropbox lifecycle', () => {
 
       let before = 0;
 
-      getHost().then(($host) => {
-        before = ($host[0] as Host).virtualSelect.$dropboxContainer.getBoundingClientRect().top;
+      // afterOpen can land while the slide is still finishing (the transition starts a frame after
+      // the show timer); measure only once it has, or `before` is off by the remaining pixel or so.
+      getHost().should(($host) => {
+        const container = ($host[0] as Host).virtualSelect.$dropboxContainer;
+
+        const view = container.ownerDocument.defaultView as Window;
+
+        expect(view.getComputedStyle(container).opacity, 'fade-in finished').to.equal('1');
+        before = container.getBoundingClientRect().top;
       });
 
       scrollBoxBy(60);
@@ -317,6 +427,33 @@ describe('Dropbox lifecycle', () => {
         const after = ($host[0] as Host).virtualSelect.$dropboxContainer.getBoundingClientRect().top;
 
         expect(before - after, 'container moved up with the host').to.be.closeTo(60, 1);
+      });
+    });
+
+    it('a reposition while the show transition still runs lands where the host now is', () => {
+      cy.window().then((win) => {
+        // Hold the slide back so it is still at its start after the show timer fires: the
+        // dropbox is then 'shown' (listeners attached) while its translate is not the final one.
+        const style = win.document.createElement('style');
+        style.id = `${MOUNT_ID}-style`;
+        style.textContent = '.vscomp-dropbox-container { transition-delay: 400ms !important; }';
+        win.document.head.appendChild(style);
+      });
+      mountInScrollBox('body', { showDuration: 300, position: 'bottom left' });
+
+      cy.window().then((win) => hostIn(win).open());
+      expectLog(['beforeOpen', 'afterOpen']);
+      scrollBoxBy(60);
+
+      // The reposition's own write is held back by the same delay; let everything settle.
+      cy.wait(1200);
+
+      getHost().should(($host) => {
+        const hostRect = $host[0].getBoundingClientRect();
+        const rect = ($host[0] as Host).virtualSelect.$dropboxContainer.getBoundingClientRect();
+
+        expect(rect.left, 'container left = host left').to.be.closeTo(hostRect.left, 1);
+        expect(rect.top, 'container top = host bottom + margin').to.be.closeTo(hostRect.bottom + 4, 1);
       });
     });
 
@@ -392,21 +529,21 @@ describe('Dropbox lifecycle', () => {
 
       it('leaves no scroll or resize listener after close', () => {
         mount(unthrottled);
+
+        let listeners: ReturnType<typeof trackScrollAndResizeListeners>;
+
+        cy.window().then((win) => {
+          listeners = trackScrollAndResizeListeners(win);
+        });
         openAndClear();
         toggle().click();
         expectLog(['beforeClose', 'afterClose']);
 
-        let styleWrites: () => number;
-
         cy.window().then((win) => {
-          styleWrites = watchStyleWrites(win, container(win));
-          scrollAndResize(win);
-        });
-        cy.window().then((win) => waitFrames(win, 2));
-        cy.wait(SETTLE_MS);
-
-        cy.then(() => {
-          expect(styleWrites(), 'style writes after close').to.equal(0);
+          expect(listeners.added(), 'listeners added while open').to.be.at.least(2);
+          expect(listeners.live(), 'listeners left after close').to.equal(0);
+          // A leaked listener would request a frame before updatePosition() ignores it.
+          expect(countFrameRequests(win, () => scrollAndResize(win)), 'frames requested').to.equal(0);
         });
       });
     });

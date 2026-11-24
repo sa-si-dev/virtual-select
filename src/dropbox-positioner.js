@@ -39,26 +39,14 @@ const translate = (x, y) => `translate3d(${x}px, ${y}px, 0)`;
 export class DropboxPositioner {
   /** @param {DropboxPositionerOptions} options */
   constructor(options) {
-    this.$trigger = options.$trigger;
-    this.$floating = options.$floating;
-    this.position = options.position;
-    this.showDuration = options.showDuration;
-    this.hideDuration = options.hideDuration;
-    this.reposition = options.reposition;
-    this.onShown = options.onShown;
-    this.onHidden = options.onHidden;
+    // Field types are declared in dropbox-positioner-fields.d.ts. timer, side, x, y, fromX and
+    // fromY are written before they are first read; clearing an unset timer is a no-op.
+    Object.assign(this, options);
 
     /** @type {State} */
     this.state = 'hidden';
-    /** @type {ReturnType<typeof setTimeout> | undefined} */
-    this.timer = undefined;
+    // Initialised here because the type checker infers `any` from the method-only writes.
     this.frame = 0;
-    /** the last placement written: final and from-translate */
-    this.x = 0;
-    this.y = 0;
-    this.fromX = 0;
-    this.fromY = 0;
-
     this.onScroll = this.onScroll.bind(this);
     this.requestUpdate = Utils.throttle(() => this.scheduleUpdate(), options.throttle);
 
@@ -74,8 +62,8 @@ export class DropboxPositioner {
 
     this.state = 'showing';
     DomUtils.addClass(this.$floating, 'pop-comp-disable-events');
-    DomUtils.setStyle(this.$floating, 'display', 'inline-flex');
-    this.placeUntransformed();
+    DomUtils.setStyles(this.$floating, { display: 'inline-flex', transitionDuration: '0ms', transform: 'none' });
+    this.place(this.$floating.getBoundingClientRect());
     DomUtils.setStyle(this.$floating, 'transform', translate(this.fromX, this.fromY));
 
     // INTENTIONAL forced reflow: commits the from-translate so the next writes transition from it.
@@ -109,8 +97,7 @@ export class DropboxPositioner {
 
   /** Back to the state a finished hide leaves, at once and without calling onHidden. */
   reset() {
-    clearTimeout(this.timer);
-    this.removeListeners();
+    this.destroy(); // clears the timer and the listeners
     this.state = 'hidden';
     DomUtils.setStyles(this.$floating, { display: 'none', opacity: '0' });
     DomUtils.removeClass(this.$trigger, 'pop-comp-active');
@@ -118,19 +105,21 @@ export class DropboxPositioner {
   }
 
   updatePosition() {
-    if (this.state === 'showing') {
-      // Mid-transition the current translate is not the one last written: measure without it.
-      this.placeUntransformed();
-    } else if (this.state === 'shown') {
-      // One read, one write: the untransformed origin is the rectangle minus the last translate.
-      const rect = this.$floating.getBoundingClientRect();
-      this.place({ left: rect.left - this.x, top: rect.top - this.y, width: rect.width, height: rect.height });
-      DomUtils.setStyle(this.$floating, 'transitionDuration', '0ms');
-    } else {
+    if (this.state !== 'showing' && this.state !== 'shown') {
       return;
     }
 
-    DomUtils.setStyle(this.$floating, 'transform', translate(this.x, this.y));
+    /*
+     * One read phase, one write phase. The untransformed origin is the rectangle minus the
+     * translate applied right now, which mid-transition is not the one last written. The rect
+     * read has already flushed layout, so the computed style costs no extra layout; a transform
+     * of 'none' parses to the identity matrix.
+     */
+    const rect = this.$floating.getBoundingClientRect();
+    const { m41, m42 } = new DOMMatrix(getComputedStyle(this.$floating).transform);
+
+    this.place({ left: rect.left - m41, top: rect.top - m42, width: rect.width, height: rect.height });
+    DomUtils.setStyles(this.$floating, { transitionDuration: '0ms', transform: translate(this.x, this.y) });
   }
 
   isShown() {
@@ -166,18 +155,19 @@ export class DropboxPositioner {
   }
 
   removeListeners() {
-    document.removeEventListener('scroll', this.onScroll, { capture: true });
+    document.removeEventListener('scroll', this.onScroll, true);
     window.removeEventListener('resize', this.requestUpdate);
     this.requestUpdate.cancel();
     cancelAnimationFrame(this.frame);
     this.frame = 0;
   }
 
-  /** @param {Event} event */
+  /**
+   * Only a scroll of the document or of an ancestor of the host moves the host.
+   * @param {Event} event
+   */
   onScroll(event) {
-    const { target } = event;
-
-    if (target === document || (target instanceof Node && target.contains(this.$trigger))) {
+    if (/** @type {Node} */ (event.target).contains(this.$trigger)) {
       this.requestUpdate();
     }
   }
@@ -194,32 +184,25 @@ export class DropboxPositioner {
     });
   }
 
-  /** Clear the transform, measure, and place from the untransformed box. */
-  placeUntransformed() {
-    DomUtils.setStyles(this.$floating, { transitionDuration: '0ms', transform: 'none' });
-    this.place(this.$floating.getBoundingClientRect());
-  }
-
   /**
    * Compute the placement for `floating` (viewport box without transform) and apply the side class.
    * @param {{ left: number, top: number, width: number, height: number }} floating
    */
   place(floating) {
-    const { side, x, y, fromX, fromY } = computePlacement({
-      trigger: this.$trigger.getBoundingClientRect(),
-      floating,
-      viewport: { width: window.innerWidth, height: window.innerHeight },
-      position: this.position,
-      margin: MARGIN,
-      offset: OFFSET,
-      distance: DISTANCE,
-    });
-
-    this.x = x;
-    this.y = y;
-    this.fromX = fromX;
-    this.fromY = fromY;
+    // Sets this.side, this.x, this.y, this.fromX and this.fromY.
+    Object.assign(
+      this,
+      computePlacement({
+        trigger: this.$trigger.getBoundingClientRect(),
+        floating,
+        viewport: { width: window.innerWidth, height: window.innerHeight },
+        position: this.position,
+        margin: MARGIN,
+        offset: OFFSET,
+        distance: DISTANCE,
+      }),
+    );
     DomUtils.removeClass(this.$floating, POSITION_CLASSES);
-    DomUtils.addClass(this.$floating, `position-${side}`);
+    DomUtils.addClass(this.$floating, `position-${this.side}`);
   }
 }
