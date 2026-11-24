@@ -1,5 +1,5 @@
 /*!
- * Virtual Select v1.4.0
+ * Virtual Select v1.4.1
  * https://sa-si-dev.github.io/virtual-select
  * Licensed under MIT (https://github.com/sa-si-dev/virtual-select/blob/master/LICENSE)
  *//******/ (function() { // webpackBootstrap
@@ -1333,6 +1333,14 @@ class VirtualSelect {
     }
   }
   onKeyDown(e) {
+    /**
+     * A disabled control takes no keyboard input. Without this, toggle-all, the arrow keys
+     * (which reopen the dropdown) and Backspace/Delete (which reset the value) all still ran,
+     * because `pointer-events: none` only blocks the mouse.
+     */
+    if (this.$ele.disabled) {
+      return;
+    }
     const key = e.which || e.keyCode;
     const method = keyDownMethodMapping[key];
     if (document.activeElement === this.$searchInput && !e.shiftKey && key === 9 && !this.multiple) {
@@ -1463,6 +1471,10 @@ class VirtualSelect {
     });
   }
   onOptionsClick(e) {
+    // The CSS pointer-events rule does not reach a dropbox portalled into an external dropboxWrapper.
+    if (this.$ele.disabled) {
+      return;
+    }
     const $option = e.target.closest('.vscomp-option');
     if ($option && !DomUtils.hasClass($option, 'disabled')) {
       if (DomUtils.hasClass($option, 'group-title')) {
@@ -1647,6 +1659,17 @@ class VirtualSelect {
       // when dropdown close resets search, so re-add as a persisted new option.
       this.setNewOption(selectedValue);
       this.toggleSelectedProp(this.lastOptionIndex, true);
+
+      /**
+       * The close that removed the temporary option also recomputed the visible count, the
+       * list height and `has-no-options` without it, and nothing after this point recomputes
+       * them: setNewOption() re-adds through addOption() with no rerender, and the deferred
+       * setSearchValue('') below is a no-op because the close already emptied the search.
+       * So the list came back one row short - 0px on an empty list, with the "no options"
+       * message still showing - until some later filter change happened to recount.
+       * Recount now that the option is a regular one; the count includes it from here on.
+       */
+      this.setVisibleOptionsCount();
     }
 
     /** using setTimeout to fix the issue of dropbox getting closed on select */
@@ -4230,6 +4253,22 @@ class VirtualSelect {
     this.$hiddenInput.setAttribute('disabled', '');
     DomUtils.setAria(this.$wrapper, 'disabled', true);
     DomUtils.changeTabIndex(this.$wrapper, -1);
+
+    /**
+     * An open dropdown keeps focus in the search input or an option, not on $wrapper, so
+     * blurring $wrapper alone left the list open and interactive. Close it without handing
+     * focus back to the (now unfocusable) wrapper, then drop focus from whatever inside the
+     * component still holds it.
+     */
+    if (this.isOpened() && !this.keepAlwaysOpen) {
+      this.shouldFocusWrapperOnClose = false;
+      this.closeDropbox();
+    }
+    const active = document.activeElement;
+    const isFocusWithin = active && (this.$wrapper.contains(active) || this.hasDropboxWrapper && this.$dropboxWrapper.contains(active));
+    if (isFocusWithin) {
+      active.blur();
+    }
     this.$wrapper.blur();
   }
   validate() {
