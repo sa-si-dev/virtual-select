@@ -15,7 +15,13 @@
 import { makeOptions, mountVs, unmountVs } from '../support/mount';
 import { blockTooltipPlugin, recordEvents } from '../support/dropbox-probe';
 
-type Instance = { open: () => void; close: () => void; $dropboxContainer: HTMLElement };
+type Instance = {
+  open: () => void;
+  close: () => void;
+  updatePosition: () => void;
+  hideDuration: number;
+  $dropboxContainer: HTMLElement;
+};
 type Host = HTMLElement & { open: () => void; close: () => void; destroy: () => void; virtualSelect: Instance };
 
 const MOUNT_ID = 'vs-lifecycle';
@@ -178,6 +184,9 @@ const trackScrollAndResizeListeners = (win: Window) => {
   return { added: () => added, live: () => live.length };
 };
 
+/** Undoes the matchMedia stub of the reduced-motion test; the page is not reloaded between tests. */
+let restoreMatchMedia: (() => void) | undefined;
+
 describe('Dropbox lifecycle', () => {
   beforeEach(() => {
     blockTooltipPlugin();
@@ -189,6 +198,8 @@ describe('Dropbox lifecycle', () => {
     cy.window().then((win) => {
       untrackListeners?.();
       untrackListeners = undefined;
+      restoreMatchMedia?.();
+      restoreMatchMedia = undefined;
       unmountVs(win, MOUNT_ID);
       unmountVs(win, MOUNT_ID_B);
       win.document.getElementById(`${MOUNT_ID}-box`)?.remove();
@@ -276,6 +287,42 @@ describe('Dropbox lifecycle', () => {
         expect(listeners.added(), 'listeners added while open').to.be.at.least(2);
         expect(listeners.live(), 'listeners left after destroy').to.equal(0);
       });
+      getHost().should('not.have.class', 'pop-comp-active');
+    });
+
+    // OutSystems UI's changeProperty(): a synchronous close(), then redraw() on a 0 ms timer, which
+    // destroys the instance and builds a new one on the same element, all inside the default hide.
+    it('close, then destroy and init on the same element in the next tick, leaves no pop-comp-active', () => {
+      const options = { options: makeOptions(6), search: true };
+
+      mount(options);
+      openAndClear();
+
+      let hideDuration = 0;
+
+      cy.window().then(
+        (win) =>
+          new Cypress.Promise<void>((resolve) => {
+            const host = hostIn(win);
+
+            hideDuration = host.virtualSelect.hideDuration;
+            host.close();
+            win.setTimeout(() => {
+              host.destroy();
+              // @ts-expect-error - VirtualSelect is attached to window by the bundle
+              win.VirtualSelect.init({ ele: host, ...options });
+              resolve();
+            }, 0);
+          }),
+      );
+
+      cy.then(() => {
+        expect(hideDuration, 'default hide duration').to.equal(200);
+      });
+      cy.wait(200 + SETTLE_MS);
+
+      getHost().should('not.have.class', 'pop-comp-active');
+      getHost().find('.vscomp-wrapper').should('have.attr', 'aria-expanded', 'false');
     });
 
     it('destroy while shown removes the listeners', () => {
@@ -296,6 +343,7 @@ describe('Dropbox lifecycle', () => {
 
         host.destroy();
 
+        expect(host, 'host after destroy').not.to.have.class('pop-comp-active');
         expect(listeners.added(), 'listeners added while open').to.be.at.least(2);
         expect(listeners.live(), 'listeners left after destroy').to.equal(0);
 
@@ -552,8 +600,12 @@ describe('Dropbox lifecycle', () => {
   context('reduced motion', () => {
     it('still fires the four events in order', () => {
       cy.window().then((win) => {
-        const originalMatchMedia = win.matchMedia.bind(win);
+        const unboundMatchMedia = win.matchMedia;
+        const originalMatchMedia = unboundMatchMedia.bind(win);
 
+        restoreMatchMedia = () => {
+          win.matchMedia = unboundMatchMedia;
+        };
         win.matchMedia = ((query: string) =>
           query.includes('prefers-reduced-motion')
             ? ({
@@ -581,6 +633,11 @@ describe('Dropbox lifecycle', () => {
   context('class timing', () => {
     it('toggles pop-comp-active and pop-comp-disable-events across open and close', () => {
       mount({ ...baseOptions, showDuration: 300, hideDuration: 300 });
+
+      // The reduced-motion test above stubs matchMedia; a leaked stub would zero the durations.
+      cy.window().then((win) => {
+        expect(hostIn(win).virtualSelect.hideDuration, 'hide duration').to.equal(300);
+      });
 
       const reads: { active: boolean; disableEvents: boolean }[] = [];
 

@@ -97,10 +97,9 @@ export class DropboxPositioner {
 
   /** Back to the state a finished hide leaves, at once and without calling onHidden. */
   reset() {
-    this.destroy(); // clears the timer and the listeners
+    this.destroy(); // clears the timer, the listeners and pop-comp-active
     this.state = 'hidden';
     DomUtils.setStyles(this.$floating, { display: 'none', opacity: '0' });
-    DomUtils.removeClass(this.$trigger, 'pop-comp-active');
     DomUtils.removeClass(this.$floating, 'pop-comp-disable-events');
   }
 
@@ -130,9 +129,11 @@ export class DropboxPositioner {
     return this.state === 'hiding';
   }
 
+  /** Also clears pop-comp-active: a destroy during the hide cancels the afterHide() that would. */
   destroy() {
     clearTimeout(this.timer);
     this.removeListeners();
+    DomUtils.removeClass(this.$trigger, 'pop-comp-active');
   }
 
   afterShow() {
