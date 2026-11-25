@@ -181,6 +181,26 @@ describe('A11y: aria-hidden is never applied over the focused element', { testIs
     $option.dispatchEvent(new win.MouseEvent('mouseover', { bubbles: true }));
   };
 
+  /** without a search input, opening lands focus on an element inside the dropbox instead */
+  const waitForFocusInDropbox = () => {
+    cy.get(`#${mountId}`).should(($ele) => {
+      const active = $ele[0].ownerDocument.activeElement;
+
+      expect($ele[0].virtualSelect.$dropboxContainer.contains(active), 'focus inside the dropbox after open')
+        .to.equal(true);
+    });
+  };
+
+  /**
+   * Dispatch a bubbling keydown on the combobox synchronously, for the same reason as
+   * hoverOptionNow(): a Cypress command hop could land after the 200ms fade it is aimed at.
+   */
+  const pressKeyNow = (vs: any, key: string, keyCode: number) => {
+    const win = vs.$ele.ownerDocument.defaultView;
+
+    vs.$wrapper.dispatchEvent(new win.KeyboardEvent('keydown', { key, keyCode, which: keyCode, bubbles: true }));
+  };
+
   /** the hide transition is ~200ms; wait it out so late callbacks are included */
   const assertNoViolations = () => {
     cy.wait(700);
@@ -253,14 +273,14 @@ describe('A11y: aria-hidden is never applied over the focused element', { testIs
   });
 
   /**
-   * The silent close: opening one instance closes every other one synchronously, straight
-   * through afterHidePopper() - while the first instance's search input still holds focus.
-   * The attribute write happens in the same script block, before the browser's style recalc
-   * can drop focus to <body>, so without an explicit release aria-hidden lands over the
-   * focused input. shouldFocusWrapperOnClose is false here, so the release must blur, not
-   * steal focus back from the instance the user just opened.
+   * Opening one instance through the API closes every other one, with no click to move focus
+   * first - so the first instance's search input still holds focus when its hide ends.
+   * afterHidePopper() writes the attribute in the same script block as the `closed` class,
+   * before the browser's style recalc can drop focus to <body>, so without an explicit release
+   * aria-hidden lands over the focused input. shouldFocusWrapperOnClose is false here, so the
+   * release must blur, not steal focus back from the instance that was just opened.
    */
-  it('releases focus from a dropdown that another instance closes silently', () => {
+  it('releases focus from a dropdown that another instance closes', () => {
     mount();
     cy.window().then((win) => {
       mountVs(win, secondMountId, { options: makeOptions(50), search: true, dropboxWrapper: 'body' });
@@ -276,7 +296,7 @@ describe('A11y: aria-hidden is never applied over the focused element', { testIs
       const vs = $ele[0].virtualSelect;
       const active = $ele[0].ownerDocument.activeElement;
 
-      expect(vs.$dropboxWrapper.contains(active), 'focus inside the silently closed dropbox').to.equal(false);
+      expect(vs.$dropboxWrapper.contains(active), 'focus inside the dropbox the other instance closed').to.equal(false);
       expect(vs.$dropboxWrapper.getAttribute('aria-hidden'), 'closed dropbox hidden').to.equal('true');
     });
   });
@@ -317,6 +337,82 @@ describe('A11y: aria-hidden is never applied over the focused element', { testIs
 
     cy.get(`#${mountId}`).then(($ele) => {
       expect($ele[0].ownerDocument.activeElement, 'focus once closed').to.equal($ele[0].virtualSelect.$wrapper);
+    });
+  });
+
+  /**
+   * The same release, reached the way a keyboard user reaches it: arrow keys are deliberately
+   * not gated during the fade, so ArrowDown right after a close highlights an option - and,
+   * with no search input to hold focus, moves DOM focus onto it.
+   *
+   * Different from the case above in the one way that matters: this option carries the
+   * highlight. Hide-end clears the highlight before it releases focus, and rewriting tabindex
+   * on a focused element the popover has already stopped rendering makes Chrome blur it on the
+   * spot - so by the time the release looked, focus was already on <body> and there was
+   * nothing left for it to hand back. The decision has to be taken before the highlight goes.
+   */
+  it('hands focus back to the combobox when an arrow key highlighted an option mid-fade', () => {
+    mount({ search: false });
+    open();
+    waitForFocusInDropbox();
+
+    cy.get(`#${mountId}`).then(($ele) => {
+      const vs = $ele[0].virtualSelect;
+
+      vs.closeDropbox();
+      expect(vs.isOpened(), 'still mid hide-transition').to.equal(true);
+
+      pressKeyNow(vs, 'ArrowDown', 40);
+
+      /** precondition: the key really did pull DOM focus onto a highlighted option */
+      const active = $ele[0].ownerDocument.activeElement as Element;
+
+      expect(vs.$dropboxContainer.contains(active), 'focus pulled into the fading dropbox').to.equal(true);
+      expect(active.classList.contains('focused'), 'the focused option carries the highlight').to.equal(true);
+    });
+
+    assertNoViolations();
+
+    cy.get(`#${mountId}`).then(($ele) => {
+      expect($ele[0].ownerDocument.activeElement, 'focus once closed').to.equal($ele[0].virtualSelect.$wrapper);
+    });
+  });
+
+  /**
+   * The other half of the same decision. When the close was caused by focus moving elsewhere
+   * (an outside click, another dropdown opening - both clear shouldFocusWrapperOnClose before
+   * closing, exactly as done here), a highlighted option that lost focus at hide-end must not
+   * be "handed back" to this combobox: that would steal focus from wherever the user went.
+   */
+  it('does not pull focus to the combobox when the close was caused by focus moving away', () => {
+    mount({ search: false });
+    open();
+    waitForFocusInDropbox();
+
+    cy.get(`#${mountId}`).then(($ele) => {
+      const vs = $ele[0].virtualSelect;
+
+      vs.shouldFocusWrapperOnClose = false;
+      vs.closeDropbox();
+      expect(vs.isOpened(), 'still mid hide-transition').to.equal(true);
+
+      /** a host-driven highlight mid-fade: focusOption() focuses the option it highlights */
+      vs.focusOption({ focusFirst: true });
+
+      const active = $ele[0].ownerDocument.activeElement as Element;
+
+      expect(vs.$dropboxContainer.contains(active), 'focus pulled into the fading dropbox').to.equal(true);
+      expect(active.classList.contains('focused'), 'the focused option carries the highlight').to.equal(true);
+    });
+
+    assertNoViolations();
+
+    cy.get(`#${mountId}`).then(($ele) => {
+      const vs = $ele[0].virtualSelect;
+      const active = $ele[0].ownerDocument.activeElement as Element;
+
+      expect(active, 'focus not handed to the combobox').to.not.equal(vs.$wrapper);
+      expect(vs.$dropboxWrapper.contains(active), 'focus left inside the hidden dropbox').to.equal(false);
     });
   });
 
@@ -411,7 +507,7 @@ describe('A11y: aria-hidden is never applied over the focused element', { testIs
 
       /** put focus back inside so the hide-end release has something to hand to the wrapper */
       vs.$dropboxContainer.querySelector('.vscomp-option[data-index="3"]').focus();
-      vs.$wrapper.addEventListener('focusin', () => $ele[0].open?.(), { once: true });
+      vs.$wrapper.addEventListener('focusin', () => $ele[0].open!(), { once: true });
     });
 
     cy.get(`#${mountId}`).find('.vscomp-wrapper').should('not.have.class', 'closed');
@@ -451,7 +547,7 @@ describe('A11y: aria-hidden is never applied over the focused element', { testIs
       vs.closeDropbox();
       expect(vs.isOpened(), 'still mid hide-transition when the reopen arrives').to.equal(true);
 
-      $ele.open?.();
+      $ele.open!();
 
       expect(vs.isClosingTransition, 'pointer gate held while the open waits').to.equal(true);
 

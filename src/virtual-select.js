@@ -297,6 +297,12 @@ export class VirtualSelect {
     if (this.additionalDropboxContainerClasses) {
       dropboxContainerClasses += ` ${Utils.sanitizeClassNames(this.additionalDropboxContainerClasses)}`;
     }
+
+    /**
+     * tabindex="-1" on the options container keeps it out of the Tab order. Firefox makes a
+     * scroll container a tab stop by itself, which put an extra stop between the options and
+     * the search clear button - one where Enter selected the highlighted option.
+     */
     const html =
       `<div id="vscomp-dropbox-container-${this.uniqueId}" class="${dropboxContainerClasses}">
         <div class="vscomp-dropbox-container-top" aria-hidden="true" tabindex="-1">&nbsp;</div>
@@ -304,7 +310,7 @@ export class VirtualSelect {
           <div class="vscomp-search-wrapper"></div>
 
           <div id="vscomp-options-container-${this.uniqueId}" class="vscomp-options-container" role="listbox"
-            aria-labelledby="vscomp-ele-wrapper-${this.uniqueId}"
+            tabindex="-1" aria-labelledby="vscomp-ele-wrapper-${this.uniqueId}"
             ${this.multiple ? 'aria-multiselectable="true"' : ''}>
             <div class="vscomp-options-loader"></div>
 
@@ -594,12 +600,14 @@ export class VirtualSelect {
   /** dom event methods - start */
   addEvents() {
     this.addEvent(document, 'click', 'onDocumentClick', true);
+    this.addEvent(document, 'keydown', 'onDocumentKeyDown');
     this.addEvent(this.$allWrappers, 'keydown', 'onKeyDown');
     this.addEvent(this.$toggleButton, 'click keydown', 'onToggleButtonPress');
     this.addEvent(this.$clearButton, 'click keydown', 'onClearButtonClick');
     this.addEvent(this.$dropboxContainer, 'click', 'onDropboxContainerClick');
     this.addEvent(this.$dropboxCloseButton, 'click', 'onDropboxCloseButtonClick');
     this.addEvent(this.$optionsContainer, 'scroll', 'onOptionsScroll');
+    this.addEvent(this.$optionsContainer, 'focus', 'onOptionsContainerFocus');
     this.addEvent(this.$options, 'click', 'onOptionsClick');
     this.addEvent(this.$options, 'mouseover', 'onOptionsMouseOver');
     this.addEvent(this.$options, 'touchmove', 'onOptionsTouchMove');
@@ -634,12 +642,14 @@ export class VirtualSelect {
      * VirtualSelect instance + detached DOM it closes over) leaks on every destroy/re-render.
      */
     this.removeEvent(document, 'click', 'onDocumentClick', true);
+    this.removeEvent(document, 'keydown', 'onDocumentKeyDown');
     this.removeEvent(this.$allWrappers, 'keydown', 'onKeyDown');
     this.removeEvent(this.$toggleButton, 'click keydown', 'onToggleButtonPress');
     this.removeEvent(this.$clearButton, 'click keydown', 'onClearButtonClick');
     this.removeEvent(this.$dropboxContainer, 'click', 'onDropboxContainerClick');
     this.removeEvent(this.$dropboxCloseButton, 'click', 'onDropboxCloseButtonClick');
     this.removeEvent(this.$optionsContainer, 'scroll', 'onOptionsScroll');
+    this.removeEvent(this.$optionsContainer, 'focus', 'onOptionsContainerFocus');
     this.removeEvent(this.$options, 'click', 'onOptionsClick');
     this.removeEvent(this.$options, 'mouseover', 'onOptionsMouseOver');
     this.removeEvent(this.$options, 'touchmove', 'onOptionsTouchMove');
@@ -695,11 +705,77 @@ export class VirtualSelect {
       return;
     }
 
-    // If clicking a different dropdown, close current one
-    const clickedInstance = $clickedEle.parentElement.virtualSelect;
+    /**
+     * If clicking a different dropdown, close current one. The instance sits on the host element
+     * - the parent of the component's own wrapper - or, for a dropbox portalled into an external
+     * dropboxWrapper, on that dropbox wrapper itself, whose parent is the external container. A
+     * click in another instance's portalled dropbox used to resolve to nothing, so this dropdown
+     * stayed open; the popover's own outside-click hide covered that until it was switched off
+     * (see initDropboxPopover()).
+     */
+    const clickedInstance = $clickedEle.virtualSelect || $clickedEle.parentElement.virtualSelect;
     if (clickedInstance && clickedInstance !== this && this.isOpened() && !this.keepAlwaysOpen) {
       // Don't focus when closing due to another dropdown being opened
       this.shouldFocusWrapperOnClose = false;
+      this.closeDropbox();
+    }
+  }
+
+  /**
+   * Escape dismisses an open dropdown wherever focus is - including outside the component,
+   * which onKeyDown() never sees: focus leaving does not close the dropdown by itself, so a
+   * host that moves focus elsewhere leaves it open.
+   *
+   * The popover used to cover that case on its own, by hiding itself on any Escape that
+   * reached the document. The component took no part in it: no beforeClose, and
+   * aria-expanded="true" left on a combobox with nothing expanded. initDropboxPopover() now
+   * switches that off, and this is the same reach done as a real close - registered in the
+   * bubble phase like the popover's own listener, so a host that stops Escape from propagating
+   * still keeps the dropdown open.
+   *
+   * The popup layout has no popover and so never had that reach: a full-screen overlay stayed
+   * up once focus was anywhere but on the component. It gets the same close here. Only
+   * keepAlwaysOpen is left out - not dismissible by design, the same exception onKeyDown() makes.
+   *
+   * When focus is inside the component, onKeyDown() has already closed it by the time the
+   * event gets here: the popup is closed outright, and closeDropbox() ignores a close whose
+   * hide transition is still running.
+   *
+   * Not for an Escape that already belongs to something else: one a host control handled and
+   * marked with preventDefault() (a date picker closing its own calendar, say), or one that ends
+   * an IME composition. Both reach the document like any other key, and closing the dropdown
+   * for them would answer a key press meant for something else. WebKit fires compositionend
+   * before that keydown, so there it arrives with isComposing false and keyCode 229 instead.
+   *
+   * An Escape this closes is marked handled, as in onKeyDown(), when it was pressed on the
+   * component - the combobox while the dropbox is portalled out of it, which onKeyDown() does
+   * not see - or with nothing focused: an enclosing native <dialog> would otherwise close on
+   * the same key press. Pressed in a host control it still closes the dropdown, but the key
+   * stays that control's: marking it would cancel the control's own Escape behaviour (a search
+   * field clearing itself, say), which the popover's Escape close never did either.
+   *
+   * @param {KeyboardEvent} e
+   */
+  onDocumentKeyDown(e) {
+    const key = e.which || e.keyCode;
+
+    if (e.defaultPrevented || e.isComposing || e.keyCode === 229) {
+      return;
+    }
+
+    if ((key === 27 || e.key === 'Escape') && !this.keepAlwaysOpen && this.isOpened()) {
+      const { target } = e;
+      const isUnclaimed =
+        !target ||
+        target === document.body ||
+        target === document.documentElement ||
+        this.$ele.contains(target) ||
+        (this.hasDropboxWrapper && this.$dropboxWrapper.contains(target));
+
+      if (isUnclaimed && this.isOpenOrOpening()) {
+        e.preventDefault();
+      }
+
       this.closeDropbox();
     }
   }
@@ -742,13 +818,28 @@ export class VirtualSelect {
      * $dropboxWrapper unconditionally for non-popup layouts left it `undefined` under the
      * default config, so the branch never ran and Escape did nothing.
      */
-    if (key === 27 || e.key === 'Escape') {
+    /**
+     * An Escape that ends an IME composition belongs to the IME, not to the dropdown - the same
+     * rule onDocumentKeyDown() applies, including WebKit's form of it (keyCode 229). Left to fall
+     * through: no method is mapped to Escape.
+     */
+    if ((key === 27 || e.key === 'Escape') && !e.isComposing && e.keyCode !== 229) {
       const wrapper = this.hasDropboxWrapper && !this.showAsPopup ? this.$dropboxWrapper : this.$wrapper;
       if (
         wrapper &&
         (document.activeElement === wrapper || wrapper.contains(document.activeElement)) &&
         !this.keepAlwaysOpen
       ) {
+        /**
+         * An Escape that closes the dropdown (or cancels its queued open) is used up here, and
+         * says so: an enclosing native <dialog> would otherwise close on the same key press, and
+         * a host that checks defaultPrevented - as onDocumentKeyDown() does - can tell the key
+         * was taken. An Escape on a dropdown that is already closed or closing is left alone.
+         */
+        if (this.isOpenOrOpening()) {
+          e.preventDefault();
+        }
+
         this.closeDropbox();
         return;
       }
@@ -841,6 +932,25 @@ export class VirtualSelect {
   }
 
   /**
+   * The options container carries tabindex="-1" to keep it out of the Tab order, which also
+   * makes it focusable by mouse: a press on its own background or scrollbar took focus off the
+   * search input and put it on a bare listbox with no active option, where typing no longer
+   * filters. Focus is handed back to the search input once it lands; the press itself is left
+   * alone, because holding it back with preventDefault() also stopped the scrollbar thumb from
+   * being dragged in Firefox. Without a search input there is nothing to hand it back to.
+   */
+  onOptionsContainerFocus() {
+    /**
+     * Not in the popup layout: it keeps focus on the combobox when it opens, so that a touch
+     * device does not raise its on-screen keyboard over the list - and a tap on blank list space
+     * must not raise it either.
+     */
+    if (this.$searchInput && !this.showAsPopup) {
+      this.$searchInput.focus({ preventScroll: true });
+    }
+  }
+
+  /**
    * Scroll fires many times per drag and each event triggered a full re-render
    * (~9.5 ms at 100k unthrottled, ~44 ms at 4x CPU), so the main thread stayed blocked for
    * the whole gesture. Coalesce into at most one re-render per animation frame; the pending
@@ -911,7 +1021,7 @@ export class VirtualSelect {
      * focus) pulling focus back into a subtree about to be marked aria-hidden. A closing
      * dropbox ignores the pointer. Clicks and arrow keys are deliberately not gated - that
      * would change what mid-fade interactions *do*, where this only stops a passive hover
-     * from mutating state; see AI-32 in ACTION-ITEMS.md.
+     * from mutating state.
      */
     if ($ele && this.isOpened() && !this.isClosingTransition) {
       if (this.shouldSkipOptionInNavigation($ele)) {
@@ -936,10 +1046,35 @@ export class VirtualSelect {
   }
 
   onSearchClear(e) {
+    /**
+     * Escape is not this button's key: it has to reach onKeyDown() on the wrapper and the
+     * document-level handler like it does from anywhere else in the dropdown, or the dropdown
+     * cannot be dismissed while the clear button has focus (WCAG 2.1.2). Every other key keeps
+     * stopping here, as before.
+     */
+    if (e.type === 'keydown' && (e.key === 'Escape' || (e.which || e.keyCode) === 27)) {
+      return;
+    }
+
     e.stopPropagation();
     if (e.code === 'Enter' || e.code === 'Space' || e.type === 'click') {
-      this.setSearchValue('');
+      /**
+       * The key is used up here. Focus moves into the search input during this keydown, so a
+       * default action left to run lands there: Space typed a space into the box just cleared,
+       * and Enter submitted an enclosing form.
+       */
+      if (e.type === 'keydown') {
+        e.preventDefault();
+      }
+
+      /**
+       * Focus first, then clear. Clearing re-highlights the first option and re-renders the
+       * list, and both of those move DOM focus onto that option unless the search input
+       * already has it - the re-render through a deferred timer that ran after a focus call
+       * placed here last. Focusing first keeps focus in the search box (WCAG 2.4.3).
+       */
       this.focusSearchInput();
+      this.setSearchValue('');
     }
   }
 
@@ -1431,6 +1566,8 @@ export class VirtualSelect {
     this.isClosing = false;
     /** true only for the ~200ms a popover-backed close is actually running - see closeDropbox() */
     this.isClosingTransition = false;
+    /** true from popover.show() until afterShowPopper() - see closeDropbox() */
+    this.isOpeningTransition = false;
     /** an open that arrived mid hide-transition and is waiting for it - see openDropbox() */
     this.pendingOpen = false;
     /** true from closeDropbox() until the next openDropbox() - see closeDropbox() */
@@ -3012,6 +3149,15 @@ export class VirtualSelect {
       updatePositionThrottle: this.updatePositionThrottle,
       showDuration: this.showDuration,
       hideDuration: this.hideDuration,
+      /**
+       * Every close goes through closeDropbox(). With the plugin's default (true) the popover
+       * also hides itself on Escape and on outside clicks - a second hide() on top of the one
+       * closeDropbox() issues for the same event, and the popper underneath starts a new timer
+       * for each call without clearing the last, so afterHidePopper() ran twice and afterClose
+       * was dispatched twice. Where the component did not react at all, the popover closed
+       * alone and left the closed state half applied - see onDocumentKeyDown().
+       */
+      hideOnOuterClick: false,
       afterShow: this.afterShowPopper.bind(this),
       afterHide: this.afterHidePopper.bind(this),
     };
@@ -3019,7 +3165,7 @@ export class VirtualSelect {
     this.dropboxPopover = new PopoverComponent(data);
   }
 
-  openDropbox(isSilent) {
+  openDropbox() {
     // Set this instance as the last interacted one immediately
     VirtualSelect.lastInteractedInstance = this;
 
@@ -3040,21 +3186,13 @@ export class VirtualSelect {
      * queued one. Together they mean exactly "a hide is running and the popover will refuse to
      * show".
      *
-     * `!isSilent` is not a fourth safety check, it is the scope of the problem: a silent open
-     * never calls dropboxPopover.show() at all (see the branch at the end of this method - it
-     * sets display directly and runs afterShowPopper() synchronously), so the refusal this
-     * queue works around cannot happen to it. A silent open landing mid-hide would still be
-     * clobbered, but by something else - the stale afterHidePopper() adding `closed` and
-     * aria-hidden on top of it - and it would need its own fix, not this one. Deliberately not
-     * written: no caller passes isSilent to this method, in-tree or through the public
-     * $ele.open(), and none ever has. Guarding an unreachable path here would be untested code
-     * defending against a call that does not exist.
-     *
      * The visible cost, measured rather than assumed: the dropbox completes its fade to
      * opacity 0 and then fades back in, so a reopen takes hideDuration + showDuration before
-     * the list is on screen again. It is an opacity dip, not a layout flash - `display: none`
-     * is never painted, because the replay's removeClass('closed') and the popper restoring
-     * `inline-flex` both land in the same synchronous block as the hide that set them.
+     * the list is on screen again. The hide ends with the popper setting `display: none`, and
+     * the replay's popper.show() restores `inline-flex` only inside its own enterDelay timer -
+     * so the dropbox can spend a frame or so as `display: none`. Nothing shows because opacity
+     * is already 0 by then; a change to the opacity or transition handling here has to keep
+     * that true, or the gap becomes a one-frame layout collapse.
      *
      * That is a deliberate trade, not a limitation. PopperComponent.show() does start with
      * clearTimeout(hideDurationTimeout), so the hide *is* cancellable and the dip could be
@@ -3067,16 +3205,16 @@ export class VirtualSelect {
      * closes again rather than reopening, and only a programmatic close()-then-open() gets
      * here. A cosmetic gain on that path is not worth the coupling.
      */
-    if (!isSilent && this.isClosingTransition && this.dropboxPopover && this.dropboxPopover.isShown()) {
+    if (this.isClosingTransition && this.dropboxPopover && this.dropboxPopover.isShown()) {
       this.pendingOpen = true;
 
       /**
        * Registered as open even though nothing is on screen yet, because that is how the
-       * page-level closes find an instance: onDocumentClick() and the "close all others" loop
-       * below both iterate openInstances, and the close that started this hide had already
+       * page-level closes find an instance: onDocumentClick() and closeOtherInstances()
+       * both iterate openInstances, and the close that started this hide had already
        * removed it. Without this the queue outlives an outside click or a second dropdown
        * opening, and the dropdown springs open ~200ms after the user dismissed it - taking the
-       * one they had just opened down with it, through this very loop. closeDropbox() knows a
+       * one they had just opened down with it, through closeOtherInstances(). closeDropbox() knows a
        * queued instance is not really open and only cancels the queue.
        *
        * Both of those loops also do `instanceObj.shouldFocusWrapperOnClose = false` immediately
@@ -3088,31 +3226,40 @@ export class VirtualSelect {
        * revisiting.
        */
       this.queuedShouldFocusWrapperOnClose = this.shouldFocusWrapperOnClose;
+
+      /**
+       * The other dropdowns close now, as for an open that is not queued - not when the replay
+       * runs. Left open until then, two dropdowns counted as open for up to ~200ms, and one
+       * Escape reached only one of them: either the other stayed on screen, or this one opened
+       * after the user had dismissed everything.
+       */
+      this.closeOtherInstances();
       VirtualSelect.openInstances.add(this);
 
       return;
     }
 
-    this.pendingOpen = false;
-    let originalTransition = '';
-    // Disable transitions for programmatic opening
-    if (!isSilent) {
-      // Store original transition
-      originalTransition = this.$dropboxContainer.style.transition;
-      this.$dropboxContainer.style.transition = 'none';
+    /**
+     * Already open, or opening: nothing to do. Running the rest again dispatched a second
+     * beforeOpen and re-applied the open state, and popover.show() - which ignores a popover
+     * that is already shown - never produced the afterOpen to match it. A dropdown in its hide
+     * transition also reads as open, but that case was queued above.
+     *
+     * Not for keepAlwaysOpen: that list is always open, and open() on it has always run the
+     * rest anyway - beforeOpen/afterOpen and focus moved into the list. It has no popover, so
+     * the afterOpen does arrive, and a host can rely on open() for that focus.
+     */
+    if (this.isOpened() && !this.keepAlwaysOpen) {
+      return;
     }
-    // Perform the open operation
-    this.isSilentOpen = isSilent;
 
-    // Close all other open instances first
-    VirtualSelect.openInstances.forEach((instance) => {
-      if (instance !== this) {
-        // Don't focus when closing due to another dropdown being opened
-        const instanceObj = instance;
-        instanceObj.shouldFocusWrapperOnClose = false;
-        instanceObj.closeDropbox(true); // silent close
-      }
-    });
+    this.pendingOpen = false;
+
+    // Disable transitions for programmatic opening; restored right after the reflow below
+    const originalTransition = this.$dropboxContainer.style.transition;
+    this.$dropboxContainer.style.transition = 'none';
+
+    this.closeOtherInstances();
 
     // Add to open instances
     VirtualSelect.openInstances.add(this);
@@ -3138,34 +3285,29 @@ export class VirtualSelect {
     DomUtils.setAttr(this.$dropboxContainerBottom, 'tabindex', '0');
     DomUtils.setAria(this.$dropboxContainerBottom, 'hidden', false);
 
-    if (isSilent) {
-      DomUtils.setStyle(this.$dropboxContainer, 'display', 'inline-flex');
-    } else {
-      DomUtils.dispatchEvent(this.$ele, 'beforeOpen');
-      /**
-       * The wrapper is the one combobox and the one carrier of aria-expanded. The search
-       * input deliberately is not a second combobox: nesting one combobox inside another is
-       * a structure screen readers disagree on, and aria-expanded is not a supported state
-       * of the input's implicit textbox role - which does support the wiring the input
-       * needs (aria-autocomplete, aria-controls, aria-activedescendant).
-       */
-      DomUtils.setAria(this.$wrapper, 'expanded', true);
-    }
+    DomUtils.dispatchEvent(this.$ele, 'beforeOpen');
+    /**
+     * The wrapper is the one combobox and the one carrier of aria-expanded. The search
+     * input deliberately is not a second combobox: nesting one combobox inside another is
+     * a structure screen readers disagree on, and aria-expanded is not a supported state
+     * of the input's implicit textbox role - which does support the wiring the input
+     * needs (aria-autocomplete, aria-controls, aria-activedescendant).
+     */
+    DomUtils.setAria(this.$wrapper, 'expanded', true);
 
     this.setDropboxWrapperWidth();
     DomUtils.removeClass(this.$allWrappers, 'closed');
     DomUtils.changeTabIndex(this.$allWrappers, 0);
 
-    if (!isSilent) {
-      // INTENTIONAL forced reflow (do not remove as a "no-op"): reading offsetHeight flushes
-      // the 'transition: none' set above so restoring the transition below does not animate the
-      // open from a stale layout. Scoped to a single element on open, so the cost is negligible.
-      this.$dropboxContainer.offsetHeight; // eslint-disable-line no-unused-expressions
-      // Restore transitions immediately after reflow
-      this.$dropboxContainer.style.transition = originalTransition;
-    }
+    // INTENTIONAL forced reflow (do not remove as a "no-op"): reading offsetHeight flushes
+    // the 'transition: none' set above so restoring the transition below does not animate the
+    // open from a stale layout. Scoped to a single element on open, so the cost is negligible.
+    this.$dropboxContainer.offsetHeight; // eslint-disable-line no-unused-expressions
+    // Restore transitions immediately after reflow
+    this.$dropboxContainer.style.transition = originalTransition;
 
-    if (this.dropboxPopover && !isSilent) {
+    if (this.dropboxPopover) {
+      this.isOpeningTransition = true;
       this.dropboxPopover.show();
     } else {
       this.afterShowPopper();
@@ -3173,33 +3315,25 @@ export class VirtualSelect {
   }
 
   afterShowPopper() {
-    const isSilent = this.isSilentOpen;
-    this.isSilentOpen = false;
+    this.isOpeningTransition = false;
+    this.moveSelectedOptionsFirst();
+    this.setScrollTop();
+    DomUtils.addClass(this.$allWrappers, 'focused');
 
-    if (!isSilent) {
-      this.moveSelectedOptionsFirst();
-      this.setScrollTop();
-      DomUtils.addClass(this.$allWrappers, 'focused');
-
-      if (this.showAsPopup) {
-        DomUtils.addClass(this.$body, 'vscomp-popup-active');
-        this.isPopupActive = true;
-      } else {
-        this.focusElementOnOpen();
-      }
-
-      DomUtils.dispatchEvent(this.$ele, 'afterOpen');
+    if (this.showAsPopup) {
+      DomUtils.addClass(this.$body, 'vscomp-popup-active');
+      this.isPopupActive = true;
+    } else {
+      this.focusElementOnOpen();
     }
+
+    DomUtils.dispatchEvent(this.$ele, 'afterOpen');
   }
 
-  closeDropbox(isSilent) {
+  closeDropbox() {
     /**
      * An instance whose open is only queued behind a running hide is not open: that hide is
      * already doing the closing, so a close aimed at it has nothing to do but cancel the queue.
-     *
-     * Before isSilentClose is touched, deliberately. The afterHidePopper() still pending belongs
-     * to the close that started the hide; overwriting the flag here would hand it this call's
-     * silentness instead, and its afterClose would go missing (or appear when it should not).
      * Returning early also keeps this from dispatching a second beforeClose for a dropdown that
      * is already closing.
      *
@@ -3217,7 +3351,23 @@ export class VirtualSelect {
       return;
     }
 
-    this.isSilentClose = isSilent;
+    /**
+     * A close that is already running needs nothing more. isOpened() stays true until the hide
+     * transition ends, so a second close inside it - a double click on the toggle, a click on
+     * another dropdown, Escape reaching onDocumentKeyDown() after onKeyDown() handled it - used
+     * to run this whole method again: a second beforeClose, and a second popover.hide() whose
+     * callback dispatched a second afterClose.
+     *
+     * The same two conditions as the queue in openDropbox(), for the same reason: together
+     * they mean a hide really is pending and will call afterHidePopper(); the flag alone, if it
+     * were ever left set, would make every later close a no-op.
+     *
+     * A caller that cleared shouldFocusWrapperOnClose on its way here is still heard: the
+     * running hide reads that flag only when it finishes.
+     */
+    if (this.isClosingTransition && this.dropboxPopover && this.dropboxPopover.isShown()) {
+      return;
+    }
 
     // Remove from open instances
     VirtualSelect.openInstances.delete(this);
@@ -3231,40 +3381,49 @@ export class VirtualSelect {
       return;
     }
 
+    /**
+     * A close inside the ~300ms show transition stops the popover before it reports the open
+     * finished - its hide() cancels the timer that would have called afterShowPopper() - so the
+     * open's afterOpen never came: beforeOpen with no match. The open did start and is now
+     * over, so it is reported as such before this close begins: beforeOpen, afterOpen,
+     * beforeClose, afterClose. Only the event; nothing afterShowPopper() would do to the list
+     * or to focus is wanted on a dropdown that is closing.
+     */
+    if (this.isOpeningTransition) {
+      this.isOpeningTransition = false;
+      DomUtils.dispatchEvent(this.$ele, 'afterOpen');
+    }
+
     // Return focus to wrapper only when no other meaningful element currently has focus
     const active = document.activeElement;
     const withinComponent = (active && this.$wrapper.contains(active)) || this.isFocusInsideDropbox(active);
 
     const shouldRefocus = this.shouldFocusWrapperOnClose &&
       VirtualSelect.lastInteractedInstance === this &&
-      !isSilent &&
       (active === null || active === document.body || withinComponent);
 
     if (shouldRefocus) {
       this.$wrapper.focus();
     }
 
-    if (isSilent) {
-      DomUtils.setStyle(this.$dropboxContainer, 'display', '');
-    } else {
-      DomUtils.dispatchEvent(this.$ele, 'beforeClose');
-      DomUtils.setAria(this.$wrapper, 'expanded', false);
-      /**
-       * No option is active once the list is gone - and the highlight has to go with it,
-       * here, synchronously.
-       *
-       * afterHidePopper() already calls removeOptionFocus(), but for popover-backed
-       * instances it only runs when the hide transition ends (~200ms later). Until then the
-       * previous highlight and `focusedOptionIndex` survived the close, so reopening within
-       * that window resumed navigation from the old position instead of the first option:
-       * the next Up/Down moved one step past where the user expected, which on a grouped
-       * multi-select meant Enter landed on the first child option instead of toggling the
-       * group title. removeOptionFocus() is a no-op when nothing is highlighted, so leaving
-       * the afterHidePopper() call in place costs nothing and still covers the silent path.
-       */
-      this.removeOptionFocus();
-      this.setActiveDescendant('');
-    }
+    DomUtils.dispatchEvent(this.$ele, 'beforeClose');
+    DomUtils.setAria(this.$wrapper, 'expanded', false);
+    /**
+     * No option is active once the list is gone - and the highlight has to go with it,
+     * here, synchronously.
+     *
+     * afterHidePopper() already calls removeOptionFocus(), but for popover-backed
+     * instances it only runs when the hide transition ends (~200ms later). Until then the
+     * previous highlight and `focusedOptionIndex` survived the close, so reopening within
+     * that window resumed navigation from the old position instead of the first option:
+     * the next Up/Down moved one step past where the user expected, which on a grouped
+     * multi-select meant Enter landed on the first child option instead of toggling the
+     * group title. removeOptionFocus() is a no-op when nothing is highlighted, so leaving
+     * the afterHidePopper() call in place costs nothing and still covers a highlight taken
+     * during the transition (an arrow key pressed mid-fade).
+     */
+    this.removeOptionFocus();
+    this.setActiveDescendant('');
 
     /**
      * Taking the dropbox out of the tab order happens here, but hiding it from assistive
@@ -3292,7 +3451,7 @@ export class VirtualSelect {
      * stays here because it was never part of the conflict - it does not block a programmatic
      * focus() - and moving it would change when the dropbox leaves the tab order.
      */
-    if (this.dropboxPopover && !isSilent) {
+    if (this.dropboxPopover) {
       this.isClosingTransition = true;
       this.dropboxPopover.hide();
 
@@ -3348,18 +3507,30 @@ export class VirtualSelect {
   }
 
   afterHidePopper() {
-    const isSilent = this.isSilentClose;
-    /** read before anything can queue a new one, and cleared either way - see openDropbox() */
-    const shouldReopen = this.pendingOpen;
+    /**
+     * destroy() does not stop the popover's hide timer. An instance destroyed mid-fade must not
+     * reach the element afterwards - a re-render may already have built a new instance on it,
+     * which would receive this one's afterClose and focus moves against detached DOM.
+     */
+    if (this.isDestroyed) {
+      return;
+    }
 
-    this.isSilentClose = false;
-    this.pendingOpen = false;
     this.isClosingTransition = false;
+
+    /**
+     * Read before the highlight is cleared just below, not where the focus is released:
+     * removeOptionFocus() rewrites tabindex on the highlighted option, and when that option is
+     * the focused element of a dropbox the popover has already stopped rendering, the browser
+     * can blur it on the spot (Chrome does). The release further down would then find focus
+     * already on <body> and have nothing to hand back - see releaseFocusFromDropbox().
+     */
+    const hadFocusInDropbox = this.isFocusInsideDropbox(document.activeElement);
 
     DomUtils.removeClass(this.$allWrappers, 'focused');
     this.removeOptionFocus();
 
-    if (!isSilent && this.isPopupActive) {
+    if (this.isPopupActive) {
       DomUtils.removeClass(this.$body, 'vscomp-popup-active');
       this.isPopupActive = false;
     }
@@ -3367,37 +3538,48 @@ export class VirtualSelect {
     DomUtils.addClass(this.$allWrappers, 'closed');
 
     /**
+     * The close is complete here - the dropbox has its closed state - so this is where it is
+     * reported: every beforeClose gets its afterClose. Before the focus release below, because
+     * that release can reopen the dropdown (a consumer focus handler calling open() runs
+     * synchronously inside it); dispatched here, afterClose is queued ahead of that reopen's
+     * beforeOpen/afterOpen, and the host hears the close end before the next open starts.
+     * Dispatched after the release, it either arrived after the reopen's events, describing a
+     * dropdown that was open again, or - suppressed for that case - left beforeClose unpaired.
+     */
+    DomUtils.dispatchEvent(this.$ele, 'afterClose');
+
+    /**
      * After the closed class, so a focus handler reacting to the wrapper refocus observes a
      * dropdown that is really closed, and before the aria-hidden writes below - nothing may
      * hold focus inside the subtree when that attribute lands, or Chrome refuses it and the
      * dropbox stays exposed to AT. Within this synchronous block the browser has not yet
-     * recalculated style, so document.activeElement still reports the element inside the
-     * dropbox even though the closed class will eventually drop focus to <body> - which is
-     * exactly the focus loss the release turns into a deliberate hand-back.
+     * recalculated style, so document.activeElement usually still reports the element inside
+     * the dropbox even though the closed class will eventually drop focus to <body> - which is
+     * exactly the focus loss the release turns into a deliberate hand-back. The exception is a
+     * highlighted option, which removeOptionFocus() above may already have blurred; that is
+     * what hadFocusInDropbox carries across.
      *
-     * (This ordering protects the *reader* of activeElement, not afterClose's own dispatch -
-     * DomUtils.dispatchEvent() defers every event through setTimeout(0), so a consumer's
-     * afterClose handler itself always runs after this method has finished and cannot reenter
-     * it.)
+     * (This ordering protects the *reader* of activeElement. DomUtils.dispatchEvent() defers
+     * every event through setTimeout(0), so a consumer's afterClose handler always runs after
+     * this method has finished and cannot reenter it.)
      */
-    this.releaseFocusFromDropbox();
-
-    /**
-     * !isOpened() because the focus() call inside the release above can, by itself, reopen the
-     * dropdown: it fires a synchronous native focusin, and a consumer handler reacting to it by
-     * calling open() runs to completion (including removing the `closed` class) before control
-     * returns here. Dispatching afterClose after that would describe a dropdown the same
-     * synchronous call stack had already reopened - stale the instant it fires, and ordered
-     * before the reopen's own beforeOpen/afterOpen only because dispatchEvent's setTimeout(0)
-     * calls preserve scheduling order, not because it happened first. The replay guard just
-     * below makes the identical check for the identical reason.
-     */
-    if (!isSilent && !this.isOpened()) {
-      DomUtils.dispatchEvent(this.$ele, 'afterClose');
-    }
+    this.releaseFocusFromDropbox(hadFocusInDropbox);
 
     // Reset for next close
     this.shouldFocusWrapperOnClose = true;
+
+    /**
+     * Read only now, after the release, and cleared either way. The release can run host code
+     * synchronously (a focus handler on the combobox), and whatever that code asked for last
+     * wins: close() there cancels the queued open through closeDropbox()'s pendingOpen branch,
+     * and open() there opens right away and clears the flag itself. Read before the release,
+     * the queue could not be cancelled at that point and the replay below opened the dropdown
+     * after the host had closed it. Nothing can queue a new open meanwhile: queueing needs
+     * isClosingTransition, cleared at the top.
+     */
+    const shouldReopen = this.pendingOpen;
+
+    this.pendingOpen = false;
 
     /**
      * The hide has finished, so the popover is idle and will accept a show again: replay the
@@ -3411,7 +3593,7 @@ export class VirtualSelect {
      * dropdown synchronously. Replaying on top of that would run a second openDropbox() and
      * dispatch a second beforeOpen for a single open.
      */
-    if (shouldReopen && !this.isDestroyed && !this.isOpened()) {
+    if (shouldReopen && !this.isOpened()) {
       this.openDropbox();
     }
 
@@ -3453,6 +3635,33 @@ export class VirtualSelect {
     this.setVisibleOptions();
   }
 
+  /**
+   * Close every other open instance - with the same close a click on this dropdown gives them
+   * through onDocumentClick(). This used to be a "silent" close, an internal mode since removed,
+   * which skipped everything that makes the other dropdown closed to anyone but the stylesheet:
+   * aria-expanded stayed "true" on its combobox, the host got no beforeClose/afterClose, and its
+   * popover was never told to hide - so it kept refusing to show, and the next open() of that
+   * dropdown removed the `closed` class and put nothing on screen. Only reachable through the
+   * open() API, or a key press after a script moved focus here: a click closes the other
+   * dropdown first, and so does tabbing out of it - which is why it went unnoticed.
+   */
+  closeOtherInstances() {
+    VirtualSelect.openInstances.forEach((instance) => {
+      if (instance !== this) {
+        // Don't focus when closing due to another dropdown being opened
+        const instanceObj = instance;
+        instanceObj.shouldFocusWrapperOnClose = false;
+        instanceObj.closeDropbox();
+      }
+    });
+  }
+
+  /**
+   * Deliberately isOpened(), not isOpenOrOpening(): isOpened() stays true for the whole hide
+   * transition, so a click on the toggle in that window is routed to the close already running
+   * and does nothing - a double click on an open dropdown leaves it closed. Every click
+   * toggling (reopen on the second click) was tried and turned down by the owner.
+   */
   toggleDropbox() {
     VirtualSelect.lastInteractedInstance = this;
     if (this.isOpened()) {
@@ -3460,6 +3669,17 @@ export class VirtualSelect {
     } else {
       this.openDropbox();
     }
+  }
+
+  /**
+   * Where the dropdown is heading. isOpened() stays true for the whole hide transition, so on
+   * its own it reads a closing dropdown as open; a queued open (pendingOpen) counts as opening.
+   * onKeyDown() uses it to decide whether an Escape actually closed something.
+   *
+   * @returns {boolean}
+   */
+  isOpenOrOpening() {
+    return this.pendingOpen || (this.isOpened() && !this.isClosingTransition);
   }
 
   updatePosition() {
@@ -3641,7 +3861,7 @@ export class VirtualSelect {
    * class's display:none silently drops that focus to <body>.
    *
    * Two deliberate divergences from closeDropbox()'s refocus guards:
-   * - no lastInteractedInstance / isSilent conditions: by hide-end those describe the close
+   * - no lastInteractedInstance condition: by hide-end it describes the close
    *   that *started* the transition, not where focus is now. The only question left is "is
    *   focus about to be trapped inside a hidden subtree" - if it is, it cannot stay there,
    *   whoever caused the close.
@@ -3662,17 +3882,25 @@ export class VirtualSelect {
    * preventScroll because this runs ~200ms after the user's action - if they have scrolled in
    * the meantime, focus restoration must not scroll the combobox back into view (the
    * deferred re-focus in afterRenderOptions() makes the same call).
+   *
+   * @param {boolean} [hadFocusInDropbox] - whether focus was inside the dropbox when the hide
+   * ended, read by the caller before it cleared the highlight. Clearing it can blur the
+   * highlighted option to <body> before this runs, and focus the hide itself dropped is still
+   * focus this has to hand back. Only when it landed nowhere, though: if it is on any other
+   * element by now, something moved it there on purpose and it stays.
    */
-  releaseFocusFromDropbox() {
+  releaseFocusFromDropbox(hadFocusInDropbox = false) {
     const $active = document.activeElement;
+    const isInside = this.isFocusInsideDropbox($active);
+    const wasDropped = hadFocusInDropbox && (!$active || $active === document.body);
 
-    if (!this.isFocusInsideDropbox($active)) {
+    if (!isInside && !wasDropped) {
       return;
     }
 
     if (this.shouldFocusWrapperOnClose) {
       this.$wrapper.focus({ preventScroll: true });
-    } else {
+    } else if (isInside) {
       $active.blur();
     }
   }
@@ -4452,7 +4680,24 @@ export class VirtualSelect {
     }
 
     if (this.dropboxPopover) {
+      /**
+       * PopoverComponent.destroy() only removes its listeners. Its popper's timers keep running,
+       * and the popover marks itself shown with `pop-comp-active` on the host element - which a
+       * new instance on the same element shares. Left there, the new instance's popover read as
+       * already shown and its open put nothing on screen; and a hide still pending removed the
+       * class later, under a new dropdown that was by then really showing, so its next close
+       * never finished. Stop the timers and take the marker off, so the element starts clean.
+       */
+      const { popper } = this.dropboxPopover;
+
+      if (popper) {
+        ['enterDelayTimeout', 'showDurationTimeout', 'exitDelayTimeout', 'hideDurationTimeout'].forEach((name) => {
+          clearTimeout(popper[name]);
+        });
+      }
+
       this.dropboxPopover.destroy();
+      DomUtils.removeClass($ele, 'pop-comp-active');
     }
 
     DomUtils.removeClass($ele, 'vscomp-ele');

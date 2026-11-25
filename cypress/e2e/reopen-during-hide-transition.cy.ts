@@ -50,17 +50,18 @@ describe('Reopening while the dropbox is still closing', { testIsolation: true }
 
       vs.closeDropbox();
       expect(vs.isOpened(), 'still mid hide-transition when the reopen arrives').to.equal(true);
-      $ele[0].open?.();
+      $ele[0].open!();
     });
   };
 
   /**
    * Settle first, then assert.
    *
-   * Every assertion below also holds *during* the fade - `openDropbox()` sets aria-expanded and
-   * clears aria-hidden synchronously, and the popover has not yet applied `display: none` - so a
-   * retrying `should()` on its own would latch onto that transient and pass against the very bug
-   * this spec exists for. The wait covers the hide (~200ms) plus the show that has to follow it.
+   * Most assertions below also hold *during* the fade - the `closed` class is only added when the
+   * hide ends, so isOpened() is true, and the popover has not yet applied `display: none` - and a
+   * retrying `should()` would keep retrying the rest (aria-expanded, which a queued open leaves
+   * "false" until it is replayed) until they line up for a moment. That can pass against the very
+   * bug this spec exists for. The wait covers the hide (~200ms) plus the show that has to follow it.
    */
   const assertOpenAndVisible = () => {
     cy.wait(700);
@@ -127,7 +128,19 @@ describe('Reopening while the dropbox is still closing', { testIsolation: true }
    */
   it('dispatches beforeOpen once and afterOpen once', () => {
     mount();
+
+    /**
+     * The first open has to be over before recording starts. open() only waits for the `closed`
+     * class to go, which happens at the start of the ~300ms show; a close inside that window
+     * reports the interrupted open's afterOpen, and it would be counted as the reopen's.
+     */
+    const firstOpen = { done: false };
+
+    cy.get(`#${mountId}`).then(($ele) => {
+      $ele[0].addEventListener('afterOpen', () => { firstOpen.done = true; }, { once: true });
+    });
     open();
+    cy.wrap(firstOpen).should('have.property', 'done', true);
 
     const events: string[] = [];
 
@@ -157,7 +170,7 @@ describe('Reopening while the dropbox is still closing', { testIsolation: true }
       const vs = $ele[0].virtualSelect;
 
       vs.closeDropbox();
-      $ele[0].open?.();
+      $ele[0].open!();
       vs.closeDropbox();
     });
 
@@ -211,7 +224,7 @@ describe('Reopening while the dropbox is still closing', { testIsolation: true }
 
       vs.closeDropbox();
       expect(vs.isOpened(), 'still mid hide-transition when the reopen arrives').to.equal(true);
-      $ele[0].open?.();
+      $ele[0].open!();
     });
 
     cy.get(`#${secondMountId}`).then(($ele2) => $ele2[0].virtualSelect.openDropbox());
@@ -264,7 +277,7 @@ describe('Reopening while the dropbox is still closing', { testIsolation: true }
       vs.$dropboxContainer.querySelector('.vscomp-option[data-index="3"]').focus();
 
       // Queue a reopen of A, then cancel it by opening a second, unrelated dropdown.
-      $ele[0].open?.();
+      $ele[0].open!();
     });
 
     cy.get(`#${secondMountId}`).then(($ele2) => $ele2[0].virtualSelect.openDropbox());
@@ -307,11 +320,11 @@ describe('Reopening while the dropbox is still closing', { testIsolation: true }
 
       vs.closeDropbox();
       expect(vs.isOpened(), 'still mid hide-transition').to.equal(true);
-      $ele[0].open?.();
+      $ele[0].open!();
 
       /** focus inside, so the hide-end release has something to hand back and fires focusin */
       vs.$dropboxContainer.querySelector('.vscomp-option[data-index="3"]').focus();
-      vs.$wrapper.addEventListener('focusin', () => $ele[0].open?.(), { once: true });
+      vs.$wrapper.addEventListener('focusin', () => $ele[0].open!(), { once: true });
     });
 
     assertOpenAndVisible();
@@ -323,28 +336,87 @@ describe('Reopening while the dropbox is still closing', { testIsolation: true }
   });
 
   /**
-   * A consumer focus handler that reopens the dropdown synchronously - the same pattern the
-   * a11y spec's "does not hide a dropdown a focus handler reopens during the close" pins - runs
-   * from inside releaseFocusFromDropbox(), which afterHidePopper() calls before its own
-   * `afterClose` dispatch. By the time that reentrant open returns, isOpened() is already true
-   * again - but afterClose used to fire anyway, describing a close that the same synchronous
-   * call stack had already undone. A host cleaning up "now that it's closed" would run that
-   * cleanup against a dropdown that is, in fact, open.
-   *
-   * `beforeOpen`/`afterOpen` are asserted too, so a fix that suppressed afterClose by also
-   * suppressing the reopen's own events would not pass this by accident.
+   * A host whose focus handler answers the hide-end refocus with close().
+   * That close is the host's last word and has to cancel the queued open. The queue used to be
+   * read and cleared before the refocus ran, so the close found nothing to cancel and the
+   * replay opened the dropdown anyway.
    */
-  it('does not dispatch afterClose for a dropdown a focus handler reopened synchronously', () => {
+  it('lets a close() from a focus handler cancel the queued open', () => {
     mount();
+
+    const firstOpen = { done: false };
+
+    cy.get(`#${mountId}`).then(($ele) => {
+      $ele[0].addEventListener('afterOpen', () => { firstOpen.done = true; }, { once: true });
+    });
     open();
     waitForSearchFocus();
+    cy.wrap(firstOpen).should('have.property', 'done', true);
 
     const events: string[] = [];
 
     cy.get(`#${mountId}`).then(($ele) => {
       const vs = $ele[0].virtualSelect;
 
-      ['beforeOpen', 'afterOpen', 'afterClose'].forEach((name) => {
+      ['beforeOpen', 'afterOpen', 'beforeClose', 'afterClose'].forEach((name) => {
+        $ele[0].addEventListener(name, () => events.push(name));
+      });
+
+      vs.closeDropbox();
+      $ele[0].open!();
+      expect(vs.pendingOpen, 'open queued behind the hide').to.equal(true);
+
+      /** focus inside, so the hide-end release refocuses the combobox and fires focusin */
+      vs.$dropboxContainer.querySelector('.vscomp-option[data-index="3"]').focus();
+      vs.$wrapper.addEventListener('focusin', () => $ele[0].close!(), { once: true });
+    });
+
+    cy.wait(700);
+    cy.get(`#${mountId}`).find('.vscomp-wrapper').should('have.class', 'closed');
+    cy.get(`#${mountId}`).should(($ele) => {
+      const vs = $ele[0].virtualSelect;
+
+      expect(vs.isOpened(), 'isOpened()').to.equal(false);
+      expect(vs.$wrapper.getAttribute('aria-expanded'), 'aria-expanded').to.equal('false');
+    });
+    cy.wrap(events).should('deep.equal', ['beforeClose', 'afterClose']);
+  });
+
+  /**
+   * A consumer focus handler that reopens the dropdown synchronously - the same pattern the
+   * a11y spec's "does not hide a dropdown a focus handler reopens during the close" pins - runs
+   * from inside releaseFocusFromDropbox(), at the end of the hide transition.
+   *
+   * The close did happen: the dropbox reached its closed state before the release handed focus
+   * back. So the host must hear the close finish, and hear it before the reopen starts:
+   * beforeClose, afterClose, beforeOpen, afterOpen. afterClose used to be dispatched after the
+   * release, so it arrived after the reopen's events and described a dropdown that was open by
+   * then; the first fix for that dropped it altogether, which left beforeClose unpaired - a
+   * host tracking "closing" from beforeClose to afterClose never saw it end.
+   */
+  it('pairs beforeClose with afterClose, before the reopen, when a focus handler reopens synchronously', () => {
+    mount();
+
+    /**
+     * The first open's afterOpen is dispatched a tick after focus reaches the search input, so
+     * waiting for that focus alone lets it land in the recorder below as if it belonged to the
+     * reopen under test (seen on Firefox). Wait for the event itself.
+     */
+    const firstOpen = { done: false };
+
+    cy.get(`#${mountId}`).then(($ele) => {
+      $ele[0].addEventListener('afterOpen', () => { firstOpen.done = true; }, { once: true });
+    });
+    open();
+    waitForSearchFocus();
+    cy.wrap(firstOpen).should('have.property', 'done', true);
+
+    const events: string[] = [];
+
+    cy.get(`#${mountId}`).then(($ele) => {
+      const vs = $ele[0].virtualSelect;
+
+      ['beforeOpen', 'afterOpen', 'beforeClose', 'afterClose'].forEach((name) => {
         $ele[0].addEventListener(name, () => events.push(name));
       });
 
@@ -352,7 +424,7 @@ describe('Reopening while the dropbox is still closing', { testIsolation: true }
       expect(vs.isOpened(), 'still mid hide-transition').to.equal(true);
 
       vs.$dropboxContainer.querySelector('.vscomp-option[data-index="3"]').focus();
-      vs.$wrapper.addEventListener('focusin', () => $ele[0].open?.(), { once: true });
+      vs.$wrapper.addEventListener('focusin', () => $ele[0].open!(), { once: true });
     });
 
     cy.get(`#${mountId}`).find('.vscomp-wrapper').should('not.have.class', 'closed');
@@ -367,7 +439,7 @@ describe('Reopening while the dropbox is still closing', { testIsolation: true }
      * margin in the common case" is exactly the flaky pattern this suite has hit before.
      */
     cy.wrap(null).should(() => {
-      expect(events, `events (${events.join(', ')})`).to.deep.equal(['beforeOpen', 'afterOpen']);
+      expect(events, `events (${events.join(', ')})`).to.deep.equal(['beforeClose', 'afterClose', 'beforeOpen', 'afterOpen']);
     });
   });
 
@@ -411,7 +483,7 @@ describe('Reopening while the dropbox is still closing', { testIsolation: true }
     cy.get(`#${mountId}`).find('.vscomp-wrapper').should('have.class', 'closed');
 
     cy.get(`#${mountId}`).then(($ele) => {
-      $ele[0].open?.();
+      $ele[0].open!();
 
       /** synchronous: an open with nothing to wait for must not be deferred */
       expect($ele[0].virtualSelect.isOpened(), 'open applied in the same tick').to.equal(true);
