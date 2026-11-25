@@ -1072,8 +1072,17 @@ export class VirtualSelect {
        * list, and both of those move DOM focus onto that option unless the search input
        * already has it - the re-render through a deferred timer that ran after a focus call
        * placed here last. Focusing first keeps focus in the search box (WCAG 2.4.3).
+       *
+       * The focus can run a host focus handler synchronously, and that handler can destroy the
+       * component. Stop then: clearing would schedule a server search after destroy() cleared
+       * the pending one, and onServerSearch would be called with the destroyed instance.
        */
       this.focusSearchInput();
+
+      if (this.isDestroyed) {
+        return;
+      }
+
       this.setSearchValue('');
     }
   }
@@ -3564,6 +3573,16 @@ export class VirtualSelect {
      * this method has finished and cannot reenter it.)
      */
     this.releaseFocusFromDropbox(hadFocusInDropbox);
+
+    /**
+     * The release can run host code synchronously (a focus handler on the combobox), and that
+     * code can destroy the instance. Stop here: destroy() leaves pendingOpen as it was, and the
+     * replay below would register the destroyed instance as open again and show its popover on
+     * an element that a new instance may already use.
+     */
+    if (this.isDestroyed) {
+      return;
+    }
 
     // Reset for next close
     this.shouldFocusWrapperOnClose = true;

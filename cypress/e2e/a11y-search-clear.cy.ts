@@ -74,6 +74,34 @@ describe('A11y: search clear button', { testIsolation: true }, () => {
     cy.window().then((win) => unmountVs(win, mountId));
   });
 
+  /**
+   * The button focuses the search input before it clears the search, and that focus can run a
+   * host focus handler synchronously - one that destroys the component, say. destroy() stops
+   * the pending server search; a clear that went on afterwards scheduled a new one, and
+   * onServerSearch was then called with the destroyed instance.
+   */
+  it('does not start a server search when a focus handler destroyed the component during the clear', () => {
+    const searches: string[] = [];
+
+    mount({ onServerSearch: (value: string) => searches.push(value) });
+    openAndType();
+    cy.wrap(searches).should('deep.equal', ['1']);
+
+    cy.get(`#${mountId}`).then(($ele) => {
+      const vs = $ele[0].virtualSelect;
+
+      vs.$searchClear.focus();
+      expect($ele[0].ownerDocument.activeElement, 'focus on the clear button').to.equal(vs.$searchClear);
+      vs.$searchInput.addEventListener('focus', () => vs.destroy(), { once: true });
+      vs.$searchClear.click();
+      expect(vs.isDestroyed, 'the focus handler destroyed it').to.equal(true);
+    });
+
+    /** well past searchDelay (300ms), when a scheduled search would have run */
+    cy.wait(700);
+    cy.wrap(searches).should('deep.equal', ['1']);
+  });
+
   it('keeps the scrollable options list out of the Tab order', () => {
     mount();
     cy.get(`#${mountId}`).should(($ele) => {

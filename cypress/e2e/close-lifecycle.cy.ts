@@ -607,6 +607,41 @@ const assertClosed = (id = mountId) => {
     });
 
     /**
+     * A host focus handler on the combobox can destroy the instance from inside the focus
+     * hand-back at the end of the fade - a framework unmounting the component on that focus,
+     * say. An open queued behind the fade must not be replayed on the destroyed instance: it
+     * registered it as open again and showed its popover on the element a new instance uses.
+     */
+    it('does not replay a queued open on an instance a focus handler destroyed at the end of the fade', () => {
+      open();
+
+      cy.window().then((win) => {
+        const $host = win.document.getElementById(mountId) as HTMLElement;
+        const vs = $host.virtualSelect;
+
+        vs.closeDropbox();
+        $host.open!();
+        expect(vs.pendingOpen, 'the open is queued').to.equal(true);
+
+        /**
+         * closeDropbox() has already handed focus to the combobox. Put it back in the fading
+         * list - an arrow key mid-fade does that for a user - so the end of the fade hands it
+         * to the combobox again, and the handler armed now runs inside that hand-back.
+         */
+        vs.$searchInput.focus();
+        expect(win.document.activeElement, 'focus in the fading list').to.equal(vs.$searchInput);
+        vs.$wrapper.addEventListener('focus', () => vs.destroy(), { once: true });
+
+        cy.wait(SETTLE).then(() => {
+          expect(vs.isDestroyed, 'the focus handler destroyed it').to.equal(true);
+          // @ts-expect-error - VirtualSelect is attached to window by the bundle
+          expect(win.VirtualSelect.openInstances.has(vs), 'registered as open').to.equal(false);
+          expect($host.classList.contains('pop-comp-active'), 'popover marked shown on the element').to.equal(false);
+        });
+      });
+    });
+
+    /**
      * A click inside another instance's dropbox is a click on that instance. With its dropbox
      * portalled to <body>, the click lands in the dropbox wrapper, whose instance is recorded on
      * the wrapper itself - not on its parent, as for the component's own wrapper - so the click
