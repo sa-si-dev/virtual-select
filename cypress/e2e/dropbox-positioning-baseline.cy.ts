@@ -8,7 +8,9 @@
  * the positioning engine was replaced. The same spec must keep passing unchanged afterwards.
  *
  * Record:  npx cypress run --expose RECORD_BASELINE=1 --spec cypress/e2e/dropbox-positioning-baseline.cy.ts
- * Recording is refused unless the popover-plugin engine is loaded, so only this PR's code can do it.
+ * Recording is refused unless the popover-plugin engine is loaded. From the positioner change on,
+ * this code no longer has it, so a re-record has to run on code that still does (master, or the
+ * safety-net branch the fixture came from); here the record path always refuses, by design.
  * On a mismatch the full actual set is written to ci-results/dropbox-baseline.actual.json.
  */
 
@@ -212,7 +214,8 @@ describe('Dropbox positioning baseline', () => {
       cy.window().then((win) => {
         if (!('PopoverComponent' in win)) {
           throw new Error(
-            'RECORD_BASELINE refused: record only on the popover-plugin engine (window.PopoverComponent).',
+            'RECORD_BASELINE refused: record only on the popover-plugin engine (window.PopoverComponent), ' +
+              'which this code no longer has. Re-record on master instead.',
           );
         }
       });
