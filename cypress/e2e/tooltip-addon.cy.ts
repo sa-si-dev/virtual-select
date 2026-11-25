@@ -184,6 +184,25 @@ describe('Tooltip add-on', { testIsolation: true }, () => {
     assertNotShown();
   });
 
+  /**
+   * Options take the pointer while the dropbox fades out. A hover then ends its enter delay after
+   * the dropbox is `display: none`, where the option would measure as a 0x0 box at the corner.
+   */
+  it('shows nothing for an option hovered while the dropdown closes', () => {
+    openSettled();
+    optionText().then(($text) => {
+      const doc = $text[0].ownerDocument;
+      const win = doc.defaultView as Window;
+
+      // Closing first: the dropbox's 200ms hide then ends before the hover's 200ms enter delay.
+      // The hover waits 60ms, past the scroll that returning focus to the control can cause a
+      // frame later, which would otherwise cancel it; the dropbox is still fading then.
+      doc.getElementById(mountId)?.close?.();
+      win.setTimeout(() => mouse(win, $text[0], 'mouseover'), 60);
+    });
+    assertNotShown();
+  });
+
   it('hides when the options container holding the trigger scrolls', () => {
     openSettled();
     optionText().then(hover);
@@ -300,9 +319,11 @@ describe('Tooltip add-on', { testIsolation: true }, () => {
     tagContent().first().then(hover);
     assertShown(labels[0]);
 
+    // A removed node gets no mouseout, so the next mouseover, here on a part of the control with
+    // no tooltip, is what has to notice the trigger is gone.
     cy.window().then((win) => {
       win.document.querySelector(`#${mountId} .vscomp-value-tag[data-index] .vscomp-value-tag-content`)?.remove();
-      mouse(win, win.document.body, 'mouseout', null);
+      mouse(win, win.document.querySelector(`#${mountId} .vscomp-wrapper`) as Element, 'mouseover');
     });
     assertNotShown();
 
@@ -356,6 +377,71 @@ describe('Tooltip add-on', { testIsolation: true }, () => {
       expect(globals.PopperComponent, 'PopperComponent').to.equal(undefined);
       expect(globals.PopoverComponent, 'PopoverComponent').to.equal(undefined);
     });
+  });
+});
+
+/**
+ * The value tag writes its label into `data-tooltip` through an HTML string, and the tooltip
+ * renders it as HTML (allow-html). The attribute has to read back exactly what the tag shows:
+ * decoded, the `&lt;` that enableSecureText put in a label became live markup in the tooltip.
+ */
+describe('Tooltip add-on: value-tag labels', { testIsolation: true }, () => {
+  const padding = ' and padding the tag cannot show'.repeat(3);
+  const payload = `<img src=x onerror="window.__vsTipXss=true">${padding}`;
+  const ampersand = `Tom & Jerry${padding}`;
+  const bold = `<b>Bold</b>${padding}`;
+
+  const mountTags = (labelsToMount: string[], enableSecureText: boolean) => {
+    cy.viewport(1280, 800);
+    cy.visit('properties');
+    cy.window().then((win) => {
+      // @ts-expect-error - test marker
+      win.__vsTipXss = undefined;
+      mountVs(
+        win,
+        mountId,
+        {
+          options: labelsToMount.map((label, i) => ({ label, value: `o${i}` })),
+          multiple: true,
+          showValueAsTags: true,
+          selectedValue: labelsToMount.map((_l, i) => `o${i}`),
+          enableSecureText,
+        },
+        { width: '120px', maxWidth: '120px' },
+      );
+    });
+  };
+
+  afterEach(() => {
+    cy.window().then((win) => unmountVs(win, mountId));
+  });
+
+  it('shows an escaped label as text, never as markup, with enableSecureText', () => {
+    mountTags([payload, ampersand], true);
+
+    tagContent().first().then(hover);
+    cy.get('.tooltip-comp .tooltip-comp-content').should(($content) => {
+      expect($content[0].querySelector('img'), 'no <img> element').to.equal(null);
+      expect($content[0].textContent, 'the label as text').to.equal(payload);
+    });
+    cy.wait(300);
+    cy.window().should((win) => {
+      // @ts-expect-error - test marker
+      expect(win.__vsTipXss, 'onerror never ran').to.equal(undefined);
+    });
+
+    tagContent().first().then(unhover);
+    tagContent().last().then(hover);
+    cy.get('.tooltip-comp .tooltip-comp-content').should(($content) => {
+      expect($content[0].textContent, 'a single ampersand').to.equal(ampersand);
+    });
+  });
+
+  it('still renders label markup without enableSecureText, as the tag does', () => {
+    mountTags([bold], false);
+
+    tagContent().first().then(hover);
+    cy.get('.tooltip-comp .tooltip-comp-content b').should('have.text', 'Bold');
   });
 });
 

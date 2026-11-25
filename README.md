@@ -28,3 +28,5 @@ npm install --save virtual-select-plugin
 <link rel="stylesheet" href="node_modules/virtual-select-plugin/dist/virtual-select-tooltip.min.css">
 <script src="node_modules/virtual-select-plugin/dist/virtual-select-tooltip.min.js"></script>
 ```
+
+> **Upgrading from 1.4.x:** `tooltip-plugin` is no longer installed with Virtual Select, so `node_modules/tooltip-plugin/dist/tooltip.min.js` stops loading. Switch to the two `virtual-select-tooltip` files above, or add `tooltip-plugin` to your own dependencies. See [Get Started](https://sa-si-dev.github.io/virtual-select/#/get-started) for details.

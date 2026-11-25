@@ -19,8 +19,8 @@
  * interpolation so the attribute still parses back to it, and derives `labelNormalized` /
  * `descriptionNormalized` from the raw text so search matches what the consumer typed.
  *
- * Note the deliberate asymmetry with `DomUtils.getAttributesText()`, which escapes quotes only:
- * its inputs are already-escaped label text, so escaping `&` there too would double it.
+ * `DomUtils.getAttributesText()` now escapes `&` and `"` the same way, so a label that is already
+ * escaped reads back from its `data-tooltip` still escaped instead of decoded into markup.
  *
  * Stage 2 — storing `label`/`description` raw and escaping at render — is breaking (a `labelRenderer`
  * receiving a raw label turns the common `'<b>' + d.label + '</b>'` into an injection) and is held

@@ -10,6 +10,8 @@ import { computePlacement } from './utils/placement';
  * - stands down while `window.tooltipComponentInitiated` (tooltip-plugin) is set, checked per hover;
  * - reads only the eight attributes the core emits;
  * - no animation under `prefers-reduced-motion`;
+ * - hides on any key press, since a key can close the dropdown under a still pointer;
+ * - drops a trigger that was re-rendered away, so its replacement can show a tooltip;
  * - assigns no global apart from its own load guard.
  *
  * Like tooltip-plugin, it covers instances in the light DOM only: its listeners are on the
@@ -55,9 +57,11 @@ function animate($node, transform, opacity, ms) {
 function show() {
   const $trigger = /** @type {HTMLElement} */ (trigger);
 
-  // Re-rendered away during the enter delay (the core re-renders options after every open): it
-  // would measure as a 0x0 box at the viewport's corner. Clearing it lets its replacement hover.
-  if (!$trigger.isConnected) {
+  // No box left to point at: re-rendered away during the enter delay (the core re-renders options
+  // after every open), or in a dropbox that finished closing meanwhile (options take the pointer
+  // while it fades out). Either would measure as a 0x0 box at the viewport's corner. Clearing it
+  // lets a replacement hover.
+  if (!$trigger.getClientRects().length) {
     hide();
     return;
   }
@@ -75,8 +79,9 @@ function show() {
   const $arrow = /** @type {HTMLElement} */ ($node.firstChild);
   const $content = /** @type {HTMLElement} */ ($node.lastChild);
 
-  // The only HTML sink, and only on request: the core asks for it where the label it escaped
-  // into the attribute is already rendered as HTML in the option or value.
+  // The only HTML sink, and only on request: the core asks for it where the same text is rendered
+  // as HTML in the option or value. It is only as safe as that text, so the core must hand the
+  // stored string over unchanged; see DomUtils.getAttributesText().
   if (data.tooltipAllowHtml === 'true') {
     $content.innerHTML = /** @type {string} */ (data.tooltip);
   } else {
