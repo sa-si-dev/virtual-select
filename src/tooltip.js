@@ -2,8 +2,9 @@ import { computePlacement } from './utils/placement';
 
 /**
  * Virtual Select tooltip add-on (virtual-select-tooltip.min.js + .min.css), replacing
- * tooltip-plugin. Opt-in and standalone: it reads only the `data-tooltip*` attributes the core
- * writes, and neither side calls the other.
+ * tooltip-plugin. Opt-in and standalone: neither side calls the other. From the core's markup it
+ * reads the `data-tooltip*` attributes, the wrapper class names, and the inline `opacity: 0` that
+ * DropboxPositioner.hide() puts on `.vscomp-dropbox-container` when a close starts (see show()).
  *
  * Differences from tooltip-plugin, all deliberate:
  * - reacts only to triggers inside `.vscomp-wrapper` or `.vscomp-dropbox-wrapper`;

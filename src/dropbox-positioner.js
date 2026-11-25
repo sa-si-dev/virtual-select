@@ -103,6 +103,8 @@ export class DropboxPositioner {
     this.state = 'hiding';
     DomUtils.removeClass(this.$floating, 'pop-comp-disable-events');
     this.removeListeners();
+    // The inline opacity 0, set at once, is how the tooltip add-on (src/tooltip.js) tells that a
+    // close has started: options still take the pointer while the dropbox fades out.
     DomUtils.setStyles(this.$floating, {
       transitionDuration: `${this.hideDuration}ms`,
       transform: translate(this.fromX, this.fromY),

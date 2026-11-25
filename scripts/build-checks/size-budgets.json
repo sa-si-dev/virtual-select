@@ -4,7 +4,7 @@
   "virtual-select-tooltip.min.js": { "baselineGzip": 3961, "maxGzip": 1677 },
   "virtual-select-tooltip.min.css": {
     "baselineGzip": 507,
-    "maxGzip": 520,
+    "maxGzip": 513,
     "aboveBaseline": "longer licence banner than tooltip.min.css; user decision 2026-11-24"
   }
 }
