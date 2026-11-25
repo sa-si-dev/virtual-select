@@ -800,6 +800,95 @@ describe('Dropbox lifecycle', () => {
       });
     });
 
+    /**
+     * A host slotted into a web component is laid out inside the component's shadow tree, which its
+     * parentNode chain never enters: the walks have to go through the slot.
+     * @param shadow the shadow root's markup, holding the one slot
+     */
+    const mountSlotted = (shadow: string, options: Record<string, unknown>) => {
+      cy.window().then((win) => {
+        const outer = win.document.createElement('div');
+        outer.id = `${MOUNT_ID}-box`;
+        Object.assign(outer.style, { position: 'fixed', left: '400px', top: '100px' });
+        outer.attachShadow({ mode: 'open' }).innerHTML = shadow;
+
+        const host = win.document.createElement('div');
+        host.id = MOUNT_ID;
+        Object.assign(host.style, { width: '240px', maxWidth: '240px' });
+
+        outer.append(host);
+        win.document.body.appendChild(outer);
+
+        // @ts-expect-error - VirtualSelect is attached to window by the bundle
+        win.VirtualSelect.init({ ele: host, ...baseOptions, ...options });
+        events = recordEvents(win, MOUNT_ID);
+        hostIn(win).open();
+      });
+      expectLog(['beforeOpen', 'afterOpen']);
+    };
+
+    it('dropboxWrapper body follows a slotted host when a scroll box in the shadow tree scrolls', () => {
+      mountSlotted(
+        '<div style="width: 500px; height: 300px; overflow: auto">' +
+          '<div style="height: 100px"></div><slot></slot><div style="height: 1200px"></div></div>',
+        { dropboxWrapper: 'body' },
+      );
+
+      let before = 0;
+
+      getHost().should(($host) => {
+        const container = ($host[0] as Host).virtualSelect.$dropboxContainer;
+        const view = container.ownerDocument.defaultView as Window;
+
+        expect(view.getComputedStyle(container).opacity, 'fade-in finished').to.equal('1');
+        before = container.getBoundingClientRect().top;
+      });
+
+      cy.window().then((win) => {
+        const scroller = win.document.getElementById(`${MOUNT_ID}-box`)?.shadowRoot?.firstElementChild as HTMLElement;
+
+        scroller.scrollTop = 60;
+        expect(scroller.scrollTop, 'box scrolled by the full delta').to.equal(60);
+      });
+
+      getHost().should(($host) => {
+        const after = ($host[0] as Host).virtualSelect.$dropboxContainer.getBoundingClientRect().top;
+
+        expect(before - after, 'container moved up with the host').to.be.closeTo(60, 1);
+      });
+    });
+
+    it('a dropbox under a mirror in the shadow tree of a slotted host does not drift', () => {
+      // Wider than the host and centred under it, so the open translate has an x to drift by.
+      mountSlotted('<div style="width: 600px; transform: scaleX(-1)"><slot></slot></div>', {
+        dropboxWrapper: 'self',
+        dropboxWidth: '400px',
+        position: 'bottom',
+      });
+
+      let before: [number, number] = [0, 0];
+
+      getHost().should(($host) => {
+        const container = ($host[0] as Host).virtualSelect.$dropboxContainer;
+        const view = container.ownerDocument.defaultView as Window;
+
+        expect(view.getComputedStyle(container).opacity, 'fade-in finished').to.equal('1');
+        before = snapshotDropbox(view, MOUNT_ID).transform;
+      });
+
+      cy.window().then((win) => {
+        for (let i = 0; i < 7; i += 1) {
+          hostIn(win).virtualSelect.updatePosition();
+        }
+
+        const after = snapshotDropbox(win, MOUNT_ID).transform;
+
+        expect(before[0], 'a horizontal translate was written').not.to.equal(0);
+        expect(after[0], 'translate x after seven repositions').to.be.closeTo(before[0], 1);
+        expect(after[1], 'translate y after seven repositions').to.be.closeTo(before[1], 1);
+      });
+    });
+
     it('dropboxWrapper body follows the host on viewport resize', () => {
       mount(
         { ...baseOptions, dropboxWrapper: 'body' },
