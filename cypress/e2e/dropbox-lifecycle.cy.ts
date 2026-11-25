@@ -431,6 +431,37 @@ describe('Dropbox lifecycle', () => {
       getHost().find('.vscomp-dropbox-container').should('be.visible');
     });
 
+    it('a second toggle click during the close animation reopens the dropdown', () => {
+      mount(slow);
+      openAndClear();
+
+      cy.window().then((win) => {
+        const button = hostIn(win).querySelector('.vscomp-toggle-button') as HTMLElement;
+
+        button.click();
+        button.click();
+      });
+      cy.wait(300 + SETTLE_MS);
+
+      expectLog(['beforeClose', 'afterClose', 'beforeOpen', 'afterOpen']);
+      getHost().find('.vscomp-wrapper').should('have.attr', 'aria-expanded', 'true');
+      getHost().find('.vscomp-dropbox-container').should('be.visible');
+    });
+
+    it('Down arrow during the close animation reopens the dropdown', () => {
+      // A close long enough for cy.type() to land inside it.
+      mount({ ...slow, hideDuration: 2000 });
+      openAndClear();
+
+      cy.window().then((win) => hostIn(win).close());
+      getHost().find('.vscomp-wrapper').type('{downarrow}');
+      cy.wait(300 + SETTLE_MS);
+
+      expectLog(['beforeClose', 'afterClose', 'beforeOpen', 'afterOpen']);
+      getHost().find('.vscomp-wrapper').should('have.attr', 'aria-expanded', 'true');
+      getHost().find('.vscomp-dropbox-container').should('be.visible');
+    });
+
     // An open that never finished fires no afterOpen: there is nothing left to focus or scroll.
     it('close() during the open animation fires no afterOpen', () => {
       mount(slow);
@@ -816,13 +847,17 @@ describe('Dropbox lifecycle', () => {
       cy.get(`#${MOUNT_ID}-scroller`).then(($scroller) => {
         $scroller[0].scrollLeft = 100;
       });
-      cy.wait(SETTLE_MS);
 
       let before: [number, number] = [0, 0];
 
-      cy.window().then((win) => {
+      // The scroll's reposition goes through the throttle and a frame: wait for it to land rather
+      // than for a fixed time, or a late one leaves x at 0 and reads as drift.
+      cy.window().should((win) => {
         before = snapshotDropbox(win, MOUNT_ID).transform;
+        expect(before[0], 'the host move was applied').not.to.equal(0);
+      });
 
+      cy.window().then((win) => {
         for (let i = 0; i < 7; i += 1) {
           hostIn(win).virtualSelect.updatePosition();
         }
