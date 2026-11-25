@@ -11,6 +11,9 @@
  * Recording is refused unless the popover-plugin engine is loaded. From the positioner change on,
  * this code no longer has it, so a re-record has to run on code that still does (master, or the
  * safety-net branch the fixture came from); here the record path always refuses, by design.
+ * Re-record with that code's own copy of this spec, adding any new scenario to it: that copy
+ * blocks tooltip-plugin, which the docs there still load and which would otherwise replace
+ * `window.PopperComponent` with its older engine and record its fractional coordinates.
  * On a mismatch the full actual set is written to ci-results/dropbox-baseline.actual.json.
  */
 

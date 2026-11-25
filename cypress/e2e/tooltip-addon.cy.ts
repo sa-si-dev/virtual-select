@@ -185,22 +185,58 @@ describe('Tooltip add-on', { testIsolation: true }, () => {
   });
 
   /**
-   * Options take the pointer while the dropbox fades out. A hover then ends its enter delay after
-   * the dropbox is `display: none`, where the option would measure as a 0x0 box at the corner.
+   * Options take the pointer while the dropbox fades out. Remounts in view with `hideDuration`,
+   * opens, then closes and hovers an option in the same task, so the hover's 200ms enter delay
+   * runs during the close.
+   *
+   * Asserted once, not retried: a tooltip that showed and was hidden again would pass a retried
+   * "not visible". show() builds a new node every time, so none may be added at all. Any scroll
+   * would hide everything and let the test pass without testing anything, so none may reach the
+   * document either: the host is fixed in view, and returning focus to it scrolls nothing.
    */
-  it('shows nothing for an option hovered while the dropdown closes', () => {
+  const closeThenHover = (hideDuration: number) => {
+    const scrolls: unknown[] = [];
+    const added: Node[] = [];
+
+    cy.window().then((win) =>
+      mountVs(
+        win,
+        mountId,
+        { options: labels.map((label, i) => ({ label, value: `o${i}` })), hideDuration },
+        { position: 'fixed', top: '100px', left: '100px', width: '120px', maxWidth: '120px' },
+      ),
+    );
     openSettled();
     optionText().then(($text) => {
       const doc = $text[0].ownerDocument;
-      const win = doc.defaultView as Window;
+      const win = doc.defaultView as Window & typeof globalThis;
 
-      // Closing first: the dropbox's 200ms hide then ends before the hover's 200ms enter delay.
-      // The hover waits 60ms, past the scroll that returning focus to the control can cause a
-      // frame later, which would otherwise cancel it; the dropbox is still fading then.
+      new win.MutationObserver((records) => {
+        records.forEach((record) => added.push(...Array.from(record.addedNodes)));
+      }).observe(doc.body, { childList: true });
+      doc.addEventListener('scroll', (event) => scrolls.push(event.target), { capture: true });
       doc.getElementById(mountId)?.close?.();
-      win.setTimeout(() => mouse(win, $text[0], 'mouseover'), 60);
+      mouse(win, $text[0], 'mouseover');
     });
-    assertNotShown();
+    // Past the 200ms enter delay and the 300ms the show transition would take.
+    cy.wait(600);
+    cy.then(() => {
+      // classList, not instanceof Element: the nodes come from the page's realm, not the spec's.
+      const tooltips = added.filter((n) => (n as Element).classList?.contains('tooltip-comp'));
+
+      expect(tooltips, 'tooltip nodes built').to.have.length(0);
+      expect(scrolls, 'scroll events').to.have.length(0);
+    });
+  };
+
+  /** The 200ms hide ends first: the option would measure as a 0x0 box at the viewport's corner. */
+  it('shows nothing for an option hovered while the dropdown closes', () => {
+    closeThenHover(200);
+  });
+
+  /** The 600ms hide is still running: the tooltip would show over the fading list and outlive it. */
+  it('shows nothing for an option hovered while a slow close is still fading', () => {
+    closeThenHover(600);
   });
 
   it('hides when the options container holding the trigger scrolls', () => {

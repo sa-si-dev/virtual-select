@@ -57,11 +57,15 @@ function animate($node, transform, opacity, ms) {
 function show() {
   const $trigger = /** @type {HTMLElement} */ (trigger);
 
-  // No box left to point at: re-rendered away during the enter delay (the core re-renders options
-  // after every open), or in a dropbox that finished closing meanwhile (options take the pointer
-  // while it fades out). Either would measure as a 0x0 box at the viewport's corner. Clearing it
-  // lets a replacement hover.
-  if (!$trigger.getClientRects().length) {
+  // Nothing to point at any more. Re-rendered away during the enter delay (the core re-renders
+  // options after every open), or in a dropbox that finished closing meanwhile: either would
+  // measure as a 0x0 box at the viewport's corner. Or in a dropbox still closing, which takes the
+  // pointer while it fades out and whose hide sets its inline opacity to 0 at once: the tooltip
+  // would outlive the list. Clearing the trigger lets a replacement hover.
+  if (
+    !$trigger.getClientRects().length ||
+    /** @type {HTMLElement | null} */ ($trigger.closest('.vscomp-dropbox-container'))?.style.opacity === '0'
+  ) {
     hide();
     return;
   }

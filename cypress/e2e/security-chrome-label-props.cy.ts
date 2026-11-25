@@ -19,9 +19,10 @@
  *
  * So the fix is not a new mechanism, it is the helper AI-14 already added, applied at five more
  * sites. `aria-label` sinks get `getAriaLabelText()` (strip markup, escape quotes — the right
- * treatment for an accessible name). `placeholder` and `aria-labelledby` get quote escaping only:
- * a placeholder is visible UI text, so silently dropping markup would be wrong, and
- * `aria-labelledby` is an IDREF rather than prose.
+ * treatment for an accessible name). `placeholder` and `aria-labelledby` get attribute escaping
+ * only (`&` and `"`, so they read back exactly what was given): a placeholder is visible UI text,
+ * so silently dropping markup would be wrong, and `aria-labelledby` is an IDREF rather than prose.
+ * The same escaping covers every `data-tooltip*` attribute, the clear button's included.
  *
  * The constraint that stops this being a one-line change: `selectAllText` is **also** rendered as
  * `<span class="vscomp-toggle-all-label">${this.selectAllText}</span>`, where HTML works today and
@@ -100,6 +101,21 @@ describe('Security: component label props cannot break out of their attributes',
     // Previously the payload put a live attribute on this very button.
     dropbox().find('.vscomp-toggle-all-button').should('not.have.attr', 'data-pwned');
     dropbox().find('[data-pwned]').should('not.exist');
+  });
+
+  /** Quote-only escaping let the parser decode these, so `R&amp;D` used to read back as `R&D`. */
+  it('reads back a character reference as typed, not decoded', () => {
+    const typed = 'R&amp;D &lt;b&gt;';
+
+    cy.window().then((win) =>
+      mount(win, { ariaLabelledby: typed, searchPlaceholderText: typed, clearButtonText: typed }),
+    );
+
+    cy.get(`#${mountId}`).find('.vscomp-ele-wrapper').should('have.attr', 'aria-labelledby', typed);
+    cy.get(`#${mountId}`).find('.vscomp-clear-button').should('have.attr', 'data-tooltip', typed);
+
+    openDropbox();
+    dropbox().find('.vscomp-search-input').should('have.attr', 'placeholder', typed);
   });
 
   it('injects nothing anywhere when every affected prop carries the payload', () => {
