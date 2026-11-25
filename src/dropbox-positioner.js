@@ -30,6 +30,12 @@ const POSITION_CLASSES = 'position-top position-bottom position-left position-ri
 const translate = (x, y) => `translate3d(${x}px, ${y}px, 0)`;
 
 /**
+ * The parent node, or the host when leaving a shadow root, where Node.contains() and parentNode stop.
+ * @param {Node} node
+ */
+const up = (node) => node.parentNode || /** @type {ShadowRoot} */ (node).host;
+
+/**
  * Places the dropbox next to its host and runs the show and hide transitions.
  * Replaces popover-plugin: same class names, same placement, same timing.
  *
@@ -68,22 +74,12 @@ export class DropboxPositioner {
     this.state = 'showing';
     DomUtils.addClass(this.$floating, 'pop-comp-disable-events');
     DomUtils.setStyles(this.$floating, { display: 'inline-flex', transitionDuration: '0ms', transform: 'none' });
-    const rect = this.$floating.getBoundingClientRect();
-
-    this.place(rect);
+    this.remeasure = this.skewed();
+    this.place(this.$floating.getBoundingClientRect());
     DomUtils.setStyle(this.$floating, 'transform', translate(this.fromX, this.fromY));
 
-    /*
-     * INTENTIONAL forced reflow: commits the from-translate so the next writes transition from it.
-     * The same read checks that the translate moved the box the way the per-axis scales say. Under
-     * a rotated or skewed ancestor it does not, and no per-axis scale can undo the translate, so
-     * repositions then measure with transform: none instead.
-     */
-    const moved = this.$floating.getBoundingClientRect();
-    const offX = moved.left - rect.left - this.fromX * this.sx;
-    const offY = moved.top - rect.top - this.fromY * this.sy;
-
-    this.remeasure = Math.abs(offX) + Math.abs(offY) > 1;
+    // INTENTIONAL forced reflow: commits the from-translate so the next writes transition from it.
+    this.$floating.getBoundingClientRect();
 
     DomUtils.setStyles(this.$floating, {
       transitionDuration: `${this.showDuration}ms`,
@@ -131,8 +127,9 @@ export class DropboxPositioner {
      * of 'none' parses to the identity matrix.
      *
      * place() takes the translate off per axis, scaled the way an ancestor scales it, so it runs
-     * on the same viewport-pixel origin that show() measures with transform: none. Under a rotated
-     * or skewed ancestor (see show()) that cannot work, so the box is measured untransformed.
+     * on the same viewport-pixel origin that show() measures with transform: none. Under a rotated,
+     * skewed or mirrored ancestor (see skewed()) that cannot work, so the box is measured
+     * untransformed.
      */
     if (this.remeasure) {
       DomUtils.setStyles(this.$floating, { transitionDuration: '0ms', transform: 'none' });
@@ -148,6 +145,27 @@ export class DropboxPositioner {
 
   isShown() {
     return this.state !== 'hidden';
+  }
+
+  /**
+   * Whether an ancestor rotates, skews or mirrors the dropbox, through transform or the rotate and
+   * scale properties. No per-axis scale can undo a translate there. Checked once per open; the
+   * walk goes up through shadow hosts.
+   */
+  skewed() {
+    for (let node = up(this.$floating); node; node = up(node)) {
+      if (node.nodeType === 1) {
+        const { transform, rotate, scale } = getComputedStyle(/** @type {Element} */ (node));
+        const { a, b, c, d } = new DOMMatrix(transform);
+
+        // rotate is 'none' unless rotating; a negative scale value mirrors.
+        if (b || c || a < 0 || d < 0 || /^[^n]|-/.test(rotate + scale)) {
+          return true;
+        }
+      }
+    }
+
+    return false;
   }
 
   isHiding() {
@@ -206,11 +224,7 @@ export class DropboxPositioner {
    * @param {Event} event
    */
   onScroll(event) {
-    for (
-      let node = /** @type {Node | null | undefined} */ (this.$trigger);
-      node;
-      node = node.parentNode || /** @type {ShadowRoot} */ (node).host
-    ) {
+    for (let node = /** @type {Node | null | undefined} */ (this.$trigger); node; node = up(node)) {
       if (node === event.target) {
         this.requestUpdate();
         return;
@@ -258,7 +272,7 @@ export class DropboxPositioner {
 
     // The placement is in viewport pixels; the translate is in the element's own, which a scaled
     // ancestor scales again.
-    Object.assign(this, { side, sx, sy, x: x / sx, y: y / sy, fromX: fromX / sx, fromY: fromY / sy });
+    Object.assign(this, { side, x: x / sx, y: y / sy, fromX: fromX / sx, fromY: fromY / sy });
     DomUtils.removeClass(this.$floating, POSITION_CLASSES);
     DomUtils.addClass(this.$floating, `position-${this.side}`);
   }

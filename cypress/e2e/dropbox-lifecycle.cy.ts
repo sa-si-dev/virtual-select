@@ -675,6 +675,70 @@ describe('Dropbox lifecycle', () => {
     });
 
     /**
+     * A mirror is invisible to the open-time check when the dropbox opens with no horizontal
+     * translate, so it has to come from the ancestors themselves. Here the dropbox lives in the
+     * mirrored box while the host scrolls sideways in a box inside it, so x only becomes non-zero
+     * after the first reposition.
+     */
+    it('a dropbox in a mirrored ancestor does not drift once the host has moved sideways', () => {
+      cy.window().then((win) => {
+        const box = win.document.createElement('div');
+        box.id = `${MOUNT_ID}-box`;
+        Object.assign(box.style, {
+          position: 'fixed',
+          left: '200px',
+          top: '100px',
+          width: '600px',
+          height: '500px',
+          transform: 'scaleX(-1)',
+        });
+
+        const scroller = win.document.createElement('div');
+        scroller.id = `${MOUNT_ID}-scroller`;
+        Object.assign(scroller.style, { width: '600px', height: '200px', overflow: 'auto' });
+
+        const row = win.document.createElement('div');
+        // The host starts at the box's left edge, where the dropbox rests too: the open translate has no x.
+        Object.assign(row.style, { width: '1500px' });
+
+        const host = win.document.createElement('div');
+        host.id = MOUNT_ID;
+        Object.assign(host.style, { width: '240px', maxWidth: '240px' });
+
+        row.append(host);
+        scroller.append(row);
+        box.append(scroller);
+        win.document.body.appendChild(box);
+
+        // @ts-expect-error - VirtualSelect is attached to window by the bundle
+        win.VirtualSelect.init({ ele: host, ...baseOptions, dropboxWrapper: `#${MOUNT_ID}-box` });
+        events = recordEvents(win, MOUNT_ID);
+        hostIn(win).open();
+      });
+      expectLog(['beforeOpen', 'afterOpen']);
+
+      cy.get(`#${MOUNT_ID}-scroller`).then(($scroller) => {
+        $scroller[0].scrollLeft = 100;
+      });
+      cy.wait(SETTLE_MS);
+
+      let before: [number, number] = [0, 0];
+
+      cy.window().then((win) => {
+        before = snapshotDropbox(win, MOUNT_ID).transform;
+
+        for (let i = 0; i < 7; i += 1) {
+          hostIn(win).virtualSelect.updatePosition();
+        }
+
+        const after = snapshotDropbox(win, MOUNT_ID).transform;
+
+        expect(after[0], 'translate x after seven repositions').to.be.closeTo(before[0], 1);
+        expect(after[1], 'translate y after seven repositions').to.be.closeTo(before[1], 1);
+      });
+    });
+
+    /**
      * Scroll events do not leave a shadow root, and `document.contains()` does not look into one,
      * so a host inside a shadow root needs listeners on that root as well as on the document.
      */
