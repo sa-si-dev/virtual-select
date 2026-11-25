@@ -3025,6 +3025,15 @@ export class VirtualSelect {
   }
 
   openDropbox(isSilent) {
+    /**
+     * An open during the close animation finishes that close first, afterClose included. The
+     * positioner would ignore the open otherwise, and the close would then land on a dropdown
+     * already announced as expanded.
+     */
+    if (this.dropboxPopover) {
+      this.dropboxPopover.finishHide();
+    }
+
     // Set this instance as the last interacted one immediately
     VirtualSelect.lastInteractedInstance = this;
     let originalTransition = '';
@@ -3129,7 +3138,7 @@ export class VirtualSelect {
      * this component and the plugin), so afterClose fired twice. Checked before isSilentClose is
      * written, so the close already running keeps its own silentness.
      */
-    if (this.dropboxPopover && this.dropboxPopover.isHiding()) {
+    if (this.dropboxPopover && this.dropboxPopover.state === 'hiding') {
       return;
     }
 

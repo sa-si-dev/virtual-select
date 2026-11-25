@@ -408,6 +408,102 @@ describe('Dropbox lifecycle', () => {
     });
   });
 
+  context('interrupted transitions', () => {
+    // Long enough that the second call always lands inside the transition.
+    const slow = { ...baseOptions, showDuration: 300, hideDuration: 300 };
+
+    it('open() during the close animation finishes the close, then opens', () => {
+      mount(slow);
+      openAndClear();
+
+      cy.window().then((win) => {
+        const host = hostIn(win);
+
+        host.close();
+        host.open();
+      });
+      cy.wait(300 + SETTLE_MS);
+
+      expectLog(['beforeClose', 'afterClose', 'beforeOpen', 'afterOpen']);
+      getHost().find('.vscomp-wrapper').should('not.have.class', 'closed');
+      getHost().find('.vscomp-wrapper').should('have.attr', 'aria-expanded', 'true');
+      getHost().find('.vscomp-dropbox-container').should('be.visible');
+    });
+
+    // An open that never finished fires no afterOpen: there is nothing left to focus or scroll.
+    it('close() during the open animation fires no afterOpen', () => {
+      mount(slow);
+
+      cy.window().then((win) => {
+        const host = hostIn(win);
+
+        host.open();
+        host.close();
+      });
+      cy.wait(300 + SETTLE_MS);
+
+      expectLog(['beforeOpen', 'beforeClose', 'afterClose']);
+    });
+
+    it('opening B during A\'s open animation closes A silently with no afterOpen', () => {
+      mount(slow);
+
+      cy.window().then((win) => {
+        mountVs(win, MOUNT_ID_B, baseOptions);
+        hostIn(win).open();
+        hostIn(win, MOUNT_ID_B).open();
+      });
+      cy.wait(300 + SETTLE_MS);
+
+      expectLog(['beforeOpen']);
+      getHost().find('.vscomp-wrapper').should('have.attr', 'aria-expanded', 'false');
+    });
+  });
+
+  /**
+   * Only a rotation, skew or mirror on the x or y axis makes repositions re-measure; the rotate and
+   * scale properties are read as values, not as text.
+   */
+  context('re-measure detection', () => {
+    (
+      [
+        ['rotate', '0deg', false],
+        ['scale', '1 1 -1', false],
+        ['scale', '0.8', false],
+        ['rotate', '45deg', true],
+        ['rotate', 'x 180deg', true],
+        ['scale', '-1 1', true],
+      ] as const
+    ).forEach(([property, value, expected]) => {
+      it(`an ancestor with ${property}: ${value} ${expected ? 'does' : 'does not'} switch to re-measuring`, () => {
+        cy.window().then((win) => {
+          const box = win.document.createElement('div');
+          box.id = `${MOUNT_ID}-box`;
+          box.style.setProperty(property, value);
+
+          const host = win.document.createElement('div');
+          host.id = MOUNT_ID;
+          box.append(host);
+          win.document.body.appendChild(box);
+
+          // @ts-expect-error - VirtualSelect is attached to window by the bundle
+          win.VirtualSelect.init({ ele: host, ...baseOptions });
+          events = recordEvents(win, MOUNT_ID);
+          hostIn(win).open();
+        });
+        expectLog(['beforeOpen', 'afterOpen']);
+
+        cy.window().then((win) => {
+          const instance = hostIn(win).virtualSelect as Instance & { dropboxPopover: { remeasure: boolean } };
+
+          expect(win.getComputedStyle(win.document.getElementById(`${MOUNT_ID}-box`) as HTMLElement)[property], 'applied')
+            .not.to.equal('none');
+          expect(instance.dropboxPopover.remeasure, 're-measures').to.equal(expected);
+        });
+      });
+    });
+  });
+
   context('popup layout', () => {
     it('Escape with focus outside does not close the popup layout', () => {
       cy.viewport(400, 800);
