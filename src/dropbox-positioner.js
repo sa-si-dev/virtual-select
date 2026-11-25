@@ -30,10 +30,12 @@ const POSITION_CLASSES = 'position-top position-bottom position-left position-ri
 const translate = (x, y) => `translate3d(${x}px, ${y}px, 0)`;
 
 /**
- * The parent node, or the host when leaving a shadow root, where Node.contains() and parentNode stop.
+ * The parent in the rendered tree: the slot a node is assigned to, else its parent node, else the
+ * host when leaving a shadow root, where Node.contains() and parentNode stop.
  * @param {Node} node
  */
-const up = (node) => node.parentNode || /** @type {ShadowRoot} */ (node).host;
+const up = (node) =>
+  /** @type {Element} */ (node).assignedSlot || node.parentNode || /** @type {ShadowRoot} */ (node).host;
 
 /**
  * Places the dropbox next to its host and runs the show and hide transitions.
@@ -150,7 +152,7 @@ export class DropboxPositioner {
   /**
    * Whether an ancestor rotates, skews or mirrors the dropbox, through transform or the rotate and
    * scale properties. No per-axis scale can undo a translate there. Checked once per open; the
-   * walk goes up through shadow hosts.
+   * walk goes up through slots and shadow hosts.
    */
   skewed() {
     for (let node = up(this.$floating); node; node = up(node)) {
@@ -184,16 +186,15 @@ export class DropboxPositioner {
     DomUtils.removeClass(this.$floating, 'pop-comp-disable-events');
 
     if (this.reposition) {
-      // Scroll events do not leave a shadow root: listen on every root from the host's up to the document.
+      // Scroll events do not leave a shadow root: listen on every shadow root (node type 11) the
+      // host is rendered in, the ones its slots lead into included, and on the document (9).
       this.roots = /** @type {Node[]} */ ([]);
 
-      for (
-        let root = /** @type {Node | undefined} */ (this.$trigger.getRootNode());
-        root;
-        root = /** @type {ShadowRoot} */ (root).host?.getRootNode()
-      ) {
-        this.roots.push(root);
-        root.addEventListener('scroll', this.onScroll, { capture: true, passive: true });
+      for (let node = /** @type {Node | null} */ (this.$trigger); node; node = up(node)) {
+        if (node.nodeType > 8) {
+          this.roots.push(node);
+          node.addEventListener('scroll', this.onScroll, { capture: true, passive: true });
+        }
       }
 
       window.addEventListener('resize', this.requestUpdate);
@@ -220,7 +221,7 @@ export class DropboxPositioner {
 
   /**
    * Only a scroll of the document or of an ancestor of the host moves the host. The walk goes up
-   * through shadow hosts, where Node.contains() stops.
+   * through slots and shadow hosts, where Node.contains() stops.
    * @param {Event} event
    */
   onScroll(event) {
