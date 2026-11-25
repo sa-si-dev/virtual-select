@@ -641,6 +641,72 @@ describe('Dropbox lifecycle', () => {
     });
   });
 
+  // keepAlwaysOpen and popup instances have no positioner: open and close take a branch of their
+  // own, so they are characterized separately from the default instance above.
+  context('keepAlwaysOpen', () => {
+    it('fires nothing at init, the open pair on every open(), and nothing on close()', () => {
+      mount({ ...baseOptions, keepAlwaysOpen: true });
+      cy.wait(SETTLE_MS);
+      expectLog([]);
+
+      cy.window().then((win) => {
+        (win.document.getElementById(MOUNT_ID) as Host).open();
+      });
+      cy.wait(SETTLE_MS);
+      expectLog(['beforeOpen', 'afterOpen']);
+
+      cy.window().then((win) => {
+        (win.document.getElementById(MOUNT_ID) as Host).open();
+      });
+      cy.wait(SETTLE_MS);
+      expectLog(['beforeOpen', 'afterOpen', 'beforeOpen', 'afterOpen']);
+
+      cy.window().then((win) => {
+        (win.document.getElementById(MOUNT_ID) as Host).close();
+      });
+      cy.wait(SETTLE_MS);
+      expectLog(['beforeOpen', 'afterOpen', 'beforeOpen', 'afterOpen']);
+      getHost().find('.vscomp-dropbox-container').should('be.visible');
+    });
+  });
+
+  context('popup', () => {
+    it('fires the open pair on every open() and the close pair once per close', () => {
+      // At or below the popup breakpoint, so showDropboxAsPopup takes effect at init.
+      cy.viewport(400, 800);
+      mount({ ...baseOptions, showDropboxAsPopup: true });
+
+      toggle().click();
+      expectLog(['beforeOpen', 'afterOpen']);
+
+      cy.window().then((win) => {
+        (win.document.getElementById(MOUNT_ID) as Host).open();
+      });
+      cy.wait(SETTLE_MS);
+      expectLog(['beforeOpen', 'afterOpen', 'beforeOpen', 'afterOpen']);
+
+      cy.window().then((win) => {
+        const host = win.document.getElementById(MOUNT_ID) as Host;
+
+        host.close();
+        host.close();
+      });
+      cy.wait(SETTLE_MS);
+      expectLog(['beforeOpen', 'afterOpen', 'beforeOpen', 'afterOpen', 'beforeClose', 'afterClose']);
+    });
+
+    it('Escape fires the close pair once', () => {
+      cy.viewport(400, 800);
+      mount({ ...baseOptions, showDropboxAsPopup: true });
+      toggle().click();
+      expectLog(['beforeOpen', 'afterOpen']);
+
+      cy.get('body').type('{esc}');
+      cy.wait(SETTLE_MS);
+      expectLog(['beforeOpen', 'afterOpen', 'beforeClose', 'afterClose']);
+    });
+  });
+
   context('repositioning', () => {
     /** A scrollable box holding the host, so an ancestor can be scrolled. */
     const mountInScrollBox = (wrapper: 'self' | 'body', options: Record<string, unknown> = {}) => {
