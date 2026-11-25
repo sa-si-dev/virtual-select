@@ -143,12 +143,12 @@ export class VirtualSelect {
      * name kept only the prefix, which is a WCAG 4.1.2 defect as much as an injection.
      *
      * getAriaLabelText() for the accessible names, because it is what AI-14 already applies to
-     * option and group labels: strip markup, then escape quotes. Plain quote escaping for
-     * aria-labelledby, which is an IDREF list rather than prose - stripping tags there would hide
-     * a caller error instead of fixing it.
+     * option and group labels: strip markup, then escape quotes. Plain attribute escaping (`&` and
+     * `"`, so the attribute reads back exactly) for aria-labelledby, which is an IDREF list rather
+     * than prose - stripping tags there would hide a caller error instead of fixing it.
      */
     const ariaLabelledbyText = this.ariaLabelledby
-      ? `aria-labelledby="${Utils.replaceDoubleQuotesWithHTML(Utils.getString(this.ariaLabelledby))}"`
+      ? `aria-labelledby="${Utils.escapeAttributeValue(this.ariaLabelledby)}"`
       : '';
     const ariaLabelText = this.ariaLabelText ? `aria-label="${Utils.getAriaLabelText(this.ariaLabelText)}"` : '';
     const ariaLabelClearBtnTxt = this.ariaLabelClearButtonText
@@ -564,7 +564,7 @@ export class VirtualSelect {
         ${this.searchFormLabel}
       </label>
       <input type="text" class="vscomp-search-input"
-        placeholder="${Utils.replaceDoubleQuotesWithHTML(Utils.getString(this.searchPlaceholderText))}"
+        placeholder="${Utils.escapeAttributeValue(this.searchPlaceholderText)}"
         id="vscomp-search-input-${this.uniqueId}"
         aria-autocomplete="list"
         aria-controls="vscomp-options-container-${this.uniqueId}">

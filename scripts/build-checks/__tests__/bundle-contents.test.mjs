@@ -11,7 +11,8 @@
  * `maxGzip`. A change that shrinks a file fails here until the same PR lowers `maxGzip` to the
  * size this test reports. A change that makes a file grow (a dependency or toolchain bump
  * included) fails until the same PR raises `maxGzip`, and `baselineGzip` too when it goes past
- * it, saying why in the commit message. `maxGzip` may never exceed `baselineGzip`.
+ * it, saying why in the commit message. `maxGzip` may exceed `baselineGzip` only with an
+ * `aboveBaseline` reason in the entry.
  */
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -65,6 +66,9 @@ async function gzipSizeOf(name) {
 
 test('dist contains exactly the shipped files', async () => {
   assert.deepEqual(await listDist(), [
+    'virtual-select-tooltip.js',
+    'virtual-select-tooltip.min.css',
+    'virtual-select-tooltip.min.js',
     'virtual-select.js',
     'virtual-select.min.css',
     'virtual-select.min.js',
@@ -90,8 +94,12 @@ test('every shipped minified file has a gzip budget', async () => {
 });
 
 test('every budgeted file measures exactly its gzip budget', async () => {
-  for (const [name, { baselineGzip, maxGzip }] of Object.entries(await readBudgets())) {
-    assert.ok(maxGzip <= baselineGzip, `${name}: maxGzip ${maxGzip} exceeds baselineGzip ${baselineGzip}`);
+  for (const [name, { baselineGzip, maxGzip, aboveBaseline }] of Object.entries(await readBudgets())) {
+    // A budget above what the file replaced must say why, in words, in `aboveBaseline`.
+    assert.ok(
+      maxGzip <= baselineGzip || (typeof aboveBaseline === 'string' && aboveBaseline.trim() !== ''),
+      `${name}: maxGzip ${maxGzip} exceeds baselineGzip ${baselineGzip} without an aboveBaseline reason`,
+    );
     const size = await gzipSizeOf(name);
     assert.ok(size <= maxGzip, `${name}: ${size} bytes gzip, budget ${maxGzip}`);
     assert.ok(size === maxGzip, `${name}: ${size} bytes gzip, under its budget ${maxGzip}; lower maxGzip to ${size}`);

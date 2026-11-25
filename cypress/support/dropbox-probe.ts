@@ -109,12 +109,3 @@ export function recordEvents(win: Window, mountId: string): string[] {
 
   return events;
 }
-
-/**
- * The docs page loads tooltip-plugin, which overwrites window.PopperComponent with an older
- * engine that yields fractional coordinates. Block it so the bundled engine is used.
- * Call before every cy.visit() that is not meant to run with tooltip-plugin loaded.
- */
-export function blockTooltipPlugin(): void {
-  cy.intercept('GET', '**/assets/tooltip.min.js', { body: '' });
-}

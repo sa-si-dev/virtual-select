@@ -339,10 +339,17 @@ export class DomUtils {
          * the condition, and the parser turns &quot; back into a quote, so the attribute still
          * reads back as the original string.
          *
-         * String(), not Utils.getString(): the latter maps `false` to '', and some of these
-         * attributes carry real boolean values (data-tooltip-ellipsis-only, -allow-html).
+         * `&` is escaped too, for the same round trip. Quotes alone let the parser decode the
+         * entities enableSecureText put in a label: `&lt;img onerror=...&gt;` read back as a live
+         * `<img onerror=...>`, which the tooltip (allow-html) then inserted as markup, while the
+         * value tag showed the same label as harmless text. Read back exactly, the string renders
+         * in the tooltip as it does in the tag.
+         *
+         * String() first: Utils.getString(), which escapeAttributeValue() applies, maps `false`
+         * to '', and some of these attributes carry real boolean values
+         * (data-tooltip-ellipsis-only, -allow-html).
          */
-        html += ` ${k}="${Utils.replaceDoubleQuotesWithHTML(String(v))}" `;
+        html += ` ${k}="${Utils.escapeAttributeValue(String(v))}" `;
       }
     });
 

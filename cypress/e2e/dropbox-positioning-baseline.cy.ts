@@ -8,21 +8,25 @@
  * Expected values live in `cypress/fixtures/dropbox-baseline.json`, recorded on the code before
  * the positioning engine was replaced. The same spec must keep passing unchanged afterwards.
  *
- * Every scenario blocks tooltip-plugin, so the bundled engine places the dropbox, except the
- * `tooltip-plugin|*` ones: a page that loads tooltip.min.js after the bundle (the docs site, the
- * README's optional setup) has its dropbox placed by tooltip-plugin's older engine instead, which
- * keeps fractional coordinates. Those scenarios use a fractional anchor, where the two differ.
+ * The `tooltip-plugin|*` entries were recorded with tooltip-plugin loaded: a page that loaded
+ * tooltip.min.js after the bundle (the docs site, the README's optional setup) had its dropbox
+ * placed by tooltip-plugin's older engine, which keeps fractional coordinates, so those scenarios
+ * use a fractional anchor. tooltip-plugin is gone from this code; they check that such pages
+ * still get the same placement.
  *
  * Record:  npx cypress run --expose RECORD_BASELINE=1 --spec cypress/e2e/dropbox-positioning-baseline.cy.ts
  * Recording is refused unless the popover-plugin engine is loaded. From the positioner change on,
  * this code no longer has it, so a re-record has to run on code that still does (master, or the
  * safety-net branch the fixture came from); here the record path always refuses, by design.
+ * Re-record with that code's own copy of this spec, adding any new scenario to it: that copy
+ * controls whether tooltip-plugin, which the docs there still load, may replace
+ * `window.PopperComponent` with its older engine.
  * When any scenario fails, the fixture is left alone: the actual set goes to
  * ci-results/dropbox-baseline.actual.json, in record mode and on a mismatch alike.
  */
 
 import { makeOptions, mountVs, unmountVs } from '../support/mount';
-import { blockTooltipPlugin, DropboxSnapshot, recordEvents, snapshotDropbox } from '../support/dropbox-probe';
+import { DropboxSnapshot, recordEvents, snapshotDropbox } from '../support/dropbox-probe';
 
 /** `self`, `body`, or the selector of a custom wrapper element. */
 type Wrapper = string;
@@ -31,8 +35,6 @@ type Scenario = {
   id: string;
   position: string;
   wrapper: Wrapper;
-  /** Leave tooltip-plugin loaded, so its engine replaces the bundled one. */
-  keepTooltipPlugin?: boolean;
   hostStyle: Partial<CSSStyleDeclaration>;
   viewport?: [number, number];
   /** Snapshot taken before the first open, stored under `<id>|closed`. */
@@ -260,7 +262,6 @@ const buildScenarios = (): Scenario[] => {
         id: `tooltip-plugin|${position}|${wrapper}`,
         position,
         wrapper,
-        keepTooltipPlugin: true,
         hostStyle: baseHostStyle({ left: '500.3px', top: '350.7px' }),
       });
     });
@@ -293,7 +294,6 @@ describe('Dropbox positioning baseline', () => {
   before(() => {
     if (recordMode) {
       // Recorded on the replacement engine, the fixture would pin what it is meant to check.
-      blockTooltipPlugin();
       cy.visit('get-started');
       cy.window().then((win) => {
         if (!('PopoverComponent' in win)) {
@@ -373,28 +373,7 @@ describe('Dropbox positioning baseline', () => {
       const [width, height] = scenario.viewport ?? [1280, 800];
       cy.viewport(width, height);
 
-      const keepTooltipPlugin = !!scenario.keepTooltipPlugin;
-
-      if (!keepTooltipPlugin) {
-        blockTooltipPlugin();
-      }
-
       cy.visit('get-started');
-
-      // Visiting the URL already open does not reload the page, which may still be the one an
-      // earlier scenario loaded with or without tooltip-plugin. tooltip-plugin sets
-      // `tooltipComponentInitiated`; reload when the page does not match the scenario.
-      const tooltipLoaded = (win: Window) => 'tooltipComponentInitiated' in win;
-
-      cy.window().then((win) => {
-        if (tooltipLoaded(win) !== keepTooltipPlugin) {
-          cy.reload();
-        }
-      });
-
-      cy.window().then((win) => {
-        expect(tooltipLoaded(win), 'tooltip-plugin loaded').to.equal(keepTooltipPlugin);
-      });
 
       let events: string[] = [];
 

@@ -201,26 +201,13 @@ export class Utils {
   }
 
   /**
-   * @static
-   * @param {string} text
-   * @return {string}
-   * @memberof Utils
-   */
-  static replaceDoubleQuotesWithHTML(text) {
-    return text.replace(/"/g, '&quot;');
-  }
-
-  /**
-   * Escape a *raw* string for interpolation into a double-quoted HTML attribute.
+   * Escape a string for interpolation into a double-quoted HTML attribute.
    *
-   * Use this only where the input has not already been HTML-escaped - currently the option
-   * value, which is stored verbatim because it reaches no innerHTML sink. `&` must be escaped
-   * first, otherwise the `&` introduced by the quote replacement would itself be escaped and
-   * the attribute would parse back as a literal `&quot;`.
-   *
-   * Deliberately NOT used by DomUtils.getAttributesText(), whose inputs are already-escaped
-   * label text: escaping `&` there would double it and a tooltip would show `&amp;`. That
-   * asymmetry is the reason this is a separate helper rather than a shared one.
+   * The attribute parses back to exactly `text`, whatever it holds: the option value, which is
+   * stored verbatim, and every value DomUtils.getAttributesText() writes, including labels that
+   * enableSecureText has already escaped (their `&lt;` must reach the tooltip as `&lt;`, not
+   * be decoded into `<`). `&` must be escaped first, otherwise the `&` introduced by the quote
+   * replacement would itself be escaped and the attribute would parse back as a literal `&quot;`.
    *
    * @static
    * @param {string} text
