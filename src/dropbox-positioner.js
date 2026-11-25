@@ -97,6 +97,8 @@ export class DropboxPositioner {
       return;
     }
 
+    // During the show this cancels the timer that would call onShown: an open that never finished
+    // has nothing left to set up, so it gets no onShown (no afterOpen). reset() does the same.
     clearTimeout(this.timer);
     this.state = 'hiding';
     DomUtils.removeClass(this.$floating, 'pop-comp-disable-events');
@@ -109,11 +111,7 @@ export class DropboxPositioner {
     this.timer = setTimeout(() => this.afterHide(), this.hideDuration);
   }
 
-  /**
-   * Ends a running hide at once, onHidden included, so an open can follow it. A hide or reset during
-   * the show cancels the timer that would call onShown: an open that never finished has nothing
-   * left to set up.
-   */
+  /** Ends a running hide at once, onHidden included, so an open can follow it. */
   finishHide() {
     if (this.state === 'hiding') {
       clearTimeout(this.timer);
@@ -121,7 +119,7 @@ export class DropboxPositioner {
     }
   }
 
-  /** Back to the state a finished hide leaves, at once and without calling onHidden. */
+  /** Back to the state a finished hide leaves, at once and without calling onShown or onHidden. */
   reset() {
     this.destroy(); // clears the timer, the listeners and pop-comp-active
     this.state = 'hidden';

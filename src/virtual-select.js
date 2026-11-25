@@ -715,11 +715,10 @@ export class VirtualSelect {
    * closeDropbox() makes this call a no-op. The popup layout is deliberately not included.
    */
   onDocumentKeyDown(e) {
-    const key = e.which || e.keyCode;
-
     // An Escape another widget already handled, or one cancelling an IME composition, is not ours.
+    // e.key is enough here: every supported (evergreen) browser sets it.
     if (
-      (key === 27 || e.key === 'Escape') &&
+      e.key === 'Escape' &&
       !e.defaultPrevented &&
       !e.isComposing &&
       this.dropboxPopover &&
@@ -787,7 +786,7 @@ export class VirtualSelect {
   onEnterPress(e) {
     e.preventDefault();
 
-    if (this.isOpened()) {
+    if (this.isStayingOpen()) {
       this.selectFocusedOption();
     } else if (this.$ele.disabled === false) {
       this.openDropbox();
@@ -809,7 +808,7 @@ export class VirtualSelect {
   navigateOptions(e, direction) {
     e.preventDefault();
 
-    if (this.isOpened()) {
+    if (this.isStayingOpen()) {
       this.focusOption({ direction });
     } else {
       this.openDropbox();
@@ -3138,7 +3137,7 @@ export class VirtualSelect {
      * this component and the plugin), so afterClose fired twice. Checked before isSilentClose is
      * written, so the close already running keeps its own silentness.
      */
-    if (this.dropboxPopover && this.dropboxPopover.state === 'hiding') {
+    if (this.isOpened() && !this.isStayingOpen()) {
       return;
     }
 
@@ -3311,7 +3310,7 @@ export class VirtualSelect {
 
   toggleDropbox() {
     VirtualSelect.lastInteractedInstance = this;
-    if (this.isOpened()) {
+    if (this.isStayingOpen()) {
       this.closeDropbox();
     } else {
       this.openDropbox();
@@ -3328,6 +3327,14 @@ export class VirtualSelect {
 
   isOpened() {
     return !DomUtils.hasClass(this.$wrapper, 'closed');
+  }
+
+  /**
+   * Whether the dropbox is open and not in its close animation. isOpened() stays true until that
+   * animation ends; the toggle and the keys use this instead, so they reopen a closing dropdown.
+   */
+  isStayingOpen() {
+    return this.isOpened() && !(this.dropboxPopover && this.dropboxPopover.state === 'hiding');
   }
 
   focusSearchInput() {
