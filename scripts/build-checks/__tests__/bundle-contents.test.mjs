@@ -97,3 +97,18 @@ test('every budgeted file measures exactly its gzip budget', async () => {
     assert.ok(size === maxGzip, `${name}: ${size} bytes gzip, under its budget ${maxGzip}; lower maxGzip to ${size}`);
   }
 });
+
+test('the bundle no longer carries the popover plugin', async () => {
+  const js = await readFile(path.join(DIST, 'virtual-select.min.js'), 'utf8');
+  for (const name of ['PopoverComponent', 'PopperComponent', 'popComp']) {
+    assert.ok(!js.includes(name), `${name} is still in the bundle`);
+  }
+});
+
+test('the stylesheet keeps the two popover rules and drops the arrow', async () => {
+  const css = await readFile(path.join(DIST, 'virtual-select.min.css'), 'utf8');
+  assert.match(css, /\.pop-comp-wrapper\{/);
+  assert.match(css, /\.pop-comp-disable-events\{pointer-events:none\}/);
+  assert.ok(!css.includes('pop-comp-arrow'));
+  assert.ok(!css.includes('pop-comp-content'));
+});
