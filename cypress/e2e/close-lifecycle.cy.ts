@@ -642,6 +642,41 @@ const assertClosed = (id = mountId) => {
     });
 
     /**
+     * afterClose is queued before the focus hand-back at the end of the fade, and a host focus
+     * handler running inside that hand-back can destroy the instance and build a new one on the
+     * same element (a framework re-render). The queued afterClose then reached the element the
+     * new instance owns, reporting a close the new dropdown never made.
+     */
+    it('does not report a close to a new instance built by a focus handler at the end of the fade', () => {
+      open();
+      const afterCloses: string[] = [];
+
+      cy.window().then((win) => {
+        const $host = win.document.getElementById(mountId) as HTMLElement;
+        const vs = $host.virtualSelect;
+
+        vs.closeDropbox();
+
+        /** closeDropbox() has already focused the combobox; an arrow key mid-fade puts it back */
+        vs.$searchInput.focus();
+        expect(win.document.activeElement, 'focus in the fading list').to.equal(vs.$searchInput);
+        vs.$wrapper.addEventListener('focus', () => {
+          vs.destroy();
+          // @ts-expect-error - VirtualSelect is attached to window by the bundle
+          win.VirtualSelect.init({ ele: $host, options: makeOptions(50), search: true, dropboxWrapper });
+          $host.addEventListener('afterClose', () => afterCloses.push('afterClose'));
+        }, { once: true });
+      });
+      cy.wait(SETTLE);
+
+      cy.get(`#${mountId}`).should(($ele) => {
+        expect($ele[0].virtualSelect.isDestroyed, 'a new instance is on the element').to.equal(false);
+        expect($ele[0].virtualSelect.isOpened(), 'the new instance is closed').to.equal(false);
+      });
+      cy.wrap(afterCloses).should('deep.equal', []);
+    });
+
+    /**
      * A click inside another instance's dropbox is a click on that instance. With its dropbox
      * portalled to <body>, the click lands in the dropbox wrapper, whose instance is recorded on
      * the wrapper itself - not on its parent, as for the component's own wrapper - so the click

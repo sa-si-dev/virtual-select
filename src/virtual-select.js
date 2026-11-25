@@ -3554,8 +3554,17 @@ export class VirtualSelect {
      * beforeOpen/afterOpen, and the host hears the close end before the next open starts.
      * Dispatched after the release, it either arrived after the reopen's events, describing a
      * dropdown that was open again, or - suppressed for that case - left beforeClose unpaired.
+     *
+     * Deferred like DomUtils.dispatchEvent() (setTimeout 0, so still ahead of a reopen's events),
+     * but through a managed timeout: the release below can run a host focus handler that
+     * destroys this instance and builds a new one on the same element, and destroy() has to be
+     * able to cancel it, or the new dropdown hears a close it never made.
      */
-    DomUtils.dispatchEvent(this.$ele, 'afterClose');
+    const { $ele } = this;
+
+    this.setManagedTimeout(() => {
+      $ele.dispatchEvent(new CustomEvent('afterClose', { bubbles: false }));
+    }, 0);
 
     /**
      * After the closed class, so a focus handler reacting to the wrapper refocus observes a
