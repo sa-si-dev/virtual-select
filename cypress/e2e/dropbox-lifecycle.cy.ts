@@ -276,6 +276,90 @@ describe('Dropbox lifecycle', () => {
     });
   });
 
+  /** The positioner shows a dropbox once, so a second open must not announce a second one. */
+  context('opening', () => {
+    it('opening twice in one tick fires the open events once', () => {
+      mount();
+      cy.window().then((win) => {
+        const host = hostIn(win);
+
+        host.open();
+        host.open();
+      });
+      cy.wait(SETTLE_MS);
+
+      expectLog(['beforeOpen', 'afterOpen']);
+    });
+
+    it('open() on an open dropdown fires nothing', () => {
+      mount();
+      openAndClear();
+      cy.window().then((win) => hostIn(win).open());
+      cy.wait(SETTLE_MS);
+
+      expectLog([]);
+    });
+  });
+
+  /**
+   * At the document, a click inside a shadow root targets the shadow host, which no
+   * `.vscomp-wrapper` contains. Real clicks, so the event crosses the shadow boundary as a user's
+   * does; recordEvents() finds hosts by id, which a shadow root hides, so the log is wired here.
+   */
+  context('inside a shadow root', () => {
+    const inShadow = (selector: string) => cy.get(`#${MOUNT_ID}-box`).shadow().find(selector);
+
+    beforeEach(() => {
+      cy.window().then((win) => {
+        const outer = win.document.createElement('div');
+        outer.id = `${MOUNT_ID}-box`;
+        Object.assign(outer.style, { position: 'fixed', left: '400px', top: '100px' });
+
+        const host = win.document.createElement('div') as unknown as Host;
+        Object.assign(host.style, { width: '240px', maxWidth: '240px' });
+
+        outer.attachShadow({ mode: 'open' }).append(host);
+        win.document.body.appendChild(outer);
+
+        // @ts-expect-error - VirtualSelect is attached to window by the bundle
+        win.VirtualSelect.init({ ele: host, ...baseOptions, multiple: true });
+        shadowHost = host;
+        events = [];
+        ['beforeOpen', 'afterOpen', 'beforeClose', 'afterClose'].forEach((type) =>
+          host.addEventListener(type, () => events.push(type)),
+        );
+      });
+      inShadow('.vscomp-toggle-button').realClick();
+      expectLog(['beforeOpen', 'afterOpen']);
+      cy.then(() => {
+        events.length = 0;
+      });
+    });
+
+    it('stays open when its search box is clicked', () => {
+      inShadow('.vscomp-search-input').realClick();
+      cy.wait(SETTLE_MS);
+
+      expectLog([]);
+      inShadow('.vscomp-wrapper').should('not.have.class', 'closed');
+    });
+
+    it('stays open when a multi-select option is clicked', () => {
+      inShadow('.vscomp-option').first().realClick();
+      cy.wait(SETTLE_MS);
+
+      expectLog([]);
+      inShadow('.vscomp-wrapper').should('not.have.class', 'closed');
+    });
+
+    it('still closes on a click outside it', () => {
+      cy.get('body').realClick({ x: 5, y: 5 });
+      cy.wait(SETTLE_MS);
+
+      expectLog(['beforeClose', 'afterClose']);
+    });
+  });
+
   context('destroy', () => {
     // dropboxWrapper 'body' is the configuration that attaches scroll and resize listeners.
     const withListeners = { ...baseOptions, dropboxWrapper: 'body', updatePositionThrottle: 0 };

@@ -685,7 +685,12 @@ export class VirtualSelect {
   }
 
   onDocumentClick(e) {
-    const $clickedEle = e.target.closest('.vscomp-wrapper');
+    /**
+     * The node actually clicked. At the document, e.target of a click inside a shadow root is
+     * retargeted to its host, which no `.vscomp-wrapper` contains: every click inside an instance
+     * rendered in a shadow root, in its search box or on an option, closed it as if outside.
+     */
+    const $clickedEle = e.composedPath()[0].closest('.vscomp-wrapper');
 
     // Close all if clicking outside any dropdown
     if (!$clickedEle) {
@@ -3028,9 +3033,17 @@ export class VirtualSelect {
      * An open during the close animation finishes that close first, afterClose included. The
      * positioner would ignore the open otherwise, and the close would then land on a dropdown
      * already announced as expanded.
+     *
+     * An open of a dropbox already opening or open is ignored: the positioner would not show it
+     * again, so a second beforeOpen would go out with no afterOpen to match. Without the
+     * positioner (popup, keepAlwaysOpen) every open still reaches afterOpen, so those keep it.
      */
     if (this.dropboxPopover) {
       this.dropboxPopover.finishHide();
+
+      if (this.isStayingOpen()) {
+        return;
+      }
     }
 
     // Set this instance as the last interacted one immediately
