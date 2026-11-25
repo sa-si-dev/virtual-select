@@ -8,7 +8,7 @@
  */
 
 export type DropboxSnapshot = {
-  /** x, y parsed from the container's inline translate3d; [0, 0] when there is none. */
+  /** x, y of the container's inline translate3d; [0, 0] when it has no inline transform. */
   transform: [number, number];
   /** 'top' | 'bottom' | 'left' | 'right' | '' (no position-* class). */
   side: string;
@@ -55,14 +55,34 @@ function classesWithPrefix(element: Element, prefixes: string[]): string[] {
     .sort();
 }
 
+const NUMBER = String.raw`(-?(?:\d+\.?\d*|\.\d+)(?:e[+-]?\d+)?)`;
+const TRANSLATE_3D = new RegExp(String.raw`^translate3d\(\s*${NUMBER}(?:px)?\s*,\s*${NUMBER}(?:px)?\s*,`);
+
+/**
+ * x, y of an inline `translate3d(...)`; [0, 0] only when there is no inline transform. Any other
+ * transform throws: read as [0, 0], it would match every fixture entry that expects no movement.
+ */
+function parseTranslate(transform: string): [number, number] {
+  if (transform === '' || transform === 'none') {
+    return [0, 0];
+  }
+
+  const match = TRANSLATE_3D.exec(transform);
+
+  if (!match) {
+    throw new Error(`dropbox-probe: unexpected inline transform "${transform}"`);
+  }
+
+  return [Number(match[1]), Number(match[2])];
+}
+
 export function snapshotDropbox(win: Window, mountId: string): DropboxSnapshot {
   const host = getHost(win, mountId);
   const container = host.virtualSelect.$dropboxContainer;
   const containerClasses = classesWithPrefix(container, ['pop-comp-', 'position-']);
   const side = containerClasses.find((name) => name.startsWith('position-'))?.slice('position-'.length) ?? '';
 
-  const match = /translate3d\(\s*(-?[\d.]+)px\s*,\s*(-?[\d.]+)px/.exec(container.style.transform);
-  const transform: [number, number] = match ? [Number(match[1]), Number(match[2])] : [0, 0];
+  const transform = parseTranslate(container.style.transform);
 
   const computed = win.getComputedStyle(container);
   const style: Record<string, string> = {};
