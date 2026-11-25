@@ -109,6 +109,18 @@ export class DropboxPositioner {
     this.timer = setTimeout(() => this.afterHide(), this.hideDuration);
   }
 
+  /**
+   * Ends a running hide at once, onHidden included, so an open can follow it. A hide or reset during
+   * the show cancels the timer that would call onShown: an open that never finished has nothing
+   * left to set up.
+   */
+  finishHide() {
+    if (this.state === 'hiding') {
+      clearTimeout(this.timer);
+      this.afterHide();
+    }
+  }
+
   /** Back to the state a finished hide leaves, at once and without calling onHidden. */
   reset() {
     this.destroy(); // clears the timer, the listeners and pop-comp-active
@@ -145,10 +157,6 @@ export class DropboxPositioner {
     DomUtils.setStyles(this.$floating, { transitionDuration: '0ms', transform: translate(this.x, this.y) });
   }
 
-  isShown() {
-    return this.state !== 'hidden';
-  }
-
   /**
    * Whether an ancestor rotates, skews or mirrors the dropbox, through transform or the rotate and
    * scale properties. No per-axis scale can undo a translate there. Checked once per open; the
@@ -159,19 +167,16 @@ export class DropboxPositioner {
       if (node.nodeType === 1) {
         const { transform, rotate, scale } = getComputedStyle(/** @type {Element} */ (node));
         const { a, b, c, d } = new DOMMatrix(transform);
-
-        // rotate is 'none' unless rotating; a negative scale value mirrors.
-        if (b || c || a < 0 || d < 0 || /^[^n]|-/.test(rotate + scale)) {
+        // rotate and scale are 'none' or values. rotate turns unless all its digits are 0 (a whole
+        // turn re-measures needlessly, which is harmless); scale mirrors when its first (x) or
+        // second (y) value is negative.
+        if (b || c || a < 0 || d < 0 || /^-|^\S+ -/.test(scale) || /[1-9]/.test(rotate)) {
           return true;
         }
       }
     }
 
     return false;
-  }
-
-  isHiding() {
-    return this.state === 'hiding';
   }
 
   /** Also clears pop-comp-active: a destroy during the hide cancels the afterHide() that would. */
