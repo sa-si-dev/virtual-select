@@ -37,6 +37,7 @@ Import downloaded files (`virtual-select.min.css` and `virtual-select.min.js`) i
 
 Import below files to enable the optional tooltip add-on.\
 Tooltip would be used to show selected values and options text, if text is long and hidden by ellipsis.
+The add-on covers Virtual Select instances in the page's own DOM; one rendered inside a shadow root gets no tooltips.
 ```html
 <link rel="stylesheet" href="path/to/virtual-select-tooltip.min.css">
 

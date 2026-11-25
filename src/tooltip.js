@@ -12,7 +12,10 @@ import { computePlacement } from './utils/placement';
  * - no animation under `prefers-reduced-motion`;
  * - assigns no global apart from its own load guard.
  *
- * Kept terse on purpose: the minified file has a 1650 B gzip budget (size-budgets.json).
+ * Like tooltip-plugin, it covers instances in the light DOM only: its listeners are on the
+ * document, which never sees the pointer move between elements inside a shadow root.
+ *
+ * Kept terse on purpose: the minified file has a tight gzip budget (see size-budgets.json).
  */
 
 /** @type {HTMLElement | null} the trigger being hovered, from the accepted mouseover until hide */

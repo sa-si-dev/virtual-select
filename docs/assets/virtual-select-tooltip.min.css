@@ -1,6 +1,0 @@
-/*!
- * Virtual Select v1.4.0
- * https://sa-si-dev.github.io/virtual-select
- * Licensed under MIT (https://github.com/sa-si-dev/virtual-select/blob/master/LICENSE)
- */
-.tooltip-comp{background-color:#212121;border-radius:2px;color:#fff;font-family:sans-serif;font-size:14px;left:0;line-height:20px;max-width:300px;opacity:0;padding:5px 10px;pointer-events:none;position:absolute;text-align:left;top:0;word-break:break-word}.tooltip-comp-arrow{height:16px;overflow:hidden;position:absolute;width:16px;z-index:1}.tooltip-comp-arrow::before{background-color:#212121;content:"";height:16px;left:8px;position:absolute;top:8px;transform:rotate(45deg);transform-origin:left top;width:16px}.tooltip-comp-content{position:relative;z-index:2}.tooltip-comp.hide-arrow-icon .tooltip-comp-arrow{display:none}.tooltip-comp.position-bottom .tooltip-comp-arrow{left:0;margin-left:-8px;top:-15px}.tooltip-comp.position-top .tooltip-comp-arrow{bottom:-15px;left:0;margin-left:-8px}.tooltip-comp.position-right .tooltip-comp-arrow{left:-15px;margin-top:-8px;top:0}.tooltip-comp.position-left .tooltip-comp-arrow{margin-top:-8px;right:-15px;top:0}
