@@ -24,14 +24,26 @@ const GROUPS = [
 describe('A11y: closing the dropbox clears option navigation state', { testIsolation: true }, () => {
   const mountId = 'vs-close-clears-highlight';
 
-  const mount = (extra: Record<string, unknown> = {}) => {
-    cy.viewport(1280, 800);
+  const mount = (extra: Record<string, unknown> = {}, viewportWidth = 1280) => {
+    cy.viewport(viewportWidth, 800);
     cy.visit('get-started');
     cy.window().then((win) => mountVs(win, mountId, { options: GROUPS, multiple: true, ...extra }));
   };
 
+  /**
+   * Waits for afterOpen before anything else. A close that lands inside the ~300ms show
+   * transition reports the interrupted open as finished (afterOpen) first - so a case that
+   * closes right after this and then waits for a reopen's afterOpen would otherwise be
+   * satisfied by that one, and run against a list that is still fading out.
+   */
   const openAndHighlightFirst = () => {
+    const opened = { done: false };
+
+    cy.get(`#${mountId}`).then(($ele) => {
+      $ele[0].addEventListener('afterOpen', () => { opened.done = true; }, { once: true });
+    });
     cy.get(`#${mountId}`).find('.vscomp-toggle-button').click();
+    cy.wrap(opened).should('have.property', 'done', true);
     cy.get(`#${mountId}`).pressKeys('ArrowDown');
     cy.get(`#${mountId}`).find('.vscomp-option.focused').should('have.attr', 'data-index', '0');
   };
@@ -72,10 +84,16 @@ describe('A11y: closing the dropbox clears option navigation state', { testIsola
   });
 
   /**
-   * Reopened in the *same tick* as the close, deliberately. Waiting for the `closed` class
-   * first would wait out `afterHidePopper()`, which clears the highlight on its own - so the
-   * case could never observe the bug it exists for. This is the user-visible symptom: reopen
-   * before the hide transition finishes and navigation must still start at the top.
+   * `openDropbox()` is called in the *same tick* as the close, deliberately. Waiting for the
+   * `closed` class first would wait out `afterHidePopper()`, which clears the highlight on its
+   * own - so the case could never observe the bug it exists for.
+   *
+   * The call itself queues rather than reopening synchronously: a reopen mid-fade waits for the
+   * running hide to finish (see reopen-during-hide-transition.cy.ts). So the ArrowDown waits for
+   * that reopen to land. Pressed earlier, it would reach a list still fading out, and whether the
+   * assertion saw its highlight before the hide's own clean-up removed it would depend on how
+   * fast the runner is. What is pinned is what the user meets: the reopened list starts at the
+   * first option.
    */
   it('starts navigation at the first option again when reopened mid hide-transition', () => {
     mount();
@@ -83,14 +101,20 @@ describe('A11y: closing the dropbox clears option navigation state', { testIsola
     cy.get(`#${mountId}`).pressKeys('ArrowDown');
     cy.get(`#${mountId}`).find('.vscomp-option.focused').should('have.attr', 'data-index', '1');
 
+    const reopen = { done: false };
+
     cy.get(`#${mountId}`).then(($ele) => {
       const vs = $ele[0].virtualSelect;
 
       vs.closeDropbox();
       expect(vs.isOpened(), 'still mid hide-transition').to.equal(true);
+      $ele[0].addEventListener('afterOpen', () => { reopen.done = true; }, { once: true });
       vs.openDropbox();
     });
 
+    cy.wrap(reopen).should('have.property', 'done', true);
+    cy.get(`#${mountId}`).find('.vscomp-wrapper').should('not.have.class', 'closed');
+    cy.get(`#${mountId}`).find('.vscomp-option.focused').should('not.exist');
     cy.get(`#${mountId}`).pressKeys('ArrowDown');
 
     // data-index 2 here would mean the pre-close highlight was carried over.
@@ -165,21 +189,44 @@ describe('A11y: closing the dropbox clears option navigation state', { testIsola
   });
 
   /**
-   * Same control on the layout where it actually bites. showAsPopup skips initDropboxPopover(),
-   * so closeDropbox() runs afterHidePopper() synchronously - i.e. right after the wrapper
-   * refocus and while the options are still visible and therefore still focusable. That is the
-   * path where clearing the highlight used to steal focus for real.
+   * Same control on the layout where it actually bites. The popup layout skips
+   * initDropboxPopover(), so closeDropbox() runs afterHidePopper() synchronously - i.e. right
+   * after the wrapper refocus and while the options are still visible and therefore still
+   * focusable. That is the path where clearing the highlight used to steal focus for real.
+   *
+   * The popup layout is not an option: it follows from `showDropboxAsPopup` (on by default) and
+   * a viewport at or below `popupDropboxBreakpoint` (576px), read when the instance is created.
+   * This case used to pass `showAsPopup: true`, which is the internal result of that decision -
+   * ignored as an option - and so ran against the desktop layout. The assertion below keeps it
+   * from drifting back.
+   *
+   * Where focus ends up is not enough on its own: releaseFocusFromDropbox() returns focus to
+   * the combobox at the end of the close even if clearing the highlight dragged it onto the
+   * option first. So the case also records every focus move into the dropbox during the close.
    */
   it('still returns focus to the combobox when a popup layout closes', () => {
-    mount({ showAsPopup: true });
+    mount({}, 500);
+    cy.get(`#${mountId}`).should(($ele) => {
+      expect($ele[0].virtualSelect.showAsPopup, 'popup layout').to.equal(true);
+      expect($ele[0].virtualSelect.dropboxPopover, 'no popover in the popup layout').to.equal(undefined);
+    });
 
     cy.get(`#${mountId}`).find('.vscomp-toggle-button').click();
     cy.get(`#${mountId}`).pressKeys('ArrowDown');
     cy.get(`#${mountId}`).find('.vscomp-option.focused').should('exist');
 
+    const focusMovesIntoDropbox: string[] = [];
+
+    cy.get(`#${mountId}`).then(($ele) => {
+      $ele[0].virtualSelect.$dropboxContainer.addEventListener('focusin', (e: FocusEvent) => {
+        focusMovesIntoDropbox.push((e.target as HTMLElement).className);
+      });
+    });
+
     cy.get(`#${mountId}`).find('.vscomp-wrapper').trigger('keydown', { key: 'Escape', keyCode: 27, which: 27 });
 
     cy.get(`#${mountId}`).find('.vscomp-wrapper').should('have.class', 'closed');
     cy.focused().should('have.class', 'vscomp-wrapper');
+    cy.wrap(focusMovesIntoDropbox).should('deep.equal', []);
   });
 });
