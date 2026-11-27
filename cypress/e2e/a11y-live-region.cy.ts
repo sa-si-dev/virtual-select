@@ -13,7 +13,7 @@
 
 import { makeOptions, mountVs, unmountVs } from '../support/mount';
 
-describe('A11y: status announcements via a live region', () => {
+describe('A11y: status announcements via a live region', { testIsolation: true }, () => {
   const mountId = 'vs-a11y-live';
 
   const liveRegion = () => cy.get(`#${mountId}`).find('.vscomp-live-region');
